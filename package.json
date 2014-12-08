@@ -1,0 +1,27 @@
+{
+    "name": "jtlt",
+    "title": "JTLT",
+    "id": "jtlt@brett.zamir",
+    "version": "0.1.0",
+    "license": "MIT",
+    "author": "Brett Zamir",
+    "contributors": [],
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/brettz9/jtlt.git"
+    },
+    "dependencies": {
+        "JSONPath": "0.10.x"
+    },
+    "devDependencies": {
+        "bower": "1.x.x"
+    },
+    "scripts": {
+        "prepublish": "bower install get-json"
+    },
+    "bugs": "https://github.com/brettz9/jtlt/issues",
+    "description": "Uses an approach similar to [XSLT](http://www.w3.org/Style/XSL/) for declarative, linear declaration of templates, but with JSON or JavaScript object data sources. As with XSLT, can be transformed into different formats (e.g., HTML strings, JSON, DOM objects, etc.).",
+    "keywords": [
+        "xsl", "xslt", "json", "javascript"
+    ]
+}
