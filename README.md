@@ -22,4 +22,4 @@ npm install .
 ```
 
 # Todos
-- Implement and demo equivalent to applying and calling tempaltes
+- Implement and demo equivalent to applying and calling templates, and root template
