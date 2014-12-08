@@ -23,3 +23,4 @@ npm install .
 
 # Todos
 - Implement and demo equivalent to applying and calling templates, and root template
+- Fork JSONPath to allow iterating against a callback, supplying parent?
