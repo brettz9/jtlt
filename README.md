@@ -21,3 +21,5 @@ The sample file is from http://goessner.net/articles/JsonPath/
 npm install .
 ```
 
+# Todos
+- Implement and demo equivalent to applying and calling tempaltes

@@ -42,9 +42,9 @@ JTLT.prototype.start = function () {
     }
 
     var that = this, result;
-    this.templates.some(function (obj, idx, arr) {
-        var path = Object.keys(obj)[0];
-        var template = obj[path];
+    this.templates.some(function (obj) {
+        var path = obj.path;
+        var template = obj.template;
 
         var match = that.options.engine(that.options.data, path);
         if (match) {

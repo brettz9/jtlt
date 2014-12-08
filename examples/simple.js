@@ -1,7 +1,9 @@
 
 JTLT([
     {
-        '$.store.book[*].author': function (value, path, obj) {
+        name: 'author', // For use with calling templates
+        path: '$.store.book[*].author',
+        template: function (value, path, obj) {
             return 's:' + JSON.stringify(value);
         }
     }
