@@ -3,7 +3,7 @@
 (function (undef) {'use strict';
 
 function JSONPath (obj, path) {
-    return jsonPath.eval(obj, path);
+    return jsonPath.eval(obj, path, {resultType: 'path'});
 }
 
 
