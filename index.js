@@ -17,15 +17,18 @@ function JTLT (templates, options) {
     var that = this;
     if (this.options.ajaxData) {
         getJSON(this.options.ajaxData, function (json) {
-        alert(json);
             that.options.data = json;
+            that.autoStart();
         });
         return this;
     }
-    if (this.options.autostart !== false) {
-        return this.start();
-    }
+    this.autoStart();
 }
+JTLT.prototype.autoStart = function () {
+    if (this.options.autostart !== false) {
+        return this.options.success(this.start());
+    }
+};
 JTLT.prototype.setDefaults = function () {
     this.options.engine = this.options.engine || JSONPath;
     return this;
@@ -38,10 +41,20 @@ JTLT.prototype.start = function () {
         throw "You must supply a 'data' or 'ajaxData' property";
     }
 
-    var that = this;
-    return this.templates.find(function (path) {
-        that.options.engine(that.options.data, path);
+    var that = this, result;
+    this.templates.some(function (obj, idx, arr) {
+        var path = Object.keys(obj)[0];
+        var template = obj[path];
+
+        var match = that.options.engine(that.options.data, path);
+        if (match) {
+            result = {template: template, value: match, path: path};
+            return true;
+        }
     });
+    if (result) {
+        return result.template(result.value, result.path, this.options.data);
+    }
 };
 
 
