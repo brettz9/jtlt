@@ -23,3 +23,4 @@ npm install .
 
 # Todos
 - Implement and demo equivalent to applying and calling templates, and root template
+    - Reshape JSONPath to return parent in results, so we can reshape
