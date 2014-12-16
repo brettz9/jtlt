@@ -10,7 +10,7 @@ function jsonPath (config) {
             return -1;
         }
         if (b.path === '$') {
-            return -1;
+            return 1;
         }
         
         // Todo: User-supplied priority
