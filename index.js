@@ -4,14 +4,14 @@
 
 function jsonPath (config) {
 
-    config.templates.sort(function (template) {
-        var path = obj.path;
+    config.templates.sort(function (templateObj) {
+        var path = templateObj.path;
 
-        var match = JSONPath({json: config.json, path: path, resultType: 'value', wrap: false, callback: function (parent, property, value, path, obj) {
+        var match = JSONPath({json: config.json, path: path, resultType: 'value', wrap: false, callback: function (parent, property, value, path, templateObj.template) {
             
         }});
         if (match) {
-            result = {template: template, value: match, path: path};
+            result = {template: templateObj.template, value: match, path: path};
             return true;
         }
     });
