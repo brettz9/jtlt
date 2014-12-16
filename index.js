@@ -1,9 +1,11 @@
-/*global jsonPath, getJSON, module*/
+/*global JSONPath, getJSON, module*/
 /*jslint vars:true*/
 (function (undef) {'use strict';
 
-function JSONPath (obj, path) {
-    return jsonPath.eval(obj, path, {resultType: 'path'});
+function jsonPath (obj, path) {
+    return JSONPath({json: obj, path: path, resultType: 'path', callback: function (parent, property, value, path, obj) {
+        
+    }});
 }
 
 
@@ -30,7 +32,7 @@ JTLT.prototype.autoStart = function () {
     }
 };
 JTLT.prototype.setDefaults = function () {
-    this.options.engine = this.options.engine || JSONPath;
+    this.options.engine = this.options.engine || jsonPath;
     return this;
 };
 JTLT.prototype.start = function () {
