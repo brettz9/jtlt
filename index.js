@@ -4,7 +4,7 @@
 
 function jsonPath (config) {
 
-    var matched = config.templates.sort(function (a, b) {
+    var matched = config.templates.concat(jsonPath.DefaultTemplateRules).sort(function (a, b) {
         // Root tests
         if (a.path === '$') {
             return -1;
@@ -14,7 +14,9 @@ function jsonPath (config) {
         }
         
         // Todo: User-supplied priority
-        
+        if ((a.hasOwnProperty('priority') && a.priority) > (b.priority || 0)) {
+            return -1;
+        }
         
         // Todo: Path specificity
         
@@ -34,11 +36,14 @@ function jsonPath (config) {
         return true;
     });
 
-    if (!matched) {
-        // Todo: Apply default template rules where no match
-        return;
+    if (!matched) { // Should not get here with default template rules in place
+        throw "No template rules matched";
     }
 }
+jsonPath.DefaultTemplateRules = [
+    // Todo: Apply default template rules
+    
+];
 
 
 function JTLT (templates, options) {
@@ -75,9 +80,7 @@ JTLT.prototype.start = function () {
         throw "You must supply a 'data' or 'ajaxData' property";
     }
 
-    var that = this;
-    
-    return that.options.engine({templates: that.options.templates, json: this.options.data});
+    return this.options.engine({templates: that.options.templates, json: this.options.data});
 };
 
 
