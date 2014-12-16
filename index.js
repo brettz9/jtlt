@@ -19,6 +19,7 @@ function jsonPath (config) {
         }
         
         // Todo: Path specificity
+        // Let's also, unlike XSLT, give higher priority to absolute fixed paths over recursive descent and priority to longer paths
         
         
         // Todo: Templates with same priority (if have config, can throw error as in XSLT)
