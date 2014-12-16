@@ -3,7 +3,8 @@
 (function (undef) {'use strict';
 
 function jsonPath (obj, path) {
-    return JSONPath({json: obj, path: path, resultType: 'path', callback: function (parent, property, value, path, obj) {
+
+    return JSONPath({json: obj, path: path, resultType: 'value', wrap: false, callback: function (parent, property, value, path, obj) {
         
     }});
 }
@@ -48,7 +49,7 @@ JTLT.prototype.start = function () {
         var path = obj.path;
         var template = obj.template;
 
-        var match = that.options.engine(that.options.data, path);
+        var match = that.options.engine({json: that.options.data, path: path});
         if (match) {
             result = {template: template, value: match, path: path};
             return true;
