@@ -1,11 +1,22 @@
-/*global JSONPath, getJSON, module*/
+/*global JSONPath, getJSON, exports*/
 /*jslint vars:true, todo:true*/
 (function (undef) {'use strict';
 
-function jsonPath (config) {
-
-    var matched = config.templates.concat(jsonPath.DefaultTemplateRules).sort(function (a, b) {
+function JSONPathTransformer (config) {
+    if (!(this instanceof JSONPathTransformer)) {
+        return new JSONPathTransformer(config);
+    }
+    this.config = config;
+}
+JSONPathTransformer.prototype.getDefaultPriority = function (path) {
+    
+};
+JSONPathTransformer.prototype.transform = function () {
+    var config = this.config;
+    var matched = config.templates.sort(function (a, b) {
         // Root tests
+        var aPriority = a.hasOwnProperty('priority') ? a.priority : this.getDefaultPriority(a.path);
+        var bPriority = b.hasOwnProperty('priority') ? b.priority : this.getDefaultPriority(a.path);
         if (a.path === '$') {
             return -1;
         }
@@ -14,7 +25,7 @@ function jsonPath (config) {
         }
         
         // Todo: User-supplied priority
-        if ((a.hasOwnProperty('priority') && a.priority) > (b.priority || 0)) {
+        if (aPriority > bPriority) {
             return -1;
         }
         
@@ -40,8 +51,8 @@ function jsonPath (config) {
     if (!matched) { // Should not get here with default template rules in place
         throw "No template rules matched";
     }
-}
-jsonPath.DefaultTemplateRules = [
+};
+JSONPathTransformer.DefaultTemplateRules = [
     // Todo: Apply default template rules
     
 ];
@@ -70,7 +81,7 @@ JTLT.prototype.autoStart = function () {
     }
 };
 JTLT.prototype.setDefaults = function () {
-    this.options.engine = this.options.engine || jsonPath;
+    this.options.engine = this.options.engine || JSONPathTransformer;
     return this;
 };
 JTLT.prototype.start = function () {
@@ -81,15 +92,18 @@ JTLT.prototype.start = function () {
         throw "You must supply a 'data' or 'ajaxData' property";
     }
 
-    return this.options.engine({templates: that.options.templates, json: this.options.data});
+    var engineObj = this.options.engine({templates: this.options.templates, json: this.options.data});
+    engineObj.transform();
 };
 
 
-if (typeof module !== 'undefined') {
-    module.exports = JTLT;
+if (typeof exports !== 'undefined') {
+    exports.JTLT = JTLT;
+    exports.JSONPathTransformer = JSONPathTransformer;
 }
 else {
     window.JTLT = JTLT;
+    window.JSONPathTransformer = JSONPathTransformer;
 }
 
 
