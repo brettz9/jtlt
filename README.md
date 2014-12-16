@@ -23,7 +23,9 @@ npm install .
 
 # Todos
 - Implement and demo equivalent to applying and calling templates, and root template
-    - As with XSLT, have root processing (and at least call-template/apply-templates/for-each equivalents to direct flow), with priority indicated by:
+    - As with XSLT, have priority determined by:
+        - Presence of any root template
+            - Have at least basic flow direction methods like XSL's call-template/apply-templates/for-each
         - Any user-supplied priority for a given template
         - Default matching priority for user templates indicated by the template's [path specificity](http://lenzconsulting.com/how-xslt-works/#priority) (JSONPath)
         - [Default template rules](http://docstore.mik.ua/orelly/xml/xmlnut/ch08_07.htm).
