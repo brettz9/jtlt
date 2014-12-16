@@ -23,5 +23,8 @@ npm install .
 
 # Todos
 - Implement and demo equivalent to applying and calling templates, and root template
-    - As with XSLT, have root processing (and at least call-template/apply-templates/for-each equivalents to direct flow), with priority indicated by [path specificity](http://lenzconsulting.com/how-xslt-works/#priority) (JSONPath), any user-supplied priority for a given template, and [default template rules](http://docstore.mik.ua/orelly/xml/xmlnut/ch08_07.htm).
+    - As with XSLT, have root processing (and at least call-template/apply-templates/for-each equivalents to direct flow), with priority indicated by:
+        - Any user-supplied priority for a given template
+        - Default matching priority for user templates indicated by the template's [path specificity](http://lenzconsulting.com/how-xslt-works/#priority) (JSONPath)
+        - [Default template rules](http://docstore.mik.ua/orelly/xml/xmlnut/ch08_07.htm).
 - Reconcile a [non-eval PR for JSONPath](https://github.com/s3u/JSONPath/pull/4) with my [own fork](https://github.com/brettz9/JSONPath). The OR condition (outside of filters) is another important feature as would be schema-aware path results.
