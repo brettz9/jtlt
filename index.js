@@ -2,11 +2,19 @@
 /*jslint vars:true*/
 (function (undef) {'use strict';
 
-function jsonPath (obj, path) {
+function jsonPath (config) {
 
-    return JSONPath({json: obj, path: path, resultType: 'value', wrap: false, callback: function (parent, property, value, path, obj) {
-        
-    }});
+    config.templates.sort(function (template) {
+        var path = obj.path;
+
+        var match = JSONPath({json: config.json, path: path, resultType: 'value', wrap: false, callback: function (parent, property, value, path, obj) {
+            
+        }});
+        if (match) {
+            result = {template: template, value: match, path: path};
+            return true;
+        }
+    });
 }
 
 
@@ -44,17 +52,9 @@ JTLT.prototype.start = function () {
         throw "You must supply a 'data' or 'ajaxData' property";
     }
 
-    var that = this, result;
-    this.templates.some(function (obj) {
-        var path = obj.path;
-        var template = obj.template;
-
-        var match = that.options.engine({json: that.options.data, path: path});
-        if (match) {
-            result = {template: template, value: match, path: path};
-            return true;
-        }
-    });
+    var that = this;
+    
+    var result = that.options.engine({templates: templates, json: this.options.data});
     if (result) {
         return result.template(result.value, result.path, this.options.data);
     }
