@@ -1,20 +1,43 @@
 /*global JSONPath, getJSON, module*/
-/*jslint vars:true*/
+/*jslint vars:true, todo:true*/
 (function (undef) {'use strict';
 
 function jsonPath (config) {
 
-    config.templates.sort(function (templateObj) {
+    var matched = config.templates.sort(function (a, b) {
+        // Root tests
+        if (a.path === '$') {
+            return -1;
+        }
+        if (b.path === '$') {
+            return -1;
+        }
+        
+        // Todo: User-supplied priority
+        
+        
+        // Todo: Path specificity
+        
+        
+        // Todo: Templates with same priority (if have config, can throw error as in XSLT)
+                
+        
+    }).some(function (templateObj) {
         var path = templateObj.path;
-
-        var match = JSONPath({json: config.json, path: path, resultType: 'value', wrap: false, callback: function (parent, property, value, path, templateObj.template) {
+        var json = config.json;
+        var values = JSONPath({json: json, path: path, resultType: 'value', wrap: false, callback: function (parent, property, value, path) {
             
         }});
-        if (match) {
-            result = {template: templateObj.template, value: match, path: path};
-            return true;
+        if (values) {
+            templateObj.template(values, path, json);
         }
+        return true;
     });
+
+    if (!matched) {
+        // Todo: Apply default template rules where no match
+        return;
+    }
 }
 
 
@@ -54,10 +77,7 @@ JTLT.prototype.start = function () {
 
     var that = this;
     
-    var result = that.options.engine({templates: templates, json: this.options.data});
-    if (result) {
-        return result.template(result.value, result.path, this.options.data);
-    }
+    return that.options.engine({templates: that.options.templates, json: this.options.data});
 };
 
 
