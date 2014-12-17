@@ -30,7 +30,7 @@ JSONPathTransformer.prototype.getDefaultPriority = function (path) {
     
     // -.5 = *, @string() (etc.)
     // -.25 = Namespace (not relevant without Jamilih)
-    // 0 = single name (i.e., $..someName)
+    // 0 = single name (i.e., $..someName or someName if allowing such relative paths)
     // .5 = ., .., [], [()], [(?)]
 
 };
