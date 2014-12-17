@@ -109,9 +109,9 @@ JTLT.prototype._autoStart = function () {
         this.config.success(this.transform());
     }
 };
-JTLT.prototype.setDefaults = function () {
-    var query = config.query ? config.query : (typeof config.templates === 'function' ? config.templates : (typeof config.template === 'function' ? config.template : null));
-    this.templates = query ? [{name: 'root', path: '$', template: query}] || config.templates || [config.template];
+JTLT.prototype.setDefaults = function (config) {
+    var query = config.query || (typeof config.templates === 'function' ? config.templates : (typeof config.template === 'function' ? config.template : null));
+    this.templates = query ? [{name: 'root', path: '$', template: query}] : (config.templates || [config.template]);
     this.config.errorOnEqualPriority = config.errorOnEqualPriority || false;
     this.config = config || {};
     this.config.engine = this.config.engine || JSONPathTransformer;
