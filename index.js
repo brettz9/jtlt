@@ -13,7 +13,7 @@ function JSONPathTransformer (config) {
     // Todo: if no templates, allow query (e.g., something like '$' without apply-templates but like XQuery)
     var map = {};
     this.templates.forEach(function (template) {
-        if (map[template.name]) {
+        if (template.name && map[template.name]) {
             throw "Templates must all have different names.";
         }
         map[template.name] = true;
