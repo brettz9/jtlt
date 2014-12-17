@@ -19,6 +19,7 @@ function JSONPathTransformer (config) {
         map[template.name] = true;
     });
     map = null;
+    this.transform();
 }
 JSONPathTransformer.prototype.getDefaultPriority = function (path) {
     if (typeof path === 'string') {
@@ -27,6 +28,11 @@ JSONPathTransformer.prototype.getDefaultPriority = function (path) {
     // Todo: Path specificity
     // Let's also, unlike XSLT, give higher priority to absolute fixed paths over recursive descent and priority to longer paths and lower to wildcard terminal points
     
+    // -.5 = *, @string() (etc.)
+    // -.25 = Namespace (not relevant without Jamilih)
+    // 0 = single name (i.e., $..someName)
+    // .5 = ., .., [], [()], [(?)]
+
 };
 JSONPathTransformer.prototype.transform = function () {
     var config = this.config;
@@ -49,7 +55,7 @@ JSONPathTransformer.prototype.transform = function () {
         return (aPriority > bPriority) ? -1 : 1; // We want equal conditions to go in favor of the later (b)
     }).some(function (templateObj) {
         var path = templateObj.path;
-        var json = config.json;
+        var json = config.data;
         var values = JSONPath({json: json, path: path, resultType: 'value', wrap: false, callback: function (parent, property, value, path) {
             
         }});
@@ -69,42 +75,64 @@ JSONPathTransformer.DefaultTemplateRules = [
 ];
 
 
+/**
+* For templates/queries, one may choose among config.query, config.template, or config.templates, but one must be present and of valid type. For the source json, one must use either a valid config.ajaxData or config.data parameter.
+* @param {function} config.success A callback supplied with a single argument that is the result of this instance's transform() method.
+* @param {array} [config.templates] An array of template objects
+* @param {object|function} [config.template] A function assumed to be a root template or a single, complete template object
+* @param {function} [config.query] A function assumed to be a root template
+* @param {object} [config.data] A JSON object
+* @param {string} [config.ajaxData] URL of a JSON file to retrieve for evaluation
+* @param {boolean} [config.errorOnEqualPriority=false]
+* @param {boolean} [config.autostart=true] Whether to begin transform() immediately.
+* @param {function} [config.engine=JSONPathTransformer] Will be based the same config as passed to this instance. Defaults to a transforming function based on JSONPath and with its own set of priorities for processing templates.
+* @returns {JTLT} A JTLT instance object
+*/
 function JTLT (config) {
     if (!(this instanceof JTLT)) {
         return new JTLT(config);
     }
-    this.templates = config.templates;
-    this.config = config || {};
-    this.setDefaults();
+
+    this.setDefaults(config);
     var that = this;
     if (this.config.ajaxData) {
         getJSON(this.config.ajaxData, function (json) {
             that.config.data = json;
-            that.autoStart();
+            that._autoStart();
         });
         return this;
     }
-    this.autoStart();
+    this._autoStart();
 }
-JTLT.prototype.autoStart = function () {
-    if (this.config.autostart !== false) {
-        return this.config.success(this.transform());
+JTLT.prototype._autoStart = function () {
+    if (this.config.autostart !== false || this.ready) {
+        this.config.success(this.transform());
     }
 };
 JTLT.prototype.setDefaults = function () {
+    var query = config.query ? config.query : (typeof config.templates === 'function' ? config.templates : (typeof config.template === 'function' ? config.template : null));
+    this.templates = query ? [{name: 'root', path: '$', template: query}] || config.templates || [config.template];
+    this.config.errorOnEqualPriority = config.errorOnEqualPriority || false;
+    this.config = config || {};
     this.config.engine = this.config.engine || JSONPathTransformer;
     return this;
 };
+/**
+* @returns {any}
+*/
 JTLT.prototype.transform = function () {
     if (this.config.data === undef) {
         if (this.config.ajaxData) {
-            throw "You must wait for the 'ajaxData' source to be retrieved.";
+            this.ready = true;
+            return;
         }
         throw "You must supply a 'data' or 'ajaxData' property";
     }
+    if (typeof this.config.success !== 'function') {
+        throw "You must supply a 'success' callback";
+    }
 
-    var engineObj = this.config.engine({templates: this.templates, json: this.config.data});
-    engineObj.transform();
+    return this.config.engine({templates: this.templates, json: this.config.data});
 };
 
 
