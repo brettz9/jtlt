@@ -12,7 +12,7 @@ function JSONPathTransformer (config) {
     this.config = config;
     // Todo: if no templates, allow query (e.g., something like '$' without apply-templates but like XQuery)
     var map = {};
-    this.config.templates.forEach(function (template) {
+    this.templates.forEach(function (template) {
         if (map[template.name]) {
             throw "Templates must all have different names.";
         }
@@ -30,7 +30,7 @@ JSONPathTransformer.prototype.getDefaultPriority = function (path) {
 };
 JSONPathTransformer.prototype.transform = function () {
     var config = this.config;
-    var matched = config.templates.sort(function (a, b) {
+    var matched = this.templates.sort(function (a, b) {
         // Root tests
         if (a.path === '$') {
             return -1;
@@ -69,17 +69,17 @@ JSONPathTransformer.DefaultTemplateRules = [
 ];
 
 
-function JTLT (templates, options) {
+function JTLT (config) {
     if (!(this instanceof JTLT)) {
-        return new JTLT(templates, options);
+        return new JTLT(config);
     }
-    this.templates = templates;
-    this.options = options || {};    
+    this.templates = config.templates;
+    this.config = config || {};
     this.setDefaults();
     var that = this;
-    if (this.options.ajaxData) {
-        getJSON(this.options.ajaxData, function (json) {
-            that.options.data = json;
+    if (this.config.ajaxData) {
+        getJSON(this.config.ajaxData, function (json) {
+            that.config.data = json;
             that.autoStart();
         });
         return this;
@@ -87,23 +87,23 @@ function JTLT (templates, options) {
     this.autoStart();
 }
 JTLT.prototype.autoStart = function () {
-    if (this.options.autostart !== false) {
-        return this.options.success(this.start());
+    if (this.config.autostart !== false) {
+        return this.config.success(this.transform());
     }
 };
 JTLT.prototype.setDefaults = function () {
-    this.options.engine = this.options.engine || JSONPathTransformer;
+    this.config.engine = this.config.engine || JSONPathTransformer;
     return this;
 };
-JTLT.prototype.start = function () {
-    if (this.options.data === undef) {    
-        if (this.options.ajaxData) {
+JTLT.prototype.transform = function () {
+    if (this.config.data === undef) {
+        if (this.config.ajaxData) {
             throw "You must wait for the 'ajaxData' source to be retrieved.";
         }
         throw "You must supply a 'data' or 'ajaxData' property";
     }
 
-    var engineObj = this.options.engine({templates: this.options.templates, json: this.options.data});
+    var engineObj = this.config.engine({templates: this.templates, json: this.config.data});
     engineObj.transform();
 };
 
