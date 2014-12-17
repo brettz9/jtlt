@@ -71,7 +71,14 @@ JSONPathTransformer.prototype.transform = function () {
 };
 JSONPathTransformer.DefaultTemplateRules = [
     // Todo: Apply default template rules
+    /*
     
+    / | *                                : apply-templates
+    / | * mode                           : apply-templates mode
+    text() | @*                          : value-of select="."
+    processing-instruction() | comment() : (nothing)
+    (an XSLT processor is not to copy any part of the namespace node to the output)
+    */
 ];
 
 
