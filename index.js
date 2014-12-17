@@ -10,8 +10,20 @@ function JSONPathTransformer (config) {
         return new JSONPathTransformer(config);
     }
     this.config = config;
+    // Todo: if no templates, allow query (e.g., something like '$' without apply-templates but like XQuery)
+    var map = {};
+    this.config.templates.forEach(function (template) {
+        if (map[template.name]) {
+            throw "Templates must all have different names.";
+        }
+        map[template.name] = true;
+    });
+    map = null;
 }
 JSONPathTransformer.prototype.getDefaultPriority = function (path) {
+    if (typeof path === 'string') {
+        path = JSONPath.toPathArray(path);
+    }
     // Todo: Path specificity
     // Let's also, unlike XSLT, give higher priority to absolute fixed paths over recursive descent and priority to longer paths and lower to wildcard terminal points
     
