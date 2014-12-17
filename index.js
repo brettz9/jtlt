@@ -2,6 +2,24 @@
 /*jslint vars:true, todo:true*/
 (function (undef) {'use strict';
 
+
+// Todo: utilize
+function JSONTransformerEvaluator () {
+
+}
+JSONTransformerEvaluator.prototype.applyTemplates = function () {
+
+};
+JSONTransformerEvaluator.prototype.callTemplate = function () {
+
+};
+JSONTransformerEvaluator.prototype.forEach = function () {
+
+};
+JSONTransformerEvaluator.prototype.valueOf = function () {
+
+};
+
 /**
 * @param {boolean} config.errorOnEqualPriority
 */
@@ -72,12 +90,11 @@ JSONPathTransformer.prototype.transform = function () {
 JSONPathTransformer.DefaultTemplateRules = [
     // Todo: Apply default template rules
     /*
-    
-    / | *                                : apply-templates
-    / | * mode                           : apply-templates mode
-    text() | @*                          : value-of select="."
-    processing-instruction() | comment() : (nothing)
-    (an XSLT processor is not to copy any part of the namespace node to the output)
+    / | *                                : apply-templates          (this.applyTemplates())
+    / | * mode                           : apply-templates mode     (this.config.mode)
+    text() | @*                          : value-of select="."      (this.valueOf({select: '.'}) or this.valueOf('.'))
+    processing-instruction() | comment() : (nothing); optionally allow JSON equivalents or Jamilih
+    (an XSLT processor is not to copy any part of the namespace node to the output); optionally allow JSON equivalents or Jamilih
     */
 ];
 
@@ -92,6 +109,7 @@ JSONPathTransformer.DefaultTemplateRules = [
 * @param {string} [config.ajaxData] URL of a JSON file to retrieve for evaluation
 * @param {boolean} [config.errorOnEqualPriority=false]
 * @param {boolean} [config.autostart=true] Whether to begin transform() immediately.
+* @param {string} [config.mode=''] The mode in which to begin the transform.
 * @param {function} [config.engine=JSONPathTransformer] Will be based the same config as passed to this instance. Defaults to a transforming function based on JSONPath and with its own set of priorities for processing templates.
 * @returns {JTLT} A JTLT instance object
 */
