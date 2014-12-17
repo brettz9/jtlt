@@ -2,6 +2,9 @@
 /*jslint vars:true, todo:true*/
 (function (undef) {'use strict';
 
+/**
+* @param {boolean} config.errorOnEqualPriority
+*/
 function JSONPathTransformer (config) {
     if (!(this instanceof JSONPathTransformer)) {
         return new JSONPathTransformer(config);
@@ -9,33 +12,29 @@ function JSONPathTransformer (config) {
     this.config = config;
 }
 JSONPathTransformer.prototype.getDefaultPriority = function (path) {
+    // Todo: Path specificity
+    // Let's also, unlike XSLT, give higher priority to absolute fixed paths over recursive descent and priority to longer paths and lower to wildcard terminal points
     
 };
 JSONPathTransformer.prototype.transform = function () {
     var config = this.config;
     var matched = config.templates.sort(function (a, b) {
         // Root tests
-        var aPriority = a.hasOwnProperty('priority') ? a.priority : this.getDefaultPriority(a.path);
-        var bPriority = b.hasOwnProperty('priority') ? b.priority : this.getDefaultPriority(a.path);
         if (a.path === '$') {
             return -1;
         }
         if (b.path === '$') {
             return 1;
         }
+
+        var aPriority = typeof a.priority === 'number' ? a.priority : this.getDefaultPriority(a.path);
+        var bPriority = typeof b.priority === 'number' ? b.priority : this.getDefaultPriority(a.path);
         
-        // Todo: User-supplied priority
-        if (aPriority > bPriority) {
-            return -1;
+        if (aPriority === bPriority && this.config.errorOnEqualPriority) {
+            throw "You have configured JSONPathTransformer to throw errors on finding templates of equal priority and these have been found.";
         }
         
-        // Todo: Path specificity
-        // Let's also, unlike XSLT, give higher priority to absolute fixed paths over recursive descent and priority to longer paths
-        
-        
-        // Todo: Templates with same priority (if have config, can throw error as in XSLT)
-                
-        
+        return (aPriority > bPriority) ? -1 : 1; // We want equal conditions to go in favor of the later (b)
     }).some(function (templateObj) {
         var path = templateObj.path;
         var json = config.json;

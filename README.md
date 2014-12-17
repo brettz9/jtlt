@@ -11,7 +11,8 @@ formats (e.g., HTML strings, JSON, DOM objects, etc.).
 
 # Credits
 
-Packaged with this [JSONPath](https://github.com/s3u/JSONPath) implementation.
+Packaged with this [JSONPath](https://github.com/s3u/JSONPath)
+implementation.
 
 The sample file is from http://goessner.net/articles/JsonPath/
 
@@ -20,6 +21,20 @@ The sample file is from http://goessner.net/articles/JsonPath/
 ```
 npm install .
 ```
+
+# Differences between an exact equivalence with XSLT
+
+JTLT, having the freedom to start a new pattern from XSLT, and though
+learning from it, deviates somewhat from making an exact
+equivalence with XSLT (to the extent JTLT and JSONPath implement
+what could possibly be transferred to JSON-based transformations
+from XSLT).
+
+1. Although the option is given for throwing errors upon finding templates of equal priority, the default behavior is to give preference to the last template (unlike XSLT which makes it an error by default).
+1. Unlike XSLT, JTLT gives higher priority to:
+    1. absolute fixed paths over recursive descent
+    1. longer paths
+    1. Non-wildcard terminal points (not only lower priority to raw wildcards)
 
 # Todos
 - Implement and demo equivalent to applying and calling templates, and root template
