@@ -52,10 +52,10 @@ JSONTransformerEvaluator.prototype.callTemplate = function (name, withParam) {
     if (!template) {
         throw "Template, " + name + ", cannot be called as it was not found.";
     }
-    return template(value);
+    return template(value); // Todo: provide context
 };
 JSONTransformerEvaluator.prototype.forEach = function () {
-
+    
 };
 JSONTransformerEvaluator.prototype.valueOf = function () {
 
