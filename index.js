@@ -43,8 +43,16 @@ JSONTransformerEvaluator.prototype.applyTemplates = function () {
         throw "No template rules matched";
     }
 };
-JSONTransformerEvaluator.prototype.callTemplate = function () {
-
+JSONTransformerEvaluator.prototype.callTemplate = function (name, withParam) {
+    var value;
+    var template = this.templates.find(function (template) {
+        value = withParam.value; // Todo: Support withParam.select (with reference to current context)
+        return template.name === name;
+    });
+    if (!template) {
+        throw "Template, " + name + ", cannot be called as it was not found.";
+    }
+    return template(value);
 };
 JSONTransformerEvaluator.prototype.forEach = function () {
 
@@ -96,7 +104,6 @@ JSONPathTransformer.prototype.defaultRootTemplate = function () {
 };
 
 JSONPathTransformer.prototype.transform = function () {
-
     switch (this.rootTemplates.length) {
         case 0:
             return this.defaultRootTemplate();
@@ -109,7 +116,6 @@ JSONPathTransformer.prototype.transform = function () {
             var json = config.data;
             return templateObj.template(json, path, json);
     }
-
 };
 
 
