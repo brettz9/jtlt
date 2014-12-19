@@ -59,13 +59,6 @@ JSONPathTransformer.prototype.getDefaultPriority = function (path) {
 JSONPathTransformer.prototype.transform = function () {
     var config = this.config;
     var matched = this.templates.sort(function (a, b) {
-        // Root tests
-        if (a.path === '$') {
-            return -1;
-        }
-        if (b.path === '$') {
-            return 1;
-        }
 
         var aPriority = typeof a.priority === 'number' ? a.priority : this.getDefaultPriority(a.path);
         var bPriority = typeof b.priority === 'number' ? b.priority : this.getDefaultPriority(a.path);
