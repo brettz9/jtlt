@@ -10,7 +10,7 @@ JTLT({
             parent[property] = '<b>' + value + '</b>';
             return 's:' + parent;
         }
-    }]
+    }],
     ajaxData: 'data/jsonpath-sample.json',
     success: function (result) {
         alert('result:'+result);
