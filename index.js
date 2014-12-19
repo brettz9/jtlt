@@ -73,7 +73,6 @@ function JSONPathTransformer (config) {
             that.rootTemplates.concat(templates.splice(i, 1));
         }
     });
-    this.rootTemplates.reverse();
     map = null;
     this.transform();
 }
@@ -105,7 +104,7 @@ JSONPathTransformer.prototype.transform = function () {
             this.triggerEqualPriorityError();
             /* Fall-through */
         case 1:
-            var templateObj = this.rootTemplates[0];
+            var templateObj = this.rootTemplates.pop();
             var path = templateObj.path;
             var json = config.data;
             return templateObj.template(json, path, json);
