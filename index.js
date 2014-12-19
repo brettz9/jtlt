@@ -7,8 +7,41 @@
 function JSONTransformerEvaluator () {
 
 }
-JSONTransformerEvaluator.prototype.applyTemplates = function () {
 
+JSONTransformerEvaluator.prototype.triggerEqualPriorityError = function () {
+    if (this.config.errorOnEqualPriority) {
+        throw "You have configured JSONPathTransformer to throw errors on finding templates of equal priority and these have been found.";
+    }
+};
+
+JSONTransformerEvaluator.prototype.applyTemplates = function () {
+    // Todo: adapt this code to only find (and apply) templates per context
+    var config = this.config;
+    var matched = this.templates.sort(function (a, b) {
+
+        var aPriority = typeof a.priority === 'number' ? a.priority : this.getDefaultPriority(a.path);
+        var bPriority = typeof b.priority === 'number' ? b.priority : this.getDefaultPriority(a.path);
+        
+        if (aPriority === bPriority) {
+            this.triggerEqualPriorityError();
+        }
+        
+        return (aPriority > bPriority) ? -1 : 1; // We want equal conditions to go in favor of the later (b)
+    }).some(function (templateObj) {
+        var path = templateObj.path;
+        var json = config.data;
+        var values = JSONPath({json: json, path: path, resultType: 'value', wrap: false, callback: function (parent, property, value, path) {
+            
+        }});
+        if (values) {
+            templateObj.template(values, path, json);
+        }
+        return true;
+    });
+
+    if (!matched) { // Should not get here with default template rules in place
+        throw "No template rules matched";
+    }
 };
 JSONTransformerEvaluator.prototype.callTemplate = function () {
 
@@ -40,6 +73,7 @@ function JSONPathTransformer (config) {
             that.rootTemplates.concat(templates.splice(i, 1));
         }
     });
+    this.rootTemplates.reverse();
     map = null;
     this.transform();
 }
@@ -56,34 +90,30 @@ JSONPathTransformer.prototype.getDefaultPriority = function (path) {
     // .5 = ., .., [], [()], [(?)]
 
 };
-JSONPathTransformer.prototype.transform = function () {
-    var config = this.config;
-    var matched = this.templates.sort(function (a, b) {
 
-        var aPriority = typeof a.priority === 'number' ? a.priority : this.getDefaultPriority(a.path);
-        var bPriority = typeof b.priority === 'number' ? b.priority : this.getDefaultPriority(a.path);
-        
-        if (aPriority === bPriority && this.config.errorOnEqualPriority) {
-            throw "You have configured JSONPathTransformer to throw errors on finding templates of equal priority and these have been found.";
-        }
-        
-        return (aPriority > bPriority) ? -1 : 1; // We want equal conditions to go in favor of the later (b)
-    }).some(function (templateObj) {
-        var path = templateObj.path;
-        var json = config.data;
-        var values = JSONPath({json: json, path: path, resultType: 'value', wrap: false, callback: function (parent, property, value, path) {
-            
-        }});
-        if (values) {
-            templateObj.template(values, path, json);
-        }
-        return true;
-    });
 
-    if (!matched) { // Should not get here with default template rules in place
-        throw "No template rules matched";
-    }
+JSONPathTransformer.prototype.defaultRootTemplate = function () {
+    return this.applyTemplates();
 };
+
+JSONPathTransformer.prototype.transform = function () {
+
+    switch (this.rootTemplates.length) {
+        case 0:
+            return this.defaultRootTemplate();
+        default:
+            this.triggerEqualPriorityError();
+            /* Fall-through */
+        case 1:
+            var templateObj = this.rootTemplates[0];
+            var path = templateObj.path;
+            var json = config.data;
+            return templateObj.template(json, path, json);
+    }
+
+};
+
+
 JSONPathTransformer.DefaultTemplateRules = [
     // Todo: Apply default template rules
     /*
