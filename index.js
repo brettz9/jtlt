@@ -2,15 +2,34 @@
 /*jslint vars:true, todo:true*/
 (function (undef) {'use strict';
 
+var jsonpath = JSONPath; // Satisfy JSLint
+
+/**
+* @private
+* @static
+*/
 function _triggerEqualPriorityError (config) {
     if (config.errorOnEqualPriority) {
         throw "You have configured JSONPathTransformer to throw errors on finding templates of equal priority and these have been found.";
     }
 }
 
+/**
+* @private
+* @static
+*/
+function _makeAbsolute (select) {
+    // See todo in JSONPath to avoid need for '$' (but may still need to add ".")
+    return select[0] !== '$' ? '$' + (select[0] === '[' ? '$' : '$.') + select : select;
+}
+
+function _getPriorityBySpecificity (path) {
+    // Todo: Implement
+    
+}
+
 // Todo: utilize
 function JSONTransformerEvaluator (config, templates) {
-    this._contextNode = null;
     this._config = config;
     this._templates = templates;
 }
@@ -18,38 +37,79 @@ function JSONTransformerEvaluator (config, templates) {
 
 JSONTransformerEvaluator.prototype.applyTemplates = function (select, mode) {
     // Todo: adapt this code to only find (and apply) templates per context
+    var that = this;
     if (select && typeof select === 'object') {
         mode = select.mode;
         select = select.select;
     }
-    select = select || '*';
-
-    var config = this.config;
-    var matched = this.templates.sort(function (a, b) {
-
-        var aPriority = typeof a.priority === 'number' ? a.priority : this.getDefaultPriority(a.path);
-        var bPriority = typeof b.priority === 'number' ? b.priority : this.getDefaultPriority(a.path);
-        
-        if (aPriority === bPriority) {
-            _triggerEqualPriorityError(this._config);
-        }
-        
-        return (aPriority > bPriority) ? -1 : 1; // We want equal conditions to go in favor of the later (b)
-    }).some(function (templateObj) {
-        var path = templateObj.path;
-        var json = config.data;
-        var values = JSONPath({json: json, path: path, resultType: 'value', wrap: false, callback: function (parent, property, value, path) {
-            
-        }});
-        if (values) {
-            templateObj.template(values, path, json);
-        }
-        return true;
-    });
-
-    if (!matched) { // Should not get here with default template rules in place
-        throw "No template rules matched";
+    if (!this.hasOwnProperty('_contextNode')) {
+        this._contextNode = this.config.data;
+        this._parent = this.config.parent || null;
+        this._parentProperty = this.config.parentProperty || null;
+        select = select || '$';
     }
+    else {
+        select = select || '*';
+    }
+    select = _makeAbsolute(select);
+    var results;
+    var found = jsonpath({path: select, json: this._contextNode, wrap: false, returnType: 'all', callback: function (preferredOutput) {
+        /*
+        // Utilize
+        preferredOutput.value;
+        that._contextNode;
+        that._parent;
+        that._parentProperty;
+        */
+        
+        var matchedTemplates = this.templates.filter(function (template) {
+            if (!((mode && mode === template.mode) && (!mode && !template.mode))) {
+                return false;
+            }
+            var matches = jsonpath({path: _makeAbsolute(template.path), json: that._contextNode, resultType: 'path', wrap: true});
+            return matches.length && matches.indexOf(preferredOutput.path) > -1;
+        });
+        
+        if (!matchedTemplates) {
+            // Todo: deal with any default templates (by default, should have all defined), including the object and array ones containing this.applyTemplates('*', mode); and this.getDefaultPriority(preferredOutput.path);
+            
+            return;
+        }
+        
+        var matched = matchedTemplates.sort(function (a, b) {
+        
+            // Todo: deal with priority, specificity, order
+
+            var aPriority = typeof a.priority === 'number' ? a.priority : _getPriorityBySpecificity(a.path);
+            var bPriority = typeof b.priority === 'number' ? b.priority : _getPriorityBySpecificity(a.path);
+            
+            if (aPriority === bPriority) {
+                _triggerEqualPriorityError(this._config);
+            }
+            
+            return (aPriority > bPriority) ? -1 : 1; // We want equal conditions to go in favor of the later (b)
+        }).some(function (templateObj) {
+            var path = templateObj.path;
+            var json = that._contextNode;
+            var values = jsonpath({json: json, path: path, resultType: 'value', wrap: false, callback: function (parent, property, value, path) {
+                
+            }});
+            if (values) {
+                templateObj.template(values, path, json);
+            }
+            return true;
+        });
+
+        if (!matched) { // Should not get here with default template rules in place
+            throw "No template rules matched";
+        }
+        
+        results.add(matched.shift());
+    }});
+    if (!found) {
+        
+    }
+    return results;
 };
 JSONTransformerEvaluator.prototype.callTemplate = function (name, withParam) {
     var value;
@@ -117,18 +177,17 @@ JSONPathTransformer.prototype.defaultRootTemplate = function () {
 
 JSONPathTransformer.prototype.transform = function () {
     var jte = new JSONTransformerEvaluator(this.config, this.templates);
-    switch (this.rootTemplates.length) {
-        case 0:
-            return this.defaultRootTemplate.call(jte);
-        default:
-            _triggerEqualPriorityError(this.config);
-            /* Fall-through */
-        case 1:
-            var templateObj = this.rootTemplates.pop();
-            var path = templateObj.path;
-            var json = config.data;
-            return templateObj.template.call(jte, json, path, json);
+    var len = this.rootTemplates.length;
+    if (!len) {
+        return this.defaultRootTemplate.call(jte);
     }
+    if (len === 1) {
+        _triggerEqualPriorityError(this.config);
+    }
+    var templateObj = this.rootTemplates.pop();
+    var path = templateObj.path;
+    var json = this.config.data;
+    return templateObj.template.call(jte, json, path, json);
 };
 
 
