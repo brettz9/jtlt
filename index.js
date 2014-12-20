@@ -2,20 +2,28 @@
 /*jslint vars:true, todo:true*/
 (function (undef) {'use strict';
 
-
-// Todo: utilize
-function JSONTransformerEvaluator () {
-
-}
-
-JSONTransformerEvaluator.prototype.triggerEqualPriorityError = function () {
-    if (this.config.errorOnEqualPriority) {
+function _triggerEqualPriorityError (config) {
+    if (config.errorOnEqualPriority) {
         throw "You have configured JSONPathTransformer to throw errors on finding templates of equal priority and these have been found.";
     }
-};
+}
 
-JSONTransformerEvaluator.prototype.applyTemplates = function () {
+// Todo: utilize
+function JSONTransformerEvaluator (config, templates) {
+    this._contextNode = null;
+    this._config = config;
+    this._templates = templates;
+}
+
+
+JSONTransformerEvaluator.prototype.applyTemplates = function (select, mode) {
     // Todo: adapt this code to only find (and apply) templates per context
+    if (select && typeof select === 'object') {
+        mode = select.mode;
+        select = select.select;
+    }
+    select = select || '*';
+
     var config = this.config;
     var matched = this.templates.sort(function (a, b) {
 
@@ -23,7 +31,7 @@ JSONTransformerEvaluator.prototype.applyTemplates = function () {
         var bPriority = typeof b.priority === 'number' ? b.priority : this.getDefaultPriority(a.path);
         
         if (aPriority === bPriority) {
-            this.triggerEqualPriorityError();
+            _triggerEqualPriorityError(this._config);
         }
         
         return (aPriority > bPriority) ? -1 : 1; // We want equal conditions to go in favor of the later (b)
@@ -45,6 +53,10 @@ JSONTransformerEvaluator.prototype.applyTemplates = function () {
 };
 JSONTransformerEvaluator.prototype.callTemplate = function (name, withParam) {
     var value;
+    if (name && typeof name === 'object') {
+        withParam = name.withParam;
+        name = name.name;
+    }
     var template = this.templates.find(function (template) {
         value = withParam.value; // Todo: Support withParam.select (with reference to current context)
         return template.name === name;
@@ -104,17 +116,18 @@ JSONPathTransformer.prototype.defaultRootTemplate = function () {
 };
 
 JSONPathTransformer.prototype.transform = function () {
+    var jte = new JSONTransformerEvaluator(this.config, this.templates);
     switch (this.rootTemplates.length) {
         case 0:
-            return this.defaultRootTemplate();
+            return this.defaultRootTemplate.call(jte);
         default:
-            this.triggerEqualPriorityError();
+            _triggerEqualPriorityError(this.config);
             /* Fall-through */
         case 1:
             var templateObj = this.rootTemplates.pop();
             var path = templateObj.path;
             var json = config.data;
-            return templateObj.template(json, path, json);
+            return templateObj.template.call(jte, json, path, json);
     }
 };
 
