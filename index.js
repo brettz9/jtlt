@@ -2,7 +2,9 @@
 /*jslint vars:true, todo:true*/
 (function (undef) {'use strict';
 
-var jsonpath = JSONPath; // Satisfy JSLint
+// Satisfy JSLint
+var jsonpath = JSONPath;
+var JSONPathTransformer;
 
 /**
 * @private
@@ -30,7 +32,7 @@ XSLTStyleJSONPathResolver.prototype.getPriorityBySpecificity = function (path) {
     if (terminal.match(/^(?:\^|\*|@.*?\(\))$/)) { // *, ^, @string() (comparable to XSLT's *, @*, and node tests)
         return -0.5;
     }
-    if (terminal.match(/^(?:\.+|\[.*?\])$/))) { // ., .., [], [()], [(?)] (comparable to XSLT's /, //, or [])
+    if (terminal.match(/^(?:\.+|\[.*?\])$/)) { // ., .., [], [()], [(?)] (comparable to XSLT's /, //, or [])
         return 0.5;
     }
     return 0; // single name (i.e., $..someName or someName if allowing such relative paths) (comparable to XSLT's identifying a particular element or attribute name)
@@ -143,7 +145,7 @@ JSONPathTransformerContext.prototype.valueOf = function () {
 /**
 * @param {boolean} config.errorOnEqualPriority
 */
-function JSONPathTransformer (config) {
+JSONPathTransformer = function JSONPathTransformer (config) {
     if (!(this instanceof JSONPathTransformer)) {
         return new JSONPathTransformer(config);
     }
@@ -162,7 +164,7 @@ function JSONPathTransformer (config) {
     });
     map = null;
     this.transform();
-}
+};
 
 JSONPathTransformer.prototype.defaultRootTemplate = function () {
     return this.applyTemplates();
