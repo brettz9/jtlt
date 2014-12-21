@@ -14,16 +14,13 @@ function _triggerEqualPriorityError (config) {
     }
 }
 
-/**
-* @private
-* @static
-*/
-function _makeAbsolute (select) {
-    // See todo in JSONPath to avoid need for '$' (but may still need to add ".")
-    return select[0] !== '$' ? '$' + (select[0] === '[' ? '$' : '$.') + select : select;
-}
 
-function _getPriorityBySpecificity (path) {
+function XSLTStyleJSONPathResolver () {
+    if (!(this instanceof XSLTStyleJSONPathResolver)) {
+        return new XSLTStyleJSONPathResolver();
+    }
+}
+XSLTStyleJSONPathResolver.prototype.getPriorityBySpecificity = function (path) {
     if (typeof path === 'string') {
         path = JSONPath.toPathArray(path);
     }
@@ -37,16 +34,16 @@ function _getPriorityBySpecificity (path) {
         return 0.5;
     }
     return 0; // single name (i.e., $..someName or someName if allowing such relative paths) (comparable to XSLT's identifying a particular element or attribute name)
-}
+};
 
 // Todo: utilize
-function JSONTransformerEvaluator (config, templates) {
+function JSONPathTransformerContext (config, templates) {
     this._config = config;
     this._templates = templates;
 }
 
 
-JSONTransformerEvaluator.prototype.applyTemplates = function (select, mode) {
+JSONPathTransformerContext.prototype.applyTemplates = function (select, mode) {
     // Todo: adapt this code to only find (and apply) templates per context
     var that = this;
     if (select && typeof select === 'object') {
@@ -62,7 +59,7 @@ JSONTransformerEvaluator.prototype.applyTemplates = function (select, mode) {
     else {
         select = select || '*';
     }
-    select = _makeAbsolute(select);
+    select = JSONPathTransformer.makeJSONPathAbsolute(select);
     var results;
     var modeMatchedTemplates = this.templates.filter(function (template) {
         return ((mode && mode === template.mode) && (!mode && !template.mode));
@@ -77,7 +74,7 @@ JSONTransformerEvaluator.prototype.applyTemplates = function (select, mode) {
         */
         
         var pathMatchedTemplates = modeMatchedTemplates.filter(function (template) {
-            return jsonpath({path: _makeAbsolute(template.path), json: that._contextNode, resultType: 'path', wrap: true}).includes(preferredOutput.path);
+            return jsonpath({path: JSONPathTransformer.makeJSONPathAbsolute(template.path), json: that._contextNode, resultType: 'path', wrap: true}).includes(preferredOutput.path);
         });
         
         if (!pathMatchedTemplates) {
@@ -88,10 +85,10 @@ JSONTransformerEvaluator.prototype.applyTemplates = function (select, mode) {
         
         var matched = pathMatchedTemplates.sort(function (a, b) {
         
-            // Todo: deal with priority, specificity, order
+            // Todo: deal with order after priority/specificity
 
-            var aPriority = typeof a.priority === 'number' ? a.priority : _getPriorityBySpecificity(a.path);
-            var bPriority = typeof b.priority === 'number' ? b.priority : _getPriorityBySpecificity(a.path);
+            var aPriority = typeof a.priority === 'number' ? a.priority : that._config.specificityPriorityResolver(a.path);
+            var bPriority = typeof b.priority === 'number' ? b.priority : that._config.specificityPriorityResolver(a.path);
             
             if (aPriority === bPriority) {
                 _triggerEqualPriorityError(this._config);
@@ -121,7 +118,7 @@ JSONTransformerEvaluator.prototype.applyTemplates = function (select, mode) {
     }
     return results;
 };
-JSONTransformerEvaluator.prototype.callTemplate = function (name, withParam) {
+JSONPathTransformerContext.prototype.callTemplate = function (name, withParam) {
     var value;
     if (name && typeof name === 'object') {
         withParam = name.withParam;
@@ -136,10 +133,10 @@ JSONTransformerEvaluator.prototype.callTemplate = function (name, withParam) {
     }
     return template(value); // Todo: provide context
 };
-JSONTransformerEvaluator.prototype.forEach = function () {
+JSONPathTransformerContext.prototype.forEach = function () {
     
 };
-JSONTransformerEvaluator.prototype.valueOf = function () {
+JSONPathTransformerContext.prototype.valueOf = function () {
 
 };
 
@@ -172,7 +169,7 @@ JSONPathTransformer.prototype.defaultRootTemplate = function () {
 };
 
 JSONPathTransformer.prototype.transform = function () {
-    var jte = new JSONTransformerEvaluator(this.config, this.templates);
+    var jte = new JSONPathTransformerContext(this.config, this.templates);
     var len = this.rootTemplates.length;
     if (!len) {
         return this.defaultRootTemplate.call(jte);
@@ -184,6 +181,15 @@ JSONPathTransformer.prototype.transform = function () {
     var path = templateObj.path;
     var json = this.config.data;
     return templateObj.template.call(jte, json, path, json);
+};
+
+/**
+* @private
+* @static
+*/
+JSONPathTransformer.makeJSONPathAbsolute = function (select) {
+    // See todo in JSONPath to avoid need for '$' (but may still need to add ".")
+    return select[0] !== '$' ? '$' + (select[0] === '[' ? '$' : '$.') + select : select;
 };
 
 
@@ -212,6 +218,7 @@ JSONPathTransformer.DefaultTemplateRules = [
 * @param {string} [config.mode=''] The mode in which to begin the transform.
 * @param {function} [config.engine=JSONPathTransformer] Will be based the same config as passed to this instance. Defaults to a transforming function based on JSONPath and with its own set of priorities for processing templates.
 * @returns {JTLT} A JTLT instance object
+* @todo Remove JSONPath dependency in query use of '$'?
 */
 function JTLT (config) {
     if (!(this instanceof JTLT)) {
@@ -240,6 +247,12 @@ JTLT.prototype.setDefaults = function (config) {
     this.config.errorOnEqualPriority = config.errorOnEqualPriority || false;
     this.config = config || {};
     this.config.engine = this.config.engine || JSONPathTransformer;
+    this.config.specificityPriorityResolver = (function () {
+        var xsjpr = new XSLTStyleJSONPathResolver();
+        return function (path) {
+            xsjpr.getPriorityBySpecificity(path);
+        };
+    }());
     return this;
 };
 /**
@@ -268,6 +281,8 @@ if (typeof exports !== 'undefined') {
 else {
     window.JTLT = JTLT;
     window.JSONPathTransformer = JSONPathTransformer;
+    window.JSONPathTransformerContext = JSONPathTransformerContext;
+    window.XSLTStyleJSONPathResolver = XSLTStyleJSONPathResolver;
 }
 
 
