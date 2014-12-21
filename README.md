@@ -47,4 +47,5 @@ from XSLT).
         - [Default template rules](http://docstore.mik.ua/orelly/xml/xmlnut/ch08_07.htm).
 - Reconcile a [non-eval PR for JSONPath](https://github.com/s3u/JSONPath/pull/4) with my [own fork](https://github.com/brettz9/JSONPath). The OR condition (outside of filters) is another important feature as would be schema-aware path results.
 - Allow hybrid JSON/Jamilih or JSON/(X)HTML/XML so that one can add XPath or query into HTML in a relevant manner; then namespace prioritizing could be added
+- Document API!
 
