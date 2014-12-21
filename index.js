@@ -53,6 +53,9 @@ JSONTransformerEvaluator.prototype.applyTemplates = function (select, mode) {
     }
     select = _makeAbsolute(select);
     var results;
+    var modeMatchedTemplates = this.templates.filter(function (template) {
+        return ((mode && mode === template.mode) && (!mode && !template.mode));
+    });
     var found = jsonpath({path: select, json: this._contextNode, wrap: false, returnType: 'all', callback: function (preferredOutput) {
         /*
         // Utilize
@@ -62,21 +65,17 @@ JSONTransformerEvaluator.prototype.applyTemplates = function (select, mode) {
         that._parentProperty;
         */
         
-        var matchedTemplates = this.templates.filter(function (template) {
-            if (!((mode && mode === template.mode) && (!mode && !template.mode))) {
-                return false;
-            }
-            var matches = jsonpath({path: _makeAbsolute(template.path), json: that._contextNode, resultType: 'path', wrap: true});
-            return matches.length && matches.indexOf(preferredOutput.path) > -1;
+        var pathMatchedTemplates = modeMatchedTemplates.filter(function (template) {
+            return jsonpath({path: _makeAbsolute(template.path), json: that._contextNode, resultType: 'path', wrap: true}).includes(preferredOutput.path);
         });
         
-        if (!matchedTemplates) {
+        if (!pathMatchedTemplates) {
             // Todo: deal with any default templates (by default, should have all defined), including the object and array ones containing this.applyTemplates('*', mode); and this.getDefaultPriority(preferredOutput.path);
             
             return;
         }
         
-        var matched = matchedTemplates.sort(function (a, b) {
+        var matched = pathMatchedTemplates.sort(function (a, b) {
         
             // Todo: deal with priority, specificity, order
 
