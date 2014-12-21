@@ -30,13 +30,13 @@ function _getPriorityBySpecificity (path) {
     // Todo: Let's also, unlike XSLT, give options for higher priority to absolute fixed paths over recursive descent and priority to longer paths and lower to wildcard terminal points
     
     var terminal = path.slice(-1);
-    if (terminal.match(/\^|\*|@.*?\(\)$/)) { // *, ^, @string() (comparable to XSLT's *, @*, and node tests)
+    if (terminal.match(/^(?:\^|\*|@.*?\(\))$/)) { // *, ^, @string() (comparable to XSLT's *, @*, and node tests)
         return -0.5;
     }
-    if (terminal.match(/^(\.+|\[.*?\])$/))) { // ., .., [], [()], [(?)] (comparable to XSLT's /, //, or [])
+    if (terminal.match(/^(?:\.+|\[.*?\])$/))) { // ., .., [], [()], [(?)] (comparable to XSLT's /, //, or [])
         return 0.5;
     }
-    return 0; // single name (i.e., $..someName or someName if allowing such relative paths)
+    return 0; // single name (i.e., $..someName or someName if allowing such relative paths) (comparable to XSLT's identifying a particular element or attribute name)
 }
 
 // Todo: utilize
