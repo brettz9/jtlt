@@ -24,8 +24,19 @@ function _makeAbsolute (select) {
 }
 
 function _getPriorityBySpecificity (path) {
-    // Todo: Implement
+    if (typeof path === 'string') {
+        path = JSONPath.toPathArray(path);
+    }
+    // Todo: Let's also, unlike XSLT, give options for higher priority to absolute fixed paths over recursive descent and priority to longer paths and lower to wildcard terminal points
     
+    var terminal = path.slice(-1);
+    if (terminal.match(/\^|\*|@.*?\(\)$/)) { // *, ^, @string() (comparable to XSLT's *, @*, and node tests)
+        return -0.5;
+    }
+    if (terminal.match(/^(\.+|\[.*?\])$/))) { // ., .., [], [()], [(?)] (comparable to XSLT's /, //, or [])
+        return 0.5;
+    }
+    return 0; // single name (i.e., $..someName or someName if allowing such relative paths)
 }
 
 // Todo: utilize
@@ -155,20 +166,6 @@ function JSONPathTransformer (config) {
     map = null;
     this.transform();
 }
-JSONPathTransformer.prototype.getDefaultPriority = function (path) {
-    if (typeof path === 'string') {
-        path = JSONPath.toPathArray(path);
-    }
-    // Todo: Path specificity
-    // Let's also, unlike XSLT, give higher priority to absolute fixed paths over recursive descent and priority to longer paths and lower to wildcard terminal points
-    
-    // -.5 = *, @string() (etc.)
-    // -.25 = Namespace (not relevant without Jamilih)
-    // 0 = single name (i.e., $..someName or someName if allowing such relative paths)
-    // .5 = ., .., [], [()], [(?)]
-
-};
-
 
 JSONPathTransformer.prototype.defaultRootTemplate = function () {
     return this.applyTemplates();
