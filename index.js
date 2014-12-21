@@ -26,7 +26,6 @@ XSLTStyleJSONPathResolver.prototype.getPriorityBySpecificity = function (path) {
     if (typeof path === 'string') {
         path = JSONPath.toPathArray(path);
     }
-    // Todo: Let's also, unlike XSLT, give options for higher priority to absolute fixed paths over recursive descent and priority to longer paths and lower to wildcard terminal points
     
     var terminal = path.slice(-1);
     if (terminal.match(/^(?:\^|\*|@.*?\(\))$/)) { // *, ^, @string() (comparable to XSLT's *, @*, and node tests)
@@ -38,7 +37,7 @@ XSLTStyleJSONPathResolver.prototype.getPriorityBySpecificity = function (path) {
     return 0; // single name (i.e., $..someName or someName if allowing such relative paths) (comparable to XSLT's identifying a particular element or attribute name)
 };
 
-// Todo: utilize
+
 function JSONPathTransformerContext (config, templates) {
     this._config = config;
     this._templates = templates;
@@ -249,6 +248,7 @@ JTLT.prototype.setDefaults = function (config) {
     this.config.errorOnEqualPriority = config.errorOnEqualPriority || false;
     this.config = config || {};
     this.config.engine = this.config.engine || JSONPathTransformer;
+    // Todo: Let's also, unlike XSLT and the following, give options for higher priority to absolute fixed paths over recursive descent and priority to longer paths and lower to wildcard terminal points
     this.config.specificityPriorityResolver = (function () {
         var xsjpr = new XSLTStyleJSONPathResolver();
         return function (path) {
