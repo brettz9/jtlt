@@ -27,6 +27,7 @@ function StringJoiningTransformer (s) {
 }
 StringJoiningTransformer.prototype.add = function (s) {
     this._str += s;
+    return this;
 };
 StringJoiningTransformer.prototype.get = function () {
     return this._str;
@@ -57,14 +58,26 @@ XSLTStyleJSONPathResolver.prototype.getPriorityBySpecificity = function (path) {
 function JSONPathTransformerContext (config, templates) {
     this._config = config;
     this._templates = templates;
+    this._contextObj = config.data;
+    this._parent = config.parent || null;
+    this._parentProperty = config.parentProperty || null;
 }
 
-JSONPathTransformerContext.prototype.get = function () { // Note: This may be removed in the future in favor of valueOf
-    return this._contextObj; // or return this.valueOf('.'); ?
+JSONPathTransformerContext.prototype._getJoiningTransformer = function () {
+    return this._config.joiningTransformer;
+};
+
+// Get is provided as a convenience method for templates, but it should typically not be used (use valueOf to add to the result tree instead)
+JSONPathTransformerContext.prototype.get = function (select) {
+    if (select) {
+        return jsonpath({path: select, json: this._contextObj, preventEval: this._config.preventEval, wrap: false, returnType: 'value'});
+    }
+    return this._contextObj;
 };
 
 JSONPathTransformerContext.prototype.set = function (v) {
     this._parent[this._parentProperty] = v;
+    return this;
 };
 
 JSONPathTransformerContext.prototype.applyTemplates = function (select, mode) {
@@ -73,21 +86,19 @@ JSONPathTransformerContext.prototype.applyTemplates = function (select, mode) {
         mode = select.mode;
         select = select.select;
     }
-    if (!this.hasOwnProperty('_contextObj')) {
-        this._contextObj = this._config.data;
-        this._parent = this._config.parent || null;
-        this._parentProperty = this._config.parentProperty || null;
+    if (!this._initialized) {
         select = select || '$';
+        this._initialized = true;
     }
     else {
         select = select || '*';
     }
     select = JSONPathTransformer.makeJSONPathAbsolute(select);
-    var results = this._config.joiningTransformer;
+    var results = this._getJoiningTransformer();
     var modeMatchedTemplates = this.templates.filter(function (templateObj) {
         return ((mode && mode === templateObj.mode) && (!mode && !templateObj.mode));
     });
-    var found = jsonpath({path: select, json: this._contextObj, preventEval: this._config.preventEval, wrap: false, returnType: 'all', callback: function (preferredOutput) {
+    jsonpath({path: select, json: this._contextObj, preventEval: this._config.preventEval, wrap: false, returnType: 'all', callback: function (preferredOutput) {
         // Todo: For remote JSON stores, could optimize this to first get template paths and cache by template (and then query the remote JSON and transform as results arrive)
         var value = preferredOutput.value;
         var parent = preferredOutput.parent;
@@ -149,32 +160,48 @@ JSONPathTransformerContext.prototype.applyTemplates = function (select, mode) {
         
         results.add(result);
     }});
-    if (!found) {
-        return;
-    }
-    return results.get();
+    return this;
 };
-JSONPathTransformerContext.prototype.callTemplate = function (name, withParam) {
-    var value;
+JSONPathTransformerContext.prototype.callTemplate = function (name, withParams) {
+    withParams = withParams || [];
+    var paramValues = withParams.map(function (withParam) {
+        return withParam.value || this.get(withParam.select);
+    });
+    var results = this._getJoiningTransformer();
     if (name && typeof name === 'object') {
-        withParam = name.withParam;
+        withParams = name.withParam || withParams;
         name = name.name;
     }
-    var template = this.templates.find(function (template) {
-        value = withParam.value; // Todo: Support withParam.select (with reference to current context)
+    var templateObj = this.templates.find(function (template) {
         return template.name === name;
     });
-    if (!template) {
+    if (!templateObj) {
         throw "Template, " + name + ", cannot be called as it was not found.";
     }
-    return template(value); // Todo: provide context
+    
+    var result = templateObj.template.apply(this, paramValues);
+    results.add(result);
+    return this;
 };
 
-JSONPathTransformerContext.prototype.forEach = function () {
-    // todo: 
+JSONPathTransformerContext.prototype.forEach = function (select, cb) {
+    var that = this;
+    jsonpath({path: select, json: this._contextObj, preventEval: this._config.preventEval, wrap: false, returnType: 'value', callback: function (value) {
+        cb.call(that, value);
+    }});
+    return this;
 };
-JSONPathTransformerContext.prototype.valueOf = function () {
-    // todo: 
+JSONPathTransformerContext.prototype.valueOf = function (select) {
+    var results = this._getJoiningTransformer();
+    var result;
+    if (select === '.') {
+        result = this._contextObj;
+    }
+    else {
+        result = this.get(select);
+    }
+    results.add(result);
+    return this;
 };
 
 /**
@@ -198,20 +225,20 @@ JSONPathTransformer = function JSONPathTransformer (config) {
         }
     });
     map = null;
-    this.transform();
 };
 
 
-JSONPathTransformer.prototype.transform = function () {
+JSONPathTransformer.prototype.transform = function (mode) {
     var jte = new JSONPathTransformerContext(this.config, this.templates);
     var len = this.rootTemplates.length;
     var templateObj = len ? this.rootTemplates.pop() : JSONPathTransformer.DefaultTemplateRules.transformRoot;
     if (len > 1) {
         _triggerEqualPriorityError(this.config);
     }
-    var path = templateObj.path;
-    var json = this.config.data;
-    return templateObj.template.call(jte, json, path, json);
+    var results = this.config.joiningTransformer;
+    var result = templateObj.template.call(jte, mode);
+    results.add(result);
+    return results.get();
 };
 
 /**
@@ -227,32 +254,32 @@ JSONPathTransformer.makeJSONPathAbsolute = function (select) {
 JSONPathTransformer.DefaultTemplateRules = {
     transformRoot: {
         template: function (mode) {
-            return this.applyTemplates(null, mode);
+            this.applyTemplates(null, mode);
         }
     },
     transformPropertyNames: {
         template: function () {
-            return this.valueOf('.');
+            this.valueOf('.');
         }
     },
     transformObjects: {
         template: function (mode) {
-            return this.applyTemplates(null, mode);
+            this.applyTemplates(null, mode);
         }
     },
     transformArrays: {
         template: function (mode) {
-            return this.applyTemplates(null, mode);
+            this.applyTemplates(null, mode);
         }
     },
     transformScalars: {
         template: function () {
-            return this.valueOf('.');
+            this.valueOf('.');
         }
     },
     transformFunctions: {
         template: function () {
-            return this.valueOf('.')();
+            this.valueOf('.')();
         }
     }
 };
@@ -287,17 +314,19 @@ function JTLT (config) {
     this.setDefaults(config);
     var that = this;
     if (this.config.ajaxData) {
-        getJSON(this.config.ajaxData, function (json) {
-            that.config.data = json;
-            that._autoStart();
-        });
+        getJSON(this.config.ajaxData, (function (config) {
+            return function (json) {
+                that.config.data = json;
+                that._autoStart(config.mode);
+            };
+        }(config)));
         return this;
     }
-    this._autoStart();
+    this._autoStart(config.mode);
 }
-JTLT.prototype._autoStart = function () {
+JTLT.prototype._autoStart = function (mode) {
     if (this.config.autostart !== false || this.ready) {
-        this.config.success(this.transform());
+        this.config.success(this.transform(mode));
     }
 };
 JTLT.prototype.setDefaults = function (config) {
@@ -305,7 +334,10 @@ JTLT.prototype.setDefaults = function (config) {
     this.templates = query ? [{name: 'root', path: '$', template: query}] : (config.templates || [config.template]);
     this.config.errorOnEqualPriority = config.errorOnEqualPriority || false;
     this.config = config || {};
-    this.config.engine = this.config.engine || JSONPathTransformer;
+    this.config.engine = this.config.engine || function (config) {
+        var jpt = new JSONPathTransformer(config);
+        return jpt.transform(config.mode);
+    };
     // Todo: Let's also, unlike XSLT and the following, give options for higher priority to absolute fixed paths over recursive descent and priority to longer paths and lower to wildcard terminal points
     this.config.specificityPriorityResolver = this.config.specificityPriorityResolver || (function () {
         var xsjpr = new XSLTStyleJSONPathResolver();
@@ -321,7 +353,7 @@ JTLT.prototype.setDefaults = function (config) {
 * @todo Allow for a success callback in case the jsonpath code is modified
          to work asynchronously (as with queries to access remote JSON stores)
 */
-JTLT.prototype.transform = function () {
+JTLT.prototype.transform = function (mode) {
     if (this.config.data === undef) {
         if (this.config.ajaxData) {
             this.ready = true;
@@ -333,7 +365,7 @@ JTLT.prototype.transform = function () {
         throw "You must supply a 'success' callback";
     }
 
-    return this.config.engine({templates: this.templates, json: this.config.data});
+    return this.config.engine({templates: this.templates, json: this.config.data, mode: mode});
 };
 
 
