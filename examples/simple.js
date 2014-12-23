@@ -6,15 +6,14 @@ JTLT({
     templates: [{
         name: 'author', // For use with calling templates
         path: '$.store.book[*].author',
-        template: function (parent, property, value/*, path, obj*/) {
-            parent[property] = '<b>' + value + '</b>';
-            return 's:' + parent;
+        template: function () {
+            this.set('<b>' + value + '</b>');
         }
     }],
     ajaxData: 'data/jsonpath-sample.json',
     success: function (result) {
         alert('result:'+result);
     }
-});
+}).transform();
 
 }());
