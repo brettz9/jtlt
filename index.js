@@ -1,7 +1,7 @@
 /*global JSONPath, getJSON, require, exports*/
 /*jslint vars:true, todo:true*/
 var getJSON;
-if (typeof require === 'undefined') {
+if (typeof require !== 'undefined') {
     getJSON = require('simple-get-json');
 }
 
@@ -336,10 +336,11 @@ JTLT.prototype._autoStart = function (mode) {
     }
 };
 JTLT.prototype.setDefaults = function (config) {
+    this.config = config || {};
+    config = this.config;
     var query = config.query || (typeof config.templates === 'function' ? config.templates : (typeof config.template === 'function' ? config.template : null));
     this.templates = query ? [{name: 'root', path: '$', template: query}] : (config.templates || [config.template]);
     this.config.errorOnEqualPriority = config.errorOnEqualPriority || false;
-    this.config = config || {};
     this.config.engine = this.config.engine || function (config) {
         var jpt = new JSONPathTransformer(config);
         return jpt.transform(config.mode);
