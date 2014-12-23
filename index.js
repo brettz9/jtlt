@@ -101,7 +101,7 @@ JSONPathTransformerContext.prototype.applyTemplates = function (select, mode) {
     }
     select = JSONPathTransformer.makeJSONPathAbsolute(select);
     var results = this._getJoiningTransformer();
-    var modeMatchedTemplates = this.templates.filter(function (templateObj) {
+    var modeMatchedTemplates = this._templates.filter(function (templateObj) {
         return ((mode && mode === templateObj.mode) && (!mode && !templateObj.mode));
     });
     jsonpath({path: select, json: this._contextObj, preventEval: this._config.preventEval, wrap: false, returnType: 'all', callback: function (preferredOutput) {
@@ -178,7 +178,7 @@ JSONPathTransformerContext.prototype.callTemplate = function (name, withParams) 
         withParams = name.withParam || withParams;
         name = name.name;
     }
-    var templateObj = this.templates.find(function (template) {
+    var templateObj = this._templates.find(function (template) {
         return template.name === name;
     });
     if (!templateObj) {
