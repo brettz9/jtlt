@@ -26,7 +26,7 @@ function StringJoiningTransformer (s) {
     this._str = s || '';
 }
 StringJoiningTransformer.prototype.add = function (s) {
-    this.str += s;
+    this._str += s;
 };
 StringJoiningTransformer.prototype.get = function () {
     return this._str;
@@ -67,8 +67,8 @@ JSONPathTransformerContext.prototype.applyTemplates = function (select, mode) {
         mode = select.mode;
         select = select.select;
     }
-    if (!this.hasOwnProperty('_contextNode')) {
-        this._contextNode = this.config.data;
+    if (!this.hasOwnProperty('_contextObj')) {
+        this._contextObj = this.config.data;
         this._parent = this.config.parent || null;
         this._parentProperty = this.config.parentProperty || null;
         select = select || '$';
@@ -78,59 +78,59 @@ JSONPathTransformerContext.prototype.applyTemplates = function (select, mode) {
     }
     select = JSONPathTransformer.makeJSONPathAbsolute(select);
     var results = this._config.joiningTransformer;
-    var modeMatchedTemplates = this.templates.filter(function (template) {
-        return ((mode && mode === template.mode) && (!mode && !template.mode));
+    var modeMatchedTemplates = this.templates.filter(function (templateObj) {
+        return ((mode && mode === templateObj.mode) && (!mode && !templateObj.mode));
     });
-    var found = jsonpath({path: select, json: this._contextNode, wrap: false, returnType: 'all', callback: function (preferredOutput) {
-        /*
-        // Utilize
-        preferredOutput.value;
-        that._contextNode;
-        that._parent;
-        that._parentProperty;
-        */
+    var found = jsonpath({path: select, json: this._contextObj, wrap: false, returnType: 'all', callback: function (preferredOutput) {
+        // Todo: For remote JSON stores, could optimize this to first get template paths and cache by template (and then query the remote JSON and transform as results arrive)
+        var value = preferredOutput.value;
+        var parent = preferredOutput.parent;
+        var parentProperty = preferredOutput.parentProperty;
         
-        var pathMatchedTemplates = modeMatchedTemplates.filter(function (template) {
-            return jsonpath({path: JSONPathTransformer.makeJSONPathAbsolute(template.path), json: that._contextNode, resultType: 'path', wrap: true}).includes(preferredOutput.path);
-        });
-        
-        if (!pathMatchedTemplates) {
-            // Todo: deal with any default templates (by default, should have all defined), including the object and array ones containing this.applyTemplates('*', mode); and this.getDefaultPriority(preferredOutput.path);
-            
-            return;
-        }
-        
-        var matched = pathMatchedTemplates.sort(function (a, b) {
-        
-            var aPriority = typeof a.priority === 'number' ? a.priority : that._config.specificityPriorityResolver(a.path);
-            var bPriority = typeof b.priority === 'number' ? b.priority : that._config.specificityPriorityResolver(a.path);
-            
-            if (aPriority === bPriority) {
-                _triggerEqualPriorityError(this._config);
-            }
-            
-            return (aPriority > bPriority) ? -1 : 1; // We want equal conditions to go in favor of the later (b)
-        }).some(function (templateObj) {
-            var path = templateObj.path;
-            var json = that._contextNode;
-            var values = jsonpath({json: json, path: path, resultType: 'value', wrap: false, callback: function (parent, property, value, path) {
-                // Todo: 
-                
-            }});
-            if (values) {
-                templateObj.template(values, path, json);
-            }
-            return true;
+        var pathMatchedTemplates = modeMatchedTemplates.filter(function (templateObj) {
+            return jsonpath({path: JSONPathTransformer.makeJSONPathAbsolute(templateObj.path), json: that._contextObj, resultType: 'path', wrap: true}).includes(preferredOutput.path);
         });
 
-        if (!matched) { // Should not get here with default template rules in place
-            throw "No template rules matched";
+        var templateObj;
+        if (!pathMatchedTemplates.length) {
+            // Todo: deal with any default templates (by default, should have all defined), including the object and array ones containing this.applyTemplates('*', mode); and this.getDefaultPriority(preferredOutput.path);
+            /*
+            // Todo: Handle default templates
+            templateObj = ;
+            */
+            return;
+        }
+        else {
+            // Todo: Could perform this first and cache by template
+            pathMatchedTemplates.sort(function (a, b) {
+                var aPriority = typeof a.priority === 'number' ? a.priority : that._config.specificityPriorityResolver(a.path);
+                var bPriority = typeof b.priority === 'number' ? b.priority : that._config.specificityPriorityResolver(a.path);
+                
+                if (aPriority === bPriority) {
+                    _triggerEqualPriorityError(this._config);
+                }
+                
+                return (aPriority > bPriority) ? -1 : 1; // We want equal conditions to go in favor of the later (b)
+            });
+            
+            templateObj = pathMatchedTemplates.shift();
         }
         
-        results.add(matched.shift());
+        that._contextObj = value;
+        that._parent = parent;
+        that._parentProperty = parentProperty;
+
+        var result = templateObj.template.call(that, value, that._parent, that._parentProperty);
+        
+        // Child templates may have changed the context
+        that._contextObj = value;
+        that._parent = parent;
+        that._parentProperty = parentProperty;
+        
+        results.add(result);
     }});
     if (!found) {
-        
+        return;
     }
     return results.get();
 };
@@ -280,6 +280,8 @@ JTLT.prototype.setDefaults = function (config) {
 };
 /**
 * @returns {any}
+* @todo Allow for a success callback in case the jsonpath code is modified
+         to work asynchronously (as with queries to access remote JSON stores)
 */
 JTLT.prototype.transform = function () {
     if (this.config.data === undef) {
