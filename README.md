@@ -36,16 +36,14 @@ from XSLT).
     1. longer paths
     1. Non-wildcard terminal points (not only lower priority to raw wildcards)
 
-# Todos
-- Implement and demo equivalent to applying and calling templates, and root template
-    - As with XSLT, have priority determined by:
-        - Presence of any root template
-            - Have at least basic flow direction methods like XSL's call-template/apply-templates/for-each
-        - Any user-supplied priority for a given template
-        - Default matching priority for user templates indicated by the template's [path specificity](http://lenzconsulting.com/how-xslt-works/#priority) (JSONPath)
-        - Go by last template if match (with option to give warning, as in XSLT)
-        - [Default template rules](http://docstore.mik.ua/orelly/xml/xmlnut/ch08_07.htm).
-- Reconcile a [non-eval PR for JSONPath](https://github.com/s3u/JSONPath/pull/4) with my [own fork](https://github.com/brettz9/JSONPath). The OR condition (outside of filters) is another important feature as would be schema-aware path results.
-- Allow hybrid JSON/Jamilih or JSON/(X)HTML/XML so that one can add XPath or query into HTML in a relevant manner; then namespace prioritizing could be added
-- Document API!
+# Immediate todos
+- Call template: context node
+- forEach
+- valueOf
 
+# Possible todos
+- Implement and demo equivalent to applying and calling templates, and root template
+- Reconcile a [non-eval PR for JSONPath](https://github.com/s3u/JSONPath/pull/4) with my [own fork](https://github.com/brettz9/JSONPath). The OR condition (outside of filters) is another important feature as would be schema-aware path results.
+- Allow hybrid JSON/Jamilih or JSON/(X)HTML/XML so that one can add XPath or query into HTML in a relevant manner
+- Document API here!
+- See code for other possible todos
