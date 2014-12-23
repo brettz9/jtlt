@@ -44,10 +44,10 @@ XSLTStyleJSONPathResolver.prototype.getPriorityBySpecificity = function (path) {
     }
     
     var terminal = path.slice(-1);
-    if (terminal.match(/^(?:\^|\*|@.*?\(\))$/)) { // *, ^, @string() (comparable to XSLT's *, @*, and node tests)
+    if (terminal.match(/^(?:\*|~|@.*?\(\))$/)) { // *, ~, @string() (comparable to XSLT's *, @*, and node tests, respectively)
         return -0.5;
     }
-    if (terminal.match(/^(?:\.+|\[.*?\])$/)) { // ., .., [], [()], [(?)] (comparable to XSLT's /, //, or [])
+    if (terminal.match(/^(?:\.+|\[.*?\])$/)) { // ., .., [] or [()] or [(?)] (comparable to XSLT's /, //, or [], respectively)
         return 0.5;
     }
     return 0; // single name (i.e., $..someName or someName if allowing such relative paths) (comparable to XSLT's identifying a particular element or attribute name)
@@ -59,18 +59,24 @@ function JSONPathTransformerContext (config, templates) {
     this._templates = templates;
 }
 
+JSONPathTransformerContext.prototype.get = function () { // Note: This may be removed in the future in favor of valueOf
+    return this._contextObj; // or return this.valueOf('.'); ?
+};
+
+JSONPathTransformerContext.prototype.set = function (v) {
+    this._parent[this._parentProperty] = v;
+};
 
 JSONPathTransformerContext.prototype.applyTemplates = function (select, mode) {
-    // Todo: adapt this code to only find (and apply) templates per context
     var that = this;
     if (select && typeof select === 'object') {
         mode = select.mode;
         select = select.select;
     }
     if (!this.hasOwnProperty('_contextObj')) {
-        this._contextObj = this.config.data;
-        this._parent = this.config.parent || null;
-        this._parentProperty = this.config.parentProperty || null;
+        this._contextObj = this._config.data;
+        this._parent = this._config.parent || null;
+        this._parentProperty = this._config.parentProperty || null;
         select = select || '$';
     }
     else {
@@ -81,24 +87,38 @@ JSONPathTransformerContext.prototype.applyTemplates = function (select, mode) {
     var modeMatchedTemplates = this.templates.filter(function (templateObj) {
         return ((mode && mode === templateObj.mode) && (!mode && !templateObj.mode));
     });
-    var found = jsonpath({path: select, json: this._contextObj, wrap: false, returnType: 'all', callback: function (preferredOutput) {
+    var found = jsonpath({path: select, json: this._contextObj, preventEval: this._config.preventEval, wrap: false, returnType: 'all', callback: function (preferredOutput) {
         // Todo: For remote JSON stores, could optimize this to first get template paths and cache by template (and then query the remote JSON and transform as results arrive)
         var value = preferredOutput.value;
         var parent = preferredOutput.parent;
         var parentProperty = preferredOutput.parentProperty;
         
         var pathMatchedTemplates = modeMatchedTemplates.filter(function (templateObj) {
-            return jsonpath({path: JSONPathTransformer.makeJSONPathAbsolute(templateObj.path), json: that._contextObj, resultType: 'path', wrap: true}).includes(preferredOutput.path);
+            return jsonpath({path: JSONPathTransformer.makeJSONPathAbsolute(templateObj.path), json: that._contextObj, resultType: 'path', preventEval: that._config.preventEval, wrap: true}).includes(preferredOutput.path);
         });
 
         var templateObj;
         if (!pathMatchedTemplates.length) {
-            // Todo: deal with any default templates (by default, should have all defined), including the object and array ones containing this.applyTemplates('*', mode); and this.getDefaultPriority(preferredOutput.path);
+            var dtr = JSONPathTransformer.DefaultTemplateRules;
+            // Default rules in XSLT, although expressible as different kind of paths, are really about result types, so we check the resulting value more than the select expression
+            if ((/~$/).test(select)) {
+                templateObj = dtr.transformPropertyNames;
+            }
+            else if (Array.isArray(value)) {
+                templateObj = dtr.transformArrays;
+            }
+            else if (value && typeof value === 'object') {
+                templateObj = dtr.transformObjects;
+            }
+            else if (value && typeof value === 'function') { // Todo: provide parameters to jsonpath based on config on whether to allow non-JSON JS results 
+                templateObj = dtr.transformFunctions;
+            }
+            else {
+                templateObj = dtr.transformScalars;
+            }
             /*
-            // Todo: Handle default templates
-            templateObj = ;
+            Todo: If Jamilih support Jamilih, could add equivalents more like XSL, including processing-instruction(), comment(), and namespace nodes (whose default templates do not add to the result tree in XSLT) as well as elements, attributes, text nodes (see http://lenzconsulting.com/how-xslt-works/#built-in_template_rules )
             */
-            return;
         }
         else {
             // Todo: Could perform this first and cache by template
@@ -120,7 +140,7 @@ JSONPathTransformerContext.prototype.applyTemplates = function (select, mode) {
         that._parent = parent;
         that._parentProperty = parentProperty;
 
-        var result = templateObj.template.call(that, value, that._parent, that._parentProperty);
+        var result = templateObj.template.call(that, mode);
         
         // Child templates may have changed the context
         that._contextObj = value;
@@ -149,11 +169,12 @@ JSONPathTransformerContext.prototype.callTemplate = function (name, withParam) {
     }
     return template(value); // Todo: provide context
 };
+
 JSONPathTransformerContext.prototype.forEach = function () {
-    
+    // todo: 
 };
 JSONPathTransformerContext.prototype.valueOf = function () {
-
+    // todo: 
 };
 
 /**
@@ -180,20 +201,14 @@ JSONPathTransformer = function JSONPathTransformer (config) {
     this.transform();
 };
 
-JSONPathTransformer.prototype.defaultRootTemplate = function () {
-    return this.applyTemplates();
-};
 
 JSONPathTransformer.prototype.transform = function () {
     var jte = new JSONPathTransformerContext(this.config, this.templates);
     var len = this.rootTemplates.length;
-    if (!len) {
-        return this.defaultRootTemplate.call(jte);
-    }
-    if (len === 1) {
+    var templateObj = len ? this.rootTemplates.pop() : JSONPathTransformer.DefaultTemplateRules.transformRoot;
+    if (len > 1) {
         _triggerEqualPriorityError(this.config);
     }
-    var templateObj = this.rootTemplates.pop();
     var path = templateObj.path;
     var json = this.config.data;
     return templateObj.template.call(jte, json, path, json);
@@ -209,16 +224,38 @@ JSONPathTransformer.makeJSONPathAbsolute = function (select) {
 };
 
 
-JSONPathTransformer.DefaultTemplateRules = [
-    // Todo: Apply default template rules
-    /*
-    / | *                                : apply-templates          (this.applyTemplates())
-    / | * mode                           : apply-templates mode     (this.config.mode)
-    text() | @*                          : value-of select="."      (this.valueOf({select: '.'}) or this.valueOf('.'))
-    processing-instruction() | comment() : (nothing); optionally allow JSON equivalents or Jamilih
-    (an XSLT processor is not to copy any part of the namespace node to the output); optionally allow JSON equivalents or Jamilih
-    */
-];
+JSONPathTransformer.DefaultTemplateRules = {
+    transformRoot: {
+        template: function (mode) {
+            return this.applyTemplates(null, mode);
+        }
+    },
+    transformPropertyNames: {
+        template: function () {
+            return this.valueOf('.');
+        }
+    },
+    transformObjects: {
+        template: function (mode) {
+            return this.applyTemplates(null, mode);
+        }
+    },
+    transformArrays: {
+        template: function (mode) {
+            return this.applyTemplates(null, mode);
+        }
+    },
+    transformScalars: {
+        template: function () {
+            return this.valueOf('.');
+        }
+    },
+    transformFunctions: {
+        template: function () {
+            return this.valueOf('.')();
+        }
+    }
+};
 
 
 /**
@@ -231,6 +268,7 @@ JSONPathTransformer.DefaultTemplateRules = [
 * @param {string} [config.ajaxData] URL of a JSON file to retrieve for evaluation
 * @param {boolean} [config.errorOnEqualPriority=false]
 * @param {boolean} [config.autostart=true] Whether to begin transform() immediately.
+* @param {boolean} [config.preventEval=false] Whether to prevent parenthetical evaluations in JSONPath. Safer if relying on user input, but reduces capabilities of JSONPath.
 * @param {string} [config.mode=''] The mode in which to begin the transform.
 * @param {function} [config.engine=JSONPathTransformer] Will be based the same config as passed to this instance. Defaults to a transforming function based on JSONPath and with its own set of priorities for processing templates.
 * @param {function} [config.specificityPriorityResolver=XSLTStyleJSONPathResolver.getPriorityBySpecificity]
