@@ -1,6 +1,8 @@
 {
   "name": "get-json",
-  "version": "0.1.0",
+  "version": "0.2.5",
+  "main": "index.js",
+  "ignore": [],
   "homepage": "https://github.com/brettz9/getJSON",
   "authors": [
     "Brett Zamir <brettz9@yahoo.com>"
@@ -10,14 +12,13 @@
     "json"
   ],
   "license": "MIT",
-  "_release": "0.1.0",
+  "_release": "0.2.5",
   "_resolution": {
     "type": "version",
-    "tag": "v0.1.0",
-    "commit": "91eda2a7f27552927c7d4dd1fc1a11eed60e4093"
+    "tag": "v0.2.5",
+    "commit": "6d63325f3d9a97d60d98c550150454d0e97dff77"
   },
   "_source": "git://github.com/brettz9/getJSON.git",
-  "_target": "~0.1.0",
-  "_originalSource": "get-json",
-  "_direct": true
+  "_target": "~0.2.0",
+  "_originalSource": "get-json"
 }

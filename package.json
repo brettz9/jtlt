@@ -11,7 +11,8 @@
         "url": "https://github.com/brettz9/jtlt.git"
     },
     "dependencies": {
-        "JSONPath": "git+https://git@github.com/brettz9/JSONPath#master"
+        "JSONPath": "git+https://git@github.com/brettz9/JSONPath#master",
+        "simple-get-json": "git+https://git@github.com/brettz9/getJSON"
     },
     "devDependencies": {
         "bower": "1.x.x",

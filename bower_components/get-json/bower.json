@@ -1,6 +1,8 @@
 {
   "name": "get-json",
-  "version": "0.1.0",
+  "version": "0.2.5",
+  "main": "index.js",
+  "ignore": [],
   "homepage": "https://github.com/brettz9/getJSON",
   "authors": [
     "Brett Zamir <brettz9@yahoo.com>"

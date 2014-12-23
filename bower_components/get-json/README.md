@@ -14,6 +14,12 @@ getJSON(url, function (data) {
 bower install get-json
 ```
 
+or
+
+```
+npm install simple-get-json
+```
+
 # Todo
 - Support named parameters ala jQuery
 - Support rest of jQuery API

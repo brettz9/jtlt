@@ -1,0 +1,25 @@
+{
+  "name": "simple-get-json",
+  "version": "0.2.5",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/brettz9/getJSON.git"
+  },
+  "author": "Brett Zamir",
+  "description": "getJSON function similar to that of jQuery's for Node or the browser",
+  "keywords": [
+    "json"
+  ],
+  "dependencies": {
+    "xmlhttprequest": "1.x"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/brettz9/getJSON/issues"
+  },
+  "homepage": "https://github.com/brettz9/getJSON",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  }
+}

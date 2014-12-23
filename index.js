@@ -1,9 +1,15 @@
-/*global JSONPath, getJSON, exports*/
+/*global JSONPath, getJSON, require, exports*/
 /*jslint vars:true, todo:true*/
+var getJSON;
+if (typeof require === 'undefined') {
+    getJSON = require('simple-get-json');
+}
+
 (function (undef) {'use strict';
 
 // Satisfy JSLint
-var jsonpath = JSONPath;
+var jsonpath = typeof require === 'undefined' ? JSONPath : require('JSONPath');
+
 var JSONPathTransformer;
 
 /**
@@ -372,6 +378,8 @@ JTLT.prototype.transform = function (mode) {
 if (typeof exports !== 'undefined') {
     exports.JTLT = JTLT;
     exports.JSONPathTransformer = JSONPathTransformer;
+    exports.JSONPathTransformerContext = JSONPathTransformerContext;
+    exports.XSLTStyleJSONPathResolver = XSLTStyleJSONPathResolver;
 }
 else {
     window.JTLT = JTLT;
