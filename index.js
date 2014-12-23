@@ -221,6 +221,7 @@ JSONPathTransformer = function JSONPathTransformer (config) {
     var map = {};
     this.config = config;
     this.rootTemplates = [];
+    this.templates = config.templates;
     this.templates.forEach(function (template, i, templates) {
         if (template.name && map[template.name]) {
             throw "Templates must all have different names.";
