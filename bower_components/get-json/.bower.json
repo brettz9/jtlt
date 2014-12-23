@@ -1,0 +1,23 @@
+{
+  "name": "get-json",
+  "version": "0.1.0",
+  "homepage": "https://github.com/brettz9/getJSON",
+  "authors": [
+    "Brett Zamir <brettz9@yahoo.com>"
+  ],
+  "description": "getJSON function similar to that of jQuery's",
+  "keywords": [
+    "json"
+  ],
+  "license": "MIT",
+  "_release": "0.1.0",
+  "_resolution": {
+    "type": "version",
+    "tag": "v0.1.0",
+    "commit": "91eda2a7f27552927c7d4dd1fc1a11eed60e4093"
+  },
+  "_source": "git://github.com/brettz9/getJSON.git",
+  "_target": "~0.1.0",
+  "_originalSource": "get-json",
+  "_direct": true
+}

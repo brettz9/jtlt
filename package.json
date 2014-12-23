@@ -14,7 +14,8 @@
         "JSONPath": "git+https://git@github.com/brettz9/JSONPath#master"
     },
     "devDependencies": {
-        "bower": "1.x.x"
+        "bower": "1.x.x",
+        "nodeunit": "0.x"
     },
     "scripts": {
         "prepublish": "bower install get-json"
