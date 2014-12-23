@@ -16,6 +16,22 @@ function _triggerEqualPriorityError (config) {
     }
 }
 
+/**
+* @todo Make JSON, DOM, and Jamilih output joining transformers
+*/
+function StringJoiningTransformer (s) {
+    if (!(this instanceof StringJoiningTransformer)) {
+        return new StringJoiningTransformer(s);
+    }
+    this._str = s || '';
+}
+StringJoiningTransformer.prototype.add = function (s) {
+    this.str += s;
+};
+StringJoiningTransformer.prototype.get = function () {
+    return this._str;
+};
+
 
 function XSLTStyleJSONPathResolver () {
     if (!(this instanceof XSLTStyleJSONPathResolver)) {
@@ -61,7 +77,7 @@ JSONPathTransformerContext.prototype.applyTemplates = function (select, mode) {
         select = select || '*';
     }
     select = JSONPathTransformer.makeJSONPathAbsolute(select);
-    var results;
+    var results = this._config.joiningTransformer;
     var modeMatchedTemplates = this.templates.filter(function (template) {
         return ((mode && mode === template.mode) && (!mode && !template.mode));
     });
@@ -86,8 +102,6 @@ JSONPathTransformerContext.prototype.applyTemplates = function (select, mode) {
         
         var matched = pathMatchedTemplates.sort(function (a, b) {
         
-            // Todo: deal with order after priority/specificity
-
             var aPriority = typeof a.priority === 'number' ? a.priority : that._config.specificityPriorityResolver(a.path);
             var bPriority = typeof b.priority === 'number' ? b.priority : that._config.specificityPriorityResolver(a.path);
             
@@ -100,6 +114,7 @@ JSONPathTransformerContext.prototype.applyTemplates = function (select, mode) {
             var path = templateObj.path;
             var json = that._contextNode;
             var values = jsonpath({json: json, path: path, resultType: 'value', wrap: false, callback: function (parent, property, value, path) {
+                // Todo: 
                 
             }});
             if (values) {
@@ -117,7 +132,7 @@ JSONPathTransformerContext.prototype.applyTemplates = function (select, mode) {
     if (!found) {
         
     }
-    return results;
+    return results.get();
 };
 JSONPathTransformerContext.prototype.callTemplate = function (name, withParam) {
     var value;
@@ -218,8 +233,13 @@ JSONPathTransformer.DefaultTemplateRules = [
 * @param {boolean} [config.autostart=true] Whether to begin transform() immediately.
 * @param {string} [config.mode=''] The mode in which to begin the transform.
 * @param {function} [config.engine=JSONPathTransformer] Will be based the same config as passed to this instance. Defaults to a transforming function based on JSONPath and with its own set of priorities for processing templates.
+* @param {function} [config.specificityPriorityResolver=XSLTStyleJSONPathResolver.getPriorityBySpecificity]
+* @param {object} [config.joiningTransformer=StringJoiningTransformer] Can be a singleton or class instance. Defaults to string joining for output transformation.
+* @param {function} [config.joiningTransformer.get=StringJoiningTransformer.get] Required method. Defaults to string joining getter.
+* @param {function} [config.joiningTransformer.add=StringJoiningTransformer.add] Required method. Defaults to string joining adder.
 * @returns {JTLT} A JTLT instance object
 * @todo Remove JSONPath dependency in query use of '$'?
+* @todo Make a simple string type "output" to handle creation of StringJoiningTransformer, DOM, JSON, or Jamilih output for users
 */
 function JTLT (config) {
     if (!(this instanceof JTLT)) {
@@ -249,12 +269,13 @@ JTLT.prototype.setDefaults = function (config) {
     this.config = config || {};
     this.config.engine = this.config.engine || JSONPathTransformer;
     // Todo: Let's also, unlike XSLT and the following, give options for higher priority to absolute fixed paths over recursive descent and priority to longer paths and lower to wildcard terminal points
-    this.config.specificityPriorityResolver = (function () {
+    this.config.specificityPriorityResolver = this.config.specificityPriorityResolver || (function () {
         var xsjpr = new XSLTStyleJSONPathResolver();
         return function (path) {
             xsjpr.getPriorityBySpecificity(path);
         };
     }());
+    this.config.joiningTransformer = this.config.joiningTransformer || new StringJoiningTransformer();
     return this;
 };
 /**
