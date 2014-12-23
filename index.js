@@ -44,7 +44,7 @@ XSLTStyleJSONPathResolver.prototype.getPriorityBySpecificity = function (path) {
     }
     
     var terminal = path.slice(-1);
-    if (terminal.match(/^(?:\*|~|@.*?\(\))$/)) { // *, ~, @string() (comparable to XSLT's *, @*, and node tests, respectively)
+    if (terminal.match(/^(?:\*|~|@[a-z]*?\(\))$/i)) { // *, ~, @string() (comparable to XSLT's *, @*, and node tests, respectively)
         return -0.5;
     }
     if (terminal.match(/^(?:\.+|\[.*?\])$/)) { // ., .., [] or [()] or [(?)] (comparable to XSLT's /, //, or [], respectively)
