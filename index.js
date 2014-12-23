@@ -340,7 +340,8 @@ JTLT.prototype.setDefaults = function (config) {
     this.config = config || {};
     config = this.config;
     var query = config.query || (typeof config.templates === 'function' ? config.templates : (typeof config.template === 'function' ? config.template : null));
-    this.templates = query ? [{name: 'root', path: '$', template: query}] : (config.templates || [config.template]);
+    this.config.templates = query ? [{name: 'root', path: '$', template: query}] : (config.templates || [config.template]);
+    this.config.json = this.config.data;
     this.config.errorOnEqualPriority = config.errorOnEqualPriority || false;
     this.config.engine = this.config.engine || function (config) {
         var jpt = new JSONPathTransformer(config);
@@ -373,7 +374,8 @@ JTLT.prototype.transform = function (mode) {
         throw "You must supply a 'success' callback";
     }
 
-    return this.config.engine({templates: this.templates, json: this.config.data, mode: mode});
+    this.config.mode = mode;
+    return this.config.engine(this.config);
 };
 
 
