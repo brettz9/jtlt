@@ -1,7 +1,7 @@
 /*global JSONPath, getJSON */
 /*jslint vars:true, todo:true, regexp:true*/
-var getJSON;
-var exports, require;
+var getJSON, exports, require;
+
 if (require !== undefined) {
     getJSON = require('simple-get-json');
 }
