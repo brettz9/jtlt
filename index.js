@@ -1,14 +1,17 @@
-/*global JSONPath, getJSON, require, exports*/
-/*jslint vars:true, todo:true*/
+/*global JSONPath, getJSON */
+/*jslint vars:true, todo:true, regexp:true*/
 var getJSON;
-if (typeof require !== 'undefined') {
+var exports, require;
+if (require !== undefined) {
     getJSON = require('simple-get-json');
 }
-function l (s) {console.log(s);}
+
 (function (undef) {'use strict';
 
+// function l (s) {console.log(s);}
+
 // Satisfy JSLint
-var jsonpath = typeof require === 'undefined' ? JSONPath : require('JSONPath');
+var jsonpath = require === undefined ? JSONPath : require('JSONPath');
 
 var JSONPathTransformer;
 
@@ -381,7 +384,7 @@ JTLT.prototype.transform = function (mode) {
 };
 
 
-if (typeof exports !== 'undefined') {
+if (exports !== undefined) {
     exports.JTLT = JTLT;
     exports.JSONPathTransformer = JSONPathTransformer;
     exports.JSONPathTransformerContext = JSONPathTransformerContext;
