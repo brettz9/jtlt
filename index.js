@@ -4,7 +4,7 @@ var getJSON;
 if (typeof require !== 'undefined') {
     getJSON = require('simple-get-json');
 }
-
+function l (s) {console.log(s);}
 (function (undef) {'use strict';
 
 // Satisfy JSLint
@@ -104,7 +104,7 @@ JSONPathTransformerContext.prototype.applyTemplates = function (select, mode) {
     var modeMatchedTemplates = this._templates.filter(function (templateObj) {
         return ((mode && mode === templateObj.mode) && (!mode && !templateObj.mode));
     });
-    jsonpath({path: select, json: this._contextObj, preventEval: this._config.preventEval, wrap: false, returnType: 'all', callback: function (preferredOutput) {
+    jsonpath({path: select, json: this._contextObj, preventEval: this._config.preventEval, wrap: false, resultType: 'all', callback: function (preferredOutput) {
         // Todo: For remote JSON stores, could optimize this to first get template paths and cache by template (and then query the remote JSON and transform as results arrive)
         var value = preferredOutput.value;
         var parent = preferredOutput.parent;
@@ -157,8 +157,9 @@ JSONPathTransformerContext.prototype.applyTemplates = function (select, mode) {
         that._parent = parent;
         that._parentProperty = parentProperty;
 
-        var result = templateObj.template.call(that, mode);
-        
+        templateObj.template.call(that, mode);
+        var result = that.get();
+
         // Child templates may have changed the context
         that._contextObj = value;
         that._parent = parent;
