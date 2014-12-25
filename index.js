@@ -243,7 +243,8 @@ JSONPathTransformer.prototype.transform = function (mode) {
         _triggerEqualPriorityError(this.config);
     }
     var results = this.config.joiningTransformer;
-    var result = templateObj.template.call(jte, mode);
+    templateObj.template.call(jte, mode);
+    var result = jte.get();
     results.add(result);
     return results.get();
 };
