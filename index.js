@@ -8,7 +8,8 @@ if (require !== undefined) {
 
 (function (undef) {'use strict';
 
-// function l (s) {console.log(s);}
+function l (s) {console.log(s);}
+function s (o) {l(JSON.stringify(o));}
 
 // Satisfy JSLint
 var jsonpath = require === undefined ? JSONPath : require('JSONPath');
@@ -232,7 +233,7 @@ JSONPathTransformer = function JSONPathTransformer (config) {
         }
         map[template.name] = true;
         if (template.path === '$') {
-            that.rootTemplates.concat(templates.splice(i, 1));
+            that.rootTemplates = that.rootTemplates.concat(templates.splice(i, 1));
         }
     });
     map = null;
