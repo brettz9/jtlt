@@ -27,7 +27,7 @@ function _triggerEqualPriorityError (config) {
 }
 
 /**
-* @todo Make JSON, DOM, and Jamilih output joining transformers
+* @todo Make DOM and Jamilih output joining transformers
 */
 function StringJoiningTransformer (s) {
     if (!(this instanceof StringJoiningTransformer)) {
@@ -42,6 +42,21 @@ StringJoiningTransformer.prototype.add = function (s) {
 StringJoiningTransformer.prototype.get = function () {
     return this._str;
 };
+
+function JSONJoiningTransformer (o) {
+    if (!(this instanceof JSONJoiningTransformer)) {
+        return new JSONJoiningTransformer(o);
+    }
+    this._obj = o || [];
+}
+JSONJoiningTransformer.prototype.add = function (item) {
+    this._obj.push(item);
+    return this;
+};
+JSONJoiningTransformer.prototype.get = function () {
+    return this._obj;
+};
+
 
 
 function XSLTStyleJSONPathResolver () {
@@ -360,7 +375,7 @@ JTLT.prototype.setDefaults = function (config) {
             xsjpr.getPriorityBySpecificity(path);
         };
     }());
-    this.config.joiningTransformer = this.config.joiningTransformer || new StringJoiningTransformer();
+    this.config.joiningTransformer = this.config.joiningTransformer || new JSONJoiningTransformer();
     return this;
 };
 /**
@@ -370,7 +385,7 @@ JTLT.prototype.setDefaults = function (config) {
 */
 JTLT.prototype.transform = function (mode) {
     if (this.config.data === undef) {
-        if (this.config.ajaxData) {
+        if (this.config.ajaxData !== undef) {
             this.ready = true;
             return;
         }
