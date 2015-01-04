@@ -50,7 +50,15 @@ function JSONJoiningTransformer (o) {
     this._obj = o || [];
 }
 JSONJoiningTransformer.prototype.add = function (item) {
-    this._obj.push(item);
+    if (!this._obj || typeof this._obj !== 'object') {
+        throw "You cannot add to a scalar or empty value.";
+    }
+    if (Array.isArray(this._obj)) {
+        this._obj.push(item);
+    }
+    else {
+        Object.assign(this._obj, item);
+    }
     return this;
 };
 JSONJoiningTransformer.prototype.get = function () {
@@ -354,6 +362,8 @@ function JTLT (config) {
 }
 JTLT.prototype._autoStart = function (mode) {
     if (this.config.autostart !== false || this.ready) {
+        // We wait to set this default as we want to pass in the data
+        this.config.joiningTransformer = this.config.joiningTransformer || new JSONJoiningTransformer(this.config.data);
         this.config.success(this.transform(mode));
     }
 };
@@ -375,7 +385,6 @@ JTLT.prototype.setDefaults = function (config) {
             xsjpr.getPriorityBySpecificity(path);
         };
     }());
-    this.config.joiningTransformer = this.config.joiningTransformer || new JSONJoiningTransformer();
     return this;
 };
 /**
@@ -385,11 +394,11 @@ JTLT.prototype.setDefaults = function (config) {
 */
 JTLT.prototype.transform = function (mode) {
     if (this.config.data === undef) {
-        if (this.config.ajaxData !== undef) {
-            this.ready = true;
-            return;
+        if (this.config.ajaxData === undef) {
+            throw "You must supply a 'data' or 'ajaxData' property";
         }
-        throw "You must supply a 'data' or 'ajaxData' property";
+        this.ready = true;
+        return;
     }
     if (typeof this.config.success !== 'function') {
         throw "You must supply a 'success' callback";
