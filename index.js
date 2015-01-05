@@ -410,7 +410,7 @@ JTLT.prototype.transform = function (mode) {
 
 
 if (exports !== undefined) {
-    Object.assign = require('object-assign');
+    Object.assign = Object.assign || require('object-assign');
     exports.JTLT = JTLT;
     exports.JSONPathTransformer = JSONPathTransformer;
     exports.JSONPathTransformerContext = JSONPathTransformerContext;
