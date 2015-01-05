@@ -1,6 +1,6 @@
 {
   "name": "simple-get-json",
-  "version": "0.2.5",
+  "version": "0.3.2",
   "repository": {
     "type": "git",
     "url": "https://github.com/brettz9/getJSON.git"
@@ -11,7 +11,7 @@
     "json"
   ],
   "dependencies": {
-    "xmlhttprequest": "1.x"
+    "local-xmlhttprequest": "1.x"
   },
   "license": "MIT",
   "bugs": {

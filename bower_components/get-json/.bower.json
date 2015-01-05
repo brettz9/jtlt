@@ -1,6 +1,5 @@
 {
   "name": "get-json",
-  "version": "0.2.5",
   "main": "index.js",
   "ignore": [],
   "homepage": "https://github.com/brettz9/getJSON",
@@ -12,13 +11,14 @@
     "json"
   ],
   "license": "MIT",
-  "_release": "0.2.5",
+  "_release": "93b6bc345a",
   "_resolution": {
-    "type": "version",
-    "tag": "v0.2.5",
-    "commit": "6d63325f3d9a97d60d98c550150454d0e97dff77"
+    "type": "branch",
+    "branch": "master",
+    "commit": "93b6bc345a0e802ba325c15cf5893bd2d8c17649"
   },
   "_source": "git://github.com/brettz9/getJSON.git",
-  "_target": "~0.2.0",
-  "_originalSource": "get-json"
+  "_target": "master",
+  "_originalSource": "get-json",
+  "_direct": true
 }
