@@ -11,15 +11,16 @@
         "url": "https://github.com/brettz9/jtlt.git"
     },
     "dependencies": {
+        "object-assign": "2.x",
         "JSONPath": "git+https://git@github.com/brettz9/JSONPath#master",
-        "simple-get-json": "git+https://git@github.com/brettz9/getJSON"
+        "simple-get-json": "git+https://git@github.com/brettz9/getJSON#master"
     },
     "devDependencies": {
         "bower": "1.x.x",
         "nodeunit": "0.x"
     },
     "scripts": {
-        "prepublish": "bower install get-json"
+        "prepublish": "bower install get-json#master"
     },
     "bugs": "https://github.com/brettz9/jtlt/issues",
     "description": "Uses an approach similar to [XSLT](http://www.w3.org/Style/XSL/) for declarative, linear declaration of templates, but with JSON or JavaScript object data sources. As with XSLT, can be transformed into different formats (e.g., HTML strings, JSON, DOM objects, etc.).",
