@@ -271,7 +271,7 @@ JSONPathTransformerContext.prototype.propertySet = function (name, propertySetOb
 };
 
 JSONPathTransformerContext.prototype.usePropertySets = function (obj, name) {
-    return Object.assign(obj, this.propertySets[name]};
+    return Object.assign(obj, this.propertySets[name]);
 };
 
 /**
