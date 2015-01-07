@@ -94,6 +94,7 @@ function JSONPathTransformerContext (config, templates) {
     this._contextObj = config.data;
     this._parent = config.parent || this._config;
     this._parentProperty = config.parentProperty || 'data';
+    this.vars = {};
 }
 
 JSONPathTransformerContext.prototype._getJoiningTransformer = function () {
