@@ -238,6 +238,15 @@ JSONPathTransformerContext.prototype.valueOf = function (select) {
     return this;
 };
 
+JSONPathTransformerContext.prototype.copyOf = function (select) { // Deep
+
+};
+
+JSONPathTransformerContext.prototype.copy = function (propertySets) { // Shallow
+
+};
+
+
 /**
 * @param {boolean} config.errorOnEqualPriority
 */
