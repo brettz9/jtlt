@@ -257,7 +257,11 @@ JSONPathTransformerContext.prototype.message = function (json) {
     console.log(json);
 };
 
-JSONPathTransformerContext.prototype.object = function () {
+JSONPathTransformerContext.prototype.object = function (prop) {
+    var obj = {};
+    if (prop !== undef) {
+        this._usePropertySets(obj, prop);
+    }
     return {}; // Todo: Add to _contextObj? Necessary?
 };
 
@@ -270,7 +274,7 @@ JSONPathTransformerContext.prototype.propertySet = function (name, propertySetOb
     return this;
 };
 
-JSONPathTransformerContext.prototype.usePropertySets = function (obj, name) {
+JSONPathTransformerContext.prototype._usePropertySets = function (obj, name) {
     return Object.assign(obj, this.propertySets[name]);
 };
 
