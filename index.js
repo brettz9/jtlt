@@ -219,7 +219,7 @@ JSONPathTransformerContext.prototype.callTemplate = function (name, withParams) 
     return this;
 };
 
-JSONPathTransformerContext.prototype.forEach = function (select, cb) {
+JSONPathTransformerContext.prototype.forEach = function (select, cb) { // Todo: add sort?
     var that = this;
     jsonpath({path: select, json: this._contextObj, preventEval: this._config.preventEval, wrap: false, returnType: 'value', callback: function (value) {
         cb.call(that, value);
