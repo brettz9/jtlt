@@ -95,6 +95,7 @@ function JSONPathTransformerContext (config, templates) {
     this._parent = config.parent || this._config;
     this._parentProperty = config.parentProperty || 'data';
     this.vars = {};
+    this.propertySets = {};
 }
 
 JSONPathTransformerContext.prototype._getJoiningTransformer = function () {
@@ -250,6 +251,27 @@ JSONPathTransformerContext.prototype.copy = function (propertySets) { // Shallow
 JSONPathTransformerContext.prototype.variable = function (name, select) {
     this.vars[name] = this.get(select);
     return this;
+};
+
+JSONPathTransformerContext.prototype.message = function (json) {
+    console.log(json);
+};
+
+JSONPathTransformerContext.prototype.object = function () {
+    return {}; // Todo: Add to _contextObj? Necessary?
+};
+
+JSONPathTransformerContext.prototype.array = function () {
+    return []; // Todo: Add to _contextObj? Necessary?
+};
+
+JSONPathTransformerContext.prototype.propertySet = function (name, propertySetObj) {
+    this.propertySets[name] = propertySetObj;
+    return this;
+};
+
+JSONPathTransformerContext.prototype.usePropertySets = function (obj, name) {
+    return Object.assign(obj, this.propertySets[name]};
 };
 
 /**
