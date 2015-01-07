@@ -116,7 +116,7 @@ JSONPathTransformerContext.prototype.set = function (v) {
     return this;
 };
 
-JSONPathTransformerContext.prototype.applyTemplates = function (select, mode, sort) { // Todo: support sort
+JSONPathTransformerContext.prototype.applyTemplates = function (select, mode, sort) { // Todo: implement sort (allow as callback or as object)
     var that = this;
     if (select && typeof select === 'object') {
         mode = select.mode;
@@ -221,7 +221,7 @@ JSONPathTransformerContext.prototype.callTemplate = function (name, withParams) 
     return this;
 };
 
-JSONPathTransformerContext.prototype.forEach = function (select, cb, sort) { // Todo: Implement sort
+JSONPathTransformerContext.prototype.forEach = function (select, cb, sort) { // Todo: Implement sort (allow as callback or as object)
     var that = this;
     jsonpath({path: select, json: this._contextObj, preventEval: this._config.preventEval, wrap: false, returnType: 'value', callback: function (value) {
         cb.call(that, value);
