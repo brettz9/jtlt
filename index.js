@@ -96,6 +96,7 @@ function JSONPathTransformerContext (config, templates) {
     this._parentProperty = config.parentProperty || 'data';
     this.vars = {};
     this.propertySets = {};
+    this.keys = {};
 }
 
 JSONPathTransformerContext.prototype._getJoiningTransformer = function () {
@@ -103,9 +104,9 @@ JSONPathTransformerContext.prototype._getJoiningTransformer = function () {
 };
 
 // Get is provided as a convenience method for templates, but it should typically not be used (use valueOf to add to the result tree instead)
-JSONPathTransformerContext.prototype.get = function (select) {
+JSONPathTransformerContext.prototype.get = function (select, wrap) {
     if (select) {
-        return jsonpath({path: select, json: this._contextObj, preventEval: this._config.preventEval, wrap: false, returnType: 'value'});
+        return jsonpath({path: select, json: this._contextObj, preventEval: this._config.preventEval, wrap: wrap || false, returnType: 'value'});
     }
     return this._contextObj;
 };
@@ -230,7 +231,7 @@ JSONPathTransformerContext.prototype.forEach = function (select, cb) { // Todo: 
 JSONPathTransformerContext.prototype.valueOf = function (select) {
     var results = this._getJoiningTransformer();
     var result;
-    if (select === '.') {
+    if (select && typeof select === 'object' && select.select === '.') {
         result = this._contextObj;
     }
     else {
@@ -276,6 +277,25 @@ JSONPathTransformerContext.prototype.propertySet = function (name, propertySetOb
 
 JSONPathTransformerContext.prototype._usePropertySets = function (obj, name) {
     return Object.assign(obj, this.propertySets[name]);
+};
+
+JSONPathTransformerContext.prototype.getKey = function (name, value) {
+    var key = this.keys[name];
+    var matches = this.get(key.match, true);
+    var p;
+    for (p in matches) { // For objects or arrays
+        if (matches.hasOwnProperty(p)) {
+            if (matches[p] && typeof matches[p] === 'object' && matches[p][key.use] === value) {
+                return matches[p];
+            }
+        }
+    }
+    return this;
+};
+
+JSONPathTransformerContext.prototype.key = function (name, match, use) {
+    this.keys[name] = {match: match, use: use};
+    return this;
 };
 
 /**
@@ -335,7 +355,7 @@ JSONPathTransformer.DefaultTemplateRules = {
     },
     transformPropertyNames: {
         template: function () {
-            this.valueOf('.');
+            this.valueOf({select: '.'});
         }
     },
     transformObjects: {
@@ -350,12 +370,12 @@ JSONPathTransformer.DefaultTemplateRules = {
     },
     transformScalars: {
         template: function () {
-            this.valueOf('.');
+            this.valueOf({select: '.'});
         }
     },
     transformFunctions: {
         template: function () {
-            this.valueOf('.')();
+            this.valueOf({select: '.'})();
         }
     }
 };
