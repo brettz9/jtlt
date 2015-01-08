@@ -350,8 +350,7 @@ JSONPathTransformerContext.prototype.array = function () {
 JSONPathTransformerContext.prototype.propertySet = function (name, propertySetObj, usePropertySets) {
     var that = this;
     this.propertySets[name] = usePropertySets ? Object.assign({}, propertySetObj, usePropertySets.reduce(function (obj, psName) {
-        that._usePropertySets(obj, psName);
-        return obj;
+        return that._usePropertySets(obj, psName);
     }, {})) : propertySetObj;
     return this;
 };
