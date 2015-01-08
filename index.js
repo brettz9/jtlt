@@ -229,14 +229,12 @@ JSONPathTransformerContext.prototype.applyTemplates = function (select, mode, so
         that._parentProperty = parentProperty;
 
         templateObj.template.call(that, mode);
-        var result = that.getOutput();
 
         // Child templates may have changed the context
         that._contextObj = value;
         that._parent = parent;
         that._parentProperty = parentProperty;
         
-        results.add(result);
     }});
     return this;
 };
