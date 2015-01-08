@@ -45,6 +45,17 @@ StringJoiningTransformer.prototype.add = function (s) {
 StringJoiningTransformer.prototype.get = function () {
     return this._str;
 };
+JSONJoiningTransformer.prototype.object = function () {
+    var obj = {};
+    if (prop !== undef) {
+        this._usePropertySets(obj, prop);
+    }
+    this.add(JSON.stringify(obj)); // Todo: set current position and deal with children
+};
+JSONJoiningTransformer.prototype.array = function () {
+    this.add(JSON.stringify([])); // Todo: set current position and deal with children
+};
+
 
 /**
 * This transformer expects the templates to do their own DOM building
@@ -61,6 +72,15 @@ DOMJoiningTransformer.prototype.add = function (item) {
 DOMJoiningTransformer.prototype.get = function () {
     return this._dom;
 };
+DOMJoiningTransformer.prototype.object = function () {
+    // throw "Object building is not supported with this DOM joining transformer.";
+    this.add(document.createTextNode()); // Todo: set current position and deal with children
+};
+DOMJoiningTransformer.prototype.array = function () {
+    // throw "Array building is not supported with this DOM joining transformer.";
+    this.add(document.createTextNode()); // Todo: set current position and deal with children
+};
+
 
 function JamilihJoiningTransformer (o) {
     if (!(this instanceof JamilihJoiningTransformer)) {
@@ -73,6 +93,7 @@ JamilihJoiningTransformer.constructor = JamilihJoiningTransformer;
 JamilihJoiningTransformer.prototype.add = function (item) {
     this._dom.appendChild(jml(item));
 };
+// Todo: add own object/array and treat result as Jamilih?
 
 
 function JSONJoiningTransformer (o) {
@@ -93,10 +114,22 @@ JSONJoiningTransformer.prototype.add = function (item) {
     }
     return this;
 };
+
 JSONJoiningTransformer.prototype.get = function () {
     return this._obj;
 };
 
+JSONJoiningTransformer.prototype.object = function () {
+    var obj = {};
+    if (prop !== undef) {
+        this._usePropertySets(obj, prop);
+    }
+    this.add(obj); // Todo: set current position and deal with children
+};
+
+JSONJoiningTransformer.prototype.array = function () {
+    this.add([]); // Todo: set current position and deal with children
+};
 
 
 function XSLTStyleJSONPathResolver () {
@@ -298,15 +331,13 @@ JSONPathTransformerContext.prototype.message = function (json) {
 };
 
 JSONPathTransformerContext.prototype.object = function (prop) {
-    var obj = {};
-    if (prop !== undef) {
-        this._usePropertySets(obj, prop);
-    }
-    return {}; // Todo: set current position
+    this._getJoiningTransformer().object(item);
+    return this;
 };
 
 JSONPathTransformerContext.prototype.array = function () {
-    return []; // Todo: set current position
+    this._getJoiningTransformer().array(item);
+    return this;
 };
 
 JSONPathTransformerContext.prototype.propertySet = function (name, propertySetObj) {
