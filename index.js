@@ -19,6 +19,7 @@ var JSONPathTransformer;
 /**
 * @private
 * @static
+* @todo Decide how to expose so can be monkey-patched or utilized externally
 */
 function _triggerEqualPriorityError (config) {
     if (config.errorOnEqualPriority) {
