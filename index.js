@@ -119,16 +119,22 @@ JSONJoiningTransformer.prototype.get = function () {
     return this._obj;
 };
 
-JSONJoiningTransformer.prototype.object = function () {
+JSONJoiningTransformer.prototype.object = function (nestedCb) {
+    var tempObj = this._obj;
     var obj = {};
     if (prop !== undef) {
         this._usePropertySets(obj, prop);
     }
-    this.add(obj); // Todo: set current position and deal with children
+    this.add(obj);
+    nestedCb.call(this);
+    this._obj = tempObj;
 };
 
-JSONJoiningTransformer.prototype.array = function () {
+JSONJoiningTransformer.prototype.array = function (nestedCb) {
+    var tempObj = this._obj;
     this.add([]); // Todo: set current position and deal with children
+    nestedCb.call(this);
+    this._obj = tempObj;
 };
 
 
@@ -340,8 +346,12 @@ JSONPathTransformerContext.prototype.array = function () {
     return this;
 };
 
-JSONPathTransformerContext.prototype.propertySet = function (name, propertySetObj) {
-    this.propertySets[name] = propertySetObj;
+JSONPathTransformerContext.prototype.propertySet = function (name, propertySetObj, usePropertySets) {
+    var that = this;
+    this.propertySets[name] = usePropertySets ? Object.assign({}, propertySetObj, usePropertySets.reduce(function (obj, psName) {
+        that._usePropertySets(obj, psName);
+        return obj;
+    }, {})) : propertySetObj;
     return this;
 };
 
