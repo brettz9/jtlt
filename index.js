@@ -127,7 +127,7 @@ JSONPathTransformerContext.prototype._getJoiningTransformer = function () {
     return this._config.joiningTransformer;
 };
 
-// Get is provided as a convenience method for templates, but it should typically not be used (use valueOf to add to the result tree instead)
+// Get() and set() are provided as a convenience method for templates, but it should typically not be used (use valueOf or the copy methods to add to the result tree instead)
 JSONPathTransformerContext.prototype.get = function (select, wrap) {
     if (select) {
         return jsonpath({path: select, json: this._contextObj, preventEval: this._config.preventEval, wrap: wrap || false, returnType: 'value'});
