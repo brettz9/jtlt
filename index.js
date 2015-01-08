@@ -45,15 +45,18 @@ StringJoiningTransformer.prototype.add = function (s) {
 StringJoiningTransformer.prototype.get = function () {
     return this._str;
 };
-StringJoiningTransformer.prototype.object = function () {
+StringJoiningTransformer.prototype.object = function (cb) {
     var obj = {};
     if (prop !== undef) {
         this._usePropertySets(obj, prop); // Todo: Put in right scope
     }
     this.add(JSON.stringify(obj)); // Todo: set current position and deal with children
 };
-StringJoiningTransformer.prototype.array = function () {
+StringJoiningTransformer.prototype.array = function (cb) {
     this.add(JSON.stringify([])); // Todo: set current position and deal with children
+};
+StringJoiningTransformer.prototype.string = function (str, cb) {
+    this.add(str); // Todo: set current position and deal with children
 };
 
 
