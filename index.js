@@ -126,14 +126,15 @@ JSONJoiningTransformer.prototype.object = function (nestedCb) {
         this._usePropertySets(obj, prop); // Todo: Put in right scope
     }
     this.add(obj);
-    nestedCb.call(this);
+    nestedCb.call(this, obj); // We pass the object, but user should usually use other methods
     this._obj = tempObj;
 };
 
 JSONJoiningTransformer.prototype.array = function (nestedCb) {
     var tempObj = this._obj;
-    this.add([]); // Todo: set current position and deal with children
-    nestedCb.call(this);
+    var arr = [];
+    this.add(arr); // Todo: set current position and deal with children
+    nestedCb.call(this, arr); // We pass the array, but user should usually use other methods
     this._obj = tempObj;
 };
 
