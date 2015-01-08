@@ -304,11 +304,11 @@ JSONPathTransformerContext.prototype.object = function (prop) {
     if (prop !== undef) {
         this._usePropertySets(obj, prop);
     }
-    return {}; // Todo: Add to _contextObj? Necessary?
+    return {}; // Todo: set current position
 };
 
 JSONPathTransformerContext.prototype.array = function () {
-    return []; // Todo: Add to _contextObj? Necessary?
+    return []; // Todo: set current position
 };
 
 JSONPathTransformerContext.prototype.propertySet = function (name, propertySetObj) {
