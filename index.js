@@ -1,6 +1,6 @@
 /*global JSONPath, getJSON, jml */
 /*jslint vars:true, todo:true, regexp:true*/
-var getJSON, exports, require;
+var getJSON, exports, require, document, window;
 
 if (require !== undefined) {
     getJSON = require('simple-get-json');
@@ -13,6 +13,11 @@ function s (o) {l(JSON.stringify(o));}
 
 // Satisfy JSLint
 var jsonpath = require === undefined ? JSONPath : require('JSONPath');
+if (exports !== undefined) {
+    Object.assign = Object.assign || require('object-assign');
+    document = require('jsdom').jsdom('');
+    window = document.parentWindow;
+}
 
 var JSONPathTransformer;
 
@@ -51,19 +56,22 @@ function DOMJoiningTransformer (o) {
     this._dom = o || document.createDocumentFragment();
 }
 DOMJoiningTransformer.prototype.add = function (item) {
-    _dom.appendChild(item);
+    this._dom.appendChild(item);
 };
 DOMJoiningTransformer.prototype.get = function () {
     return this._dom;
 };
 
 function JamilihJoiningTransformer (o) {
-
+    if (!(this instanceof JamilihJoiningTransformer)) {
+        return new JamilihJoiningTransformer(o);
+    }
+    this._dom = o || document.createDocumentFragment();
 }
 JamilihJoiningTransformer.prototype = new DOMJoiningTransformer();
 JamilihJoiningTransformer.constructor = JamilihJoiningTransformer;
 JamilihJoiningTransformer.prototype.add = function (item) {
-    _dom.appendChild(jml(item));
+    this._dom.appendChild(jml(item));
 };
 
 
@@ -125,6 +133,15 @@ function JSONPathTransformerContext (config, templates) {
 
 JSONPathTransformerContext.prototype._getJoiningTransformer = function () {
     return this._config.joiningTransformer;
+};
+
+JSONPathTransformerContext.prototype.addOutput = function (item) {
+    this._getJoiningTransformer().add(item);
+    return this;
+};
+JSONPathTransformerContext.prototype.getOutput = function () {
+    this._getJoiningTransformer().get();
+    return this;
 };
 
 // Get() and set() are provided as a convenience method for templates, but it should typically not be used (use valueOf or the copy methods to add to the result tree instead)
@@ -212,7 +229,7 @@ JSONPathTransformerContext.prototype.applyTemplates = function (select, mode, so
         that._parentProperty = parentProperty;
 
         templateObj.template.call(that, mode);
-        var result = that.get();
+        var result = that.getOutput();
 
         // Child templates may have changed the context
         that._contextObj = value;
@@ -354,11 +371,9 @@ JSONPathTransformer.prototype.transform = function (mode) {
     if (len > 1) {
         _triggerEqualPriorityError(this.config);
     }
-    var results = this.config.joiningTransformer;
     templateObj.template.call(jte, mode);
-    var result = jte.get();
-    results.add(result);
-    return results.get();
+    var result = jte.getOutput();
+    return result;
 };
 
 /**
@@ -492,14 +507,7 @@ JTLT.prototype.transform = function (mode) {
     return this.config.engine(this.config);
 };
 
-var baseObj;
-if (exports !== undefined) {
-    Object.assign = Object.assign || require('object-assign');
-    baseObj = exports;
-}
-else {
-    baseObj = window;
-}
+var baseObj = exports === undefined ? window : exports;
 
 // EXPORTS
 baseObj.JTLT = JTLT;
