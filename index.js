@@ -51,12 +51,15 @@ StringJoiningTransformer.prototype.object = function (cb) {
         this._usePropertySets(obj, prop); // Todo: Put in right scope
     }
     this.add(JSON.stringify(obj)); // Todo: set current position and deal with children
+    return this;
 };
 StringJoiningTransformer.prototype.array = function (cb) {
     this.add(JSON.stringify([])); // Todo: set current position and deal with children
+    return this;
 };
 StringJoiningTransformer.prototype.string = function (str, cb) {
     this.add(str); // Todo: set current position and deal with children
+    return this;
 };
 
 
@@ -78,10 +81,12 @@ DOMJoiningTransformer.prototype.get = function () {
 DOMJoiningTransformer.prototype.object = function () {
     // throw "Object building is not supported with this DOM joining transformer.";
     this.add(document.createTextNode()); // Todo: set current position and deal with children
+    return this;
 };
 DOMJoiningTransformer.prototype.array = function () {
     // throw "Array building is not supported with this DOM joining transformer.";
     this.add(document.createTextNode()); // Todo: set current position and deal with children
+    return this;
 };
 
 
@@ -95,6 +100,7 @@ JamilihJoiningTransformer.prototype = new DOMJoiningTransformer();
 JamilihJoiningTransformer.constructor = JamilihJoiningTransformer;
 JamilihJoiningTransformer.prototype.add = function (item) {
     this._dom.appendChild(jml(item));
+    return this;
 };
 // Todo: add own object/array and treat result as Jamilih?
 
@@ -122,15 +128,27 @@ JSONJoiningTransformer.prototype.get = function () {
     return this._obj;
 };
 
-JSONJoiningTransformer.prototype.object = function (nestedCb) {
+/**
+* @param {function} nestedCb Callback to be executed on this transformer but with a context nested within the newly created object
+* @param {array} usePropertySets Array of string property set names to copy onto the new object
+* @param {object} propSets An object of key-value pairs to copy onto the new object
+*/
+JSONJoiningTransformer.prototype.object = function (nestedCb, usePropertySets, propSets) {
     var tempObj = this._obj;
     var obj = {};
-    if (prop !== undef) {
-        this._usePropertySets(obj, prop); // Todo: Put in right scope
+    var that = this;
+    if (usePropertySets !== undef) {
+        usePropertySets.reduce(function (obj, psName) {
+            return that._usePropertySets(obj, psName); // Todo: Put in right scope
+        }, {}));
+    }
+    if (propSets !== undef) {
+        Object.assign(obj, propSets);
     }
     this.add(obj);
     nestedCb.call(this, obj); // We pass the object, but user should usually use other methods
     this._obj = tempObj;
+    return this;
 };
 
 JSONJoiningTransformer.prototype.array = function (nestedCb) {
@@ -139,6 +157,12 @@ JSONJoiningTransformer.prototype.array = function (nestedCb) {
     this.add(arr); // Todo: set current position and deal with children
     nestedCb.call(this, arr); // We pass the array, but user should usually use other methods
     this._obj = tempObj;
+    return this;
+};
+JSONJoiningTransformer.prototype.string = function (str, nestedCb) {
+    var sjt = new StringJoiningTransformer(str);
+    nestedCb.call(this, str); // We pass the string, but user should usually use other methods
+    return this;
 };
 
 
