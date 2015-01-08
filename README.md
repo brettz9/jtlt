@@ -36,6 +36,11 @@ from XSLT).
 # Todos
 
 1. Finish existing code to get it to work!
+1. Allow, depending on mode, containers to contain containers of other
+types (e.g., a JS container containing DOM objects, or temporary use
+of a string container, etc.). Include JHTML methods after implementing
+my latest spec
+    1. Support XML and add hXML methods.
 
 # Possible todos
 
