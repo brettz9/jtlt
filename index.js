@@ -1,4 +1,4 @@
-/*global JSONPath, getJSON */
+/*global JSONPath, getJSON, jml */
 /*jslint vars:true, todo:true, regexp:true*/
 var getJSON, exports, require;
 
@@ -26,9 +26,6 @@ function _triggerEqualPriorityError (config) {
     }
 }
 
-/**
-* @todo Make DOM and Jamilih output joining transformers
-*/
 function StringJoiningTransformer (s) {
     if (!(this instanceof StringJoiningTransformer)) {
         return new StringJoiningTransformer(s);
@@ -42,6 +39,32 @@ StringJoiningTransformer.prototype.add = function (s) {
 StringJoiningTransformer.prototype.get = function () {
     return this._str;
 };
+
+/**
+* This transformer expects the templates to do their own DOM building
+*/
+function DOMJoiningTransformer (o) {
+    if (!(this instanceof DOMJoiningTransformer)) {
+        return new DOMJoiningTransformer(o);
+    }
+    this._dom = o || document.createDocumentFragment();
+}
+DOMJoiningTransformer.prototype.add = function (item) {
+    _dom.appendChild(item);
+};
+DOMJoiningTransformer.prototype.get = function () {
+    return this._dom;
+};
+
+function JamilihJoiningTransformer (o) {
+
+}
+JamilihJoiningTransformer.prototype = new DOMJoiningTransformer();
+JamilihJoiningTransformer.constructor = JamilihJoiningTransformer;
+JamilihJoiningTransformer.prototype.add = function (item) {
+    _dom.appendChild(jml(item));
+};
+
 
 function JSONJoiningTransformer (o) {
     if (!(this instanceof JSONJoiningTransformer)) {
@@ -468,21 +491,23 @@ JTLT.prototype.transform = function (mode) {
     return this.config.engine(this.config);
 };
 
-
+var baseObj;
 if (exports !== undefined) {
     Object.assign = Object.assign || require('object-assign');
-    exports.JTLT = JTLT;
-    exports.JSONPathTransformer = JSONPathTransformer;
-    exports.JSONPathTransformerContext = JSONPathTransformerContext;
-    exports.XSLTStyleJSONPathResolver = XSLTStyleJSONPathResolver;
+    baseObj = exports;
 }
 else {
-    window.JTLT = JTLT;
-    window.JSONPathTransformer = JSONPathTransformer;
-    window.JSONPathTransformerContext = JSONPathTransformerContext;
-    window.XSLTStyleJSONPathResolver = XSLTStyleJSONPathResolver;
+    baseObj = window;
 }
 
-
+// EXPORTS
+baseObj.JTLT = JTLT;
+baseObj.JSONPathTransformer = JSONPathTransformer;
+baseObj.JSONPathTransformerContext = JSONPathTransformerContext;
+baseObj.XSLTStyleJSONPathResolver = XSLTStyleJSONPathResolver;
+baseObj.StringJoiningTransformer = StringJoiningTransformer;
+baseObj.DOMJoiningTransformer = DOMJoiningTransformer;
+baseObj.JamilihJoiningTransformer = JamilihJoiningTransformer;
+baseObj.JSONJoiningTransformer = JSONJoiningTransformer;
 
 }());

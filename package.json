@@ -13,7 +13,8 @@
     "dependencies": {
         "object-assign": "2.x",
         "JSONPath": "git+https://git@github.com/brettz9/JSONPath#master",
-        "simple-get-json": "git+https://git@github.com/brettz9/getJSON#master"
+        "simple-get-json": "git+https://git@github.com/brettz9/getJSON#master",
+        "jamilih": "git+https://git@github.com/brettz9/jamilih#master"
     },
     "devDependencies": {
         "bower": "1.x.x",
