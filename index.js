@@ -48,7 +48,7 @@ StringJoiningTransformer.prototype.get = function () {
 StringJoiningTransformer.prototype.object = function () {
     var obj = {};
     if (prop !== undef) {
-        this._usePropertySets(obj, prop);
+        this._usePropertySets(obj, prop); // Todo: Put in right scope
     }
     this.add(JSON.stringify(obj)); // Todo: set current position and deal with children
 };
@@ -123,7 +123,7 @@ JSONJoiningTransformer.prototype.object = function (nestedCb) {
     var tempObj = this._obj;
     var obj = {};
     if (prop !== undef) {
-        this._usePropertySets(obj, prop);
+        this._usePropertySets(obj, prop); // Todo: Put in right scope
     }
     this.add(obj);
     nestedCb.call(this);
