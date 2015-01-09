@@ -21,23 +21,30 @@ if (exports !== undefined) {
 
 var JSONPathTransformer;
 
-/**
-* @private
-* @static
-* @todo Decide how to expose so can be monkey-patched or utilized externally
-*/
-function _triggerEqualPriorityError (config) {
-    if (config.errorOnEqualPriority) {
-        throw "You have configured JSONPathTransformer to throw errors on finding templates of equal priority and these have been found.";
+
+
+
+function AbstractJoiningTransformer () {
+    if (!(this instanceof AbstractJoiningTransformer)) {
+        return new AbstractJoiningTransformer();
     }
 }
+AbstractJoiningTransformer.prototype._requireSameChildren = function (type) {
+    if (this._cfg[type].requireSameChildren) {
+        throw "Cannot embed object children for a string joining transformer.";
+    }
+};
 
-function StringJoiningTransformer (s) {
+
+function StringJoiningTransformer (s, cfg) {
     if (!(this instanceof StringJoiningTransformer)) {
-        return new StringJoiningTransformer(s);
+        return new StringJoiningTransformer(s, cfg);
     }
     this._str = s || '';
+    this._cfg = cfg;
 }
+StringJoiningTransformer.prototype = new AbstractJoiningTransformer();
+
 StringJoiningTransformer.prototype.add = function (s) {
     this._str += s;
     return this;
@@ -46,6 +53,7 @@ StringJoiningTransformer.prototype.get = function () {
     return this._str;
 };
 StringJoiningTransformer.prototype.object = function (cb) {
+    this._requireSameChildren('string');
     var obj = {};
     if (prop !== undef) {
         this._usePropertySets(obj, prop); // Todo: Put in right scope
@@ -54,6 +62,7 @@ StringJoiningTransformer.prototype.object = function (cb) {
     return this;
 };
 StringJoiningTransformer.prototype.array = function (cb) {
+    this._requireSameChildren('string');
     this.add(JSON.stringify([])); // Todo: set current position and deal with children
     return this;
 };
@@ -66,12 +75,14 @@ StringJoiningTransformer.prototype.string = function (str, cb) {
 /**
 * This transformer expects the templates to do their own DOM building
 */
-function DOMJoiningTransformer (o) {
+function DOMJoiningTransformer (o, cfg) {
     if (!(this instanceof DOMJoiningTransformer)) {
-        return new DOMJoiningTransformer(o);
+        return new DOMJoiningTransformer(o, cfg);
     }
     this._dom = o || document.createDocumentFragment();
+    this._cfg = cfg;
 }
+DOMJoiningTransformer.prototype = new AbstractJoiningTransformer();
 DOMJoiningTransformer.prototype.add = function (item) {
     this._dom.appendChild(item);
 };
@@ -79,22 +90,33 @@ DOMJoiningTransformer.prototype.get = function () {
     return this._dom;
 };
 DOMJoiningTransformer.prototype.object = function () {
-    // throw "Object building is not supported with this DOM joining transformer.";
-    this.add(document.createTextNode()); // Todo: set current position and deal with children
+    this._requireSameChildren('dom');
+    if (this._cfg.useJHTML) {
+        this.add(jhtml());
+    }
+    else {
+        this.add(document.createTextNode()); // Todo: set current position and deal with children
+    }
     return this;
 };
 DOMJoiningTransformer.prototype.array = function () {
-    // throw "Array building is not supported with this DOM joining transformer.";
-    this.add(document.createTextNode()); // Todo: set current position and deal with children
+    this._requireSameChildren('dom');
+    if (this._cfg.useJHTML) {
+        this.add(jhtml());
+    }
+    else {
+        this.add(document.createTextNode()); // Todo: set current position and deal with children
+    }
     return this;
 };
 
 
-function JamilihJoiningTransformer (o) {
+function JamilihJoiningTransformer (o, cfg) {
     if (!(this instanceof JamilihJoiningTransformer)) {
-        return new JamilihJoiningTransformer(o);
+        return new JamilihJoiningTransformer(o, cfg);
     }
     this._dom = o || document.createDocumentFragment();
+    this._cfg = cfg;
 }
 JamilihJoiningTransformer.prototype = new DOMJoiningTransformer();
 JamilihJoiningTransformer.constructor = JamilihJoiningTransformer;
@@ -105,12 +127,14 @@ JamilihJoiningTransformer.prototype.add = function (item) {
 // Todo: add own object/array and treat result as Jamilih?
 
 
-function JSONJoiningTransformer (o) {
+function JSONJoiningTransformer (o, cfg) {
     if (!(this instanceof JSONJoiningTransformer)) {
-        return new JSONJoiningTransformer(o);
+        return new JSONJoiningTransformer(o, cfg);
     }
     this._obj = o || [];
+    this._cfg = cfg;
 }
+JSONJoiningTransformer.prototype = new AbstractJoiningTransformer();
 JSONJoiningTransformer.prototype.add = function (item) {
     if (!this._obj || typeof this._obj !== 'object') {
         throw "You cannot add to a scalar or empty value.";
@@ -160,10 +184,14 @@ JSONJoiningTransformer.prototype.array = function (nestedCb) {
     return this;
 };
 JSONJoiningTransformer.prototype.string = function (str, nestedCb) {
+    this._requireSameChildren('json');
     var sjt = new StringJoiningTransformer(str);
     nestedCb.call(this, str); // We pass the string, but user should usually use other methods
     return this;
 };
+
+
+
 
 
 function XSLTStyleJSONPathResolver () {
@@ -197,6 +225,11 @@ function JSONPathTransformerContext (config, templates) {
     this.propertySets = {};
     this.keys = {};
 }
+JSONPathTransformerContext.prototype._triggerEqualPriorityError = function () {
+    if (this._config.errorOnEqualPriority) {
+        throw "You have configured JSONPathTransformer to throw errors on finding templates of equal priority and these have been found.";
+    }
+};
 
 JSONPathTransformerContext.prototype._getJoiningTransformer = function () {
     return this._config.joiningTransformer;
@@ -282,7 +315,7 @@ JSONPathTransformerContext.prototype.applyTemplates = function (select, mode, so
                 var bPriority = typeof b.priority === 'number' ? b.priority : that._config.specificityPriorityResolver(a.path);
                 
                 if (aPriority === bPriority) {
-                    _triggerEqualPriorityError(this._config);
+                    this._triggerEqualPriorityError();
                 }
                 
                 return (aPriority > bPriority) ? -1 : 1; // We want equal conditions to go in favor of the later (b)
@@ -414,7 +447,7 @@ JSONPathTransformer = function JSONPathTransformer (config) {
     }
     var that = this;
     var map = {};
-    this.config = config;
+    this._config = config;
     this.rootTemplates = [];
     this.templates = config.templates;
     this.templates.forEach(function (template, i, templates) {
@@ -428,14 +461,18 @@ JSONPathTransformer = function JSONPathTransformer (config) {
     });
     map = null;
 };
-
+JSONPathTransformer.prototype._triggerEqualPriorityError = function () {
+    if (this._config.errorOnEqualPriority) {
+        throw "You have configured JSONPathTransformer to throw errors on finding templates of equal priority and these have been found.";
+    }
+};
 
 JSONPathTransformer.prototype.transform = function (mode) {
-    var jte = new JSONPathTransformerContext(this.config, this.templates);
+    var jte = new JSONPathTransformerContext(this._config, this.templates);
     var len = this.rootTemplates.length;
     var templateObj = len ? this.rootTemplates.pop() : JSONPathTransformer.DefaultTemplateRules.transformRoot;
     if (len > 1) {
-        _triggerEqualPriorityError(this.config);
+        this._triggerEqualPriorityError();
     }
     templateObj.template.call(jte, mode);
     var result = jte.getOutput();
@@ -501,8 +538,9 @@ JSONPathTransformer.DefaultTemplateRules = {
 * @param {function} [config.engine=JSONPathTransformer] Will be based the same config as passed to this instance. Defaults to a transforming function based on JSONPath and with its own set of priorities for processing templates.
 * @param {function} [config.specificityPriorityResolver=XSLTStyleJSONPathResolver.getPriorityBySpecificity]
 * @param {object} [config.joiningTransformer=StringJoiningTransformer] Can be a singleton or class instance. Defaults to string joining for output transformation.
-* @param {function} [config.joiningTransformer.get=StringJoiningTransformer.get] Required method. Defaults to string joining getter.
-* @param {function} [config.joiningTransformer.add=StringJoiningTransformer.add] Required method. Defaults to string joining adder.
+* @param {function} [config.joiningTransformer.get=StringJoiningTransformer.get] Required method if object provided. Defaults to string joining getter.
+* @param {function} [config.joiningTransformer.add=StringJoiningTransformer.add] Required method if object provided. Defaults to string joining adder.
+* @param {object} [config.joiningConfig={string: {}, json: {}, dom: {}, jamilih: {}}] Config to pass on to the joining transformer
 * @returns {JTLT} A JTLT instance object
 * @todo Remove JSONPath dependency in query use of '$'?
 * @todo Make a simple string type "output" to handle creation of StringJoiningTransformer, DOM, JSON, or Jamilih output for users
@@ -528,7 +566,7 @@ function JTLT (config) {
 JTLT.prototype._autoStart = function (mode) {
     if (this.config.autostart !== false || this.ready) {
         // We wait to set this default as we want to pass in the data
-        this.config.joiningTransformer = this.config.joiningTransformer || new JSONJoiningTransformer(this.config.data);
+        this.config.joiningTransformer = this.config.joiningTransformer || new JSONJoiningTransformer(this.config.data, this.config.joiningConfig);
         this.config.success(this.transform(mode));
     }
 };
