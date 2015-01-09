@@ -614,13 +614,14 @@ JTLT.prototype.transform = function (mode) {
 var baseObj = exports === undefined ? window : exports;
 
 // EXPORTS
-baseObj.JTLT = JTLT;
-baseObj.JSONPathTransformer = JSONPathTransformer;
-baseObj.JSONPathTransformerContext = JSONPathTransformerContext;
-baseObj.XSLTStyleJSONPathResolver = XSLTStyleJSONPathResolver;
+baseObj.AbstractJoiningTransformer = AbstractJoiningTransformer;
 baseObj.StringJoiningTransformer = StringJoiningTransformer;
 baseObj.DOMJoiningTransformer = DOMJoiningTransformer;
 baseObj.JamilihJoiningTransformer = JamilihJoiningTransformer;
 baseObj.JSONJoiningTransformer = JSONJoiningTransformer;
+baseObj.XSLTStyleJSONPathResolver = XSLTStyleJSONPathResolver;
+baseObj.JSONPathTransformerContext = JSONPathTransformerContext;
+baseObj.JSONPathTransformer = JSONPathTransformer;
+baseObj.JTLT = JTLT;
 
 }());
