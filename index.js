@@ -140,7 +140,7 @@ JSONJoiningTransformer.prototype.object = function (nestedCb, usePropertySets, p
     if (usePropertySets !== undef) {
         usePropertySets.reduce(function (obj, psName) {
             return that._usePropertySets(obj, psName); // Todo: Put in right scope
-        }, {}));
+        }, {});
     }
     if (propSets !== undef) {
         Object.assign(obj, propSets);
