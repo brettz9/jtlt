@@ -617,7 +617,6 @@ JTLT.prototype.setDefaults = function (config) {
     config = this.config;
     var query = config.query || (typeof config.templates === 'function' ? config.templates : (typeof config.template === 'function' ? config.template : null));
     this.config.templates = query ? [{name: 'root', path: '$', template: query}] : (config.templates || [config.template]);
-    this.config.json = this.config.data;
     this.config.errorOnEqualPriority = config.errorOnEqualPriority || false;
     this.config.engine = this.config.engine || function (config) {
         var jpt = new JSONPathTransformer(config);
