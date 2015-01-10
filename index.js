@@ -71,6 +71,13 @@ StringJoiningTransformer.prototype.string = function (str, cb) {
     return this;
 };
 
+StringJoiningTransformer.prototype.element = function () {
+
+};
+StringJoiningTransformer.prototype.attribute = function () {
+
+};
+
 
 /**
 * This transformer expects the templates to do their own DOM building
@@ -109,7 +116,12 @@ DOMJoiningTransformer.prototype.array = function () {
     }
     return this;
 };
+DOMJoiningTransformer.prototype.element = function () {
 
+};
+DOMJoiningTransformer.prototype.attribute = function () {
+
+};
 
 function JamilihJoiningTransformer (o, cfg) {
     if (!(this instanceof JamilihJoiningTransformer)) {
@@ -190,7 +202,12 @@ JSONJoiningTransformer.prototype.string = function (str, nestedCb) {
     return this;
 };
 
+JSONJoiningTransformer.prototype.element = function () {
 
+};
+JSONJoiningTransformer.prototype.attribute = function () {
+
+};
 
 
 
@@ -561,14 +578,19 @@ function JTLT (config) {
         }(config)));
         return this;
     }
-    this._autoStart(config.mode);
+    else {
+        this._autoStart(config.mode);
+    }
 }
 JTLT.prototype._autoStart = function (mode) {
-    if (this.config.autostart !== false || this.ready) {
-        // We wait to set this default as we want to pass in the data
-        this.config.joiningTransformer = this.config.joiningTransformer || new JSONJoiningTransformer(this.config.data, this.config.joiningConfig);
-        this.config.success(this.transform(mode));
+    // We wait to set this default as we want to pass in the data
+    this.config.joiningTransformer = this.config.joiningTransformer || new JSONJoiningTransformer(this.config.data, this.config.joiningConfig);
+
+    if (this.config.autostart === false && !this.ready) {
+        return;
     }
+
+    this.transform(mode);
 };
 JTLT.prototype.setDefaults = function (config) {
     this.config = config || {};
@@ -608,7 +630,7 @@ JTLT.prototype.transform = function (mode) {
     }
 
     this.config.mode = mode;
-    return this.config.engine(this.config);
+    return this.config.success(this.config.engine(this.config));
 };
 
 var baseObj = exports === undefined ? window : exports;
