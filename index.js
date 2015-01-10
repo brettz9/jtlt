@@ -78,6 +78,7 @@ StringJoiningTransformer.prototype.element = function () { // Todo: implement (a
 StringJoiningTransformer.prototype.attribute = function () {
 
 };
+// Todo: Implement comment(), processingInstruction(), etc.
 
 
 /**
