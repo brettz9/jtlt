@@ -578,6 +578,9 @@ function JTLT (config) {
         }(config)));
         return this;
     }
+    else if (this.config.data === undef) {
+        throw "You must supply either config.ajaxData or config.data";
+    }
     else {
         this._autoStart(config.mode);
     }
