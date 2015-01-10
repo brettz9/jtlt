@@ -586,7 +586,7 @@ JTLT.prototype._autoStart = function (mode) {
     // We wait to set this default as we want to pass in the data
     this.config.joiningTransformer = this.config.joiningTransformer || new JSONJoiningTransformer(this.config.data, this.config.joiningConfig);
 
-    if (this.config.autostart === false && !this.ready) {
+    if (this.config.autostart === false) {
         return;
     }
 
@@ -622,8 +622,7 @@ JTLT.prototype.transform = function (mode) {
         if (this.config.ajaxData === undef) {
             throw "You must supply a 'data' or 'ajaxData' property";
         }
-        this.ready = true;
-        return;
+        throw "You must wait until the ajax file is retrieved";
     }
     if (typeof this.config.success !== 'function') {
         throw "You must supply a 'success' callback";
