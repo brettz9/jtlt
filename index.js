@@ -71,7 +71,7 @@ StringJoiningTransformer.prototype.string = function (str, cb) {
     return this;
 };
 
-StringJoiningTransformer.prototype.element = function () {
+StringJoiningTransformer.prototype.element = function () { // Todo: implement (allow for complete Jamilih or function callback)
 
 };
 StringJoiningTransformer.prototype.attribute = function () {
