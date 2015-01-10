@@ -1,6 +1,6 @@
 /*global JSONPath, getJSON, jml */
 /*jslint vars:true, todo:true, regexp:true*/
-var getJSON, exports, require, document, window;
+var getJSON, exports, require, document, window, jhtml;
 
 if (require !== undefined) {
     getJSON = require('simple-get-json');
@@ -16,6 +16,7 @@ var jsonpath = require === undefined ? JSONPath : require('JSONPath');
 if (exports !== undefined) {
     Object.assign = Object.assign || require('object-assign');
     document = require('jsdom').jsdom('');
+    jhtml = require('jhtml');
     window = document.parentWindow;
 }
 
@@ -52,7 +53,7 @@ StringJoiningTransformer.prototype.add = function (s) {
 StringJoiningTransformer.prototype.get = function () {
     return this._str;
 };
-StringJoiningTransformer.prototype.object = function (cb) {
+StringJoiningTransformer.prototype.object = function (prop, cb) {
     this._requireSameChildren('string');
     var obj = {};
     if (prop !== undef) {
@@ -415,12 +416,12 @@ JSONPathTransformerContext.prototype.message = function (json) {
 };
 
 JSONPathTransformerContext.prototype.object = function (prop) {
-    this._getJoiningTransformer().object(item);
+    this._getJoiningTransformer().object();
     return this;
 };
 
 JSONPathTransformerContext.prototype.array = function () {
-    this._getJoiningTransformer().array(item);
+    this._getJoiningTransformer().array();
     return this;
 };
 
@@ -560,7 +561,6 @@ JSONPathTransformer.DefaultTemplateRules = {
 * @param {object} [config.joiningConfig={string: {}, json: {}, dom: {}, jamilih: {}}] Config to pass on to the joining transformer
 * @returns {JTLT} A JTLT instance object
 * @todo Remove JSONPath dependency in query use of '$'?
-* @todo Make a simple string type "output" to handle creation of StringJoiningTransformer, DOM, JSON, or Jamilih output for users
 */
 function JTLT (config) {
     if (!(this instanceof JTLT)) {
@@ -578,16 +578,32 @@ function JTLT (config) {
         }(config)));
         return this;
     }
-    else if (this.config.data === undef) {
+    if (this.config.data === undef) {
         throw "You must supply either config.ajaxData or config.data";
     }
-    else {
-        this._autoStart(config.mode);
-    }
+    this._autoStart(config.mode);
 }
+JTLT.prototype._createJoiningTransformer = function () {
+    var JT;
+    switch (this.config.outputType) {
+        case 'string':
+            JT = StringJoiningTransformer;
+            break;
+        case 'dom':
+            JT = DOMJoiningTransformer;
+            break;
+        case 'jamilih':
+            JT = JamilihJoiningTransformer;
+            break;
+        case 'json': default:
+            JT = JSONJoiningTransformer;
+            break;
+    }
+    return new JT(this.config.data, this.config.joiningConfig);
+};
 JTLT.prototype._autoStart = function (mode) {
     // We wait to set this default as we want to pass in the data
-    this.config.joiningTransformer = this.config.joiningTransformer || new JSONJoiningTransformer(this.config.data, this.config.joiningConfig);
+    this.config.joiningTransformer = this.config.joiningTransformer || this._createJoiningTransformer();
 
     if (this.config.autostart === false) {
         return;
