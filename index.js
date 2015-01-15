@@ -124,6 +124,7 @@ DOMJoiningTransformer.prototype.element = function () {
 DOMJoiningTransformer.prototype.attribute = function () {
 
 };
+// Todo: allow separate XML DOM one with XML String and hXML conversions (HTML to XHTML is inevitably safe?)
 
 function JamilihJoiningTransformer (o, cfg) {
     if (!(this instanceof JamilihJoiningTransformer)) {
