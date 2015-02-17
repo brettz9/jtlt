@@ -41,9 +41,11 @@ types (e.g., a JS container containing DOM objects, or temporary use
 of a string container, etc.). Include JHTML methods after implementing
 my latest spec
     1. Support XML and add hXML methods.
-1. Add update functions and create JSON serialization (as with XSLT
-expressed itself in declarative XML) so one can submit
-and evaluate through [HTTPQuery](https://github.com/brettz9/httpquery).
+1. Add JSON update functions (equivalent to Xquery Update Facility for
+XML ([overview](http://www.xmlplease.com/xquery-update))) and create
+JSON serialization (as with XSLT expressed itself in declarative XML)
+so one can submit and evaluate
+through [HTTPQuery](https://github.com/brettz9/httpquery).
 
 # Possible todos
 
