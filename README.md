@@ -49,7 +49,7 @@ through [HTTPQuery](https://github.com/brettz9/httpquery).
 
 # Possible todos
 
-1. Make schema-aware so that templates could target types. Most reusable application may be having a type-driven view of a JSON Schema instance (e.g., dates could be shown inside a calendar widget). Perhaps this schema-awareness could also drive a JSON editor (as with other existing projects) (even using same API as JSONEditor?).
+1. Make schema-aware so that templates could target types. Most reusable application may be having a type-driven view of a JSON Schema instance (e.g., dates could be shown inside a calendar widget). Perhaps this schema-awareness could also drive a JSON editor (as with other existing projects) (even using same API as JSONEditor?). This would help not only for editors which edit a JSON file in full, but also for providing schema paths or other identifiers so that a transformed/queried subset of a file (or joining of multiple files) could point the way for edited contents to be saved back to the correct JSON file and position in the JSON file.
 1. Implement and demo equivalent to applying and calling templates, and root template
 1. Reconcile a [non-eval PR for JSONPath](https://github.com/s3u/JSONPath/pull/4) with my [own fork](https://github.com/brettz9/JSONPath). The OR condition (outside of filters) is another important feature as would be schema-aware path results.
 1. Allow hybrid JSON/Jamilih or JSON/(X)HTML/XML so that one can add XPath or query into HTML in a relevant manner
