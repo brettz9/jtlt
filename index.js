@@ -47,7 +47,13 @@ function StringJoiningTransformer (s, cfg) {
 StringJoiningTransformer.prototype = new AbstractJoiningTransformer();
 
 StringJoiningTransformer.prototype.add = function (s) {
-    this._str += s;
+    // Todo: Could allow option to disallow elements within arrays, etc. (add states and state checking)
+    if (this._arrItemState) {
+        this._arr.push(s);
+    }
+    else {
+        this._str += s;
+    }
     return this;
 };
 StringJoiningTransformer.prototype.get = function () {
@@ -65,9 +71,21 @@ StringJoiningTransformer.prototype.object = function (prop, cb) {
 };
 StringJoiningTransformer.prototype.array = function (cb) {
     this._requireSameChildren('string');
-    var arr = [];
+    var oldArr = this._arr;
+    this._arr = [];
+    
+    var oldArrItemState = this._arrItemState;
+    this._arrItemState = true;
     cb.call(this);
-    this.add(JSON.stringify(arr)); // Todo: set current position and deal with children
+    this._arrItemState = oldArrItemState;
+    
+    if (oldArrItemState) { // Not ready to serialize yet as still inside another array
+        this.add(this._arr);
+    }
+    else {
+        this.add(JSON.stringify(this._arr)); // Todo: set current position and deal with children
+    }
+    this._arr = oldArr;
     return this;
 };
 StringJoiningTransformer.prototype.string = function (str, cb) {
@@ -89,9 +107,14 @@ StringJoiningTransformer.prototype.element = function (elName, atts, cb) { // To
     }
     this.add('</' + elName + '>');
     this._openTagState = oldTagState;
+    return this;
 };
 StringJoiningTransformer.prototype.attribute = function (name, val) {
-    this.add(' ' + name + '="' + val + '"'); // Todo: attribute value escaping
+    if (!this._openTagState) {
+        throw "An attribute cannot be added after an opening tag has been closed (name: " + name + "; value: " + val + ")";
+    }
+    this.add(' ' + name + '="' + val.replace(/&/g, '&amp;').replace(/"/g, '&quot;') + '"'); // Todo: make ampersand escaping optional to avoid double escaping
+    return this;
 };
 StringJoiningTransformer.prototype.text = function (txt) {
     if (this._openTagState) {
@@ -142,13 +165,13 @@ DOMJoiningTransformer.prototype.array = function () {
     return this;
 };
 DOMJoiningTransformer.prototype.element = function () {
-
+    return this;
 };
 DOMJoiningTransformer.prototype.attribute = function () {
-
+    return this;
 };
 DOMJoiningTransformer.prototype.text = function (txt) {
-
+    return this;
 };
 // Todo: allow separate XML DOM one with XML String and hXML conversions (HTML to XHTML is inevitably safe?)
 
@@ -232,13 +255,13 @@ JSONJoiningTransformer.prototype.string = function (str, nestedCb) {
 };
 
 JSONJoiningTransformer.prototype.element = function () {
-
+    return this;
 };
 JSONJoiningTransformer.prototype.attribute = function () {
-
+    return this;
 };
 JSONJoiningTransformer.prototype.text = function (txt) {
-
+    return this;
 };
 
 
