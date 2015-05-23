@@ -51,6 +51,9 @@ StringJoiningTransformer.prototype.add = function (s) {
     if (this._arrItemState) {
         this._arr.push(s);
     }
+    else if (this._objPropState) {
+        throw "Scalar values must be added via propValue() when in an object state.";
+    }
     else {
         this._str += s;
     }
@@ -59,14 +62,35 @@ StringJoiningTransformer.prototype.add = function (s) {
 StringJoiningTransformer.prototype.get = function () {
     return this._str;
 };
+StringJoiningTransformer.prototype.propValue = function (prop, val) {
+    if (!this._objPropState) {
+        throw "propValue() can only be called after an object state has been set up.";
+    }
+    this._obj[prop] = val;
+    return this;
+};
+
 StringJoiningTransformer.prototype.object = function (prop, cb) {
     this._requireSameChildren('string');
-    var obj = {};
+    var oldObj = this._obj;
+    this._obj = {};
+    
     if (prop !== undef) {
         this._usePropertySets(obj, prop); // Todo: Put in right scope
     }
+    
+    var oldObjPropState = this._objPropState;
+    this._objPropState = true;
     cb.call(this);
-    this.add(JSON.stringify(obj)); // Todo: set current position and deal with children
+    this._objPropState = oldObjPropState;
+    
+    if (oldObjPropState || this._arrItemState) { // Not ready to serialize yet as still inside another array
+        this.add(this._obj);
+    }
+    else {
+        this.add(JSON.stringify(this._obj));
+    }
+    this._arr = oldArr;
     return this;
 };
 StringJoiningTransformer.prototype.array = function (cb) {
@@ -79,17 +103,17 @@ StringJoiningTransformer.prototype.array = function (cb) {
     cb.call(this);
     this._arrItemState = oldArrItemState;
     
-    if (oldArrItemState) { // Not ready to serialize yet as still inside another array
+    if (oldArrItemState || this._objPropState) { // Not ready to serialize yet as still inside another array
         this.add(this._arr);
     }
     else {
-        this.add(JSON.stringify(this._arr)); // Todo: set current position and deal with children
+        this.add(JSON.stringify(this._arr));
     }
     this._arr = oldArr;
     return this;
 };
 StringJoiningTransformer.prototype.string = function (str, cb) {
-    this.add(str); // Todo: set current position and deal with children
+    this.add(str);
     return this;
 };
 
@@ -143,6 +167,9 @@ DOMJoiningTransformer.prototype.add = function (item) {
 };
 DOMJoiningTransformer.prototype.get = function () {
     return this._dom;
+};
+DOMJoiningTransformer.prototype.propValue = function (prop, val) {
+    
 };
 DOMJoiningTransformer.prototype.object = function () {
     this._requireSameChildren('dom');
@@ -214,6 +241,11 @@ JSONJoiningTransformer.prototype.add = function (item) {
 
 JSONJoiningTransformer.prototype.get = function () {
     return this._obj;
+};
+
+
+JSONJoiningTransformer.prototype.propValue = function (prop, val) {
+    
 };
 
 /**
