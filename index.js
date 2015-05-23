@@ -59,12 +59,15 @@ StringJoiningTransformer.prototype.object = function (prop, cb) {
     if (prop !== undef) {
         this._usePropertySets(obj, prop); // Todo: Put in right scope
     }
+    cb.call(this);
     this.add(JSON.stringify(obj)); // Todo: set current position and deal with children
     return this;
 };
 StringJoiningTransformer.prototype.array = function (cb) {
     this._requireSameChildren('string');
-    this.add(JSON.stringify([])); // Todo: set current position and deal with children
+    var arr = [];
+    cb.call(this);
+    this.add(JSON.stringify(arr)); // Todo: set current position and deal with children
     return this;
 };
 StringJoiningTransformer.prototype.string = function (str, cb) {
@@ -72,11 +75,31 @@ StringJoiningTransformer.prototype.string = function (str, cb) {
     return this;
 };
 
-StringJoiningTransformer.prototype.element = function () { // Todo: implement (allow for complete Jamilih or function callback)
 
+StringJoiningTransformer.prototype.element = function (elName, atts, cb) { // Todo: implement (allow for complete Jamilih or function callback)
+    // Todo: allow third argument to be array following Jamilih (also let "atts" follow Jamilih)
+    this.add('<' + elName);
+    var oldTagState = this._openTagState;
+    this._openTagState = true;
+    cb.call(this);
+    
+    // Todo: Depending on an this._cfg option, might allow for HTML self-closing tags (or polyglot-friendly self-closing) or XML self-closing when empty
+    if (this._openTagState) {
+        this.add('>');
+    }
+    this.add('</' + elName + '>');
+    this._openTagState = oldTagState;
 };
-StringJoiningTransformer.prototype.attribute = function () {
-
+StringJoiningTransformer.prototype.attribute = function (name, val) {
+    this.add(' ' + name + '="' + val + '"'); // Todo: attribute value escaping
+};
+StringJoiningTransformer.prototype.text = function (txt) {
+    if (this._openTagState) {
+        this.add('>');
+        this._openTagState = false;
+    }
+    this.add(txt);
+    return this;
 };
 // Todo: Implement comment(), processingInstruction(), etc.
 
@@ -122,6 +145,9 @@ DOMJoiningTransformer.prototype.element = function () {
 
 };
 DOMJoiningTransformer.prototype.attribute = function () {
+
+};
+DOMJoiningTransformer.prototype.text = function (txt) {
 
 };
 // Todo: allow separate XML DOM one with XML String and hXML conversions (HTML to XHTML is inevitably safe?)
@@ -211,7 +237,9 @@ JSONJoiningTransformer.prototype.element = function () {
 JSONJoiningTransformer.prototype.attribute = function () {
 
 };
+JSONJoiningTransformer.prototype.text = function (txt) {
 
+};
 
 
 function XSLTStyleJSONPathResolver () {
