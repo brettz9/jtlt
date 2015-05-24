@@ -85,7 +85,7 @@ StringJoiningTransformer.prototype.object = function (prop, cb) {
     cb.call(this);
     this._objPropState = oldObjPropState;
     
-    if (oldObjPropState || this._arrItemState) { // Not ready to serialize yet as still inside another array
+    if (oldObjPropState || this._arrItemState) { // Not ready to serialize yet as still inside another array or object
         this.add(this._obj);
     }
     else {
@@ -104,7 +104,7 @@ StringJoiningTransformer.prototype.array = function (cb) {
     cb.call(this);
     this._arrItemState = oldArrItemState;
     
-    if (oldArrItemState || this._objPropState) { // Not ready to serialize yet as still inside another array
+    if (oldArrItemState || this._objPropState) { // Not ready to serialize yet as still inside another array or object
         this.add(this._arr);
     }
     else {
