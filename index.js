@@ -91,7 +91,7 @@ StringJoiningTransformer.prototype.object = function (prop, cb) {
     else {
         this.add(JSON.stringify(this._obj));
     }
-    this._arr = oldArr;
+    this._obj = oldObj;
     return this;
 };
 StringJoiningTransformer.prototype.array = function (cb) {
@@ -265,7 +265,10 @@ JSONJoiningTransformer.prototype.get = function () {
 
 
 JSONJoiningTransformer.prototype.propValue = function (prop, val) {
-    
+    if (!this._objPropState) {
+        throw "propValue() can only be called after an object state has been set up.";
+    }
+    this._obj[prop] = val;
 };
 
 /**
@@ -285,9 +288,13 @@ JSONJoiningTransformer.prototype.object = function (nestedCb, usePropertySets, p
     if (propSets !== undef) {
         Object.assign(obj, propSets);
     }
+    
     this.add(obj);
+    var oldObjPropState = this._objPropState;
+    this._objPropState = true;
     nestedCb.call(this, obj); // We pass the object, but user should usually use other methods
     this._obj = tempObj;
+    this._objPropState = oldObjPropState;
     return this;
 };
 
@@ -306,10 +313,10 @@ JSONJoiningTransformer.prototype.string = function (str, nestedCb) {
     return this;
 };
 
-JSONJoiningTransformer.prototype.element = function () {
+JSONJoiningTransformer.prototype.element = function (elName, atts, cb) {
     return this;
 };
-JSONJoiningTransformer.prototype.attribute = function () {
+JSONJoiningTransformer.prototype.attribute = function (name, val) {
     return this;
 };
 JSONJoiningTransformer.prototype.text = function (txt) {
