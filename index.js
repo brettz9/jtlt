@@ -192,13 +192,32 @@ DOMJoiningTransformer.prototype.array = function () {
     }
     return this;
 };
-DOMJoiningTransformer.prototype.element = function () {
+DOMJoiningTransformer.prototype.element = function (elName, atts, cb) {
+    // Todo: allow third argument to be array following Jamilih (also let "atts" follow Jamilih)
+    var el = document.createElement(elName);
+    var att;
+    for (att in atts) {
+        el.setAttribute(att, atts[att]);
+    }
+    this.add(el);
+    
+    var oldDOM = this._dom;
+
+    this._dom = el;
+    cb.call(this);
+    this._dom = oldDOM;
+    
     return this;
 };
-DOMJoiningTransformer.prototype.attribute = function () {
+DOMJoiningTransformer.prototype.attribute = function (name, val) {
+    if (!this._dom || typeof this._dom !== 'object' || this._dom.nodeType !== 1) {
+        throw "You may only set an attribute on an element";
+    }
+    this._dom.setAttribute(name, val);
     return this;
 };
 DOMJoiningTransformer.prototype.text = function (txt) {
+    this.add(document.createTextNode(txt));
     return this;
 };
 // Todo: allow separate XML DOM one with XML String and hXML conversions (HTML to XHTML is inevitably safe?)
