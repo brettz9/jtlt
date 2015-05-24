@@ -30,9 +30,9 @@ function AbstractJoiningTransformer () {
         return new AbstractJoiningTransformer();
     }
 }
-AbstractJoiningTransformer.prototype._requireSameChildren = function (type) {
+AbstractJoiningTransformer.prototype._requireSameChildren = function (type, embedType) {
     if (this._cfg[type].requireSameChildren) {
-        throw "Cannot embed object children for a string joining transformer.";
+        throw "Cannot embed " + embedType + " children for a " + type + " joining transformer.";
     }
 };
 
@@ -67,11 +67,12 @@ StringJoiningTransformer.prototype.propValue = function (prop, val) {
         throw "propValue() can only be called after an object state has been set up.";
     }
     this._obj[prop] = val;
+    // Todo: allow a sister method allowing second argument to be a callback? (if so, temporarily disable _objPropState so it can use add())
     return this;
 };
 
 StringJoiningTransformer.prototype.object = function (prop, cb) {
-    this._requireSameChildren('string');
+    this._requireSameChildren('string', 'object');
     var oldObj = this._obj;
     this._obj = {};
     
@@ -94,7 +95,7 @@ StringJoiningTransformer.prototype.object = function (prop, cb) {
     return this;
 };
 StringJoiningTransformer.prototype.array = function (cb) {
-    this._requireSameChildren('string');
+    this._requireSameChildren('string', 'array');
     var oldArr = this._arr;
     this._arr = [];
     
@@ -172,7 +173,7 @@ DOMJoiningTransformer.prototype.propValue = function (prop, val) {
     
 };
 DOMJoiningTransformer.prototype.object = function () {
-    this._requireSameChildren('dom');
+    this._requireSameChildren('dom', 'object');
     if (this._cfg.useJHTML) {
         this.add(jhtml());
     }
@@ -182,7 +183,7 @@ DOMJoiningTransformer.prototype.object = function () {
     return this;
 };
 DOMJoiningTransformer.prototype.array = function () {
-    this._requireSameChildren('dom');
+    this._requireSameChildren('dom', 'array');
     if (this._cfg.useJHTML) {
         this.add(jhtml());
     }
@@ -280,7 +281,7 @@ JSONJoiningTransformer.prototype.array = function (nestedCb) {
     return this;
 };
 JSONJoiningTransformer.prototype.string = function (str, nestedCb) {
-    this._requireSameChildren('json');
+    this._requireSameChildren('json', 'string');
     var sjt = new StringJoiningTransformer(str);
     nestedCb.call(this, str); // We pass the string, but user should usually use other methods
     return this;
