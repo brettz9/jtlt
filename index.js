@@ -1,4 +1,4 @@
-/*global JSONPath, getJSON, jml */
+/*global JSONPath, getJSON, jml, JHTML */
 /*jslint vars:true, todo:true, regexp:true*/
 var getJSON, exports, require, document, window, jhtml;
 
@@ -71,13 +71,18 @@ StringJoiningTransformer.prototype.propValue = function (prop, val) {
     return this;
 };
 
-StringJoiningTransformer.prototype.object = function (prop, cb) {
+StringJoiningTransformer.prototype.object = function (cb, usePropertySets, propSets) {
     this._requireSameChildren('string', 'object');
     var oldObj = this._obj;
     this._obj = {};
     
-    if (prop !== undef) {
-        this._usePropertySets(obj, prop); // Todo: Put in right scope
+    if (usePropertySets !== undef) {
+        usePropertySets.reduce(function (obj, psName) {
+            return this._usePropertySets(obj, psName); // Todo: Put in right scope
+        }.bind(this), {});
+    }
+    if (propSets !== undef) {
+        Object.assign(this._obj, propSets);
     }
     
     var oldObjPropState = this._objPropState;
@@ -87,6 +92,9 @@ StringJoiningTransformer.prototype.object = function (prop, cb) {
     
     if (oldObjPropState || this._arrItemState) { // Not ready to serialize yet as still inside another array or object
         this.add(this._obj);
+    }
+    else if (this._cfg.JHTMLForJSON) {
+        this.add(JHTML.toJHTMLString(this._obj));
     }
     else {
         this.add(JSON.stringify(this._obj));
@@ -172,10 +180,10 @@ DOMJoiningTransformer.prototype.get = function () {
 DOMJoiningTransformer.prototype.propValue = function (prop, val) {
     
 };
-DOMJoiningTransformer.prototype.object = function () {
+DOMJoiningTransformer.prototype.object = function (cb, usePropertySets, propSets) {
     this._requireSameChildren('dom', 'object');
-    if (this._cfg.useJHTML) {
-        this.add(jhtml());
+    if (this._cfg.JHTMLForJSON) {
+        this.add(JHTML());
     }
     else {
         this.add(document.createTextNode()); // Todo: set current position and deal with children
@@ -184,14 +192,20 @@ DOMJoiningTransformer.prototype.object = function () {
 };
 DOMJoiningTransformer.prototype.array = function () {
     this._requireSameChildren('dom', 'array');
-    if (this._cfg.useJHTML) {
-        this.add(jhtml());
+    if (this._cfg.JHTMLForJSON) {
+        this.add(JHTML());
     }
     else {
         this.add(document.createTextNode()); // Todo: set current position and deal with children
     }
     return this;
 };
+
+DOMJoiningTransformer.prototype.string = function () {
+    this.add(document.createTextNode());
+    return this;
+};
+
 DOMJoiningTransformer.prototype.element = function (elName, atts, cb) {
     // Todo: allow third argument to be array following Jamilih (also let "atts" follow Jamilih)
     var el = document.createElement(elName);
@@ -272,18 +286,17 @@ JSONJoiningTransformer.prototype.propValue = function (prop, val) {
 };
 
 /**
-* @param {function} nestedCb Callback to be executed on this transformer but with a context nested within the newly created object
+* @param {function} cb Callback to be executed on this transformer but with a context nested within the newly created object
 * @param {array} usePropertySets Array of string property set names to copy onto the new object
 * @param {object} propSets An object of key-value pairs to copy onto the new object
 */
-JSONJoiningTransformer.prototype.object = function (nestedCb, usePropertySets, propSets) {
+JSONJoiningTransformer.prototype.object = function (cb, usePropertySets, propSets) {
     var tempObj = this._obj;
     var obj = {};
-    var that = this;
     if (usePropertySets !== undef) {
-        usePropertySets.reduce(function (obj, psName) {
-            return that._usePropertySets(obj, psName); // Todo: Put in right scope
-        }, {});
+        obj = usePropertySets.reduce(function (obj, psName) {
+            return this._usePropertySets(obj, psName); // Todo: Put in right scope
+        }.bind(this), {});
     }
     if (propSets !== undef) {
         Object.assign(obj, propSets);
@@ -292,24 +305,24 @@ JSONJoiningTransformer.prototype.object = function (nestedCb, usePropertySets, p
     this.add(obj);
     var oldObjPropState = this._objPropState;
     this._objPropState = true;
-    nestedCb.call(this, obj); // We pass the object, but user should usually use other methods
+    cb.call(this, obj); // We pass the object, but user should usually use other methods
     this._obj = tempObj;
     this._objPropState = oldObjPropState;
     return this;
 };
 
-JSONJoiningTransformer.prototype.array = function (nestedCb) {
+JSONJoiningTransformer.prototype.array = function (cb) {
     var tempObj = this._obj;
     var arr = [];
     this.add(arr); // Todo: set current position and deal with children
-    nestedCb.call(this, arr); // We pass the array, but user should usually use other methods
+    cb.call(this, arr); // We pass the array, but user should usually use other methods
     this._obj = tempObj;
     return this;
 };
-JSONJoiningTransformer.prototype.string = function (str, nestedCb) {
+JSONJoiningTransformer.prototype.string = function (str, cb) {
     this._requireSameChildren('json', 'string');
     var sjt = new StringJoiningTransformer(str);
-    nestedCb.call(this, str); // We pass the string, but user should usually use other methods
+    cb.call(this, str); // We pass the string, but user should usually use other methods
     return this;
 };
 
@@ -527,7 +540,7 @@ JSONPathTransformerContext.prototype.message = function (json) {
     console.log(json);
 };
 
-JSONPathTransformerContext.prototype.object = function (prop) {
+JSONPathTransformerContext.prototype.object = function (cb, usePropertySets, propSets) {
     this._getJoiningTransformer().object();
     return this;
 };
@@ -538,10 +551,9 @@ JSONPathTransformerContext.prototype.array = function () {
 };
 
 JSONPathTransformerContext.prototype.propertySet = function (name, propertySetObj, usePropertySets) {
-    var that = this;
     this.propertySets[name] = usePropertySets ? Object.assign({}, propertySetObj, usePropertySets.reduce(function (obj, psName) {
-        return that._usePropertySets(obj, psName);
-    }, {})) : propertySetObj;
+        return this._usePropertySets(obj, psName);
+    }.bind(this), {})) : propertySetObj;
     return this;
 };
 
