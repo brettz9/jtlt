@@ -86,6 +86,7 @@ StringJoiningTransformer.prototype.object = function (cb, usePropertySets, propS
     this._requireSameChildren('string', 'object');
     var oldObj = this._obj;
     this._obj = {};
+    // Todo: Allow in this and subsequent JSON methods ability to create jml-based JHTML
     
     if (usePropertySets !== undef) {
         usePropertySets.reduce(function (obj, psName) {
