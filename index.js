@@ -25,7 +25,7 @@ else {
     jsonpath = JSONPath;
 }
 
-
+// Todo: Allow swapping of joining transformer types in mid transformation (e.g., building strings with string transformer but adding as text node in a DOM transformer)
 
 function AbstractJoiningTransformer (cfg) {
     if (!(this instanceof AbstractJoiningTransformer)) {
@@ -126,16 +126,54 @@ StringJoiningTransformer.prototype.array = function (cb) {
     if (oldArrItemState || this._objPropState) { // Not ready to serialize yet as still inside another array or object
         this.add(this._arr);
     }
+    else if (this._cfg.JHTMLForJSON) {
+        this.add(JHTML.toJHTMLString(this._arr));
+    }
     else {
         this.add(JSON.stringify(this._arr));
     }
     this._arr = oldArr;
     return this;
 };
-StringJoiningTransformer.prototype.string = function (str, cb) {
+StringJoiningTransformer.prototype.string = function (str) {
     this.add(str);
     return this;
 };
+StringJoiningTransformer.prototype.number = function (num) {
+    this.add(num.toString());
+    return this;
+};
+StringJoiningTransformer.prototype['boolean'] = function (bool) {
+    this.add(bool ? 'true' : 'false');
+    return this;
+};
+StringJoiningTransformer.prototype['null'] = function () {
+    this.add('null');
+    return this;
+};
+
+StringJoiningTransformer.prototype['undefined'] = function () {
+    if (this._cfg.mode !== 'JavaScript') {
+        throw 'undefined is not allowed unless added in JavaScript mode';
+    }
+    this.add('undefined');
+    return this;
+};
+StringJoiningTransformer.prototype.nonfiniteNumber = function (num) {
+    if (this._cfg.mode !== 'JavaScript') {
+        throw 'Non-finite numbers are not allowed unless added in JavaScript mode';
+    }
+    this.add(num.toString());
+    return this;
+};
+StringJoiningTransformer.prototype['function'] = function (func) {
+    if (this._cfg.mode !== 'JavaScript') {
+        throw 'function is not allowed unless added in JavaScript mode';
+    }
+    this.add(func.toString());
+    return this;
+};
+
 
 
 StringJoiningTransformer.prototype.element = function (elName, atts, cb) { // Todo: implement (allow for complete Jamilih or function callback)
@@ -184,7 +222,12 @@ function DOMJoiningTransformer (o, cfg) {
 }
 DOMJoiningTransformer.prototype = new AbstractJoiningTransformer();
 DOMJoiningTransformer.prototype.add = function (item) {
-    this._dom.appendChild(item);
+    if (typeof item === 'string') {
+        this._dom.appendChild(document.createTextNode(item));
+    }
+    else {
+        this._dom.appendChild(item);
+    }
 };
 DOMJoiningTransformer.prototype.get = function () {
     return this._dom;
@@ -202,7 +245,7 @@ DOMJoiningTransformer.prototype.object = function (cb, usePropertySets, propSets
     }
     return this;
 };
-DOMJoiningTransformer.prototype.array = function () {
+DOMJoiningTransformer.prototype.array = function (cb) {
     this._requireSameChildren('dom', 'array');
     if (this._cfg.JHTMLForJSON) {
         this.add(JHTML());
@@ -213,10 +256,46 @@ DOMJoiningTransformer.prototype.array = function () {
     return this;
 };
 
-DOMJoiningTransformer.prototype.string = function () {
-    this.add(document.createTextNode());
+DOMJoiningTransformer.prototype.string = function (str) {
+    // Todo: Conditionally add as JHTML (and in subsequent methods as well)
+    this.add(str);
     return this;
 };
+DOMJoiningTransformer.prototype.number = function (num) {
+    this.add(num.toString());
+    return this;
+};
+DOMJoiningTransformer.prototype['boolean'] = function (bool) {
+    this.add(bool ? 'true' : 'false');
+    return this;
+};
+DOMJoiningTransformer.prototype['null'] = function () {
+    this.add('null');
+    return this;
+};
+
+DOMJoiningTransformer.prototype['undefined'] = function () {
+    if (this._cfg.mode !== 'JavaScript') {
+        throw 'undefined is not allowed unless added in JavaScript mode';
+    }
+    this.add('undefined');
+    return this;
+};
+DOMJoiningTransformer.prototype.nonfiniteNumber = function (num) {
+    if (this._cfg.mode !== 'JavaScript') {
+        throw 'Non-finite numbers are not allowed unless added in JavaScript mode';
+    }
+    this.add(num.toString());
+    return this;
+};
+DOMJoiningTransformer.prototype['function'] = function (func) {
+    if (this._cfg.mode !== 'JavaScript') {
+        throw 'function is not allowed unless added in JavaScript mode';
+    }
+    this.add(func.toString());
+    return this;
+};
+
 
 DOMJoiningTransformer.prototype.element = function (elName, atts, cb) {
     // Todo: allow third argument to be array following Jamilih (also let "atts" follow Jamilih)
@@ -290,6 +369,7 @@ JSONJoiningTransformer.prototype.propValue = function (prop, val) {
 * @param {object} propSets An object of key-value pairs to copy onto the new object
 */
 JSONJoiningTransformer.prototype.object = function (cb, usePropertySets, propSets) {
+    // Todo: Conditionally add as JHTML-based jml (and in subsequent methods as well)
     var tempObj = this._obj;
     var obj = {};
     if (usePropertySets !== undef) {
@@ -318,10 +398,44 @@ JSONJoiningTransformer.prototype.array = function (cb) {
     this._obj = tempObj;
     return this;
 };
-JSONJoiningTransformer.prototype.string = function (str, cb) {
+JSONJoiningTransformer.prototype.string = function (str) {
     this._requireSameChildren('json', 'string');
-    var sjt = new StringJoiningTransformer(str);
-    cb.call(this, str); // We pass the string, but user should usually use other methods
+    this.add(JSON.stringify(str));
+    return this;
+};
+
+JSONJoiningTransformer.prototype.number = function (num) {
+    this.add(num);
+    return this;
+};
+JSONJoiningTransformer.prototype['boolean'] = function (bool) {
+    this.add(bool);
+    return this;
+};
+JSONJoiningTransformer.prototype['null'] = function () {
+    this.add(null);
+    return this;
+};
+
+JSONJoiningTransformer.prototype['undefined'] = function () {
+    if (this._cfg.mode !== 'JavaScript') {
+        throw 'undefined is not allowed unless added in JavaScript mode';
+    }
+    this.add(undefined);
+    return this;
+};
+JSONJoiningTransformer.prototype.nonfiniteNumber = function (num) {
+    if (this._cfg.mode !== 'JavaScript') {
+        throw 'Non-finite numbers are not allowed unless added in JavaScript mode';
+    }
+    this.add(num);
+    return this;
+};
+JSONJoiningTransformer.prototype['function'] = function (func) {
+    if (this._cfg.mode !== 'JavaScript') {
+        throw 'function is not allowed unless added in JavaScript mode';
+    }
+    this.add(func);
     return this;
 };
 
@@ -441,7 +555,7 @@ JSONPathTransformerContext.prototype.applyTemplates = function (select, mode, so
             else if (value && typeof value === 'object') {
                 templateObj = dtr.transformObjects;
             }
-            else if (value && typeof value === 'function') { // Todo: provide parameters to jsonpath based on config on whether to allow non-JSON JS results 
+            else if (value && typeof value === 'function') { // Todo: provide parameters to jsonpath based on config on whether to allow non-JSON JS results
                 templateObj = dtr.transformFunctions;
             }
             else {
