@@ -1,10 +1,6 @@
-/*global JSONPath, getJSON, jml, JHTML */
 /*jslint vars:true, todo:true, regexp:true*/
-var getJSON, exports, require, document, window, jhtml;
-
-if (require !== undefined) {
-    getJSON = require('simple-get-json');
-}
+var getJSON, JHTML, JSONPath, jml; // Define globally for convenience of any user subclasses
+var exports, require, document, window;
 
 (function (undef) {'use strict';
 
@@ -12,28 +8,42 @@ function l (s) {console.log(s);}
 function s (o) {l(JSON.stringify(o));}
 
 // Satisfy JSLint
-var jsonpath = require === undefined ? JSONPath : require('JSONPath');
+var jsonpath, JSONPathTransformer;
+
 if (exports !== undefined) {
+    getJSON = require('simple-get-json');
+    JHTML = require('jhtml');
+    jsonpath = require('JSONPath');
+    jml = require('jamilih');
+
+    // Polyfills
     Object.assign = Object.assign || require('object-assign');
     document = require('jsdom').jsdom('');
-    jhtml = require('jhtml');
     window = document.parentWindow;
 }
+else {
+    jsonpath = JSONPath;
+}
 
-var JSONPathTransformer;
 
 
-
-
-function AbstractJoiningTransformer () {
+function AbstractJoiningTransformer (cfg) {
     if (!(this instanceof AbstractJoiningTransformer)) {
         return new AbstractJoiningTransformer();
     }
+    // Todo: Might set some reasonable defaults across all classes
+    this._cfg = cfg;
 }
 AbstractJoiningTransformer.prototype._requireSameChildren = function (type, embedType) {
     if (this._cfg[type].requireSameChildren) {
         throw "Cannot embed " + embedType + " children for a " + type + " joining transformer.";
     }
+};
+AbstractJoiningTransformer.prototype.config = function (prop, val, cb) {
+    var oldCfgProp = this._cfg[prop];
+    this._cfg[prop] = val;
+    cb.call(this);
+    this._cfg[prop] = oldCfgProp;
 };
 
 
@@ -41,10 +51,11 @@ function StringJoiningTransformer (s, cfg) {
     if (!(this instanceof StringJoiningTransformer)) {
         return new StringJoiningTransformer(s, cfg);
     }
+    AbstractJoiningTransformer.call(this, cfg); // Include this in any subclass of AbstractJoiningTransformer
     this._str = s || '';
-    this._cfg = cfg;
 }
 StringJoiningTransformer.prototype = new AbstractJoiningTransformer();
+
 
 StringJoiningTransformer.prototype.add = function (s) {
     // Todo: Could allow option to disallow elements within arrays, etc. (add states and state checking)
@@ -129,6 +140,7 @@ StringJoiningTransformer.prototype.string = function (str, cb) {
 
 StringJoiningTransformer.prototype.element = function (elName, atts, cb) { // Todo: implement (allow for complete Jamilih or function callback)
     // Todo: allow third argument to be array following Jamilih (also let "atts" follow Jamilih)
+    // Todo: allow for cfg to produce Jamilih string output or hXML
     this.add('<' + elName);
     var oldTagState = this._openTagState;
     this._openTagState = true;
@@ -167,8 +179,8 @@ function DOMJoiningTransformer (o, cfg) {
     if (!(this instanceof DOMJoiningTransformer)) {
         return new DOMJoiningTransformer(o, cfg);
     }
+    AbstractJoiningTransformer.call(this, cfg); // Include this in any subclass of AbstractJoiningTransformer
     this._dom = o || document.createDocumentFragment();
-    this._cfg = cfg;
 }
 DOMJoiningTransformer.prototype = new AbstractJoiningTransformer();
 DOMJoiningTransformer.prototype.add = function (item) {
@@ -208,6 +220,9 @@ DOMJoiningTransformer.prototype.string = function () {
 
 DOMJoiningTransformer.prototype.element = function (elName, atts, cb) {
     // Todo: allow third argument to be array following Jamilih (also let "atts" follow Jamilih)
+    // Todo: allow for cfg to produce Jamilih DOM output or hXML
+    // Todo: allow separate XML DOM one with XML String and hXML conversions (HTML to XHTML is inevitably safe?)
+
     var el = document.createElement(elName);
     var att;
     for (att in atts) {
@@ -234,30 +249,14 @@ DOMJoiningTransformer.prototype.text = function (txt) {
     this.add(document.createTextNode(txt));
     return this;
 };
-// Todo: allow separate XML DOM one with XML String and hXML conversions (HTML to XHTML is inevitably safe?)
-
-function JamilihJoiningTransformer (o, cfg) {
-    if (!(this instanceof JamilihJoiningTransformer)) {
-        return new JamilihJoiningTransformer(o, cfg);
-    }
-    this._dom = o || document.createDocumentFragment();
-    this._cfg = cfg;
-}
-JamilihJoiningTransformer.prototype = new DOMJoiningTransformer();
-JamilihJoiningTransformer.constructor = JamilihJoiningTransformer;
-JamilihJoiningTransformer.prototype.add = function (item) {
-    this._dom.appendChild(jml(item));
-    return this;
-};
-// Todo: add own object/array and treat result as Jamilih?
 
 
 function JSONJoiningTransformer (o, cfg) {
     if (!(this instanceof JSONJoiningTransformer)) {
         return new JSONJoiningTransformer(o, cfg);
     }
+    AbstractJoiningTransformer.call(this, cfg); // Include this in any subclass of AbstractJoiningTransformer
     this._obj = o || [];
-    this._cfg = cfg;
 }
 JSONJoiningTransformer.prototype = new AbstractJoiningTransformer();
 JSONJoiningTransformer.prototype.add = function (item) {
@@ -335,6 +334,7 @@ JSONJoiningTransformer.prototype.attribute = function (name, val) {
 JSONJoiningTransformer.prototype.text = function (txt) {
     return this;
 };
+
 
 
 function XSLTStyleJSONPathResolver () {
@@ -773,6 +773,7 @@ JTLT.prototype.transform = function (mode) {
     this.config.mode = mode;
     return this.config.success(this.config.engine(this.config));
 };
+
 
 var baseObj = exports === undefined ? window : exports;
 
