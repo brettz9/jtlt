@@ -78,12 +78,14 @@ StringJoiningTransformer.prototype.append = function (s) {
 StringJoiningTransformer.prototype.get = function () {
     return this._str;
 };
+
 StringJoiningTransformer.prototype.propValue = function (prop, val) {
     if (!this._objPropState) {
         throw "propValue() can only be called after an object state has been set up.";
     }
     this._obj[prop] = val;
-    // Todo: allow a sister method allowing second argument to be a callback? (if so, temporarily disable _objPropState so it can use append())
+    // Todo: allow a sister method allowing second argument to be a callback? (if so, temporarily disable _objPropState so it can use append()); propOnly and valueOnly methods for two-steps?
+    // Allow this method to operate on arrays and functions if in JS mode
     return this;
 };
 
@@ -128,6 +130,7 @@ StringJoiningTransformer.prototype.object = function (obj, cb, usePropertySets, 
 StringJoiningTransformer.prototype.array = function (arr, cb) {
     this._requireSameChildren('string', 'array');
     var oldArr = this._arr;
+    // Todo: copy array?
     this._arr = arr || [];
     if (_isElement(arr)) {
         this._arr = JHTML.toJSONObject(this._arr);
