@@ -1,5 +1,5 @@
 /*jslint vars:true, todo:true, regexp:true*/
-var getJSON, JHTML, JSONPath, jml; // Define globally for convenience of any user subclasses
+var getJSON, JHTML, JSONPath, jml, Stringifier; // Define globally for convenience of any user subclasses
 var exports, require, document, window;
 
 (function (undef) {'use strict';
@@ -15,6 +15,7 @@ if (exports !== undefined) {
     JHTML = require('jhtml');
     jsonpath = require('JSONPath');
     jml = require('jamilih');
+    Stringifier = require('./node_modules/jhtml/SAJJ/SAJJ.Stringifier');
 
     // Polyfills
     Object.assign = Object.assign || require('object-assign');
@@ -26,9 +27,9 @@ else {
 }
 
 
-var camelCase = /[a-z][A-Z])/g;
+var camelCase = /[a-z][A-Z]/g;
 function _isElement (item) {
-    return item && typeof item === 'object' && item.nodeType === 1) {
+    return item && typeof item === 'object' && item.nodeType === 1;
 }
 function _makeDatasetAttribute (n0) {
     return n0.charAt(0) + '-' + n0.charAt(1).toLowerCase();
@@ -127,8 +128,9 @@ StringJoiningTransformer.prototype.object = function (obj, cb, usePropertySets, 
         this.append(JHTML.toJHTMLString(this._obj));
     }
     else if (this._cfg.mode !== 'JavaScript') {
-        // Todo: allow this method to operate on non-finite numbers and functions if in JS mode
-        
+        // Allow this method to operate on non-finite numbers and functions
+        var stringifier = new Stringifier({mode: 'JavaScript'});
+        this.append(stringifier.walkJSONObject(this._obj));
     }
     else {
         this.append(JSON.stringify(this._obj));
@@ -160,8 +162,9 @@ StringJoiningTransformer.prototype.array = function (arr, cb) {
         this.append(JHTML.toJHTMLString(this._arr));
     }
     else if (this._cfg.mode !== 'JavaScript') {
-        // Todo: allow this method to operate on non-finite numbers and functions if in JS mode
-        
+        // Allow this method to operate on non-finite numbers and functions
+        var stringifier = new Stringifier({mode: 'JavaScript'});
+        this.append(stringifier.walkJSONObject(this._obj));
     }
     else {
         this.append(JSON.stringify(this._arr));
@@ -186,8 +189,9 @@ StringJoiningTransformer.prototype.string = function (str, cb) {
         this._strTemp += str;
     }
     else if (this._cfg.mode !== 'JavaScript') {
-        // Todo: allow this method to operate on non-finite numbers and functions if in JS mode
-        
+        // Allow this method to operate on non-finite numbers and functions
+        var stringifier = new Stringifier({mode: 'JavaScript'});
+        this.append(stringifier.walkJSONObject(this._obj));
     }
     else {
         this.append(JSON.stringify(tmpStr + str));
@@ -201,7 +205,7 @@ StringJoiningTransformer.prototype.number = function (num) {
     this.append(num.toString());
     return this;
 };
-StringJoiningTransformer.prototype['boolean'] = function (bool) {
+StringJoiningTransformer.prototype.boolean = function (bool) {
     if (_isElement(bool)) {
         bool = JHTML.toJSONObject(bool);
     }
@@ -413,7 +417,7 @@ DOMJoiningTransformer.prototype.number = function (num) {
     this.append(num.toString());
     return this;
 };
-DOMJoiningTransformer.prototype['boolean'] = function (bool) {
+DOMJoiningTransformer.prototype.boolean = function (bool) {
     this.append(bool ? 'true' : 'false');
     return this;
 };
@@ -566,7 +570,7 @@ JSONJoiningTransformer.prototype.number = function (num) {
     this.append(num);
     return this;
 };
-JSONJoiningTransformer.prototype['boolean'] = function (bool) {
+JSONJoiningTransformer.prototype.boolean = function (bool) {
     this.append(bool);
     return this;
 };
@@ -993,9 +997,6 @@ JTLT.prototype._createJoiningTransformer = function () {
         case 'dom':
             JT = DOMJoiningTransformer;
             break;
-        case 'jamilih':
-            JT = JamilihJoiningTransformer;
-            break;
         case 'json': default:
             JT = JSONJoiningTransformer;
             break;
@@ -1058,7 +1059,6 @@ var baseObj = exports === undefined ? window : exports;
 baseObj.AbstractJoiningTransformer = AbstractJoiningTransformer;
 baseObj.StringJoiningTransformer = StringJoiningTransformer;
 baseObj.DOMJoiningTransformer = DOMJoiningTransformer;
-baseObj.JamilihJoiningTransformer = JamilihJoiningTransformer;
 baseObj.JSONJoiningTransformer = JSONJoiningTransformer;
 baseObj.XSLTStyleJSONPathResolver = XSLTStyleJSONPathResolver;
 baseObj.JSONPathTransformerContext = JSONPathTransformerContext;
