@@ -98,12 +98,21 @@ StringJoiningTransformer.prototype.propOnly = function (prop, cb) {
     if (!this._objPropState) {
         throw "propOnly() can only be called after an object state has been set up.";
     }
+    if (this.objPropState) {
+        throw "propOnly() can only be called again after a value is et";
+    }
+    this.objPropState = true;
     var oldPropTemp = this._objPropTemp;
     this._objPropTemp = prop;
     cb.call(this);
     this._objPropTemp = oldPropTemp;
+    if (this.objPropState) {
+        throw "propOnly() must be followed up with setting a value.";
+    }
     return this;
 };
+
+// Todo: Remove valueOnly in place of refactoring append() to set a new value (but making sure if it happens twice at the same level, that an error is thrown); make sure to set this.objPropState to false
 StringJoiningTransformer.prototype.valueOnly = function (val) {
     if (!this._objPropState) {
         throw "valueOnly() can only be called after an object state has been set up.";
@@ -112,6 +121,7 @@ StringJoiningTransformer.prototype.valueOnly = function (val) {
         throw "propOnly() must be called before valueOnly()";
     }
     this._obj[this._objPropTemp] = val;
+    this.objPropState = false;
     return this;
 };
 
