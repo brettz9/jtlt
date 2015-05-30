@@ -84,6 +84,7 @@ StringJoiningTransformer.prototype.propValue = function (prop, val) {
 
 StringJoiningTransformer.prototype.object = function (cb, usePropertySets, propSets) {
     this._requireSameChildren('string', 'object');
+    var oldObjPropState = this._objPropState;
     var oldObj = this._obj;
     this._obj = {};
     // Todo: Allow in this and subsequent JSON methods ability to create jml-based JHTML
@@ -97,10 +98,11 @@ StringJoiningTransformer.prototype.object = function (cb, usePropertySets, propS
         Object.assign(this._obj, propSets);
     }
     
-    var oldObjPropState = this._objPropState;
-    this._objPropState = true;
-    cb.call(this);
-    this._objPropState = oldObjPropState;
+    if (cb) {
+        this._objPropState = true;
+        cb.call(this);
+        this._objPropState = oldObjPropState;
+    }
     
     if (oldObjPropState || this._arrItemState) { // Not ready to serialize yet as still inside another array or object
         this.add(this._obj);
@@ -120,9 +122,12 @@ StringJoiningTransformer.prototype.array = function (cb) {
     this._arr = [];
     
     var oldArrItemState = this._arrItemState;
-    this._arrItemState = true;
-    cb.call(this);
-    this._arrItemState = oldArrItemState;
+    
+    if (cb) {
+        this._arrItemState = true;
+        cb.call(this);
+        this._arrItemState = oldArrItemState;
+    }
     
     if (oldArrItemState || this._objPropState) { // Not ready to serialize yet as still inside another array or object
         this.add(this._arr);
@@ -136,8 +141,21 @@ StringJoiningTransformer.prototype.array = function (cb) {
     this._arr = oldArr;
     return this;
 };
-StringJoiningTransformer.prototype.string = function (str) {
-    this.add(str);
+StringJoiningTransformer.prototype.string = function (str, cb) {
+    var tmpStr = '';
+    var _oldStrTemp = this._strTemp;
+    if (cb) {
+        this._strTemp = '';
+        cb.call(this);
+        tmpStr = this._strTemp;
+        this._strTemp = _oldStrTemp;
+    }
+    if (_oldStrTemp !== undefined) {
+        this._strTemp += str;
+    }
+    else {
+        this.add(JSON.stringify(tmpStr + str));
+    }
     return this;
 };
 StringJoiningTransformer.prototype.number = function (num) {
@@ -257,7 +275,7 @@ DOMJoiningTransformer.prototype.array = function (cb) {
     return this;
 };
 
-DOMJoiningTransformer.prototype.string = function (str) {
+DOMJoiningTransformer.prototype.string = function (str, cb) {
     // Todo: Conditionally add as JHTML (and in subsequent methods as well)
     this.add(str);
     return this;
@@ -399,7 +417,7 @@ JSONJoiningTransformer.prototype.array = function (cb) {
     this._obj = tempObj;
     return this;
 };
-JSONJoiningTransformer.prototype.string = function (str) {
+JSONJoiningTransformer.prototype.string = function (str, cb) {
     this._requireSameChildren('json', 'string');
     this.add(JSON.stringify(str));
     return this;
