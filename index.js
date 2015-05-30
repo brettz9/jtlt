@@ -239,15 +239,22 @@ StringJoiningTransformer.prototype.text = function (txt) {
     this.append(txt.replace(/&/g, '&amp;').replace(/</g, '&lt;')); // Escape gt if inside CDATA
     return this;
 };
+
 /**
 * Unlike text(), does not escape for HTML; unlike string(), does not perform JSON stringification;
-* unlike append(), is not polymorphic with other joining transformers
+* unlike append(), does not do other checks (but still varies in its role across transformers)
 * @param {String} str
 */
 StringJoiningTransformer.prototype.rawAppend = function (str) {
     this._str += str;
     return this;
 };
+
+StringJoiningTransformer.prototype.plainText = function (str) {
+    this._str += str;
+    return this;
+};
+
 // Todo: Implement comment(), processingInstruction(), etc.
 
 
@@ -375,6 +382,11 @@ DOMJoiningTransformer.prototype.text = function (txt) {
     return this;
 };
 
+DOMJoiningTransformer.prototype.plainText = function (str) {
+    this.text(str);
+    return this;
+};
+
 
 function JSONJoiningTransformer (o, cfg) {
     if (!(this instanceof JSONJoiningTransformer)) {
@@ -390,7 +402,7 @@ JSONJoiningTransformer.prototype.rawAppend = function (item) {
 };
 
 JSONJoiningTransformer.prototype.append = function (item) {
-    if (!this._obj || typeof this._obj !== 'object') {
+    if (!this._obj || typeof this._obj !== 'object') { // Todo: allow for first time
         throw "You cannot append to a scalar or empty value.";
     }
     if (Array.isArray(this._obj)) {
@@ -451,7 +463,7 @@ JSONJoiningTransformer.prototype.array = function (cb) {
 };
 JSONJoiningTransformer.prototype.string = function (str, cb) {
     this._requireSameChildren('json', 'string');
-    this.append(JSON.stringify(str));
+    this.append(str);
     return this;
 };
 
@@ -497,6 +509,11 @@ JSONJoiningTransformer.prototype.attribute = function (name, val) {
     return this;
 };
 JSONJoiningTransformer.prototype.text = function (txt) {
+    return this;
+};
+
+JSONJoiningTransformer.prototype.plainText = function (str) {
+    this.string(str);
     return this;
 };
 
