@@ -262,6 +262,11 @@ function DOMJoiningTransformer (o, cfg) {
     this._dom = o || document.createDocumentFragment();
 }
 DOMJoiningTransformer.prototype = new AbstractJoiningTransformer();
+
+DOMJoiningTransformer.prototype.rawAppend = function (item) {
+    this._dom.appendChild(item);
+};
+
 DOMJoiningTransformer.prototype.append = function (item) {
     if (typeof item === 'string') {
         this._dom.appendChild(document.createTextNode(item));
@@ -379,6 +384,11 @@ function JSONJoiningTransformer (o, cfg) {
     this._obj = o || [];
 }
 JSONJoiningTransformer.prototype = new AbstractJoiningTransformer();
+
+JSONJoiningTransformer.prototype.rawAppend = function (item) {
+    this._obj.push(item);
+};
+
 JSONJoiningTransformer.prototype.append = function (item) {
     if (!this._obj || typeof this._obj !== 'object') {
         throw "You cannot append to a scalar or empty value.";
