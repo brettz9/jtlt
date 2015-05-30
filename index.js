@@ -25,10 +25,14 @@ else {
     jsonpath = JSONPath;
 }
 
+
+var camelCase = /[a-z][A-Z])/g;
 function _isElement (item) {
     return item && typeof item === 'object' && item.nodeType === 1) {
 }
-
+function _makeDatasetAttribute (n0) {
+    return n0.charAt(0) + '-' + n0.charAt(1).toLowerCase();
+}
 
 // Todo: Allow swapping of joining transformer types in mid transformation (e.g., building strings with string transformer but adding as text node in a DOM transformer)
 
@@ -47,8 +51,10 @@ AbstractJoiningTransformer.prototype._requireSameChildren = function (type, embe
 AbstractJoiningTransformer.prototype.config = function (prop, val, cb) {
     var oldCfgProp = this._cfg[prop];
     this._cfg[prop] = val;
-    cb.call(this);
-    this._cfg[prop] = oldCfgProp;
+    if (cb) {
+        cb.call(this);
+        this._cfg[prop] = oldCfgProp;
+    }
 };
 
 
@@ -224,16 +230,38 @@ StringJoiningTransformer.prototype['function'] = function (func) {
     return this;
 };
 
-StringJoiningTransformer.prototype.element = function (elName, atts, cb) { // Todo: implement (allow for complete Jamilih or function callback)
+StringJoiningTransformer.prototype.element = function (elName, atts, childNodes, cb) { // Todo: implement (allow for complete Jamilih or function callback)    
+    if (Array.isArray(atts)) {
+        cb = childNodes;
+        childNodes = atts;
+        atts = {};
+    }
+    else if (typeof atts === 'function') {
+        cb = atts;
+        childNodes = undefined;
+        atts = {};
+    }
+    if (typeof childNodes === 'function') {
+        cb = childNodes;
+        childNodes = undefined;
+    }
+
+// Todo: allow for cfg to produce Jamilih string output or hXML string output
+    if (!cb) {
+        var method = this._cfg.xmlElements ? 'toXML' : 'toHTML';
+        // Note that Jamilih currently has an issue with 'selected', 'checked', 'value', 'defaultValue', 'for', 'on*', 'style' (workaround: pass an empty callback as the last argument to element())
+        this.append(jml[method].call(jml, elName, atts, childNodes));
+        return this;
+    }
+
     // Todo: allow third argument to be array following Jamilih (also let "atts" follow Jamilih)
-    // Todo: allow for cfg to produce Jamilih string output or hXML
-    
+
     if (typeof elName === 'object') {
         var objAtts = {};
         Array.from(elName.attributes).forEach(function (att, i) {
             objAtts[att.name] = att.value;
         });
-        Object.assign(objAtts, atts);
+        atts = Object.assign(objAtts, atts);
         elName = elName.nodeName;
     }
     
@@ -245,9 +273,17 @@ StringJoiningTransformer.prototype.element = function (elName, atts, cb) { // To
             this.attribute(att, atts[att]);
         }, this);
     }
-    cb.call(this);
+    if (childNodes && childNodes.length) {
+        this._openTagState = false;
+        childNodes.forEach(function () {
+            
+        });
+    }
+    if (cb) {
+        cb.call(this);
+    }
     
-    // Todo: Depending on an this._cfg option, might allow for HTML self-closing tags (or polyglot-friendly self-closing) or XML self-closing when empty
+    // Todo: Depending on an this._cfg.xmlElements option, allow for XML self-closing when empty or as per the tag, HTML self-closing tags (or polyglot-friendly self-closing)
     if (this._openTagState) {
         this.append('>');
     }
@@ -259,6 +295,26 @@ StringJoiningTransformer.prototype.attribute = function (name, val) {
     if (!this._openTagState) {
         throw "An attribute cannot be added after an opening tag has been closed (name: " + name + "; value: " + val + ")";
     }
+    
+    if (!this._cfg.xmlElements) {
+        if (typeof val === 'object') {
+            switch (name) {
+                case 'dataset':
+                    Object.keys(val).forEach(function (att) {
+                        this.attribute('data-' + att.replace(camelCase, _makeDatasetAttribute), val[att]);
+                    });
+                    break;
+                case '$a': // Ordered attributes
+                    val.forEach(function (attArr) {
+                        this.attribute(attArr[0], attArr[1]);
+                    });
+                    break;
+            }
+            return this;
+        }
+        name = {className: 'class', htmlFor: 'for'}[name] || name;
+    }
+    
     this.append(' ' + name + '="' + val.replace(/&/g, '&amp;').replace(/"/g, '&quot;') + '"'); // Todo: make ampersand escaping optional to avoid double escaping
     return this;
 };
