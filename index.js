@@ -91,7 +91,6 @@ StringJoiningTransformer.prototype.propValue = function (prop, val) {
     }
     this._obj[prop] = val;
     // Todo: allow a sister method allowing second argument to be a callback? (if so, temporarily disable _objPropState so it can use append()); propOnly and valueOnly methods for two-steps?
-    // Allow this method to operate on arrays and functions if in JS mode
     return this;
 };
 
@@ -127,6 +126,10 @@ StringJoiningTransformer.prototype.object = function (obj, cb, usePropertySets, 
     else if (this._cfg.JHTMLForJSON) {
         this.append(JHTML.toJHTMLString(this._obj));
     }
+    else if (this._cfg.mode !== 'JavaScript') {
+        // Todo: allow this method to operate on non-finite numbers and functions if in JS mode
+        
+    }
     else {
         this.append(JSON.stringify(this._obj));
     }
@@ -156,6 +159,10 @@ StringJoiningTransformer.prototype.array = function (arr, cb) {
     else if (this._cfg.JHTMLForJSON) {
         this.append(JHTML.toJHTMLString(this._arr));
     }
+    else if (this._cfg.mode !== 'JavaScript') {
+        // Todo: allow this method to operate on non-finite numbers and functions if in JS mode
+        
+    }
     else {
         this.append(JSON.stringify(this._arr));
     }
@@ -177,6 +184,10 @@ StringJoiningTransformer.prototype.string = function (str, cb) {
     }
     if (_oldStrTemp !== undefined) {
         this._strTemp += str;
+    }
+    else if (this._cfg.mode !== 'JavaScript') {
+        // Todo: allow this method to operate on non-finite numbers and functions if in JS mode
+        
     }
     else {
         this.append(JSON.stringify(tmpStr + str));
