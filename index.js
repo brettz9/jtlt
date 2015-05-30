@@ -91,7 +91,27 @@ StringJoiningTransformer.prototype.propValue = function (prop, val) {
         throw "propValue() can only be called after an object state has been set up.";
     }
     this._obj[prop] = val;
-    // Todo: allow a sister method allowing second argument to be a callback? (if so, temporarily disable _objPropState so it can use append()); propOnly and valueOnly methods for two-steps?
+    return this;
+};
+
+StringJoiningTransformer.prototype.propOnly = function (prop, cb) {
+    if (!this._objPropState) {
+        throw "propOnly() can only be called after an object state has been set up.";
+    }
+    var oldPropTemp = this._objPropTemp;
+    this._objPropTemp = prop;
+    cb.call(this);
+    this._objPropTemp = oldPropTemp;
+    return this;
+};
+StringJoiningTransformer.prototype.valueOnly = function (val) {
+    if (!this._objPropState) {
+        throw "valueOnly() can only be called after an object state has been set up.";
+    }
+    if (this._objPropTemp === undefined) {
+        throw "propOnly() must be called before valueOnly()";
+    }
+    this._obj[this._objPropTemp] = val;
     return this;
 };
 
@@ -245,7 +265,7 @@ StringJoiningTransformer.prototype['function'] = function (func) {
     return this;
 };
 
-StringJoiningTransformer.prototype.element = function (elName, atts, childNodes, cb) { // Todo: implement (allow for complete Jamilih or function callback)    
+StringJoiningTransformer.prototype.element = function (elName, atts, childNodes, cb) {
     if (Array.isArray(atts)) {
         cb = childNodes;
         childNodes = atts;
@@ -457,7 +477,9 @@ DOMJoiningTransformer.prototype.element = function (elName, atts, cb) {
     var el = document.createElement(elName);
     var att;
     for (att in atts) {
-        el.setAttribute(att, atts[att]);
+        if (atts.hasOwnProperty(att)) {
+            el.setAttribute(att, atts[att]);
+        }
     }
     this.append(el);
     
