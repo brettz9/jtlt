@@ -25,6 +25,11 @@ else {
     jsonpath = JSONPath;
 }
 
+function _isElement (item) {
+    return item && typeof item === 'object' && item.nodeType === 1) {
+}
+
+
 // Todo: Allow swapping of joining transformer types in mid transformation (e.g., building strings with string transformer but adding as text node in a DOM transformer)
 
 function AbstractJoiningTransformer (cfg) {
@@ -82,16 +87,20 @@ StringJoiningTransformer.prototype.propValue = function (prop, val) {
     return this;
 };
 
-StringJoiningTransformer.prototype.object = function (cb, usePropertySets, propSets) {
+StringJoiningTransformer.prototype.object = function (obj, cb, usePropertySets, propSets) {
     this._requireSameChildren('string', 'object');
     var oldObjPropState = this._objPropState;
     var oldObj = this._obj;
-    this._obj = {};
+    this._obj = obj || {};
+    if (_isElement(obj)) {
+        this._obj = JHTML.toJSONObject(this._obj);
+    }
+    
     // Todo: Allow in this and subsequent JSON methods ability to create jml-based JHTML
     
     if (usePropertySets !== undef) {
-        usePropertySets.reduce(function (obj, psName) {
-            return this._usePropertySets(obj, psName); // Todo: Put in right scope
+        usePropertySets.reduce(function (o, psName) {
+            return this._usePropertySets(o, psName); // Todo: Put in right scope
         }.bind(this), {});
     }
     if (propSets !== undef) {
@@ -116,10 +125,13 @@ StringJoiningTransformer.prototype.object = function (cb, usePropertySets, propS
     this._obj = oldObj;
     return this;
 };
-StringJoiningTransformer.prototype.array = function (cb) {
+StringJoiningTransformer.prototype.array = function (arr, cb) {
     this._requireSameChildren('string', 'array');
     var oldArr = this._arr;
-    this._arr = [];
+    this._arr = arr || [];
+    if (_isElement(arr)) {
+        this._arr = JHTML.toJSONObject(this._arr);
+    }
     
     var oldArrItemState = this._arrItemState;
     
@@ -142,6 +154,10 @@ StringJoiningTransformer.prototype.array = function (cb) {
     return this;
 };
 StringJoiningTransformer.prototype.string = function (str, cb) {
+    if (_isElement(str)) {
+        str = JHTML.toJSONObject(str);
+    }
+
     var tmpStr = '';
     var _oldStrTemp = this._strTemp;
     if (cb) {
@@ -159,10 +175,16 @@ StringJoiningTransformer.prototype.string = function (str, cb) {
     return this;
 };
 StringJoiningTransformer.prototype.number = function (num) {
+    if (_isElement(num)) {
+        num = JHTML.toJSONObject(num);
+    }
     this.append(num.toString());
     return this;
 };
 StringJoiningTransformer.prototype['boolean'] = function (bool) {
+    if (_isElement(bool)) {
+        bool = JHTML.toJSONObject(bool);
+    }
     this.append(bool ? 'true' : 'false');
     return this;
 };
@@ -182,12 +204,18 @@ StringJoiningTransformer.prototype.nonfiniteNumber = function (num) {
     if (this._cfg.mode !== 'JavaScript') {
         throw 'Non-finite numbers are not allowed unless added in JavaScript mode';
     }
+    if (_isElement(num)) {
+        num = JHTML.toJSONObject(num);
+    }
     this.append(num.toString());
     return this;
 };
 StringJoiningTransformer.prototype['function'] = function (func) {
     if (this._cfg.mode !== 'JavaScript') {
         throw 'function is not allowed unless added in JavaScript mode';
+    }
+    if (_isElement(func)) {
+        func = JHTML.toJSONObject(func);
     }
     this.append(func.toString());
     return this;
