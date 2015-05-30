@@ -287,7 +287,7 @@ StringJoiningTransformer.prototype.element = function (elName, atts, childNodes,
     this._openTagState = oldTagState;
     return this;
 };
-StringJoiningTransformer.prototype.attribute = function (name, val) {
+StringJoiningTransformer.prototype.attribute = function (name, val, avoidAttEscape) {
     if (!this._openTagState) {
         throw "An attribute cannot be added after an opening tag has been closed (name: " + name + "; value: " + val + ")";
     }
@@ -311,7 +311,8 @@ StringJoiningTransformer.prototype.attribute = function (name, val) {
         name = {className: 'class', htmlFor: 'for'}[name] || name;
     }
     
-    this.append(' ' + name + '="' + val.replace(/&/g, '&amp;').replace(/"/g, '&quot;') + '"'); // Todo: make ampersand escaping optional to avoid double escaping
+    val = (this._cfg.preEscapedAttributes || avoidAttEscape) ? val : val.replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+    this.append(' ' + name + '="' + val + '"');
     return this;
 };
 StringJoiningTransformer.prototype.text = function (txt) {
