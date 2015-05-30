@@ -57,7 +57,7 @@ function StringJoiningTransformer (s, cfg) {
 StringJoiningTransformer.prototype = new AbstractJoiningTransformer();
 
 
-StringJoiningTransformer.prototype.add = function (s) {
+StringJoiningTransformer.prototype.append = function (s) {
     // Todo: Could allow option to disallow elements within arrays, etc. (add states and state checking)
     if (this._arrItemState) {
         this._arr.push(s);
@@ -78,7 +78,7 @@ StringJoiningTransformer.prototype.propValue = function (prop, val) {
         throw "propValue() can only be called after an object state has been set up.";
     }
     this._obj[prop] = val;
-    // Todo: allow a sister method allowing second argument to be a callback? (if so, temporarily disable _objPropState so it can use add())
+    // Todo: allow a sister method allowing second argument to be a callback? (if so, temporarily disable _objPropState so it can use append())
     return this;
 };
 
@@ -105,13 +105,13 @@ StringJoiningTransformer.prototype.object = function (cb, usePropertySets, propS
     }
     
     if (oldObjPropState || this._arrItemState) { // Not ready to serialize yet as still inside another array or object
-        this.add(this._obj);
+        this.append(this._obj);
     }
     else if (this._cfg.JHTMLForJSON) {
-        this.add(JHTML.toJHTMLString(this._obj));
+        this.append(JHTML.toJHTMLString(this._obj));
     }
     else {
-        this.add(JSON.stringify(this._obj));
+        this.append(JSON.stringify(this._obj));
     }
     this._obj = oldObj;
     return this;
@@ -130,13 +130,13 @@ StringJoiningTransformer.prototype.array = function (cb) {
     }
     
     if (oldArrItemState || this._objPropState) { // Not ready to serialize yet as still inside another array or object
-        this.add(this._arr);
+        this.append(this._arr);
     }
     else if (this._cfg.JHTMLForJSON) {
-        this.add(JHTML.toJHTMLString(this._arr));
+        this.append(JHTML.toJHTMLString(this._arr));
     }
     else {
-        this.add(JSON.stringify(this._arr));
+        this.append(JSON.stringify(this._arr));
     }
     this._arr = oldArr;
     return this;
@@ -154,20 +154,20 @@ StringJoiningTransformer.prototype.string = function (str, cb) {
         this._strTemp += str;
     }
     else {
-        this.add(JSON.stringify(tmpStr + str));
+        this.append(JSON.stringify(tmpStr + str));
     }
     return this;
 };
 StringJoiningTransformer.prototype.number = function (num) {
-    this.add(num.toString());
+    this.append(num.toString());
     return this;
 };
 StringJoiningTransformer.prototype['boolean'] = function (bool) {
-    this.add(bool ? 'true' : 'false');
+    this.append(bool ? 'true' : 'false');
     return this;
 };
 StringJoiningTransformer.prototype['null'] = function () {
-    this.add('null');
+    this.append('null');
     return this;
 };
 
@@ -175,39 +175,52 @@ StringJoiningTransformer.prototype['undefined'] = function () {
     if (this._cfg.mode !== 'JavaScript') {
         throw 'undefined is not allowed unless added in JavaScript mode';
     }
-    this.add('undefined');
+    this.append('undefined');
     return this;
 };
 StringJoiningTransformer.prototype.nonfiniteNumber = function (num) {
     if (this._cfg.mode !== 'JavaScript') {
         throw 'Non-finite numbers are not allowed unless added in JavaScript mode';
     }
-    this.add(num.toString());
+    this.append(num.toString());
     return this;
 };
 StringJoiningTransformer.prototype['function'] = function (func) {
     if (this._cfg.mode !== 'JavaScript') {
         throw 'function is not allowed unless added in JavaScript mode';
     }
-    this.add(func.toString());
+    this.append(func.toString());
     return this;
 };
-
-
 
 StringJoiningTransformer.prototype.element = function (elName, atts, cb) { // Todo: implement (allow for complete Jamilih or function callback)
     // Todo: allow third argument to be array following Jamilih (also let "atts" follow Jamilih)
     // Todo: allow for cfg to produce Jamilih string output or hXML
-    this.add('<' + elName);
+    
+    if (typeof elName === 'object') {
+        var objAtts = {};
+        Array.from(elName.attributes).forEach(function (att, i) {
+            objAtts[att.name] = att.value;
+        });
+        Object.assign(objAtts, atts);
+        elName = elName.nodeName;
+    }
+    
+    this.append('<' + elName);
     var oldTagState = this._openTagState;
     this._openTagState = true;
+    if (atts) {
+        Object.keys(atts).forEach(function (att) {
+            this.attribute(att, atts[att]);
+        }, this);
+    }
     cb.call(this);
     
     // Todo: Depending on an this._cfg option, might allow for HTML self-closing tags (or polyglot-friendly self-closing) or XML self-closing when empty
     if (this._openTagState) {
-        this.add('>');
+        this.append('>');
     }
-    this.add('</' + elName + '>');
+    this.append('</' + elName + '>');
     this._openTagState = oldTagState;
     return this;
 };
@@ -215,15 +228,24 @@ StringJoiningTransformer.prototype.attribute = function (name, val) {
     if (!this._openTagState) {
         throw "An attribute cannot be added after an opening tag has been closed (name: " + name + "; value: " + val + ")";
     }
-    this.add(' ' + name + '="' + val.replace(/&/g, '&amp;').replace(/"/g, '&quot;') + '"'); // Todo: make ampersand escaping optional to avoid double escaping
+    this.append(' ' + name + '="' + val.replace(/&/g, '&amp;').replace(/"/g, '&quot;') + '"'); // Todo: make ampersand escaping optional to avoid double escaping
     return this;
 };
 StringJoiningTransformer.prototype.text = function (txt) {
     if (this._openTagState) {
-        this.add('>');
+        this.append('>');
         this._openTagState = false;
     }
-    this.add(txt);
+    this.append(txt.replace(/&/g, '&amp;').replace(/</g, '&lt;')); // Escape gt if inside CDATA
+    return this;
+};
+/**
+* Unlike text(), does not escape for HTML; unlike string(), does not perform JSON stringification;
+* unlike append(), is not polymorphic with other joining transformers
+* @param {String} str
+*/
+StringJoiningTransformer.prototype.rawAppend = function (str) {
+    this._str += str;
     return this;
 };
 // Todo: Implement comment(), processingInstruction(), etc.
@@ -240,7 +262,7 @@ function DOMJoiningTransformer (o, cfg) {
     this._dom = o || document.createDocumentFragment();
 }
 DOMJoiningTransformer.prototype = new AbstractJoiningTransformer();
-DOMJoiningTransformer.prototype.add = function (item) {
+DOMJoiningTransformer.prototype.append = function (item) {
     if (typeof item === 'string') {
         this._dom.appendChild(document.createTextNode(item));
     }
@@ -257,39 +279,39 @@ DOMJoiningTransformer.prototype.propValue = function (prop, val) {
 DOMJoiningTransformer.prototype.object = function (cb, usePropertySets, propSets) {
     this._requireSameChildren('dom', 'object');
     if (this._cfg.JHTMLForJSON) {
-        this.add(JHTML());
+        this.append(JHTML());
     }
     else {
-        this.add(document.createTextNode()); // Todo: set current position and deal with children
+        this.append(document.createTextNode()); // Todo: set current position and deal with children
     }
     return this;
 };
 DOMJoiningTransformer.prototype.array = function (cb) {
     this._requireSameChildren('dom', 'array');
     if (this._cfg.JHTMLForJSON) {
-        this.add(JHTML());
+        this.append(JHTML());
     }
     else {
-        this.add(document.createTextNode()); // Todo: set current position and deal with children
+        this.append(document.createTextNode()); // Todo: set current position and deal with children
     }
     return this;
 };
 
 DOMJoiningTransformer.prototype.string = function (str, cb) {
     // Todo: Conditionally add as JHTML (and in subsequent methods as well)
-    this.add(str);
+    this.append(str);
     return this;
 };
 DOMJoiningTransformer.prototype.number = function (num) {
-    this.add(num.toString());
+    this.append(num.toString());
     return this;
 };
 DOMJoiningTransformer.prototype['boolean'] = function (bool) {
-    this.add(bool ? 'true' : 'false');
+    this.append(bool ? 'true' : 'false');
     return this;
 };
 DOMJoiningTransformer.prototype['null'] = function () {
-    this.add('null');
+    this.append('null');
     return this;
 };
 
@@ -297,21 +319,21 @@ DOMJoiningTransformer.prototype['undefined'] = function () {
     if (this._cfg.mode !== 'JavaScript') {
         throw 'undefined is not allowed unless added in JavaScript mode';
     }
-    this.add('undefined');
+    this.append('undefined');
     return this;
 };
 DOMJoiningTransformer.prototype.nonfiniteNumber = function (num) {
     if (this._cfg.mode !== 'JavaScript') {
         throw 'Non-finite numbers are not allowed unless added in JavaScript mode';
     }
-    this.add(num.toString());
+    this.append(num.toString());
     return this;
 };
 DOMJoiningTransformer.prototype['function'] = function (func) {
     if (this._cfg.mode !== 'JavaScript') {
         throw 'function is not allowed unless added in JavaScript mode';
     }
-    this.add(func.toString());
+    this.append(func.toString());
     return this;
 };
 
@@ -326,7 +348,7 @@ DOMJoiningTransformer.prototype.element = function (elName, atts, cb) {
     for (att in atts) {
         el.setAttribute(att, atts[att]);
     }
-    this.add(el);
+    this.append(el);
     
     var oldDOM = this._dom;
 
@@ -344,7 +366,7 @@ DOMJoiningTransformer.prototype.attribute = function (name, val) {
     return this;
 };
 DOMJoiningTransformer.prototype.text = function (txt) {
-    this.add(document.createTextNode(txt));
+    this.append(document.createTextNode(txt));
     return this;
 };
 
@@ -357,9 +379,9 @@ function JSONJoiningTransformer (o, cfg) {
     this._obj = o || [];
 }
 JSONJoiningTransformer.prototype = new AbstractJoiningTransformer();
-JSONJoiningTransformer.prototype.add = function (item) {
+JSONJoiningTransformer.prototype.append = function (item) {
     if (!this._obj || typeof this._obj !== 'object') {
-        throw "You cannot add to a scalar or empty value.";
+        throw "You cannot append to a scalar or empty value.";
     }
     if (Array.isArray(this._obj)) {
         this._obj.push(item);
@@ -400,7 +422,7 @@ JSONJoiningTransformer.prototype.object = function (cb, usePropertySets, propSet
         Object.assign(obj, propSets);
     }
     
-    this.add(obj);
+    this.append(obj);
     var oldObjPropState = this._objPropState;
     this._objPropState = true;
     cb.call(this, obj); // We pass the object, but user should usually use other methods
@@ -412,27 +434,27 @@ JSONJoiningTransformer.prototype.object = function (cb, usePropertySets, propSet
 JSONJoiningTransformer.prototype.array = function (cb) {
     var tempObj = this._obj;
     var arr = [];
-    this.add(arr); // Todo: set current position and deal with children
+    this.append(arr); // Todo: set current position and deal with children
     cb.call(this, arr); // We pass the array, but user should usually use other methods
     this._obj = tempObj;
     return this;
 };
 JSONJoiningTransformer.prototype.string = function (str, cb) {
     this._requireSameChildren('json', 'string');
-    this.add(JSON.stringify(str));
+    this.append(JSON.stringify(str));
     return this;
 };
 
 JSONJoiningTransformer.prototype.number = function (num) {
-    this.add(num);
+    this.append(num);
     return this;
 };
 JSONJoiningTransformer.prototype['boolean'] = function (bool) {
-    this.add(bool);
+    this.append(bool);
     return this;
 };
 JSONJoiningTransformer.prototype['null'] = function () {
-    this.add(null);
+    this.append(null);
     return this;
 };
 
@@ -440,21 +462,21 @@ JSONJoiningTransformer.prototype['undefined'] = function () {
     if (this._cfg.mode !== 'JavaScript') {
         throw 'undefined is not allowed unless added in JavaScript mode';
     }
-    this.add(undefined);
+    this.append(undefined);
     return this;
 };
 JSONJoiningTransformer.prototype.nonfiniteNumber = function (num) {
     if (this._cfg.mode !== 'JavaScript') {
         throw 'Non-finite numbers are not allowed unless added in JavaScript mode';
     }
-    this.add(num);
+    this.append(num);
     return this;
 };
 JSONJoiningTransformer.prototype['function'] = function (func) {
     if (this._cfg.mode !== 'JavaScript') {
         throw 'function is not allowed unless added in JavaScript mode';
     }
-    this.add(func);
+    this.append(func);
     return this;
 };
 
@@ -511,8 +533,8 @@ JSONPathTransformerContext.prototype._getJoiningTransformer = function () {
     return this._config.joiningTransformer;
 };
 
-JSONPathTransformerContext.prototype.addOutput = function (item) {
-    this._getJoiningTransformer().add(item);
+JSONPathTransformerContext.prototype.appendOutput = function (item) {
+    this._getJoiningTransformer().append(item);
     return this;
 };
 JSONPathTransformerContext.prototype.getOutput = function () {
@@ -632,7 +654,7 @@ JSONPathTransformerContext.prototype.callTemplate = function (name, withParams) 
     }
     
     var result = templateObj.template.apply(this, paramValues);
-    results.add(result);
+    results.append(result);
     return this;
 };
 
@@ -652,7 +674,7 @@ JSONPathTransformerContext.prototype.valueOf = function (select) {
     else {
         result = this.get(select);
     }
-    results.add(result);
+    results.append(result);
     return this;
 };
 
@@ -814,7 +836,7 @@ JSONPathTransformer.DefaultTemplateRules = {
 * @param {function} [config.specificityPriorityResolver=XSLTStyleJSONPathResolver.getPriorityBySpecificity]
 * @param {object} [config.joiningTransformer=StringJoiningTransformer] Can be a singleton or class instance. Defaults to string joining for output transformation.
 * @param {function} [config.joiningTransformer.get=StringJoiningTransformer.get] Required method if object provided. Defaults to string joining getter.
-* @param {function} [config.joiningTransformer.add=StringJoiningTransformer.add] Required method if object provided. Defaults to string joining adder.
+* @param {function} [config.joiningTransformer.append=StringJoiningTransformer.append] Required method if object provided. Defaults to string joining appender.
 * @param {object} [config.joiningConfig={string: {}, json: {}, dom: {}, jamilih: {}}] Config to pass on to the joining transformer
 * @returns {JTLT} A JTLT instance object
 * @todo Remove JSONPath dependency in query use of '$'?
