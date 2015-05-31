@@ -36,23 +36,26 @@ from XSLT).
 # Todos
 
 1. Finish existing code to get it to work!
-1. Allow alternative to element(), array(), etc. methods by just detecting those types from return values.
+1. Allow alternative to `element()`, `array()`, etc. methods by just detecting those types from return values (and generic of each type like `dom()` and `json()`).
 1. Allow, depending on mode, containers to contain containers of other
 types (e.g., a JS container containing DOM objects, or temporary use
-of a string container, etc.). Include JHTML methods after implementing
-my latest spec
+of a string container, etc.).
     1. Support XML and add hXML methods.
+    1. Support JHTML.
+    1. Support `appendJSON()`/`appendDOM()` and `appendType('json', ...)`.
+1. Add `appendResult(function () {return result})`.
 1. Add JSON update functions (equivalent to Xquery Update Facility for
 XML ([overview](http://www.xmlplease.com/xquery-update))) and create
 JSON serialization (as with XSLT expressed itself in declarative XML)
 so one can submit and evaluate
-through [HTTPQuery](https://github.com/brettz9/httpquery).
+through [HTTPQuery](https://github.com/brettz9/httpquery). Utilize updating by reference.
 
 # Possible todos
 
-1. Make schema-aware so that templates could target types. Most reusable application may be having a type-driven view of a JSON Schema instance (e.g., dates could be shown inside a calendar widget). Perhaps this schema-awareness could also drive a JSON editor (as with other existing projects) (even using same API as JSONEditor?). This would help not only for editors which edit a JSON file in full, but also for providing schema paths or other identifiers so that a transformed/queried subset of a file (or joining of multiple files) could point the way for edited contents to be saved back to the correct JSON file and position in the JSON file.
+1. Make schema-aware so that templates could target types. Most reusable application may be having a type-driven view of a JSON Schema instance (e.g., dates could be shown inside a calendar widget). Perhaps this schema-awareness could also drive a JSON editor (as with other existing projects) (even using same API as JSONEditor?) (or type-aware filtered search/raw queries). This would help not only for editors which edit a JSON file in full, but also for providing schema paths or other identifiers so that a transformed/queried subset of a file (or joining of multiple files) could point the way for edited contents to be saved back to the correct JSON file and position in the JSON file.
 1. Implement and demo equivalent to applying and calling templates, and root template
 1. Reconcile a [non-eval PR for JSONPath](https://github.com/s3u/JSONPath/pull/4) with my [own fork](https://github.com/brettz9/JSONPath). The OR condition (outside of filters) is another important feature as would be schema-aware path results.
 1. Allow hybrid JSON/Jamilih or JSON/(X)HTML/XML so that one can add XPath or query into HTML in a relevant manner
 1. Document API here!
 1. See code for other possible todos
+1. Support Promise API in addition to callbacks
