@@ -42,7 +42,7 @@ types (e.g., a JS container containing DOM objects, or temporary use
 of a string container, etc.).
     1. Support XML and add hXML methods.
     1. Support JHTML.
-    1. Support `appendJSON()`/`appendDOM()` and `appendType('json', ...)`.
+    1. Support `appendJSON()`/`appendDOM()` and `appendType('json', ...)` (allowing type extensions).
 1. Add `appendResult(function () {return result})`.
 1. Add JSON update functions (equivalent to Xquery Update Facility for
 XML ([overview](http://www.xmlplease.com/xquery-update))) and create
@@ -56,6 +56,7 @@ through [HTTPQuery](https://github.com/brettz9/httpquery). Utilize updating by r
 1. Implement and demo equivalent to applying and calling templates, and root template
 1. Reconcile a [non-eval PR for JSONPath](https://github.com/s3u/JSONPath/pull/4) with my [own fork](https://github.com/brettz9/JSONPath). The OR condition (outside of filters) is another important feature as would be schema-aware path results.
 1. Allow hybrid JSON/Jamilih or JSON/(X)HTML/XML so that one can add XPath or query into HTML in a relevant manner
+1. Support pull parsing?
 1. Document API here!
 1. See code for other possible todos
 1. Support Promise API in addition to callbacks
