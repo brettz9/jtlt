@@ -71,11 +71,17 @@ StringJoiningTransformer.prototype = new AbstractJoiningTransformer();
 
 StringJoiningTransformer.prototype.append = function (s) {
     // Todo: Could allow option to disallow elements within arrays, etc. (add states and state checking)
-    if (this._arrItemState) {
+
+    if (this.propOnlyState) {
+        this._obj[this._objPropTemp] = val;
+        this.propOnlyState = false;
+        this._objPropTemp = undefined;
+    }
+    else if (this._arrItemState) {
         this._arr.push(s);
     }
     else if (this._objPropState) {
-        throw "Scalar values must be added via propValue() when in an object state.";
+        throw "Object values must be added via propValue() or after propOnly() when in an object state.";
     }
     else {
         this._str += s;
@@ -98,30 +104,17 @@ StringJoiningTransformer.prototype.propOnly = function (prop, cb) {
     if (!this._objPropState) {
         throw "propOnly() can only be called after an object state has been set up.";
     }
-    if (this.objPropState) {
-        throw "propOnly() can only be called again after a value is et";
+    if (this.propOnlyState) {
+        throw "propOnly() can only be called again after a value is set";
     }
-    this.objPropState = true;
+    this.propOnlyState = true;
     var oldPropTemp = this._objPropTemp;
     this._objPropTemp = prop;
     cb.call(this);
     this._objPropTemp = oldPropTemp;
-    if (this.objPropState) {
+    if (this.propOnlyState) {
         throw "propOnly() must be followed up with setting a value.";
     }
-    return this;
-};
-
-// Todo: Remove valueOnly in place of refactoring append() to set a new value (but making sure if it happens twice at the same level, that an error is thrown); make sure to set this.objPropState to false
-StringJoiningTransformer.prototype.valueOnly = function (val) {
-    if (!this._objPropState) {
-        throw "valueOnly() can only be called after an object state has been set up.";
-    }
-    if (this._objPropTemp === undefined) {
-        throw "propOnly() must be called before valueOnly()";
-    }
-    this._obj[this._objPropTemp] = val;
-    this.objPropState = false;
     return this;
 };
 
@@ -180,9 +173,12 @@ StringJoiningTransformer.prototype.array = function (arr, cb) {
     var oldArrItemState = this._arrItemState;
     
     if (cb) {
+        var oldObjPropState = this._objPropState;
+        this._objPropState = false;
         this._arrItemState = true;
         cb.call(this);
         this._arrItemState = oldArrItemState;
+        this._objPropState = oldObjPropState;
     }
     
     if (oldArrItemState || this._objPropState) { // Not ready to serialize yet as still inside another array or object
