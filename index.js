@@ -289,10 +289,12 @@ StringJoiningTransformer.prototype.element = function (elName, atts, childNodes,
         childNodes = undefined;
     }
 
-// Todo: allow for cfg to produce Jamilih string output or hXML string output
+    // Todo: allow for cfg to produce Jamilih string output or hXML string output
     var method = this._cfg.xmlElements ? 'toXML' : 'toHTML';
     if (!cb) {
-        // Note that Jamilih currently has an issue with 'selected', 'checked', 'value', 'defaultValue', 'for', 'on*', 'style' (workaround: pass an empty callback as the last argument to element())
+        // Note that Jamilih currently has an issue with 'selected', 'checked',
+        //  'value', 'defaultValue', 'for', 'on*', 'style' (workaround: pass
+        //   an empty callback as the last argument to element())
         this.append(jml[method].call(jml, elName, atts, childNodes));
         return this;
     }
