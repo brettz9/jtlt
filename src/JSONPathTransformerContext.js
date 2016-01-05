@@ -59,8 +59,10 @@ JSONPathTransformerContext.prototype.applyTemplates = function (select, mode, so
     select = JSONPathTransformer.makeJSONPathAbsolute(select);
     var results = this._getJoiningTransformer();
     var modeMatchedTemplates = this._templates.filter(function (templateObj) {
-        return ((mode && mode === templateObj.mode) && (!mode && !templateObj.mode));
+        return ((mode && mode === templateObj.mode) || (!mode && !templateObj.mode));
     });
+    // s(select);
+    // s(this._contextObj);
     jsonpath({
         path: select,
         resultType: 'all',
@@ -73,13 +75,16 @@ JSONPathTransformerContext.prototype.applyTemplates = function (select, mode, so
             //        the remote JSON and transform as results arrive)
 
             var pathMatchedTemplates = modeMatchedTemplates.filter(function (templateObj) {
-                return jsonpath({
+                var queryResult = jsonpath({
                     path: JSONPathTransformer.makeJSONPathAbsolute(templateObj.path),
                     json: that._contextObj,
                     resultType: 'path',
                     preventEval: that._config.preventEval,
                     wrap: true
-                }).includes(path);
+                });
+s(queryResult);
+s(path);
+                return queryResult.includes(path);
             });
 
             var templateObj;
