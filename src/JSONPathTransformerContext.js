@@ -61,74 +61,80 @@ JSONPathTransformerContext.prototype.applyTemplates = function (select, mode, so
     var modeMatchedTemplates = this._templates.filter(function (templateObj) {
         return ((mode && mode === templateObj.mode) && (!mode && !templateObj.mode));
     });
-    jsonpath({path: select, json: this._contextObj, preventEval: this._config.preventEval, wrap: false, resultType: 'all', callback: function (preferredOutput) {
-        // Todo: For remote JSON stores, could optimize this to first get
-        //        template paths and cache by template (and then query
-        //        the remote JSON and transform as results arrive)
-        var value = preferredOutput.value;
-        var parent = preferredOutput.parent;
-        var parentProperty = preferredOutput.parentProperty;
+    jsonpath({
+        path: select,
+        resultType: 'all',
+        wrap: false,
+        json: this._contextObj,
+        preventEval: this._config.preventEval,
+        callback: function (preferredOutput) {
+            // Todo: For remote JSON stores, could optimize this to first get
+            //        template paths and cache by template (and then query
+            //        the remote JSON and transform as results arrive)
+            var value = preferredOutput.value;
+            var parent = preferredOutput.parent;
+            var parentProperty = preferredOutput.parentProperty;
 
-        var pathMatchedTemplates = modeMatchedTemplates.filter(function (templateObj) {
-            return jsonpath({path: JSONPathTransformer.makeJSONPathAbsolute(templateObj.path), json: that._contextObj, resultType: 'path', preventEval: that._config.preventEval, wrap: true}).includes(preferredOutput.path);
-        });
-
-        var templateObj;
-        if (!pathMatchedTemplates.length) {
-            var dtr = JSONPathTransformer.DefaultTemplateRules;
-            // Default rules in XSLT, although expressible as different kind of paths, are really about result types, so we check the resulting value more than the select expression
-            if ((/~$/).test(select)) {
-                templateObj = dtr.transformPropertyNames;
-            }
-            else if (Array.isArray(value)) {
-                templateObj = dtr.transformArrays;
-            }
-            else if (value && typeof value === 'object') {
-                templateObj = dtr.transformObjects;
-            }
-            // Todo: provide parameters to jsonpath based on config on whether to allow non-JSON JS results
-            else if (value && typeof value === 'function') {
-                templateObj = dtr.transformFunctions;
-            }
-            else {
-                templateObj = dtr.transformScalars;
-            }
-            /*
-            Todo: If Jamilih support Jamilih, could add equivalents more like XSL,
-            including processing-instruction(), comment(), and namespace nodes (whose
-            default templates do not add to the result tree in XSLT) as well as elements,
-            attributes, text nodes (see
-            http://lenzconsulting.com/how-xslt-works/#built-in_template_rules )
-            */
-        }
-        else {
-            // Todo: Could perform this first and cache by template
-            pathMatchedTemplates.sort(function (a, b) {
-                var aPriority = typeof a.priority === 'number' ? a.priority : that._config.specificityPriorityResolver(a.path);
-                var bPriority = typeof b.priority === 'number' ? b.priority : that._config.specificityPriorityResolver(a.path);
-
-                if (aPriority === bPriority) {
-                    this._triggerEqualPriorityError();
-                }
-
-                return (aPriority > bPriority) ? -1 : 1; // We want equal conditions to go in favor of the later (b)
+            var pathMatchedTemplates = modeMatchedTemplates.filter(function (templateObj) {
+                return jsonpath({path: JSONPathTransformer.makeJSONPathAbsolute(templateObj.path), json: that._contextObj, resultType: 'path', preventEval: that._config.preventEval, wrap: true}).includes(preferredOutput.path);
             });
 
-            templateObj = pathMatchedTemplates.shift();
+            var templateObj;
+            if (!pathMatchedTemplates.length) {
+                var dtr = JSONPathTransformer.DefaultTemplateRules;
+                // Default rules in XSLT, although expressible as different kind of paths, are really about result types, so we check the resulting value more than the select expression
+                if ((/~$/).test(select)) {
+                    templateObj = dtr.transformPropertyNames;
+                }
+                else if (Array.isArray(value)) {
+                    templateObj = dtr.transformArrays;
+                }
+                else if (value && typeof value === 'object') {
+                    templateObj = dtr.transformObjects;
+                }
+                // Todo: provide parameters to jsonpath based on config on whether to allow non-JSON JS results
+                else if (value && typeof value === 'function') {
+                    templateObj = dtr.transformFunctions;
+                }
+                else {
+                    templateObj = dtr.transformScalars;
+                }
+                /*
+                Todo: If Jamilih support Jamilih, could add equivalents more like XSL,
+                including processing-instruction(), comment(), and namespace nodes (whose
+                default templates do not add to the result tree in XSLT) as well as elements,
+                attributes, text nodes (see
+                http://lenzconsulting.com/how-xslt-works/#built-in_template_rules )
+                */
+            }
+            else {
+                // Todo: Could perform this first and cache by template
+                pathMatchedTemplates.sort(function (a, b) {
+                    var aPriority = typeof a.priority === 'number' ? a.priority : that._config.specificityPriorityResolver(a.path);
+                    var bPriority = typeof b.priority === 'number' ? b.priority : that._config.specificityPriorityResolver(a.path);
+
+                    if (aPriority === bPriority) {
+                        this._triggerEqualPriorityError();
+                    }
+
+                    return (aPriority > bPriority) ? -1 : 1; // We want equal conditions to go in favor of the later (b)
+                });
+
+                templateObj = pathMatchedTemplates.shift();
+            }
+
+            that._contextObj = value;
+            that._parent = parent;
+            that._parentProperty = parentProperty;
+
+            templateObj.template.call(that, mode);
+
+            // Child templates may have changed the context
+            that._contextObj = value;
+            that._parent = parent;
+            that._parentProperty = parentProperty;
         }
-
-        that._contextObj = value;
-        that._parent = parent;
-        that._parentProperty = parentProperty;
-
-        templateObj.template.call(that, mode);
-
-        // Child templates may have changed the context
-        that._contextObj = value;
-        that._parent = parent;
-        that._parentProperty = parentProperty;
-
-    }});
+    });
     return this;
 };
 JSONPathTransformerContext.prototype.callTemplate = function (name, withParams) {
