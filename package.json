@@ -5,6 +5,7 @@
     "version": "0.1.0",
     "license": "MIT",
     "author": "Brett Zamir",
+    "main": "src/index",
     "contributors": [],
     "homepage": "https://github.com/s3u/JSONPath/",
     "engines": {

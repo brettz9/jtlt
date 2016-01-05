@@ -2,7 +2,7 @@
 /*jslint vars:true*/
 (function () {'use strict';
 
-var JTLT = require('../').JTLT,
+var JTLT = require('../src/index').JTLT,
     testCase = require('nodeunit').testCase;
 
 var json = {
@@ -28,7 +28,7 @@ module.exports = testCase({
 
         var expected = '';
         var result = '';
-        
+
         var a = JTLT({
             templates: [{
                 name: 'author', // For use with calling templates
