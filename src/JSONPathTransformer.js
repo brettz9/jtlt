@@ -45,7 +45,7 @@ JSONPathTransformer.prototype.transform = function (mode) {
 */
 JSONPathTransformer.makeJSONPathAbsolute = function (select) {
     // See todo in JSONPath to avoid need for '$' (but may still need to add ".")
-    return select[0] !== '$' ? '$' + (select[0] === '[' ? '$' : '$.') + select : select;
+    return select[0] !== '$' ? ((select[0] === '[' ? '$' : '$.') + select) : select;
 };
 
 
