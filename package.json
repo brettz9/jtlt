@@ -6,6 +6,10 @@
     "license": "MIT",
     "author": "Brett Zamir",
     "contributors": [],
+    "homepage": "https://github.com/s3u/JSONPath/",
+    "engines": {
+      "node": ">=0.8"
+    },
     "repository": {
         "type": "git",
         "url": "https://github.com/brettz9/jtlt.git"
@@ -13,7 +17,7 @@
     "dependencies": {
         "object-assign": "2.x",
         "jsdom": "2.x",
-        "JSONPath": "git+https://git@github.com/brettz9/JSONPath#master",
+        "jsonpath-plus": "git+https://git@github.com/s3u/JSONPath#master",
         "simple-get-json": "git+https://git@github.com/brettz9/getJSON#master",
         "jamilih": "git+https://git@github.com/brettz9/jamilih#master",
         "jhtml": "git+https://git@github.com/brettz9/jhtml#master"

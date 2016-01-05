@@ -13,7 +13,7 @@ var jsonpath, JSONPathTransformer;
 if (exports !== undefined) {
     getJSON = require('simple-get-json');
     JHTML = require('jhtml');
-    jsonpath = require('JSONPath');
+    jsonpath = require('jsonpath-plus');
     jml = require('jamilih');
     Stringifier = require('./node_modules/jhtml/SAJJ/SAJJ.Stringifier');
 
