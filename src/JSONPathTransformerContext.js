@@ -76,7 +76,13 @@ JSONPathTransformerContext.prototype.applyTemplates = function (select, mode, so
             var parentProperty = preferredOutput.parentProperty;
 
             var pathMatchedTemplates = modeMatchedTemplates.filter(function (templateObj) {
-                return jsonpath({path: JSONPathTransformer.makeJSONPathAbsolute(templateObj.path), json: that._contextObj, resultType: 'path', preventEval: that._config.preventEval, wrap: true}).includes(preferredOutput.path);
+                return jsonpath({
+                    path: JSONPathTransformer.makeJSONPathAbsolute(templateObj.path),
+                    json: that._contextObj,
+                    resultType: 'path',
+                    preventEval: that._config.preventEval,
+                    wrap: true
+                }).includes(preferredOutput.path);
             });
 
             var templateObj;
