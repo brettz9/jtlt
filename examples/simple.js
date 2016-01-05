@@ -12,7 +12,7 @@ JTLT({
     }],
     ajaxData: 'data/jsonpath-sample.json',
     success: function (result) {
-        alert('result:'+JSON.stringify(result));
+        alert('result:' + JSON.stringify(result));
     },
     outputType: 'string'
 });
