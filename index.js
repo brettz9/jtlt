@@ -126,9 +126,9 @@ StringJoiningTransformer.prototype.object = function (obj, cb, usePropertySets, 
     if (_isElement(obj)) {
         this._obj = JHTML.toJSONObject(this._obj);
     }
-    
+
     // Todo: Allow in this and subsequent JSON methods ability to create jml-based JHTML
-    
+
     if (usePropertySets !== undef) {
         usePropertySets.reduce(function (o, psName) {
             return this._usePropertySets(o, psName); // Todo: Put in right scope
@@ -137,13 +137,13 @@ StringJoiningTransformer.prototype.object = function (obj, cb, usePropertySets, 
     if (propSets !== undef) {
         Object.assign(this._obj, propSets);
     }
-    
+
     if (cb) {
         this._objPropState = true;
         cb.call(this);
         this._objPropState = oldObjPropState;
     }
-    
+
     if (oldObjPropState || this._arrItemState) { // Not ready to serialize yet as still inside another array or object
         this.append(this._obj);
     }
@@ -169,9 +169,9 @@ StringJoiningTransformer.prototype.array = function (arr, cb) {
     if (_isElement(arr)) {
         this._arr = JHTML.toJSONObject(this._arr);
     }
-    
+
     var oldArrItemState = this._arrItemState;
-    
+
     if (cb) {
         var oldObjPropState = this._objPropState;
         this._objPropState = false;
@@ -180,7 +180,7 @@ StringJoiningTransformer.prototype.array = function (arr, cb) {
         this._arrItemState = oldArrItemState;
         this._objPropState = oldObjPropState;
     }
-    
+
     if (oldArrItemState || this._objPropState) { // Not ready to serialize yet as still inside another array or object
         this.append(this._arr);
     }
@@ -303,7 +303,7 @@ StringJoiningTransformer.prototype.element = function (elName, atts, childNodes,
         atts = Object.assign(objAtts, atts);
         elName = elName.nodeName;
     }
-    
+
     this.append('<' + elName);
     var oldTagState = this._openTagState;
     this._openTagState = true;
@@ -319,7 +319,7 @@ StringJoiningTransformer.prototype.element = function (elName, atts, childNodes,
     if (cb) {
         cb.call(this);
     }
-    
+
     // Todo: Depending on an this._cfg.xmlElements option, allow for XML self-closing when empty or as per the tag, HTML self-closing tags (or polyglot-friendly self-closing)
     if (this._openTagState) {
         this.append('>');
@@ -332,7 +332,7 @@ StringJoiningTransformer.prototype.attribute = function (name, val, avoidAttEsca
     if (!this._openTagState) {
         throw "An attribute cannot be added after an opening tag has been closed (name: " + name + "; value: " + val + ")";
     }
-    
+
     if (!this._cfg.xmlElements) {
         if (typeof val === 'object') {
             switch (name) {
@@ -351,7 +351,7 @@ StringJoiningTransformer.prototype.attribute = function (name, val, avoidAttEsca
         }
         name = {className: 'class', htmlFor: 'for'}[name] || name;
     }
-    
+
     val = (this._cfg.preEscapedAttributes || avoidAttEscape) ? val : val.replace(/&/g, '&amp;').replace(/"/g, '&quot;');
     this.append(' ' + name + '="' + val + '"');
     return this;
@@ -411,7 +411,7 @@ DOMJoiningTransformer.prototype.get = function () {
     return this._dom;
 };
 DOMJoiningTransformer.prototype.propValue = function (prop, val) {
-    
+
 };
 DOMJoiningTransformer.prototype.object = function (cb, usePropertySets, propSets) {
     this._requireSameChildren('dom', 'object');
@@ -488,13 +488,13 @@ DOMJoiningTransformer.prototype.element = function (elName, atts, cb) {
         }
     }
     this.append(el);
-    
+
     var oldDOM = this._dom;
 
     this._dom = el;
     cb.call(this);
     this._dom = oldDOM;
-    
+
     return this;
 };
 DOMJoiningTransformer.prototype.attribute = function (name, val) {
@@ -570,7 +570,7 @@ JSONJoiningTransformer.prototype.object = function (cb, usePropertySets, propSet
     if (propSets !== undef) {
         Object.assign(obj, propSets);
     }
-    
+
     this.append(obj);
     var oldObjPropState = this._objPropState;
     this._objPropState = true;
@@ -655,7 +655,7 @@ XSLTStyleJSONPathResolver.prototype.getPriorityBySpecificity = function (path) {
     if (typeof path === 'string') {
         path = JSONPath.toPathArray(path);
     }
-    
+
     var terminal = path.slice(-1);
     if (terminal.match(/^(?:\*|~|@[a-z]*?\(\))$/i)) { // *, ~, @string() (comparable to XSLT's *, @*, and node tests, respectively)
         return -0.5;
@@ -732,7 +732,7 @@ JSONPathTransformerContext.prototype.applyTemplates = function (select, mode, so
         var value = preferredOutput.value;
         var parent = preferredOutput.parent;
         var parentProperty = preferredOutput.parentProperty;
-        
+
         var pathMatchedTemplates = modeMatchedTemplates.filter(function (templateObj) {
             return jsonpath({path: JSONPathTransformer.makeJSONPathAbsolute(templateObj.path), json: that._contextObj, resultType: 'path', preventEval: that._config.preventEval, wrap: true}).includes(preferredOutput.path);
         });
@@ -765,17 +765,17 @@ JSONPathTransformerContext.prototype.applyTemplates = function (select, mode, so
             pathMatchedTemplates.sort(function (a, b) {
                 var aPriority = typeof a.priority === 'number' ? a.priority : that._config.specificityPriorityResolver(a.path);
                 var bPriority = typeof b.priority === 'number' ? b.priority : that._config.specificityPriorityResolver(a.path);
-                
+
                 if (aPriority === bPriority) {
                     this._triggerEqualPriorityError();
                 }
-                
+
                 return (aPriority > bPriority) ? -1 : 1; // We want equal conditions to go in favor of the later (b)
             });
-            
+
             templateObj = pathMatchedTemplates.shift();
         }
-        
+
         that._contextObj = value;
         that._parent = parent;
         that._parentProperty = parentProperty;
@@ -786,7 +786,7 @@ JSONPathTransformerContext.prototype.applyTemplates = function (select, mode, so
         that._contextObj = value;
         that._parent = parent;
         that._parentProperty = parentProperty;
-        
+
     }});
     return this;
 };
@@ -806,7 +806,7 @@ JSONPathTransformerContext.prototype.callTemplate = function (name, withParams) 
     if (!templateObj) {
         throw "Template, " + name + ", cannot be called as it was not found.";
     }
-    
+
     var result = templateObj.template.apply(this, paramValues);
     results.append(result);
     return this;
