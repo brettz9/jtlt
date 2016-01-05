@@ -35,7 +35,9 @@ function _makeDatasetAttribute (n0) {
     return n0.charAt(0) + '-' + n0.charAt(1).toLowerCase();
 }
 
-// Todo: Allow swapping of joining transformer types in mid transformation (e.g., building strings with string transformer but adding as text node in a DOM transformer)
+// Todo: Allow swapping of joining transformer types in
+//        mid-transformation (e.g., building strings with
+//        string transformer but adding as text node in a DOM transformer)
 
 function AbstractJoiningTransformer (cfg) {
     if (!(this instanceof AbstractJoiningTransformer)) {
@@ -320,7 +322,9 @@ StringJoiningTransformer.prototype.element = function (elName, atts, childNodes,
         cb.call(this);
     }
 
-    // Todo: Depending on an this._cfg.xmlElements option, allow for XML self-closing when empty or as per the tag, HTML self-closing tags (or polyglot-friendly self-closing)
+    // Todo: Depending on an this._cfg.xmlElements option, allow for
+    //        XML self-closing when empty or as per the tag, HTML
+    //        self-closing tags (or polyglot-friendly self-closing)
     if (this._openTagState) {
         this.append('>');
     }
@@ -709,7 +713,10 @@ JSONPathTransformerContext.prototype.set = function (v) {
     return this;
 };
 
-JSONPathTransformerContext.prototype.applyTemplates = function (select, mode, sort) { // Todo: implement sort (allow as callback or as object)
+/**
+* @todo implement sort (allow as callback or as object)
+*/
+JSONPathTransformerContext.prototype.applyTemplates = function (select, mode, sort) {
     var that = this;
     if (select && typeof select === 'object') {
         mode = select.mode;
@@ -728,7 +735,9 @@ JSONPathTransformerContext.prototype.applyTemplates = function (select, mode, so
         return ((mode && mode === templateObj.mode) && (!mode && !templateObj.mode));
     });
     jsonpath({path: select, json: this._contextObj, preventEval: this._config.preventEval, wrap: false, resultType: 'all', callback: function (preferredOutput) {
-        // Todo: For remote JSON stores, could optimize this to first get template paths and cache by template (and then query the remote JSON and transform as results arrive)
+        // Todo: For remote JSON stores, could optimize this to first get
+        //        template paths and cache by template (and then query
+        //        the remote JSON and transform as results arrive)
         var value = preferredOutput.value;
         var parent = preferredOutput.parent;
         var parentProperty = preferredOutput.parentProperty;
@@ -750,14 +759,19 @@ JSONPathTransformerContext.prototype.applyTemplates = function (select, mode, so
             else if (value && typeof value === 'object') {
                 templateObj = dtr.transformObjects;
             }
-            else if (value && typeof value === 'function') { // Todo: provide parameters to jsonpath based on config on whether to allow non-JSON JS results
+            // Todo: provide parameters to jsonpath based on config on whether to allow non-JSON JS results
+            else if (value && typeof value === 'function') {
                 templateObj = dtr.transformFunctions;
             }
             else {
                 templateObj = dtr.transformScalars;
             }
             /*
-            Todo: If Jamilih support Jamilih, could add equivalents more like XSL, including processing-instruction(), comment(), and namespace nodes (whose default templates do not add to the result tree in XSLT) as well as elements, attributes, text nodes (see http://lenzconsulting.com/how-xslt-works/#built-in_template_rules )
+            Todo: If Jamilih support Jamilih, could add equivalents more like XSL,
+            including processing-instruction(), comment(), and namespace nodes (whose
+            default templates do not add to the result tree in XSLT) as well as elements,
+            attributes, text nodes (see
+            http://lenzconsulting.com/how-xslt-works/#built-in_template_rules )
             */
         }
         else {
@@ -812,7 +826,8 @@ JSONPathTransformerContext.prototype.callTemplate = function (name, withParams) 
     return this;
 };
 
-JSONPathTransformerContext.prototype.forEach = function (select, cb, sort) { // Todo: Implement sort (allow as callback or as object)
+// Todo: Implement sort (allow as callback or as object)
+JSONPathTransformerContext.prototype.forEach = function (select, cb, sort) {
     var that = this;
     jsonpath({path: select, json: this._contextObj, preventEval: this._config.preventEval, wrap: false, returnType: 'value', callback: function (value) {
         cb.call(that, value);
@@ -1051,7 +1066,9 @@ JTLT.prototype.setDefaults = function (config) {
         var jpt = new JSONPathTransformer(config);
         return jpt.transform(config.mode);
     };
-    // Todo: Let's also, unlike XSLT and the following, give options for higher priority to absolute fixed paths over recursive descent and priority to longer paths and lower to wildcard terminal points
+    // Todo: Let's also, unlike XSLT and the following, give options for higher priority to
+    //        absolute fixed paths over recursive descent and priority to longer paths
+    //        and lower to wildcard terminal points
     this.config.specificityPriorityResolver = this.config.specificityPriorityResolver || (function () {
         var xsjpr = new XSLTStyleJSONPathResolver();
         return function (path) {

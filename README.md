@@ -28,7 +28,7 @@ JTLT, having the freedom to start a new pattern from XSLT, and though
 seeking to learn from it, deviates somewhat from making an exact
 equivalence with XSLT (to the extent JTLT and JSONPath implement
 what could possibly be transferred to JSON-based transformations
-from XSLT).
+from XSLT):
 
 1.  Although the option is given for throwing errors upon finding
     templates of equal priority, the default behavior is to give
@@ -47,9 +47,9 @@ from XSLT).
     types (e.g., a JS container containing DOM objects, or temporary use
     of a string container, etc.).
 
-    1.  Support XML and add hXML methods.
+    1.  Support XML and add [hXML](https://github.com/brettz9/hxml) methods.
 
-    2.  Support JHTML.
+    2.  Support [JHTML](https://github.com/brettz9/jhtml).
 
     3.  Support `appendJSON()`/`appendDOM()` and
         `appendType('json', ...)` (allowing type extensions).
@@ -79,15 +79,15 @@ from XSLT).
 2.  Implement and demo equivalent to applying and calling templates, and
     root template
 
-3.  Reconcile a [non-eval PR for JSONPath](https://github.com/s3u/JSONPath/pull/4)
-    with my [own fork](https://github.com/brettz9/JSONPath). The OR condition
-    (outside of filters) is another important feature as would be
-    schema-aware path results.
+3.  Add a [non-eval PR for JSONPath](https://github.com/s3u/JSONPath/pull/4).
+    The OR condition (outside of filters) is another important feature as
+    would be schema-aware path results.
 
-4.  Allow hybrid JSON/Jamilih or JSON/(X)HTML/XML so that one can add
+4.  Allow hybrid JSON/[Jamilih](https://github.com/brettz9/jamilih) or
+    JSON/(X)HTML/XML so that one can add
     XPath or query into HTML in a relevant manner
 
-5.  Support pull parsing?
+5.  Support pull parsing/streaming?
 
 6.  Document API here!
 
