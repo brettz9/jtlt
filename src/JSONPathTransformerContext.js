@@ -67,13 +67,10 @@ JSONPathTransformerContext.prototype.applyTemplates = function (select, mode, so
         wrap: false,
         json: this._contextObj,
         preventEval: this._config.preventEval,
-        callback: function (preferredOutput) {
+        callback: function ({value, parent, parentProperty, path}) {
             // Todo: For remote JSON stores, could optimize this to first get
             //        template paths and cache by template (and then query
             //        the remote JSON and transform as results arrive)
-            var value = preferredOutput.value;
-            var parent = preferredOutput.parent;
-            var parentProperty = preferredOutput.parentProperty;
 
             var pathMatchedTemplates = modeMatchedTemplates.filter(function (templateObj) {
                 return jsonpath({
@@ -82,7 +79,7 @@ JSONPathTransformerContext.prototype.applyTemplates = function (select, mode, so
                     resultType: 'path',
                     preventEval: that._config.preventEval,
                     wrap: true
-                }).includes(preferredOutput.path);
+                }).includes(path);
             });
 
             var templateObj;
