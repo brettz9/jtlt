@@ -5,7 +5,7 @@ function DOMJoiningTransformer (o, cfg) {
     if (!(this instanceof DOMJoiningTransformer)) {
         return new DOMJoiningTransformer(o, cfg);
     }
-    AbstractJoiningTransformer.call(this, cfg); // Include this in any subclass of AbstractJoiningTransformer
+    this.setConfig(cfg); // Include this in any subclass of AbstractJoiningTransformer
     this._dom = o || document.createDocumentFragment();
 }
 DOMJoiningTransformer.prototype = new AbstractJoiningTransformer();

@@ -209,13 +209,19 @@ JSONPathTransformerContext.prototype.message = function (json) {
     console.log(json);
 };
 
-JSONPathTransformerContext.prototype.object = function (cb, usePropertySets, propSets) {
-    this._getJoiningTransformer().object();
+// Todo: Add other methods from the joining transformers
+JSONPathTransformerContext.prototype.string = function (str, cb) {
+    this._getJoiningTransformer().string(str, cb);
     return this;
 };
 
-JSONPathTransformerContext.prototype.array = function () {
-    this._getJoiningTransformer().array();
+JSONPathTransformerContext.prototype.object = function (cb, usePropertySets, propSets) {
+    this._getJoiningTransformer().object(cb, usePropertySets, propSets);
+    return this;
+};
+
+JSONPathTransformerContext.prototype.array = function (cb) {
+    this._getJoiningTransformer().array(cb);
     return this;
 };
 

@@ -2,7 +2,7 @@ function JSONJoiningTransformer (o, cfg) {
     if (!(this instanceof JSONJoiningTransformer)) {
         return new JSONJoiningTransformer(o, cfg);
     }
-    AbstractJoiningTransformer.call(this, cfg); // Include this in any subclass of AbstractJoiningTransformer
+    this.setConfig(cfg); // Include this in any subclass of AbstractJoiningTransformer
     this._obj = o || [];
 }
 JSONJoiningTransformer.prototype = new AbstractJoiningTransformer();

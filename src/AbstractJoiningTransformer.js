@@ -7,8 +7,13 @@ function AbstractJoiningTransformer (cfg) {
         return new AbstractJoiningTransformer();
     }
     // Todo: Might set some reasonable defaults across all classes
-    this._cfg = cfg;
+    this.setConfig(cfg);
 }
+
+AbstractJoiningTransformer.prototype.setConfig = function (cfg) {
+    this._cfg = cfg;
+};
+
 AbstractJoiningTransformer.prototype._requireSameChildren = function (type, embedType) {
     if (this._cfg[type].requireSameChildren) {
         throw "Cannot embed " + embedType + " children for a " + type + " joining transformer.";

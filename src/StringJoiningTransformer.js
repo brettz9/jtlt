@@ -15,7 +15,7 @@ function StringJoiningTransformer (s, cfg) {
     if (!(this instanceof StringJoiningTransformer)) {
         return new StringJoiningTransformer(s, cfg);
     }
-    AbstractJoiningTransformer.call(this, cfg); // Include this in any subclass of AbstractJoiningTransformer
+    this.setConfig(cfg); // Include this in any subclass of AbstractJoiningTransformer
     this._str = s || '';
 }
 StringJoiningTransformer.prototype = new AbstractJoiningTransformer();

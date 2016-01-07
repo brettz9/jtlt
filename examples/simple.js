@@ -6,7 +6,7 @@ JTLT({
     templates: [{
         name: 'author', // For use with calling templates
         path: '$.store.book[*].author',
-        template: function () {
+        template: function (value) {
             this.string('<b>' + value + '</b>');
         }
     }],
