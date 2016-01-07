@@ -76,8 +76,6 @@ JSONPathTransformerContext.prototype.applyTemplates = function (select, mode, so
 //s(value + '::' + parent + '::' + parentProperty + '::' + path);
             var _oldPath = that._currPath;
             that._currPath += path.replace(/^\$/, '');
-s('cp:' + that._currPath);
-s(modeMatchedTemplates.length)
             // Todo: Normalize templateObj.path's
             var pathMatchedTemplates = modeMatchedTemplates.filter(function (templateObj) {
                 var queryResult = jsonpath({
@@ -87,8 +85,8 @@ s(modeMatchedTemplates.length)
                     preventEval: that._config.preventEval,
                     wrap: true
                 });
-s(queryResult);
-s('currPath:'+that._currPath);
+//s(queryResult);
+//s('currPath:'+that._currPath);
                 return queryResult.includes(that._currPath);
             });
 
@@ -140,7 +138,7 @@ s('currPath:'+that._currPath);
             that._parent = parent;
             that._parentProperty = parentProperty;
 
-            templateObj.template.call(that, value, mode);
+            templateObj.template.call(that, mode);
 
             // Child templates may have changed the context
             that._contextObj = value;

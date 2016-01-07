@@ -6,8 +6,8 @@ JTLT({
     templates: [{
         name: 'author', // For use with calling templates
         path: '$.store.book[*].author',
-        template: function (value) {
-            this.string('<b>' + value + '</b>');
+        template: function () {
+            this.string('<b>' + this.valueOf({select: '.'}) + '</b>');
         }
     }],
     ajaxData: 'data/jsonpath-sample.json',
