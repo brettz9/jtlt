@@ -23,8 +23,7 @@ JSONPathTransformerContext.prototype.appendOutput = function (item) {
     return this;
 };
 JSONPathTransformerContext.prototype.getOutput = function () {
-    this._getJoiningTransformer().get();
-    return this;
+    return this._getJoiningTransformer().get();
 };
 
 // Get() and set() are provided as a convenience method for templates, but it should typically not be used (use valueOf or the copy methods to add to the result tree instead)
