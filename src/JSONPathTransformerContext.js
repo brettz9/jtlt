@@ -77,7 +77,8 @@ s(this._contextObj);
 //s(value + '::' + parent + '::' + parentProperty + '::' + path);
             var _oldPath = that._currPath;
             that._currPath += path.replace(/^\$/, '');
-s('currPath: '+ that._currPath);
+
+            // Todo: Normalize templateObj.path's
             var pathMatchedTemplates = modeMatchedTemplates.filter(function (templateObj) {
                 var queryResult = jsonpath({
                     path: JSONPathTransformer.makeJSONPathAbsolute(templateObj.path),
@@ -88,7 +89,7 @@ s('currPath: '+ that._currPath);
                 });
 //s(queryResult);
 
-                return queryResult.includes(path);
+                return queryResult.includes(that._currPath);
             });
 
             var templateObj;
