@@ -1,7 +1,7 @@
 function JSONPathTransformerContext (config, templates) {
     this._config = config;
     this._templates = templates;
-    this._contextObj = config.data;
+    this._contextObj = this._origObj = config.data;
     this._parent = config.parent || this._config;
     this._parentProperty = config.parentProperty || 'data';
     this.vars = {};
@@ -62,8 +62,8 @@ JSONPathTransformerContext.prototype.applyTemplates = function (select, mode, so
     var modeMatchedTemplates = this._templates.filter(function (templateObj) {
         return ((mode && mode === templateObj.mode) || (!mode && !templateObj.mode));
     });
-s(select);
-s(this._contextObj);
+//s(select);
+//s(this._contextObj);
     jsonpath({
         path: select,
         resultType: 'all',
@@ -82,13 +82,11 @@ s(this._contextObj);
             var pathMatchedTemplates = modeMatchedTemplates.filter(function (templateObj) {
                 var queryResult = jsonpath({
                     path: JSONPathTransformer.makeJSONPathAbsolute(templateObj.path),
-                    json: that._contextObj,
+                    json: that._origObj,
                     resultType: 'path',
                     preventEval: that._config.preventEval,
                     wrap: true
                 });
-//s(queryResult);
-
                 return queryResult.includes(that._currPath);
             });
 
