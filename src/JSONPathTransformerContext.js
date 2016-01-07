@@ -51,6 +51,7 @@ JSONPathTransformerContext.prototype.applyTemplates = function (select, mode, so
     }
     if (!this._initialized) {
         select = select || '$';
+        this._currPath = '$';
         this._initialized = true;
     }
     else {
@@ -61,8 +62,8 @@ JSONPathTransformerContext.prototype.applyTemplates = function (select, mode, so
     var modeMatchedTemplates = this._templates.filter(function (templateObj) {
         return ((mode && mode === templateObj.mode) || (!mode && !templateObj.mode));
     });
-    // s(select);
-    // s(this._contextObj);
+s(select);
+s(this._contextObj);
     jsonpath({
         path: select,
         resultType: 'all',
@@ -73,7 +74,10 @@ JSONPathTransformerContext.prototype.applyTemplates = function (select, mode, so
             // Todo: For remote JSON stores, could optimize this to first get
             //        template paths and cache by template (and then query
             //        the remote JSON and transform as results arrive)
-
+//s(value + '::' + parent + '::' + parentProperty + '::' + path);
+            var _oldPath = that._currPath;
+            that._currPath += path.replace(/^\$/, '');
+s('currPath: '+ that._currPath);
             var pathMatchedTemplates = modeMatchedTemplates.filter(function (templateObj) {
                 var queryResult = jsonpath({
                     path: JSONPathTransformer.makeJSONPathAbsolute(templateObj.path),
@@ -82,8 +86,8 @@ JSONPathTransformerContext.prototype.applyTemplates = function (select, mode, so
                     preventEval: that._config.preventEval,
                     wrap: true
                 });
-s(queryResult);
-s(path);
+//s(queryResult);
+
                 return queryResult.includes(path);
             });
 
@@ -141,6 +145,7 @@ s(path);
             that._contextObj = value;
             that._parent = parent;
             that._parentProperty = parentProperty;
+            that._currPath = _oldPath;
         }
     });
     return this;
