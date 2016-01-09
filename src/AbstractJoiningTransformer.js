@@ -27,3 +27,7 @@ AbstractJoiningTransformer.prototype.config = function (prop, val, cb) {
         this._cfg[prop] = oldCfgProp;
     }
 };
+
+if (typeof module !== 'undefined') {
+    module.exports = AbstractJoiningTransformer;
+}

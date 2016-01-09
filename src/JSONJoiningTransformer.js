@@ -1,3 +1,7 @@
+if (typeof exports !== 'undefined') {
+    AbstractJoiningTransformer = require('./AbstractJoiningTransformer');
+}
+
 function JSONJoiningTransformer (o, cfg) {
     if (!(this instanceof JSONJoiningTransformer)) {
         return new JSONJoiningTransformer(o, cfg);
@@ -126,3 +130,7 @@ JSONJoiningTransformer.prototype.plainText = function (str) {
     this.string(str);
     return this;
 };
+
+if (typeof module !== 'undefined') {
+    module.exports = JSONJoiningTransformer;
+}

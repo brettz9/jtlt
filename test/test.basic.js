@@ -2,7 +2,7 @@
 /*jslint vars:true*/
 (function () {'use strict';
 
-var JTLT = require('../src/index').JTLT,
+var JTLT = require('../src/index'),
     testCase = require('nodeunit').testCase;
 
 var json = {

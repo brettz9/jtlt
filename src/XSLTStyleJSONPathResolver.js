@@ -20,3 +20,7 @@ XSLTStyleJSONPathResolver.prototype.getPriorityBySpecificity = function (path) {
     //   element or attribute name)
     return 0;
 };
+
+if (typeof module !== 'undefined') {
+    module.exports = XSLTStyleJSONPathResolver;
+}

@@ -1,3 +1,7 @@
+if (typeof exports !== 'undefined') {
+    AbstractJoiningTransformer = require('./AbstractJoiningTransformer');
+}
+
 var exports;
 
 (function () {
@@ -338,7 +342,11 @@ StringJoiningTransformer.prototype.plainText = function (str) {
 
 // Todo: Implement comment(), processingInstruction(), etc.
 
-var baseObj = exports === undefined ? window : exports;
-baseObj.StringJoiningTransformer = StringJoiningTransformer;
+if (module === undefined) {
+    window.StringJoiningTransformer = StringJoiningTransformer;
+}
+else {
+    module.exports = StringJoiningTransformer;
+}
 
 }());

@@ -1,3 +1,6 @@
+if (typeof exports !== 'undefined') {
+    AbstractJoiningTransformer = require('./AbstractJoiningTransformer');
+}
 /**
 * This transformer expects the templates to do their own DOM building
 */
@@ -128,3 +131,7 @@ DOMJoiningTransformer.prototype.plainText = function (str) {
     this.text(str);
     return this;
 };
+
+if (typeof module !== 'undefined') {
+    module.exports = DOMJoiningTransformer;
+}

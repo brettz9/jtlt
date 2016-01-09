@@ -81,3 +81,7 @@ JSONPathTransformer.DefaultTemplateRules = {
         }
     }
 };
+
+if (typeof module !== 'undefined') {
+    module.exports = JSONPathTransformer;
+}

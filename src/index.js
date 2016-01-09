@@ -1,5 +1,9 @@
 var jsonpath, getJSON, JHTML, JSONPath, jml, Stringifier; // Define globally for convenience of any user subclasses
 var exports, require, document, window;
+var AbstractJoiningTransformer, DOMJoiningTransformer,
+    JSONJoiningTransformer, JSONPathTransformer,
+    JSONPathTransformerContext, StringJoiningTransformer,
+    XSLTStyleJSONPathResolver;
 
 function l (s) {console.log(s);}
 function s (o) {l(JSON.stringify(o));}
@@ -10,13 +14,26 @@ if (exports !== undefined) {
     getJSON = require('simple-get-json');
     JHTML = require('jhtml');
     jsonpath = require('jsonpath-plus');
-    jml = require('jamilih');
-    Stringifier = require('./node_modules/jhtml/SAJJ/SAJJ.Stringifier');
+    try {
+        jml = require('jamilih');
+        document = require('jsdom').jsdom('');
+        window = document.parentWindow;
+    }
+    catch(e) {
+        console.log('Optional dependency not defined: ' + e);
+    }
+    Stringifier = require('../node_modules/jhtml/SAJJ/SAJJ.Stringifier');
+
+    AbstractJoiningTransformer = require('./AbstractJoiningTransformer');
+    DOMJoiningTransformer = require('./DOMJoiningTransformer');
+    JSONJoiningTransformer = require('./JSONJoiningTransformer');
+    JSONPathTransformer = require('./JSONPathTransformer');
+    JSONPathTransformerContext = require('./JSONPathTransformerContext');
+    StringJoiningTransformer = require('./StringJoiningTransformer');
+    XSLTStyleJSONPathResolver = require('./XSLTStyleJSONPathResolver');
 
     // Polyfills
     Object.assign = Object.assign || require('object-assign');
-    document = require('jsdom').jsdom('');
-    window = document.parentWindow;
 }
 else {
     jsonpath = JSONPath;
@@ -141,6 +158,12 @@ baseObj.JSONJoiningTransformer = JSONJoiningTransformer;
 baseObj.XSLTStyleJSONPathResolver = XSLTStyleJSONPathResolver;
 baseObj.JSONPathTransformerContext = JSONPathTransformerContext;
 baseObj.JSONPathTransformer = JSONPathTransformer;
-baseObj.JTLT = JTLT;
+
+if (typeof module !== 'undefined') {
+    module.exports = JTLT;
+}
+else {
+    baseObj.JTLT = JTLT;
+}
 
 }());

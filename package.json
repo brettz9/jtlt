@@ -17,11 +17,13 @@
     },
     "dependencies": {
         "object-assign": "2.x",
-        "jsdom": "2.x",
         "jsonpath-plus": "git+https://git@github.com/s3u/JSONPath#master",
-        "simple-get-json": "git+https://git@github.com/brettz9/getJSON#master",
+        "jhtml": "git+https://git@github.com/brettz9/jhtml#master",
+        "simple-get-json": "git+https://git@github.com/brettz9/getJSON#master"
+    },
+    "optionalDependencies": {
         "jamilih": "git+https://git@github.com/brettz9/jamilih#master",
-        "jhtml": "git+https://git@github.com/brettz9/jhtml#master"
+        "jsdom": "2.x"
     },
     "devDependencies": {
         "bower": "1.x.x",
