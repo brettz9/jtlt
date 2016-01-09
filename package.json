@@ -28,7 +28,8 @@
         "nodeunit": "0.x"
     },
     "scripts": {
-        "prepublish": "bower install get-json#master"
+        "prepublish": "bower install get-json#master",
+        "test": "node ./node_modules/nodeunit/bin/nodeunit ./test"
     },
     "bugs": "https://github.com/brettz9/jtlt/issues",
     "description": "Uses an approach similar to [XSLT](http://www.w3.org/Style/XSL/) for declarative, linear declaration of templates, but with JSON or JavaScript object data sources. As with XSLT, can be transformed into different formats (e.g., HTML strings, JSON, DOM objects, etc.).",
