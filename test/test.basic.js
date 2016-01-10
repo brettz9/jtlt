@@ -1,9 +1,9 @@
 /*global require, module*/
 /*jslint vars:true*/
+var JTLT;
 var testBasic;
 (function () {'use strict';
 
-var JTLT;
 
 var json = {
     "store": {
