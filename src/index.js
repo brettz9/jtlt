@@ -94,7 +94,7 @@ JTLT.prototype._createJoiningTransformer = function () {
             JT = JSONJoiningTransformer;
             break;
     }
-    return new JT(this.config.data, this.config.joiningConfig || {string: {}, json: {}, dom: {}, jamilih: {}});
+    return new JT(/*this.config.data,*/undefined, this.config.joiningConfig || {string: {}, json: {}, dom: {}, jamilih: {}});
 };
 JTLT.prototype._autoStart = function (mode) {
     // We wait to set this default as we want to pass in the data
