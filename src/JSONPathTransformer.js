@@ -34,7 +34,7 @@ JSONPathTransformer.prototype.transform = function (mode) {
     if (len > 1) {
         this._triggerEqualPriorityError();
     }
-    templateObj.template.call(jte, mode);
+    templateObj.template.call(jte, {mode: mode});
     var result = jte.getOutput();
     return result;
 };
@@ -51,8 +51,8 @@ JSONPathTransformer.makeJSONPathAbsolute = function (select) {
 
 JSONPathTransformer.DefaultTemplateRules = {
     transformRoot: {
-        template: function (mode) {
-            this.applyTemplates(null, mode);
+        template: function (cfg) {
+            this.applyTemplates(null, cfg.mode);
         }
     },
     transformPropertyNames: {
@@ -61,13 +61,13 @@ JSONPathTransformer.DefaultTemplateRules = {
         }
     },
     transformObjects: {
-        template: function (mode) {
-            this.applyTemplates(null, mode);
+        template: function (cfg) {
+            this.applyTemplates(null, cfg.mode);
         }
     },
     transformArrays: {
-        template: function (mode) {
-            this.applyTemplates(null, mode);
+        template: function (cfg) {
+            this.applyTemplates(null, cfg.mode);
         }
     },
     transformScalars: {
