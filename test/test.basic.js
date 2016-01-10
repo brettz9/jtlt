@@ -27,23 +27,22 @@ testBasic = {
         test.expect(1);
 
         var expected = '';
-        var result = '';
-
-        var a = JTLT({
+        JTLT({
             templates: [{
                 name: 'author', // For use with calling templates
-                path: '$..author',
+                path: '$.store.book[*].author',
                 template: function () {
-                    return '<b>' + this.valueOf({select: '.'}) + '</b>';
+                    this.string('<b>' + this.valueOf({select: '.'}) + '</b>');
                 }
             }],
-            ajaxData: '../examples/data/jsonpath-sample.json',
+            ajaxData: 'data/jsonpath-sample.json',
             success: function (result) {
-                console.log('result:'+result);
-            }
+                alert('result:' + JSON.stringify(result));
+                test.deepEqual(expected, result);
+                test.done();
+            },
+            outputType: 'string'
         });
-        test.deepEqual(expected, result);
-        test.done();
     }
 };
 
