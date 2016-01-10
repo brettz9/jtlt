@@ -1,9 +1,9 @@
 /*global require, module*/
 /*jslint vars:true*/
-var testJtltConfig;
-(function () {'use strict';
-
 var JTLT;
+var testJtltConfig;
+
+(function () {'use strict';
 
 var json = {
   "store": {
@@ -55,7 +55,7 @@ testJtltConfig = {
                     return '<b>' + this.valueOf({select: '.'}) + '</b>';
                 }
             }],
-            ajaxData: '../examples/data/jsonpath-sample.json',
+            ajaxData: 'data/jsonpath-sample.json',
             success: function (result) {
                 test.deepEqual(expected, this.data);
                 test.done();

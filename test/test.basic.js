@@ -38,8 +38,8 @@ testBasic = {
                 }],
                 ajaxData: 'data/jsonpath-sample.json',
                 success: function (result) {
-                    alert('result:' + JSON.stringify(result));
-                    test.deepEqual(expected, result);
+//                    alert('result:' + JSON.stringify(result));
+                    test.deepEqual(expected, JSON.stringify(result));
                     test.done();
                 },
                 outputType: 'string'
