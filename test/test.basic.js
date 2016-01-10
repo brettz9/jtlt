@@ -29,15 +29,22 @@ testBasic = {
         var expected = '<b>Nigel Rees</b><b>Evelyn Waugh</b><b>Herman Melville</b><b>J. R. R. Tolkien</b>';
         try {
             JTLT({
-                templates: [{
-                    name: 'author', // For use with calling templates
-                    path: '$.store.book[*].author',
-                    template: function () {
-                        this.string('<b>');
-                        this.valueOf({select: '.'});
-                        this.string('</b>');
+                templates: [
+                    {
+                        name: 'strings',
+                        path: '$..*@string()',
+                        template: function () {}
+                    },
+                    {
+                        name: 'author', // For use with calling templates
+                        path: '$.store.book[*].author',
+                        template: function () {
+                            this.string('<b>');
+                            this.valueOf({select: '.'});
+                            this.string('</b>');
+                        }
                     }
-                }],
+                ],
                 ajaxData: 'data/jsonpath-sample.json',
                 success: function (result) {
 //                    alert('result:' + JSON.stringify(result));
