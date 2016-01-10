@@ -31,8 +31,8 @@ testBasic = {
             JTLT({
                 templates: [
                     {
-                        name: 'strings',
-                        path: '$..*@string()',
+                        name: 'scalars',
+                        path: '$..*@scalar()',
                         template: function () {}
                     },
                     {

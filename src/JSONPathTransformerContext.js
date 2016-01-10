@@ -126,7 +126,7 @@ JSONPathTransformerContext.prototype.applyTemplates = function (select, mode, so
                     var bPriority = typeof b.priority === 'number' ? b.priority : that._config.specificityPriorityResolver(a.path);
 
                     if (aPriority === bPriority) {
-                        this._triggerEqualPriorityError();
+                        that._triggerEqualPriorityError();
                     }
 
                     return (aPriority > bPriority) ? -1 : 1; // We want equal conditions to go in favor of the later (b)

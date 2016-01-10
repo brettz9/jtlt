@@ -8,7 +8,7 @@ XSLTStyleJSONPathResolver.prototype.getPriorityBySpecificity = function (path) {
         path = JSONPath.toPathArray(path);
     }
 
-    var terminal = path.slice(-1);
+    var terminal = path.slice(-1)[0];
     if (terminal.match(/^(?:\*|~|@[a-z]*?\(\))$/i)) { // *, ~, @string() (comparable to XSLT's *, @*, and node tests, respectively)
         return -0.5;
     }
