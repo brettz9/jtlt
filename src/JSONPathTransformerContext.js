@@ -70,7 +70,7 @@ JSONPathTransformerContext.prototype.applyTemplates = function (select, mode, so
         json: this._contextObj,
         preventEval: this._config.preventEval,
         callback: function (o /*{value, parent, parentProperty, path}*/) {
-            var value = o.value, parent = o.value, parentProperty = o.value, path = o.value;
+            var value = o.value, parent = o.parent, parentProperty = o.parentProperty, path = o.path;
             // Todo: For remote JSON stores, could optimize this to first get
             //        template paths and cache by template (and then query
             //        the remote JSON and transform as results arrive)
