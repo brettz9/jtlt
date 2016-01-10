@@ -30,7 +30,7 @@ testBasic = {
         try {
             JTLT({
                 templates: [
-                    {
+                    { // We could instead try a root template which applied on the author path
                         name: 'scalars',
                         path: '$..*@scalar()',
                         template: function () {}
