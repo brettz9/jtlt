@@ -50,7 +50,7 @@ function runTest (jtltConfig) {
 
 
 testBasic = {
-    'basic test': function (t) {
+    'should be able to use valueOf to get current context': function (t) {
         // test.expect(1);
         test = t;
 
@@ -66,7 +66,7 @@ testBasic = {
         };
         runTest(jtltConfig);
     },
-    'should be able to use argument to template': function (t) {
+    'should be able to utilize argument to template': function (t) {
         test = t;
 
         expected = '<b>Nigel Rees</b><b>Evelyn Waugh</b><b>Herman Melville</b><b>J. R. R. Tolkien</b>';
