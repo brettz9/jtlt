@@ -1,9 +1,9 @@
 /*global require, module*/
 /*jslint vars:true*/
+var testBasic;
 (function () {'use strict';
 
-var JTLT = require('../src/index'),
-    testCase = require('nodeunit').testCase;
+var JTLT;
 
 var json = {
     "store": {
@@ -22,7 +22,7 @@ var json = {
     }
 };
 
-module.exports = testCase({
+testBasic = {
     'basic test': function (test) {
         test.expect(1);
 
@@ -45,6 +45,11 @@ module.exports = testCase({
         test.deepEqual(expected, result);
         test.done();
     }
-});
+};
+
+if (typeof exports !== 'undefined') {
+    JTLT = require('../src/index');
+    module.exports = testBasic;
+}
 
 }());

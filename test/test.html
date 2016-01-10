@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Test Suite</title>
+    <link rel="stylesheet" href="../node_modules/nodeunit/share/nodeunit.css" type="text/css" />
+    <script src="../node_modules/jhtml/SAJJ/SAJJ.js"></script>
+    <script src="../node_modules/jhtml/SAJJ/SAJJ.ObjectArrayDelegator.js"></script>
+    <script src="../node_modules/jhtml/SAJJ/SAJJ.Stringifier.js"></script>
+    <script src="./test.basic.js"></script>
+    <script src="./test.JTLT-config.js"></script>
+    <script src="../node_modules/nodeunit/examples/browser/nodeunit.js"></script>
+  </head>
+  <body>
+    <h1 id="nodeunit-header">Test Suite</h1>
+    <script>
+      nodeunit.run({
+        'Suite One': testBasic,
+        'Suite two': testJtltConfig
+      });
+    </script>
+  </body>
+</html>

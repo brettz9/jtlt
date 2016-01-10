@@ -1,9 +1,9 @@
 /*global require, module*/
 /*jslint vars:true*/
+var testJtltConfig;
 (function () {'use strict';
 
-var JTLT = require('../src/index'),
-    testCase = require('nodeunit').testCase;
+var JTLT;
 
 var json = {
   "store": {
@@ -42,7 +42,7 @@ var json = {
   }
 };
 
-module.exports = testCase({
+testJtltConfig = {
     'ajaxData': function (test) {
         test.expect(1);
         var expected = json;
@@ -62,6 +62,11 @@ module.exports = testCase({
             }
         });
     }
-});
+};
+
+if (typeof exports !== 'undefined') {
+    JTLT = require('../src/index');
+    module.exports = testJtltConfig;
+}
 
 }());
