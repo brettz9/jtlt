@@ -26,7 +26,7 @@ testBasic = {
     'basic test': function (test) {
         test.expect(1);
 
-        var expected = '';
+        var expected = '<b>Nigel Rees</b><b>Evelyn Waugh</b><b>Herman Melville</b><b>J. R. R. Tolkien</b>';
         try {
             JTLT({
                 templates: [{
