@@ -33,7 +33,9 @@ testBasic = {
                     name: 'author', // For use with calling templates
                     path: '$.store.book[*].author',
                     template: function () {
-                        this.string('<b>' + this.valueOf({select: '.'}) + '</b>');
+                        this.string('<b>');
+                        this.valueOf({select: '.'});
+                        this.string('</b>');
                     }
                 }],
                 ajaxData: 'data/jsonpath-sample.json',

@@ -170,13 +170,16 @@ StringJoiningTransformer.prototype.string = function (str, cb) {
     if (_oldStrTemp !== undefined) {
         this._strTemp += str;
     }
+    /*
+    // What was this for?
     else if (this._cfg.mode !== 'JavaScript') {
         // Allow this method to operate on non-finite numbers and functions
         var stringifier = new Stringifier({mode: 'JavaScript'});
         this.append(stringifier.walkJSONObject(this._obj));
     }
+    */
     else {
-        this.append(JSON.stringify(tmpStr + str));
+        this.append(tmpStr + str); // argument had been wrapped in JSON.stringify()
     }
     return this;
 };
