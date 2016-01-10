@@ -73,8 +73,8 @@ testBasic = {
         jtltConfig.templates[1] = {
             name: 'author', // For use with calling templates
             path: '$.store.book[*].author',
-            template: function (cfg) {
-                this.string('<b>' + cfg.value + '</b>');
+            template: function (value) {
+                this.string('<b>' + value + '</b>');
             }
         };
         runTest(jtltConfig);
