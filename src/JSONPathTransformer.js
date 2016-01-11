@@ -61,6 +61,7 @@ JSONPathTransformer.makeJSONPathAbsolute = function (select) {
 };
 
 
+// To-do: Express as JSONPath expressions?
 JSONPathTransformer.DefaultTemplateRules = {
     transformRoot: {
         template: function (value, cfg) {
