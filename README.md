@@ -24,7 +24,7 @@ npm install .
 
 ## API/Usage
 
-See the [docs](docs/API.MD)
+See the [docs](docs/API.md).
 
 ## Differences between an exact equivalence with XSLT
 
