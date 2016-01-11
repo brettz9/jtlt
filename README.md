@@ -4,7 +4,7 @@ JavaScript Template Language Transformations (JTLT, pronounced as "Jetlet")
 
 ***Early alpha state!!!***
 
-JSON/JavaScript equivalent for [XSLT](http://www.w3.org/Style/XSL/),
+JavaScript equivalent for [XSLT](http://www.w3.org/Style/XSL/),
 with JSON/JavaScript object data sources. As with XSLT, allows
 for declarative, linear declaration of (recursive) templates and can be
 transformed into different formats (e.g., HTML strings,
