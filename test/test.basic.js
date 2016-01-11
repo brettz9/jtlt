@@ -56,10 +56,10 @@ testBasic = {
         test = t;
 
         expected = '<b>Nigel Rees</b><b>Evelyn Waugh</b><b>Herman Melville</b><b>J. R. R. Tolkien</b>';
-        runTest(['$.store.book[*].author', function (value) {
-            return '<b>' + value + '</b>';
+        runTest(['$.store.book[*].author', function (author) {
+            return '<b>' + author + '</b>';
         }]);
-        // Could just do runTest(['$.store.book[*].author', value => '<b>' + value + '</b>']); but may want to use `this`
+        // Could just do runTest(['$.store.book[*].author', author => '<b>' + author + '</b>']); but may want to use `this`
     },
     'should be able to use valueOf to get current context': function (t) {
         test = t;
@@ -82,8 +82,8 @@ testBasic = {
         runTest({
             name: 'author', // For use with calling templates
             path: '$.store.book[*].author',
-            template: function (value) {
-                this.string('<b>' + value + '</b>');
+            template: function (author) {
+                this.string('<b>' + author + '</b>');
             }
         });
     },
@@ -94,8 +94,8 @@ testBasic = {
         runTest({
             name: 'author', // For use with calling templates
             path: '$.store.book[*].author',
-            template: function (value) {
-                return '<b>' + value + '</b>';
+            template: function (author) {
+                return '<b>' + author + '</b>';
             }
         });
     }
