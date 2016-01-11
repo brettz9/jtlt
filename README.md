@@ -41,8 +41,8 @@ from XSLT):
     1.  Implement and demo equivalent to applying and calling templates, and
         root template
 
-    2.  Demo chaining of methods, including equivalents to XQuery's
-        FLWOR (see also Promises to-do)
+    2.  Demo chaining of methods, including [equivalents](http://www.saxonica.com/papers/XTech2005/mhkpaper.html#S4.)
+        to XQuery's FLWOR expressions (see also Promises to-do).
 
 2.  Allow alternative to `element()`, `array()`, etc. methods by just
     detecting those types from return values (and generic of each
