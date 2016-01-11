@@ -53,11 +53,14 @@ from XSLT):
         even making aliases so that XQuery's friendlier terms can be used
         instead of XSLT's.
 
-2.  Allow alternative to `element()`, `array()`, etc. methods by just
+2.  When sufficiently documented, add as example library/tool to
+    JSONPath wiki.
+
+3.  Allow alternative to `element()`, `array()`, etc. methods by just
     detecting those types from return values (and generic of each
     type like `dom()` and `json()`).
 
-3.  Allow, depending on mode, containers to contain containers of other
+4.  Allow, depending on mode, containers to contain containers of other
     types (e.g., a JS container containing DOM objects, or temporary use
     of a string container, etc.).
 
@@ -68,9 +71,9 @@ from XSLT):
     3.  Support `appendJSON()`/`appendDOM()` and
         `appendType('json', ...)` (allowing type extensions).
 
-4.  Add `appendResult(function () {return result})`.
+5.  Add `appendResult(function () {return result})`.
 
-5.  Add JSON update functions (equivalent to Xquery Update Facility for
+6.  Add JSON update functions (equivalent to Xquery Update Facility for
     XML ([overview](http://www.xmlplease.com/xquery-update))) and create
     JSON serialization (as with XSLT expressed itself in declarative XML)
     so one can submit and evaluate
