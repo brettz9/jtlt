@@ -103,4 +103,9 @@ from XSLT):
     `document()` and `unparsed-text()` for allowing non-JSON file
     retrieval (as well as variables/parameters).
 
-7.  See code for other possible to-dos
+7.  Add `outputType` which uses a DOM joiner but allows specialized
+    serialized output (e.g., pretty-printed HTML) so the users
+    don't need to build it themselves (likewise with stringified
+    JSON output).
+
+8.  See code for other possible to-dos
