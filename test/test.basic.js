@@ -39,7 +39,10 @@ var jtltConfig = {
     }
 };
 
-function runTest (template) {
+function runTest (template, replace) {
+    if (replace) {
+        jtltConfig.templates[0] = replace;
+    }
     jtltConfig.templates[1] = template;
     try {
         JTLT(jtltConfig);
@@ -49,9 +52,8 @@ function runTest (template) {
     }
 }
 
-
 testBasic = {
-    'simple template format': function (t) {
+    'should support the simple array-based template format': function (t) {
         // test.expect(1);
         test = t;
 
@@ -98,6 +100,15 @@ testBasic = {
                 return '<b>' + author + '</b>';
             }
         });
+    },
+    'should be able to use a root template calling applyTemplates with a select path': function (t) {
+        test = t;
+        expected = '<b>Nigel Rees</b><b>Evelyn Waugh</b><b>Herman Melville</b><b>J. R. R. Tolkien</b>';
+        runTest(['$', function (value, cfg) {
+            this.applyTemplates('$.store.book[*].author', cfg.mode);
+        }], ['$.store.book[*].author', function (author) {
+            return '<b>' + author + '</b>';
+        }]);
     }
 };
 
