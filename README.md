@@ -22,7 +22,9 @@ The sample file is from <http://goessner.net/articles/JsonPath/>
 npm install .
 ```
 
-## API/Usage
+## Basic usage
+
+## API
 
 See the [docs](docs/API.md).
 
