@@ -25,7 +25,7 @@ var json = {
 var test, expected;
 
 
-function runTest (template, replace, otherTemplates) {
+function runTest (templates, replace) {
     var config = {
         ajaxData: 'data/jsonpath-sample.json',
         outputType: 'string', // string is default
@@ -42,15 +42,11 @@ function runTest (template, replace, otherTemplates) {
         }
     };
     if (replace) {
-        config.templates[0] = replace;
+        config.templates[0] = templates.pop();
     }
-    config.templates[1] = template;
-    if (otherTemplates) {
-        otherTemplates = Array.isArray(otherTemplates) ? otherTemplates : [otherTemplates];
-        otherTemplates.forEach(function (template) {
-            config.templates.push(template);
-        });
-    }
+    templates.forEach(function (template) {
+        config.templates.push(template);
+    });
     try {
         JTLT(config);
     }
@@ -65,16 +61,18 @@ testBasic = {
         test = t;
 
         expected = '<b>Nigel Rees</b><b>Evelyn Waugh</b><b>Herman Melville</b><b>J. R. R. Tolkien</b>';
-        runTest(['$.store.book[*].author', function (author) {
-            return '<b>' + author + '</b>';
-        }]);
+        runTest([
+            ['$.store.book[*].author', function (author) {
+                return '<b>' + author + '</b>';
+            }]
+        ]);
         // Could just do runTest(['$.store.book[*].author', author => '<b>' + author + '</b>']); but may want to use `this`
     },
     'should be able to use valueOf to get current context': function (t) {
         test = t;
 
         expected = '<b>Nigel Rees</b><b>Evelyn Waugh</b><b>Herman Melville</b><b>J. R. R. Tolkien</b>';
-        runTest({
+        runTest([{
             name: 'author', // For use with calling templates
             path: '$.store.book[*].author',
             template: function () {
@@ -82,64 +80,66 @@ testBasic = {
                 this.valueOf({select: '.'});
                 this.string('</b>');
             }
-        });
+        }]);
     },
     'should be able to utilize argument to template': function (t) {
         test = t;
 
         expected = '<b>Nigel Rees</b><b>Evelyn Waugh</b><b>Herman Melville</b><b>J. R. R. Tolkien</b>';
-        runTest({
+        runTest([{
             name: 'author', // For use with calling templates
             path: '$.store.book[*].author',
             template: function (author) {
                 this.string('<b>' + author + '</b>');
             }
-        });
+        }]);
     },
     'should be able to provide return value from template': function (t) {
         test = t;
 
         expected = '<b>Nigel Rees</b><b>Evelyn Waugh</b><b>Herman Melville</b><b>J. R. R. Tolkien</b>';
-        runTest({
+        runTest([{
             name: 'author', // For use with calling templates
             path: '$.store.book[*].author',
             template: function (author) {
                 return '<b>' + author + '</b>';
             }
-        });
+        }]);
     },
     'should be able to use a root template calling applyTemplates with a select path': function (t) {
         test = t;
         expected = '<b>Nigel Rees</b><b>Evelyn Waugh</b><b>Herman Melville</b><b>J. R. R. Tolkien</b>';
-        runTest(['$', function (value, cfg) {
-            this.applyTemplates('$.store.book[*].author', cfg.mode);
-        }], ['$.store.book[*].author', function (author) {
-            return '<b>' + author + '</b>';
-        }]);
+        runTest([
+            ['$', function (value, cfg) {
+              this.applyTemplates('$.store.book[*].author', cfg.mode);
+            }], ['$.store.book[*].author', function (author) {
+              return '<b>' + author + '</b>';
+            }]
+        ]);
     },
     'should support multiple child templates': function (t) {
         test = t;
 
         expected = '<b>Nigel Rees</b><u>8.95</u><b>Evelyn Waugh</b><u>12.99</u><b>Herman Melville</b><u>8.99</u><b>J. R. R. Tolkien</b><u>22.99</u>';
-        runTest({
+        runTest([{
             name: 'author', // For use with calling templates
             path: '$.store.book[*].author',
             template: function (author) {
                 return '<b>' + author + '</b>';
             }
-        }, null, {
+        }, {
             name: 'price', // For use with calling templates
             path: '$.store.book[*].price',
             template: function (price) {
                 return '<u>' + price + '</u>';
             }
-        });
+        }]);
     },
     'should support nested templates': function (t) {
         test = t;
 
         expected = '<i><b>Nigel Rees</b><u>8.95</u></i><i><b>Evelyn Waugh</b><u>12.99</u></i><i><b>Herman Melville</b><u>8.99</u></i><i><b>J. R. R. Tolkien</b><u>22.99</u></i>';
-        runTest({
+        runTest([{
             name: 'book', // For use with calling templates
             path: '$.store.book[*]',
             template: function (book) {
@@ -147,7 +147,7 @@ testBasic = {
                 this.applyTemplates();
                 this.string('</i>');
             }
-        }, null, [{
+        }, {
             name: 'author', // For use with calling templates
             path: '$.store.book[*].author',
             template: function (author) {
