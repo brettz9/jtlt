@@ -22,6 +22,10 @@ The sample file is from <http://goessner.net/articles/JsonPath/>
 npm install .
 ```
 
+## API/Usage
+
+See the [docs](docs/API.MD)
+
 ## Differences between an exact equivalence with XSLT
 
 JTLT, having the freedom to start a new pattern from XSLT, and though
