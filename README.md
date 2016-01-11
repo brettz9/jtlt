@@ -2,7 +2,7 @@
 
 JavaScript Template Language Transformations (JTLT, pronounced as "Jetlet")
 
-***Work incomplete!!***
+***Early alpha state!!!***
 
 Uses an approach similar to [XSLT](http://www.w3.org/Style/XSL/) for
 declarative, linear declaration of templates, but with JSON or JavaScript
