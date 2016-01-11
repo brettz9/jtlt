@@ -34,7 +34,11 @@ JSONPathTransformer.prototype.transform = function (mode) {
     if (len > 1) {
         this._triggerEqualPriorityError();
     }
-    templateObj.template.call(jte, undefined, {mode: mode});
+    var ret = templateObj.template.call(jte, undefined, {mode: mode});
+    if (typeof ret !== 'undefined') {
+        // Will vary by jte._config.outputType
+        jte._getJoiningTransformer().append(ret);
+    }
     var result = jte.getOutput();
     return result;
 };

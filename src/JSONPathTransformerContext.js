@@ -139,7 +139,11 @@ JSONPathTransformerContext.prototype.applyTemplates = function (select, mode, so
             that._parent = parent;
             that._parentProperty = parentProperty;
 
-            templateObj.template.call(that, value, {mode: mode, parent: parent, parentProperty: parentProperty});
+            var ret = templateObj.template.call(that, value, {mode: mode, parent: parent, parentProperty: parentProperty});
+            if (typeof ret !== 'undefined') {
+                // Will vary by that._config.outputType
+                that._getJoiningTransformer().append(ret);
+            }
 
             // Child templates may have changed the context
             that._contextObj = value;

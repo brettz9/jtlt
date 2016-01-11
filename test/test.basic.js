@@ -78,6 +78,19 @@ testBasic = {
             }
         };
         runTest(jtltConfig);
+    },
+    'should be able to provide return value from template': function (t) {
+        test = t;
+
+        expected = '<b>Nigel Rees</b><b>Evelyn Waugh</b><b>Herman Melville</b><b>J. R. R. Tolkien</b>';
+        jtltConfig.templates[1] = {
+            name: 'author', // For use with calling templates
+            path: '$.store.book[*].author',
+            template: function (value) {
+                return '<b>' + value + '</b>';
+            }
+        };
+        runTest(jtltConfig);
     }
 };
 
