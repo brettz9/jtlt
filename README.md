@@ -91,6 +91,9 @@ from XSLT):
 5.  Support Promise API in addition to callbacks
 
 6.  Add [XQuery Functions](https://code.google.com/p/jsxqueryparser/source/browse/trunk/jsxqueryparser/XQueryParser.js#1768)
-    (also supporting DOM and JSON where possible) as plug-in.
+    (also supporting DOM and JSON where possible) as plug-in. Also add, if not
+    present among these functions (or in XQuery), add equivalents to XSLT's
+    `document()` and `unparsed-text()` for allowing non-JSON file
+    retrieval (as well as variables/parameters).
 
 7.  See code for other possible to-dos
