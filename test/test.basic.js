@@ -4,26 +4,7 @@ var JTLT;
 var testBasic;
 (function () {'use strict';
 
-
-var json = {
-    "store": {
-        "book": { "category": "reference",
-            "author": "Nigel Rees",
-            "title": "Sayings of the Century",
-            "price": [8.95, 8.94, 8.93]
-        },
-        "books": [
-            { "category": "reference",
-                "author": "Nigel Rees",
-                "title": "Sayings of the Century",
-                "price": [8.95, 8.94, 8.93]
-            }
-        ]
-    }
-};
-
 var test, expected;
-
 
 function runTest (templates, replace) {
     var config = {
