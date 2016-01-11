@@ -84,14 +84,14 @@ function JTLT (config) {
 JTLT.prototype._createJoiningTransformer = function () {
     var JT;
     switch (this.config.outputType) {
-        case 'string':
-            JT = StringJoiningTransformer;
-            break;
         case 'dom':
             JT = DOMJoiningTransformer;
             break;
-        case 'json': default:
+        case 'json':
             JT = JSONJoiningTransformer;
+            break;
+        case 'string': default:
+            JT = StringJoiningTransformer;
             break;
     }
     return new JT(/*this.config.data,*/undefined, this.config.joiningConfig || {string: {}, json: {}, dom: {}, jamilih: {}});
