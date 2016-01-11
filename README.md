@@ -42,7 +42,9 @@ from XSLT):
         root template
 
     2.  Demo chaining of methods, including [equivalents](http://www.saxonica.com/papers/XTech2005/mhkpaper.html#S4.)
-        to XQuery's FLWOR expressions (see also Promises to-do).
+        to XQuery's FLWOR expressions (see also Promises to-do), perhaps
+        even making aliases so that XQuery's friendlier terms can be used
+        instead of XSLT's.
 
 2.  Allow alternative to `element()`, `array()`, etc. methods by just
     detecting those types from return values (and generic of each
@@ -95,8 +97,9 @@ from XSLT):
     current chaining; see also XQuery FLWOR to-do)
 
 6.  Add [XQuery Functions](https://code.google.com/p/jsxqueryparser/source/browse/trunk/jsxqueryparser/XQueryParser.js#1768)
-    (also supporting DOM and JSON where possible) as plug-in. Also add, if not
-    present among these functions (or in XQuery), add equivalents to XSLT's
+    (also supporting DOM and JSON where possible) as plug-in (also any
+    missing from XSLT/XQuery 3.0). Also add, if not present among these
+    functions (or in XQuery), add equivalents to XSLT's
     `document()` and `unparsed-text()` for allowing non-JSON file
     retrieval (as well as variables/parameters).
 
