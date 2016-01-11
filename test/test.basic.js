@@ -51,8 +51,18 @@ function runTest (template) {
 
 
 testBasic = {
-    'should be able to use valueOf to get current context': function (t) {
+    'simple template format': function (t) {
         // test.expect(1);
+        test = t;
+
+        expected = '<b>Nigel Rees</b><b>Evelyn Waugh</b><b>Herman Melville</b><b>J. R. R. Tolkien</b>';
+        runTest([
+            '$.store.book[*].author', function (value) {
+                return '<b>' + value + '</b>';
+            }
+        ]);
+    },
+    'should be able to use valueOf to get current context': function (t) {
         test = t;
 
         expected = '<b>Nigel Rees</b><b>Evelyn Waugh</b><b>Herman Melville</b><b>J. R. R. Tolkien</b>';

@@ -10,6 +10,12 @@ var JSONPathTransformer = function JSONPathTransformer (config) {
     this._config = config;
     this.rootTemplates = [];
     this.templates = config.templates;
+    this.templates = this.templates.map(function (template) {
+        if (Array.isArray(template)) {
+            return {path: template[0], template: template[1]};
+        }
+        return template;
+    });
     this.templates.forEach(function (template, i, templates) {
         if (template.name && map[template.name]) {
             throw "Templates must all have different names.";
