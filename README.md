@@ -36,7 +36,7 @@ from XSLT):
 
 ## To-dos
 
-1.  Finish existing code to get it to work!
+1.  Add test cases to cover current features!
 
 2.  Allow alternative to `element()`, `array()`, etc. methods by just
     detecting those types from return values (and generic of each
