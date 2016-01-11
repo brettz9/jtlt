@@ -65,9 +65,6 @@ from XSLT):
     through [HTTPQuery](https://github.com/brettz9/httpquery). Utilize
     updating by reference.
 
-6.  Add [XQuery Functions](https://code.google.com/p/jsxqueryparser/source/browse/trunk/jsxqueryparser/XQueryParser.js#1768)
-    (also supporting DOM and JSON where possible).
-
 ## Possible to-dos
 
 1.  Make schema-aware so that templates could target types. Most reusable
@@ -93,4 +90,7 @@ from XSLT):
 
 5.  Support Promise API in addition to callbacks
 
-6.  See code for other possible to-dos
+6.  Add [XQuery Functions](https://code.google.com/p/jsxqueryparser/source/browse/trunk/jsxqueryparser/XQueryParser.js#1768)
+    (also supporting DOM and JSON where possible) as plug-in.
+
+7.  See code for other possible to-dos
