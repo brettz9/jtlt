@@ -22,7 +22,14 @@ The sample file is from <http://goessner.net/articles/JsonPath/>
 npm install .
 ```
 
+In the browser, you will also need to include the dependencies.
+See the [test file](test/test.html).
+
 ## Basic usage
+
+### Node
+
+### Browser
 
 ## API
 
