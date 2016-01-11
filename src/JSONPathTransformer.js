@@ -12,6 +12,8 @@ var JSONPathTransformer = function JSONPathTransformer (config) {
     this.templates = config.templates;
     this.templates = this.templates.map(function (template) {
         if (Array.isArray(template)) {
+            // Todo: We could allow a third argument (at beginning or
+            //        end?) to represent template name
             return {path: template[0], template: template[1]};
         }
         return template;
