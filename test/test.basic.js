@@ -42,7 +42,7 @@ function runTest (templates, replace) {
         }
     };
     if (replace) {
-        config.templates[0] = templates.pop();
+        config.templates[0] = templates.shift();
     }
     templates.forEach(function (template) {
         config.templates.push(template);
@@ -115,7 +115,7 @@ testBasic = {
             }], ['$.store.book[*].author', function (author) {
               return '<b>' + author + '</b>';
             }]
-        ]);
+        ], true);
     },
     'should support multiple child templates': function (t) {
         test = t;
