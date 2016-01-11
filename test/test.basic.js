@@ -24,6 +24,8 @@ var json = {
 
 var test, expected;
 var jtltConfig = {
+    ajaxData: 'data/jsonpath-sample.json',
+    outputType: 'string', // string is default
     templates: [
         { // We could instead try a root template which applied on the author path
             name: 'scalars',
@@ -31,12 +33,10 @@ var jtltConfig = {
             template: function () {}
         }
     ],
-    ajaxData: 'data/jsonpath-sample.json',
     success: function (result) {
         test.deepEqual(expected, result);
         test.done();
-    },
-    outputType: 'string'
+    }
 };
 
 function runTest (jtltConfig) {
