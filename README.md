@@ -41,6 +41,9 @@ from XSLT):
     1.  Implement and demo equivalent to applying and calling templates, and
         root template
 
+    2.  Demo chaining of methods, including equivalents to XQuery's
+        FLWOR (see also Promises to-do)
+
 2.  Allow alternative to `element()`, `array()`, etc. methods by just
     detecting those types from return values (and generic of each
     type like `dom()` and `json()`).
@@ -88,7 +91,8 @@ from XSLT):
 
 4.  Support pull parsing/streaming?
 
-5.  Support Promise API in addition to callbacks
+5.  Support Promise API in addition to callbacks (reconcile with
+    current chaining; see also XQuery FLWOR to-do)
 
 6.  Add [XQuery Functions](https://code.google.com/p/jsxqueryparser/source/browse/trunk/jsxqueryparser/XQueryParser.js#1768)
     (also supporting DOM and JSON where possible) as plug-in. Also add, if not
