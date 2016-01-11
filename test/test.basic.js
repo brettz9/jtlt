@@ -23,29 +23,30 @@ var json = {
 };
 
 var test, expected;
-var jtltConfig = {
-    ajaxData: 'data/jsonpath-sample.json',
-    outputType: 'string', // string is default
-    templates: [
-        { // We could instead try a root template which applied on the author path
-            name: 'scalars',
-            path: '$..*@scalar()',
-            template: function () {}
-        }
-    ],
-    success: function (result) {
-        test.deepEqual(expected, result);
-        test.done();
-    }
-};
+
 
 function runTest (template, replace) {
+    var config = {
+        ajaxData: 'data/jsonpath-sample.json',
+        outputType: 'string', // string is default
+        templates: [
+            { // We could instead try a root template which applied on the author path
+                name: 'scalars',
+                path: '$..*@scalar()',
+                template: function () {}
+            }
+        ],
+        success: function (result) {
+            test.deepEqual(expected, result);
+            test.done();
+        }
+    };
     if (replace) {
-        jtltConfig.templates[0] = replace;
+        config.templates[0] = replace;
     }
-    jtltConfig.templates[1] = template;
+    config.templates[1] = template;
     try {
-        JTLT(jtltConfig);
+        JTLT(config);
     }
     catch (e) {
         alert(e);

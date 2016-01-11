@@ -145,7 +145,6 @@ JTLT.prototype.transform = function (mode) {
 
     this.config.mode = mode;
     var ret = this.config.success(this.config.engine(this.config));
-    this.config.joiningTransformer = undefined;
     return ret;
 };
 
