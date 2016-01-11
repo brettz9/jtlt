@@ -38,6 +38,9 @@ from XSLT):
 
 1.  Document and add test cases to cover current features!
 
+    1.  Implement and demo equivalent to applying and calling templates, and
+        root template
+
 2.  Allow alternative to `element()`, `array()`, etc. methods by just
     detecting those types from return values (and generic of each
     type like `dom()` and `json()`).
@@ -78,21 +81,16 @@ from XSLT):
     files) could point the way for edited contents to be saved back to the
     correct JSON file and position in the JSON file.
 
-2.  Implement and demo equivalent to applying and calling templates, and
-    root template
-
-3.  Add a [non-eval PR for JSONPath](https://github.com/s3u/JSONPath/pull/4).
+2.  Add a [non-eval PR for JSONPath](https://github.com/s3u/JSONPath/pull/4).
     The OR condition (outside of filters) is another important feature as
     would be schema-aware path results.
 
-4.  Allow hybrid JSON/[Jamilih](https://github.com/brettz9/jamilih) or
+3.  Allow hybrid JSON/[Jamilih](https://github.com/brettz9/jamilih) or
     JSON/(X)HTML/XML so that one can add
     XPath or query into HTML in a relevant manner
 
-5.  Support pull parsing/streaming?
+4.  Support pull parsing/streaming?
 
-6.  Document API here!
+5.  Support Promise API in addition to callbacks
 
-7.  See code for other possible to-dos
-
-8.  Support Promise API in addition to callbacks
+6.  See code for other possible to-dos
