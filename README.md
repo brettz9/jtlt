@@ -11,8 +11,7 @@ formats (e.g., HTML strings, JSON, DOM objects, etc.).
 
 ## Credits
 
-Packaged with this [JSONPath](https://github.com/s3u/JSONPath)
-implementation.
+Packaged with [JSONPath Plus](https://github.com/s3u/JSONPath).
 
 The sample file is from <http://goessner.net/articles/JsonPath/>
 
