@@ -56,11 +56,10 @@ testBasic = {
         test = t;
 
         expected = '<b>Nigel Rees</b><b>Evelyn Waugh</b><b>Herman Melville</b><b>J. R. R. Tolkien</b>';
-        runTest([
-            '$.store.book[*].author', function (value) {
-                return '<b>' + value + '</b>';
-            }
-        ]);
+        runTest(['$.store.book[*].author', function (value) {
+            return '<b>' + value + '</b>';
+        }]);
+        // Could just do runTest(['$.store.book[*].author', value => '<b>' + value + '</b>']); but may want to use `this`
     },
     'should be able to use valueOf to get current context': function (t) {
         test = t;
