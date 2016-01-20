@@ -84,8 +84,8 @@ from XSLT):
     XML ([overview](http://www.xmlplease.com/xquery-update))) and create
     JSON serialization (as with XSLT expressed itself in declarative XML)
     so one can submit and evaluate
-    through [HTTPQuery](https://github.com/brettz9/httpquery). Utilize
-    updating by reference.
+    through [HTTPQuery](https://github.com/brettz9/httpquery) (and also
+    supply to JSONEditor, etc.). Utilize updating by reference.
 
 ## Possible to-dos
 
