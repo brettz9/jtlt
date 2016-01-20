@@ -45,6 +45,7 @@ else {
 * @param {array} [config.templates] An array of template objects
 * @param {object|function} [config.template] A function assumed to be a root template or a single, complete template object
 * @param {function} [config.query] A function assumed to be a root template
+* @param {array} [config.forQuery] An array with arguments to be supplied to a single call to `forEach` (and which will serve as the root template)
 * @param {object} [config.data] A JSON object
 * @param {string} [config.ajaxData] URL of a JSON file to retrieve for evaluation
 * @param {boolean} [config.errorOnEqualPriority=false]
@@ -109,7 +110,9 @@ JTLT.prototype._autoStart = function (mode) {
 JTLT.prototype.setDefaults = function (config) {
     this.config = config || {};
     config = this.config;
-    var query = config.query || (typeof config.templates === 'function' ? config.templates : (typeof config.template === 'function' ? config.template : null));
+    var query = config.forQuery ? function () {
+        this.forEach(...config.forQuery);
+    } : (config.query || (typeof config.templates === 'function' ? config.templates : (typeof config.template === 'function' ? config.template : null)));
     this.config.templates = query ? [{name: 'root', path: '$', template: query}] : (config.templates || [config.template]);
     this.config.errorOnEqualPriority = config.errorOnEqualPriority || false;
     this.config.engine = this.config.engine || function (config) {

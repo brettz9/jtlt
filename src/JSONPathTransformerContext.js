@@ -177,6 +177,7 @@ JSONPathTransformerContext.prototype.callTemplate = function (name, withParams) 
 };
 
 // Todo: Implement sort (allow as callback or as object)
+// Todo: If making changes in return values, be sure to update `forQuery` as well
 JSONPathTransformerContext.prototype.forEach = function (select, cb, sort) {
     var that = this;
     jsonpath({path: select, json: this._contextObj, preventEval: this._config.preventEval, wrap: false, returnType: 'value', callback: function (value) {
