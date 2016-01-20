@@ -108,7 +108,8 @@ from XSLT):
     JSON/(X)HTML/XML so that one can add
     XPath or query into HTML in a relevant manner
 
-4.  Support pull parsing/streaming?
+4.  Support pull parsing/streaming? Pass `done()` function to templates to
+    signal completion?
 
 5.  Support Promise API in addition to callbacks (reconcile with
     current chaining; see also XQuery FLWOR to-do)
