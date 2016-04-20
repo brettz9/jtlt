@@ -122,7 +122,9 @@ from XSLT):
     missing from XSLT/XQuery 3.0). Also add, if not present among these
     functions (or in XQuery), add equivalents to XSLT's
     `document()` and `unparsed-text()` for allowing non-JSON file
-    retrieval (as well as variables/parameters).
+    retrieval (as well as variables/parameters) and also methods for
+    iterating or retrieving IndexedDB, `localStorage`, and cookies
+    (names, keys and values).
 
 7.  Add `outputType` which uses a DOM joiner but allows specialized
     serialized output (e.g., pretty-printed HTML) so the users
