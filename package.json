@@ -16,14 +16,14 @@
         "url": "https://github.com/brettz9/jtlt.git"
     },
     "dependencies": {
-        "object-assign": "2.x",
+        "object-assign": "4.x",
         "jsonpath-plus": "git+https://git@github.com/s3u/JSONPath#master",
         "jhtml": "git+https://git@github.com/brettz9/jhtml#master",
         "simple-get-json": "git+https://git@github.com/brettz9/getJSON#master"
     },
     "optionalDependencies": {
-        "jamilih": "git+https://git@github.com/brettz9/jamilih#master",
-        "jsdom": "2.x"
+        "jamilih": "0.9.0",
+        "jsdom": "9.8.3"
     },
     "devDependencies": {
         "bower": "1.x.x",
