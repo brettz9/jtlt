@@ -8,10 +8,12 @@ var AbstractJoiningTransformer, DOMJoiningTransformer,
   JSONPathTransformerContext, StringJoiningTransformer,
   XSLTStyleJSONPathResolver;
 
+/*
 function l (str) {
   'use strict';
   console.log(str); // eslint-disable-line no-console
 }
+*/
 // function s (o) {'use strict'; l(JSON.stringify(o));}
 
 (function () {'use strict';
