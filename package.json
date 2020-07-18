@@ -18,7 +18,7 @@
   "dependencies": {
     "jhtml": "git+https://git@github.com/brettz9/jhtml#master",
     "jsonpath-plus": "git+https://git@github.com/s3u/JSONPath#master",
-    "lodash": "^4.17.15",
+    "lodash": "^4.17.19",
     "object-assign": "4.x",
     "simple-get-json": "git+https://git@github.com/brettz9/getJSON#master"
   },
