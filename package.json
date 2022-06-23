@@ -24,7 +24,7 @@
   },
   "optionalDependencies": {
     "jamilih": "0.45.0",
-    "jsdom": "15.1.1"
+    "jsdom": "16.5.0"
   },
   "devDependencies": {
     "@mysticatea/eslint-plugin": "^12.0.0",
