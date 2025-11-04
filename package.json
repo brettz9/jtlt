@@ -1,58 +1,39 @@
 {
   "name": "jtlt",
-  "title": "JTLT",
-  "id": "jtlt@brett.zamir",
   "version": "0.1.0",
-  "license": "MIT",
+  "type": "module",
   "author": "Brett Zamir",
-  "main": "src/index",
   "contributors": [],
-  "homepage": "https://github.com/s3u/JSONPath/",
+  "license": "MIT",
+  "main": "src/index.js",
   "engines": {
-    "node": ">=0.8"
+    "node": ">=22.16.0"
   },
+  "homepage": "https://github.com/s3u/JSONPath/",
   "repository": {
     "type": "git",
     "url": "https://github.com/brettz9/jtlt.git"
   },
   "dependencies": {
+    "jamilih": "0.60.0",
     "jhtml": "git+https://git@github.com/brettz9/jhtml#master",
-    "jsonpath-plus": "git+https://git@github.com/s3u/JSONPath#master",
+    "jsdom": "27.1.0",
+    "jsonpath-plus": "10.3.0",
     "lodash": "^4.17.21",
     "object-assign": "4.x",
-    "simple-get-json": "git+https://git@github.com/brettz9/getJSON#master"
-  },
-  "optionalDependencies": {
-    "jamilih": "0.45.0",
-    "jsdom": "16.5.0"
+    "simple-get-json": "10.0.0"
   },
   "devDependencies": {
-    "@mysticatea/eslint-plugin": "^12.0.0",
-    "bower": "1.x.x",
-    "eslint": "^6.6.0",
-    "eslint-config-ash-nazg": "^11.0.1",
-    "eslint-config-standard": "^14.1.0",
-    "eslint-plugin-array-func": "^3.1.3",
-    "eslint-plugin-compat": "^3.3.0",
-    "eslint-plugin-eslint-comments": "^3.1.2",
-    "eslint-plugin-html": "^6.0.0",
-    "eslint-plugin-import": "^2.18.2",
-    "eslint-plugin-jsdoc": "^15.12.2",
-    "eslint-plugin-markdown": "^3.0.0",
-    "eslint-plugin-no-use-extend-native": "^0.4.1",
-    "eslint-plugin-node": "^10.0.0",
-    "eslint-plugin-promise": "^4.2.1",
-    "eslint-plugin-sonarjs": "^0.4.0",
-    "eslint-plugin-standard": "^4.0.1",
-    "eslint-plugin-unicorn": "^12.1.0",
-    "mocha": "^10.1.0",
-    "nodeunit": "0.x",
-    "typescript": "^3.6.4"
+    "chai": "^6.2.0",
+    "eslint": "^9.39.1",
+    "eslint-config-ash-nazg": "^39.7.0",
+    "mocha": "^11.7.5",
+    "typescript": "^5.9.3"
   },
   "scripts": {
-    "prepublish": "bower install get-json#master",
-    "test-old": "node ./node_modules/nodeunit/bin/nodeunit ./test",
-    "test": "mocha ./test"
+    "prepublish": "pnpm i",
+    "lint": "eslint .",
+    "test": "mocha"
   },
   "bugs": "https://github.com/brettz9/jtlt/issues",
   "description": "Uses an approach similar to [XSLT](http://www.w3.org/Style/XSL/) for declarative, linear declaration of templates, but with JSON or JavaScript object data sources. As with XSLT, can be transformed into different formats (e.g., HTML strings, JSON, DOM objects, etc.).",

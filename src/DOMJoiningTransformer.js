@@ -1,137 +1,222 @@
-if (typeof exports !== 'undefined') {
-  AbstractJoiningTransformer = require('./AbstractJoiningTransformer');
-}
+import JHTML from 'jhtml';
+import AbstractJoiningTransformer from './AbstractJoiningTransformer.js';
+
 /**
-* This transformer expects the templates to do their own DOM building
-*/
-function DOMJoiningTransformer (o, cfg) {
-  if (!(this instanceof DOMJoiningTransformer)) {
-    return new DOMJoiningTransformer(o, cfg);
+ * This transformer expects the templates to do their own DOM building.
+ */
+class DOMJoiningTransformer extends AbstractJoiningTransformer {
+  /**
+   * @param {DocumentFragment|Element} o - Initial DOM node
+   * @param {object} cfg - Configuration object
+   */
+  constructor (o, cfg) {
+    super(cfg); // Include this in any subclass of AbstractJoiningTransformer
+    this._dom = o || cfg.document.createDocumentFragment();
   }
-  this.setConfig(cfg); // Include this in any subclass of AbstractJoiningTransformer
-  this._dom = o || document.createDocumentFragment();
-}
-DOMJoiningTransformer.prototype = new AbstractJoiningTransformer();
 
-DOMJoiningTransformer.prototype.rawAppend = function (item) {
-  this._dom.appendChild(item);
-};
+  /**
+   * @param {Node} item
+   * @returns {void}
+   */
+  rawAppend (item) {
+    this._dom.append(item);
+  }
 
-DOMJoiningTransformer.prototype.append = function (item) {
-  if (typeof item === 'string') {
-    this._dom.appendChild(document.createTextNode(item));
+  /**
+   * @param {string|Node} item - Item to append
+   * @returns {void}
+   */
+  append (item) {
+    this._dom.append(item);
   }
-  else {
-    this._dom.appendChild(item);
-  }
-};
-DOMJoiningTransformer.prototype.get = function () {
-  return this._dom;
-};
-DOMJoiningTransformer.prototype.propValue = function (prop, val) {
 
-};
-DOMJoiningTransformer.prototype.object = function (cb, usePropertySets, propSets) {
-  this._requireSameChildren('dom', 'object');
-  if (this._cfg.JHTMLForJSON) {
-    this.append(JHTML());
+  /**
+   * @returns {DocumentFragment|Element}
+   */
+  get () {
+    return this._dom;
   }
-  else {
-    this.append(document.createTextNode()); // Todo: set current position and deal with children
-  }
-  return this;
-};
-DOMJoiningTransformer.prototype.array = function (cb) {
-  this._requireSameChildren('dom', 'array');
-  if (this._cfg.JHTMLForJSON) {
-    this.append(JHTML());
-  }
-  else {
-    this.append(document.createTextNode()); // Todo: set current position and deal with children
-  }
-  return this;
-};
 
-DOMJoiningTransformer.prototype.string = function (str, cb) {
-  // Todo: Conditionally add as JHTML (and in subsequent methods as well)
-  this.append(str);
-  return this;
-};
-DOMJoiningTransformer.prototype.number = function (num) {
-  this.append(num.toString());
-  return this;
-};
-DOMJoiningTransformer.prototype.boolean = function (bool) {
-  this.append(bool ? 'true' : 'false');
-  return this;
-};
-DOMJoiningTransformer.prototype['null'] = function () {
-  this.append('null');
-  return this;
-};
-
-DOMJoiningTransformer.prototype['undefined'] = function () {
-  if (this._cfg.mode !== 'JavaScript') {
-    throw 'undefined is not allowed unless added in JavaScript mode';
+  /**
+   * @param {string} prop - Property name
+   * @param {*} val - Property value
+   * @returns {void}
+   */
+  // eslint-disable-next-line class-methods-use-this -- Incomplete?
+  propValue (prop, val) {
+    //
   }
-  this.append('undefined');
-  return this;
-};
-DOMJoiningTransformer.prototype.nonfiniteNumber = function (num) {
-  if (this._cfg.mode !== 'JavaScript') {
-    throw 'Non-finite numbers are not allowed unless added in JavaScript mode';
-  }
-  this.append(num.toString());
-  return this;
-};
-DOMJoiningTransformer.prototype['function'] = function (func) {
-  if (this._cfg.mode !== 'JavaScript') {
-    throw 'function is not allowed unless added in JavaScript mode';
-  }
-  this.append(func.toString());
-  return this;
-};
 
-
-DOMJoiningTransformer.prototype.element = function (elName, atts, cb) {
-  // Todo: allow third argument to be array following Jamilih (also let "atts" follow Jamilih)
-  // Todo: allow for cfg to produce Jamilih DOM output or hXML
-  // Todo: allow separate XML DOM one with XML String and hXML conversions (HTML to XHTML is inevitably safe?)
-
-  var el = document.createElement(elName);
-  var att;
-  for (att in atts) {
-    if (atts.hasOwnProperty(att)) {
-      el.setAttribute(att, atts[att]);
+  /**
+   * @param {Function} cb - Callback function
+   * @param {Array} usePropertySets - Property sets to use
+   * @param {object} propSets - Additional property sets
+   * @returns {DOMJoiningTransformer}
+   */
+  object (cb, usePropertySets, propSets) {
+    this._requireSameChildren('dom', 'object');
+    if (this._cfg.JHTMLForJSON) {
+      this.append(new JHTML());
+    } else {
+      // Todo: set current position and deal with children
+      this.append('');
     }
+    return this;
   }
-  this.append(el);
 
-  var oldDOM = this._dom;
-
-  this._dom = el;
-  cb.call(this);
-  this._dom = oldDOM;
-
-  return this;
-};
-DOMJoiningTransformer.prototype.attribute = function (name, val) {
-  if (!this._dom || typeof this._dom !== 'object' || this._dom.nodeType !== 1) {
-    throw "You may only set an attribute on an element";
+  /**
+   * @returns {DOMJoiningTransformer}
+   */
+  array (/* cb */) {
+    this._requireSameChildren('dom', 'array');
+    if (this._cfg.JHTMLForJSON) {
+      this.append(new JHTML());
+    } else {
+      // Todo: set current position and deal with children
+      this.append('');
+    }
+    return this;
   }
-  this._dom.setAttribute(name, val);
-  return this;
-};
-DOMJoiningTransformer.prototype.text = function (txt) {
-  this.append(document.createTextNode(txt));
-  return this;
-};
 
-DOMJoiningTransformer.prototype.plainText = function (str) {
-  this.text(str);
-  return this;
-};
+  /**
+   * @param {string} str - String value
+   * @param {Function} cb - Callback function (unused)
+   * @returns {DOMJoiningTransformer}
+   */
+  string (str, cb) {
+    // Todo: Conditionally add as JHTML (and in subsequent methods as well)
+    this.append(str);
+    return this;
+  }
 
-if (typeof module !== 'undefined') {
-  module.exports = DOMJoiningTransformer;
+  /**
+   * @param {number} num - Number value
+   * @returns {DOMJoiningTransformer}
+   */
+  number (num) {
+    this.append(num.toString());
+    return this;
+  }
+
+  /**
+   * @param {boolean} bool
+   * @returns {DOMJoiningTransformer}
+   */
+  boolean (bool) {
+    this.append(bool ? 'true' : 'false');
+    return this;
+  }
+
+  /**
+   * @returns {DOMJoiningTransformer}
+   */
+  null () {
+    this.append('null');
+    return this;
+  }
+
+  /**
+   * @returns {DOMJoiningTransformer}
+   */
+  undefined () {
+    if (this._cfg.mode !== 'JavaScript') {
+      throw new Error(
+        'undefined is not allowed unless added in JavaScript mode'
+      );
+    }
+    this.append('undefined');
+    return this;
+  }
+
+  /**
+   * @param {number} num - Non-finite number (NaN, Infinity, -Infinity)
+   * @returns {DOMJoiningTransformer}
+   */
+  nonfiniteNumber (num) {
+    if (this._cfg.mode !== 'JavaScript') {
+      throw new Error(
+        'Non-finite numbers are not allowed unless added in JavaScript mode'
+      );
+    }
+    this.append(num.toString());
+    return this;
+  }
+
+  /**
+   * @param {Function} func - Function to stringify
+   * @returns {DOMJoiningTransformer}
+   */
+  function (func) {
+    if (this._cfg.mode !== 'JavaScript') {
+      throw new Error(
+        'function is not allowed unless added in JavaScript mode'
+      );
+    }
+    this.append(func.toString());
+    return this;
+  }
+
+  /**
+   * @param {string} elName - Element name
+   * @param {object} atts - Attributes object
+   * @param {Function} cb - Callback function
+   * @returns {DOMJoiningTransformer}
+   */
+  element (elName, atts, cb) {
+    // Todo: allow third argument to be array following Jamilih (also let
+    //   "atts" follow Jamilih)
+    // Todo: allow for cfg to produce Jamilih DOM output or hXML
+    // Todo: allow separate XML DOM one with XML String and hXML conversions
+    //   (HTML to XHTML is inevitably safe?)
+
+    const el = this._cfg.document.createElement(elName);
+    for (const att in atts) {
+      if (Object.hasOwn(atts, att)) {
+        el.setAttribute(att, atts[att]);
+      }
+    }
+    this.append(el);
+
+    const oldDOM = this._dom;
+
+    this._dom = el;
+    cb.call(this);
+    this._dom = oldDOM;
+
+    return this;
+  }
+
+  /**
+   * @param {string} name
+   * @param {string} val
+   * @returns {DOMJoiningTransformer}
+   */
+  attribute (name, val) {
+    if (!this._dom || typeof this._dom !== 'object' ||
+        this._dom.nodeType !== 1) {
+      throw new Error('You may only set an attribute on an element');
+    }
+    this._dom.setAttribute(name, val);
+    return this;
+  }
+
+  /**
+   * @param {string} txt - Text content
+   * @returns {DOMJoiningTransformer}
+   */
+  text (txt) {
+    this.append(txt);
+    return this;
+  }
+
+  /**
+   * @param {string} str
+   * @returns {DOMJoiningTransformer}
+   */
+  plainText (str) {
+    this.text(str);
+    return this;
+  }
 }
+
+export default DOMJoiningTransformer;

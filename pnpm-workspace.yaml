@@ -1,0 +1,3 @@
+onlyBuiltDependencies:
+  - ejs
+  - unrs-resolver
