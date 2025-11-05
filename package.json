@@ -16,7 +16,7 @@
   },
   "dependencies": {
     "jamilih": "0.60.0",
-    "jhtml": "git+https://git@github.com/brettz9/jhtml#master",
+    "jhtml": "0.6.2",
     "jsdom": "27.1.0",
     "jsonpath-plus": "10.3.0",
     "lodash": "^4.17.21",
@@ -24,19 +24,26 @@
     "simple-get-json": "10.0.0"
   },
   "devDependencies": {
+    "@types/chai": "^5.2.3",
+    "@types/jsdom": "^27.0.0",
+    "@types/mocha": "^10.0.10",
+    "c8": "^10.1.3",
     "chai": "^6.2.0",
     "eslint": "^9.39.1",
-    "eslint-config-ash-nazg": "^39.7.0",
+    "eslint-config-ash-nazg": "^39.7.1",
     "mocha": "^11.7.5",
     "typescript": "^5.9.3"
   },
   "scripts": {
-    "prepublish": "pnpm i",
+    "prepublishOnly": "pnpm i && pnpm build",
+    "tsc": "tsc",
+    "build": "tsc -p tsconfig-prod.json",
     "lint": "eslint .",
-    "test": "mocha"
+    "mocha": "mocha",
+    "test": "c8 npm run mocha"
   },
   "bugs": "https://github.com/brettz9/jtlt/issues",
-  "description": "Uses an approach similar to [XSLT](http://www.w3.org/Style/XSL/) for declarative, linear declaration of templates, but with JSON or JavaScript object data sources. As with XSLT, can be transformed into different formats (e.g., HTML strings, JSON, DOM objects, etc.).",
+  "description": "Uses an approach similar to [XSLT](https://www.w3.org/Style/XSL/) for declarative, linear declaration of templates, but with JSON or JavaScript object data sources. As with XSLT, can be transformed into different formats (e.g., HTML strings, JSON, DOM objects, etc.).",
   "keywords": [
     "xsl",
     "xslt",

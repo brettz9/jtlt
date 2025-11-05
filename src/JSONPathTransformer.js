@@ -6,8 +6,9 @@ import JSONPathTransformerContext from './JSONPathTransformerContext.js';
 class JSONPathTransformer {
   /**
    * @param {object} config - Configuration object
-   * @param {boolean} config.errorOnEqualPriority - Whether to error on equal
-   *   priority templates
+   * @param {boolean} [config.errorOnEqualPriority] - Whether to error on
+   *   equal priority templates
+   * @param {any[]} config.templates - Array of template objects
    */
   constructor (config) {
     let map = {};
@@ -70,7 +71,6 @@ class JSONPathTransformer {
   }
 
   /**
-   * @private
    * @param {string} select - JSONPath selector
    * @returns {string} Absolute JSONPath
    */
@@ -85,33 +85,57 @@ class JSONPathTransformer {
   // To-do: Express as JSONPath expressions?
   static DefaultTemplateRules = {
     transformRoot: {
+      /**
+       * @param {*} value - Value
+       * @param {{mode: string}} cfg - Configuration
+       * @returns {void}
+       */
       template (value, cfg) {
-        this.applyTemplates(null, cfg.mode);
+        /** @type {any} */ (this).applyTemplates(null, cfg.mode);
       }
     },
     transformPropertyNames: {
+      /**
+       * @returns {*}
+       */
       template () {
-        this.valueOf({select: '.'});
+        return /** @type {any} */ (this).valueOf({select: '.'});
       }
     },
     transformObjects: {
+      /**
+       * @param {*} value - Value
+       * @param {{mode: string}} cfg - Configuration
+       * @returns {void}
+       */
       template (value, cfg) {
-        this.applyTemplates(null, cfg.mode);
+        /** @type {any} */ (this).applyTemplates(null, cfg.mode);
       }
     },
     transformArrays: {
+      /**
+       * @param {*} value - Value
+       * @param {{mode: string}} cfg - Configuration
+       * @returns {void}
+       */
       template (value, cfg) {
-        this.applyTemplates(null, cfg.mode);
+        /** @type {any} */ (this).applyTemplates(null, cfg.mode);
       }
     },
     transformScalars: {
+      /**
+       * @returns {*}
+       */
       template () {
-        this.valueOf({select: '.'});
+        return /** @type {any} */ (this).valueOf({select: '.'});
       }
     },
     transformFunctions: {
+      /**
+       * @returns {*}
+       */
       template () {
-        this.valueOf({select: '.'})();
+        return /** @type {any} */ (this).valueOf({select: '.'})();
       }
     }
   };

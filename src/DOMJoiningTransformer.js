@@ -1,4 +1,4 @@
-import JHTML from 'jhtml';
+import * as JHTML from 'jhtml';
 import AbstractJoiningTransformer from './AbstractJoiningTransformer.js';
 
 /**
@@ -8,10 +8,12 @@ class DOMJoiningTransformer extends AbstractJoiningTransformer {
   /**
    * @param {DocumentFragment|Element} o - Initial DOM node
    * @param {object} cfg - Configuration object
+   * @param {object} [cfg.document] - Document object
    */
   constructor (o, cfg) {
     super(cfg); // Include this in any subclass of AbstractJoiningTransformer
-    this._dom = o || cfg.document.createDocumentFragment();
+    this._dom = o ||
+    /** @type {any} */ (cfg).document.createDocumentFragment();
   }
 
   /**
@@ -48,15 +50,16 @@ class DOMJoiningTransformer extends AbstractJoiningTransformer {
   }
 
   /**
-   * @param {Function} cb - Callback function
-   * @param {Array} usePropertySets - Property sets to use
-   * @param {object} propSets - Additional property sets
+   * @param {object} obj - Object to serialize
+   * @param {Function} [cb] - Callback function.
+   * @param {any[]} [usePropertySets] - Property sets to use
+   * @param {object} [propSets] - Additional property sets
    * @returns {DOMJoiningTransformer}
    */
-  object (cb, usePropertySets, propSets) {
+  object (obj, cb, usePropertySets, propSets) {
     this._requireSameChildren('dom', 'object');
-    if (this._cfg.JHTMLForJSON) {
-      this.append(new JHTML());
+    if (this._cfg && /** @type {any} */ (this._cfg).JHTMLForJSON) {
+      this.append(JHTML.toJHTMLDOM(obj));
     } else {
       // Todo: set current position and deal with children
       this.append('');
@@ -65,12 +68,14 @@ class DOMJoiningTransformer extends AbstractJoiningTransformer {
   }
 
   /**
+   * @param {any[]|Element} arr
+   * @param {Function} [cb] - Callback function
    * @returns {DOMJoiningTransformer}
    */
-  array (/* cb */) {
+  array (arr, cb) {
     this._requireSameChildren('dom', 'array');
-    if (this._cfg.JHTMLForJSON) {
-      this.append(new JHTML());
+    if (this._cfg && /** @type {any} */ (this._cfg).JHTMLForJSON) {
+      this.append(JHTML.toJHTMLDOM(arr));
     } else {
       // Todo: set current position and deal with children
       this.append('');
@@ -119,7 +124,7 @@ class DOMJoiningTransformer extends AbstractJoiningTransformer {
    * @returns {DOMJoiningTransformer}
    */
   undefined () {
-    if (this._cfg.mode !== 'JavaScript') {
+    if (this._cfg && /** @type {any} */ (this._cfg).mode !== 'JavaScript') {
       throw new Error(
         'undefined is not allowed unless added in JavaScript mode'
       );
@@ -133,7 +138,7 @@ class DOMJoiningTransformer extends AbstractJoiningTransformer {
    * @returns {DOMJoiningTransformer}
    */
   nonfiniteNumber (num) {
-    if (this._cfg.mode !== 'JavaScript') {
+    if (this._cfg && /** @type {any} */ (this._cfg).mode !== 'JavaScript') {
       throw new Error(
         'Non-finite numbers are not allowed unless added in JavaScript mode'
       );
@@ -147,7 +152,7 @@ class DOMJoiningTransformer extends AbstractJoiningTransformer {
    * @returns {DOMJoiningTransformer}
    */
   function (func) {
-    if (this._cfg.mode !== 'JavaScript') {
+    if (this._cfg && /** @type {any} */ (this._cfg).mode !== 'JavaScript') {
       throw new Error(
         'function is not allowed unless added in JavaScript mode'
       );
@@ -158,8 +163,8 @@ class DOMJoiningTransformer extends AbstractJoiningTransformer {
 
   /**
    * @param {string} elName - Element name
-   * @param {object} atts - Attributes object
-   * @param {Function} cb - Callback function
+   * @param {object} [atts] - Attributes object
+   * @param {Function} [cb] - Callback function
    * @returns {DOMJoiningTransformer}
    */
   element (elName, atts, cb) {
@@ -169,10 +174,13 @@ class DOMJoiningTransformer extends AbstractJoiningTransformer {
     // Todo: allow separate XML DOM one with XML String and hXML conversions
     //   (HTML to XHTML is inevitably safe?)
 
-    const el = this._cfg.document.createElement(elName);
+    const el = this._cfg &&
+    /** @type {any} */ (this._cfg).document.createElement(elName);
     for (const att in atts) {
       if (Object.hasOwn(atts, att)) {
-        el.setAttribute(att, atts[att]);
+        /** @type {Record<string, any>} */
+        const attsObj = /** @type {any} */ (atts);
+        el.setAttribute(att, attsObj[att]);
       }
     }
     this.append(el);
@@ -180,7 +188,9 @@ class DOMJoiningTransformer extends AbstractJoiningTransformer {
     const oldDOM = this._dom;
 
     this._dom = el;
-    cb.call(this);
+    if (cb) {
+      cb.call(this);
+    }
     this._dom = oldDOM;
 
     return this;

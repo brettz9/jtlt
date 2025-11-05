@@ -4,8 +4,8 @@ import JTLT from '../src/index.js';
 /**
  * @param {() => void} done - Test done callback
  * @param {string} expected - Expected result
- * @param {Array} templates - Array of template objects
- * @param {object} replace - Properties to replace in config
+ * @param {any[]} templates - Array of template objects
+ * @param {object} [replace] - Properties to replace in config
  * @returns {void}
  */
 function runTest (done, expected, templates, replace) {
@@ -17,17 +17,24 @@ function runTest (done, expected, templates, replace) {
       { // We could instead try a root template which applied on the author path
         name: 'scalars',
         path: '$..*@scalar()',
+        /**
+         * @returns {void}
+         */
         template () {
           //
         }
       }
     ],
+    /**
+     * @param {any} result - Result
+     * @returns {void}
+     */
     success (result) {
       try {
         expect(result).to.equal(expected);
         done();
-      } catch (err) {
-        done(err);
+      } catch (/** @type {any} */ err) {
+        done(/** @type {Error} */ (err));
       }
     }
   };
@@ -40,10 +47,10 @@ function runTest (done, expected, templates, replace) {
   try {
     // eslint-disable-next-line no-new -- API
     new JTLT(config);
-  } catch (e) {
+  } catch (/** @type {any} */ e) {
     // eslint-disable-next-line no-console -- Testing
     console.error('Error', e);
-    done(e);
+    done();
   }
 }
 
@@ -52,9 +59,16 @@ describe('jtlt', () => {
     // eslint-disable-next-line @stylistic/max-len -- Long
     const expected = '<b>Nigel Rees</b><b>Evelyn Waugh</b><b>Herman Melville</b><b>J. R. R. Tolkien</b>';
     runTest(done, expected, [
-      ['$.store.book[*].author', function (author) {
-        return `<b>${author}</b>`;
-      }]
+      [
+        '$.store.book[*].author',
+        /**
+         * @param {any} author - Author
+         * @returns {string}
+         */
+        function (author) {
+          return `<b>${author}</b>`;
+        }
+      ]
     ]);
     // Could just do
     //   runTest(
@@ -69,10 +83,13 @@ describe('jtlt', () => {
     runTest(done, expected, [{
       name: 'author', // For use with calling templates
       path: '$.store.book[*].author',
+      /**
+       * @returns {void}
+       */
       template () {
-        this.string('<b>');
-        this.valueOf({select: '.'});
-        this.string('</b>');
+        /** @type {any} */ (this).string('<b>');
+        /** @type {any} */ (this).valueOf({select: '.'});
+        /** @type {any} */ (this).string('</b>');
       }
     }]);
   });
@@ -82,17 +99,41 @@ describe('jtlt', () => {
     runTest(done, expected, [{
       name: 'author', // For use with calling templates
       path: '$.store.book[*].author',
+      /**
+       * @param {any} author - Author
+       * @returns {void}
+       */
       template (author) {
-        this.string(`<b>${author}</b>`);
+        /** @type {any} */ (this).string(`<b>${author}</b>`);
       }
     }]);
   });
+  it('should be able to call `plainText`', (done) => {
+    // eslint-disable-next-line @stylistic/max-len -- Long
+    const expected = '<i>Nigel Rees</i><i>Evelyn Waugh</i><i>Herman Melville</i><i>J. R. R. Tolkien</i>';
+    runTest(done, expected, [{
+      name: 'author', // For use with calling templates
+      path: '$.store.book[*].author',
+      /**
+       * @param {any} author - Author
+       * @returns {void}
+       */
+      template (author) {
+        this.plainText(`<i>${author}</i>`);
+      }
+    }]);
+  });
+
   it('should be able to provide return value from template', (done) => {
     // eslint-disable-next-line @stylistic/max-len -- Long
     const expected = '<b>Nigel Rees</b><b>Evelyn Waugh</b><b>Herman Melville</b><b>J. R. R. Tolkien</b>';
     runTest(done, expected, [{
       name: 'author', // For use with calling templates
       path: '$.store.book[*].author',
+      /**
+       * @param {any} author - Author
+       * @returns {string}
+       */
       template (author) {
         return `<b>${author}</b>`;
       }
@@ -105,13 +146,31 @@ describe('jtlt', () => {
       // eslint-disable-next-line @stylistic/max-len -- Long
       const expected = '<b>Nigel Rees</b><b>Evelyn Waugh</b><b>Herman Melville</b><b>J. R. R. Tolkien</b>';
       runTest(done, expected, [
-        ['$', function (value, cfg) {
-          this.applyTemplates('$.store.book[*].author', cfg.mode);
-        }],
-        ['$.store.book[*].author', function (author) {
-          return `<b>${author}</b>`;
-        }]
-      ], true);
+        [
+          '$',
+          /**
+           * @param {any} value - Value
+           * @param {{mode: string}} cfg - Config
+           * @this {import('../src/JSONPathTransformerContext.js').default}
+           * @returns {void}
+           */
+          function (value, cfg) {
+            this.applyTemplates(
+              '$.store.book[*].author', cfg.mode
+            );
+          }
+        ],
+        [
+          '$.store.book[*].author',
+          /**
+           * @param {any} author - Author
+           * @returns {string}
+           */
+          function (author) {
+            return `<b>${author}</b>`;
+          }
+        ]
+      ], {});
     }
   );
   it('should support multiple child templates', (done) => {
@@ -120,12 +179,20 @@ describe('jtlt', () => {
     runTest(done, expected, [{
       name: 'author', // For use with calling templates
       path: '$.store.book[*].author',
+      /**
+       * @param {any} author - Author
+       * @returns {string}
+       */
       template (author) {
         return `<b>${author}</b>`;
       }
     }, {
       name: 'price', // For use with calling templates
       path: '$.store.book[*].price',
+      /**
+       * @param {any} price - Price
+       * @returns {string}
+       */
       template (price) {
         return `<u>${price}</u>`;
       }
@@ -137,20 +204,31 @@ describe('jtlt', () => {
     runTest(done, expected, [{
       name: 'book', // For use with calling templates
       path: '$.store.book[*]',
+      /**
+       * @returns {void}
+       */
       template (/* book */) {
-        this.string('<i>');
-        this.applyTemplates();
-        this.string('</i>');
+        /** @type {any} */ (this).string('<i>');
+        /** @type {any} */ (this).applyTemplates();
+        /** @type {any} */ (this).string('</i>');
       }
     }, {
       name: 'author', // For use with calling templates
       path: '$.store.book[*].author',
+      /**
+       * @param {any} author - Author
+       * @returns {string}
+       */
       template (author) {
         return `<b>${author}</b>`;
       }
     }, {
       name: 'price', // For use with calling templates
       path: '$.store.book[*].price',
+      /**
+       * @param {any} price - Price
+       * @returns {string}
+       */
       template (price) {
         return `<u>${price}</u>`;
       }

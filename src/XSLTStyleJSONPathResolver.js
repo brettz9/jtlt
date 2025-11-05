@@ -15,10 +15,14 @@ class XSLTStyleJSONPathResolver {
     }
 
     const terminal = path.at(-1);
-    if ((/^(?:\*|~|@[a-z]*?\(\))$/vi).test(terminal)) { // *, ~, @string() (comparable to XSLT's *, @*, and node tests, respectively)
+    // *, ~, @string() (comparable to XSLT's *, @*, and node tests,
+    //   respectively)
+    if (terminal && (/^(?:\*|~|@[a-z]*?\(\))$/vi).test(terminal)) {
       return -0.5;
     }
-    if ((/^(?:\.+|\[.*?\])$/v).test(terminal)) { // ., .., [] or [()] or [(?)] (comparable to XSLT's /, //, or [], respectively)
+    // ., .., [] or [()] or [(?)] (comparable to XSLT's /, //, or [],
+    //   respectively)
+    if (terminal && (/^(?:\.+|\[.*?\])$/v).test(terminal)) {
       return 0.5;
     }
     // single name (i.e., $..someName or someName if allowing such

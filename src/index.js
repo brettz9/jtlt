@@ -16,14 +16,14 @@ import XSLTStyleJSONPathResolver from './XSLTStyleJSONPathResolver.js';
  * @typedef {object} JTLTOptions
  * @property {Function} success A callback supplied with a single
  * argument that is the result of this instance's transform() method.
- * @property {array} [templates] An array of template objects
+ * @property {any[]} [templates] An array of template objects
  * @property {object|Function} [template] A function assumed to be a
  * root template or a single, complete template object
  * @property {Function} [query] A function assumed to be a root template
- * @property {array} [forQuery] An array with arguments to be supplied
+ * @property {any[]} [forQuery] An array with arguments to be supplied
  * to a single call to `forEach` (and which will serve as the root
  * template)
- * @param {object} [data] A JSON object
+ * @property {any} [data] A JSON object
  * @property {string} [ajaxData] URL of a JSON file to retrieve for
  * evaluation
  * @property {boolean} [errorOnEqualPriority] Whether or not to
@@ -34,21 +34,21 @@ import XSLTStyleJSONPathResolver from './XSLTStyleJSONPathResolver.js';
  * parenthetical evaluations in JSONPath. Safer if relying on user
  * input, but reduces capabilities of JSONPath.
  * @property {string} [mode] The mode in which to begin the transform.
+ * @property {string} [outputType] Output type: 'string', 'dom', or 'json'
  * @property {Function} [engine] Will be based the
  * same config as passed to this instance. Defaults to a transforming
  * function based on JSONPath and with its own set of priorities for
  * processing templates.
  * @property {Function} [specificityPriorityResolver]
  * Callback for getting the priority by specificity
- * @property {object} [joiningTransformer] Can
+ * @property {{get: Function, append: Function, string?: Function,
+ *   object?: Function, array?: Function}} [joiningTransformer] Can
  * be a singleton or class instance. Defaults to string joining for output
  * transformation.
- * @property {Function} [joiningTransformer.get] Required method if
- *   object provided. Defaults to string joining getter.
- * @property {Function} [joiningTransformer.append] Required method if
- *   object provided. Defaults to string joining appender.
  * @property {object} [joiningConfig] Config to pass on to the joining
  *   transformer
+ * @property {any} [parent] Parent object for context
+ * @property {string} [parentProperty] Parent property name for context
  */
 
 const {window} = new JSDOM();
@@ -67,7 +67,10 @@ class JTLT {
    * @todo Remove JSONPath dependency in query use of '$'?
    */
   constructor (config) {
+    /** @type {JTLTOptions} */
+    this.config = config || {};
     this.setDefaults(config);
+
     // eslint-disable-next-line unicorn/no-this-assignment -- Temporary
     const that = this;
     if (this.config.ajaxData) {
@@ -133,28 +136,34 @@ class JTLT {
    * @returns {JTLT}
    */
   setDefaults (config) {
+    /** @type {JTLTOptions} */
     this.config = config || {};
-    ({config} = this);
-    const query = config.forQuery
+    const cfg = this.config;
+    const query = cfg.forQuery
       ? function () {
-        this.forEach([].slice.call(config.forQuery));
+        /** @type {any} */ (this).forEach([].slice.call(cfg.forQuery));
       }
-      : config.query || (
-        typeof config.templates === 'function'
-          ? config.templates
-          : typeof config.template === 'function'
-            ? config.template
+      : cfg.query || (
+        typeof cfg.templates === 'function'
+          ? cfg.templates
+          : typeof cfg.template === 'function'
+            ? cfg.template
             : null
       );
     this.config.templates = query
       ? [
         {name: 'root', path: '$', template: query}
       ]
-      : config.templates || [config.template];
-    this.config.errorOnEqualPriority = config.errorOnEqualPriority || false;
-    this.config.engine = this.config.engine || function (cfg) {
-      const jpt = new JSONPathTransformer(cfg);
-      const ret = jpt.transform(cfg.mode);
+      : cfg.templates || [cfg.template];
+    this.config.errorOnEqualPriority = cfg.errorOnEqualPriority || false;
+    this.config.engine = this.config.engine ||
+    /**
+     * @param {JTLTOptions} configParam
+     * @returns {any}
+     */
+    function (configParam) {
+      const jpt = new JSONPathTransformer(configParam);
+      const ret = jpt.transform(configParam.mode);
 
       return ret;
     };
@@ -164,7 +173,7 @@ class JTLT {
     this.config.specificityPriorityResolver =
       this.config.specificityPriorityResolver || (function () {
         const xsjpr = new XSLTStyleJSONPathResolver();
-        return function (path) {
+        return function (/** @type {string} */ path) {
           return xsjpr.getPriorityBySpecificity(path);
         };
       }());

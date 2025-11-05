@@ -7,7 +7,19 @@ import JSONPathTransformer from './JSONPathTransformer.js';
 class JSONPathTransformerContext {
   /**
    * @param {object} config - Configuration object
-   * @param {Array} templates - Array of template objects
+   * @param {object} config.data - Data to transform
+   * @param {object} [config.parent] - Parent object
+   * @param {string} [config.parentProperty] - Parent property name
+   * @param {boolean} [config.errorOnEqualPriority] - Whether to error on
+   *   equal priority
+   * @param {{append: Function, get: Function, string: Function,
+   *   object: Function, array: Function}} config.joiningTransformer -
+   *   Joining transformer
+   * @param {boolean} [config.preventEval] - Whether to prevent eval in
+   *   JSONPath
+   * @param {Function} [config.specificityPriorityResolver] - Function to
+   *   resolve priority
+   * @param {any[]} templates - Array of template objects
    */
   constructor (config, templates) {
     this._config = config;
@@ -15,9 +27,16 @@ class JSONPathTransformerContext {
     this._contextObj = this._origObj = config.data;
     this._parent = config.parent || this._config;
     this._parentProperty = config.parentProperty || 'data';
+    /** @type {Record<string, any>} */
     this.vars = {};
+    /** @type {Record<string, any>} */
     this.propertySets = {};
+    /** @type {Record<string, any>} */
     this.keys = {};
+    /** @type {boolean | undefined} */
+    this._initialized = undefined;
+    /** @type {string | undefined} */
+    this._currPath = undefined;
   }
 
   /**
@@ -89,16 +108,17 @@ class JSONPathTransformerContext {
   /**
    * @todo implement sort (allow as callback or as object)
    * @param {string|object} select - JSONPath selector or options object
-   * @param {string} mode - Mode to apply
-   * @param {*} sort - Sort parameter (not yet implemented)
+   * @param {string} [mode] - Mode to apply
+   * @param {*} [sort] - Sort parameter (not yet implemented)
    * @returns {JSONPathTransformerContext}
    */
   applyTemplates (select, mode, sort) {
     // eslint-disable-next-line unicorn/no-this-assignment -- Temporary
     const that = this;
     if (select && typeof select === 'object') {
-      ({mode} = select);
-      ({select} = select);
+      /** @type {{mode?: string, select?: string}} */
+      const selectObj = /** @type {any} */ (select);
+      ({mode, select} = selectObj);
     }
     if (!this._initialized) {
       select = select || '$';
@@ -172,7 +192,7 @@ class JSONPathTransformerContext {
           including processing-instruction(), comment(), and namespace nodes
           (whose default templates do not add to the result tree in XSLT) as
           well as elements, attributes, text nodes (see
-          http://lenzconsulting.com/how-xslt-works/#built-in_template_rules )
+          https://lenzconsulting.com/how-xslt-works/#built-in_template_rules )
           */
         } else {
           // Todo: Could perform this first and cache by template
@@ -219,17 +239,21 @@ class JSONPathTransformerContext {
 
   /**
    * @param {string|object} name - Template name or options object
-   * @param {Array} withParams - Parameters to pass to template
+   * @param {any[]} [withParams] - Parameters to pass to template
    * @returns {JSONPathTransformerContext}
    */
   callTemplate (name, withParams) {
+    // eslint-disable-next-line unicorn/no-this-assignment -- Temporary
+    const that = this;
     if (name && typeof name === 'object') {
-      withParams = name.withParam || withParams;
-      ({name} = name);
+      /** @type {{name?: string, withParam?: any[]}} */
+      const nameObj = /** @type {any} */ (name);
+      withParams = nameObj.withParam || withParams;
+      ({name} = nameObj);
     }
     withParams = withParams || [];
     const paramValues = withParams.map(function (withParam) {
-      return withParam.value || this.get(withParam.select);
+      return withParam.value || that.get(withParam.select, false);
     });
     const results = this._getJoiningTransformer();
     const templateObj = this._templates.find(function (template) {
@@ -270,14 +294,15 @@ class JSONPathTransformerContext {
   }
 
   /**
-   * @param {string} select - JSONPath selector
+   * @param {string|object} [select] - JSONPath selector
    * @returns {JSONPathTransformerContext}
    */
   valueOf (select) {
     const results = this._getJoiningTransformer();
-    const result = select && typeof select === 'object' && select.select === '.'
+    const result = select && typeof select === 'object' &&
+    /** @type {{select?: string}} */ (select).select === '.'
       ? this._contextObj
-      : this.get(select);
+      : this.get(/** @type {string} */ (select), false);
     results.append(result);
     return this;
   }
@@ -306,7 +331,7 @@ class JSONPathTransformerContext {
    * @returns {JSONPathTransformerContext}
    */
   variable (name, select) {
-    this.vars[name] = this.get(select);
+    this.vars[name] = this.get(select, false);
     return this;
   }
 
@@ -327,7 +352,19 @@ class JSONPathTransformerContext {
    */
   // Todo: Add other methods from the joining transformers
   string (str, cb) {
-    this._getJoiningTransformer().string(str, cb);
+    /** @type {any} */ (this._getJoiningTransformer()).string(str, cb);
+    return this;
+  }
+
+  /**
+   * Append plain text directly to the output without escaping or JSON
+   *   stringification. Mirrors the joining transformer API so templates can
+   *   call `this.plainText()`.
+   * @param {string} str - Plain text to append
+   * @returns {JSONPathTransformerContext}
+   */
+  plainText (str) {
+    /** @type {any} */ (this._getJoiningTransformer()).plainText(str);
     return this;
   }
 
@@ -338,7 +375,9 @@ class JSONPathTransformerContext {
    * @returns {JSONPathTransformerContext}
    */
   object (cb, usePropertySets, propSets) {
-    this._getJoiningTransformer().object(cb, usePropertySets, propSets);
+    /** @type {any} */ (this._getJoiningTransformer()).object(
+      cb, usePropertySets, propSets
+    );
     return this;
   }
 
@@ -347,22 +386,24 @@ class JSONPathTransformerContext {
    * @returns {JSONPathTransformerContext}
    */
   array (cb) {
-    this._getJoiningTransformer().array(cb);
+    /** @type {any} */ (this._getJoiningTransformer()).array(cb);
     return this;
   }
 
   /**
    * @param {string} name - Property set name
    * @param {object} propertySetObj - Property set object
-   * @param {Array} usePropertySets - Property sets to use
+   * @param {any[]} [usePropertySets] - Property sets to use
    * @returns {JSONPathTransformerContext}
    */
   propertySet (name, propertySetObj, usePropertySets) {
+    // eslint-disable-next-line unicorn/no-this-assignment -- Temporary
+    const that = this;
     this.propertySets[name] = usePropertySets
       ? ({
         ...propertySetObj,
         ...usePropertySets.reduce((obj, psName) => {
-          return this._usePropertySets(obj, psName);
+          return that._usePropertySets(obj, psName);
         }, {})
       })
       : propertySetObj;

@@ -1,7 +1,6 @@
 import {jml} from 'jamilih';
-import JHTML from 'jhtml';
+import * as JHTML from 'jhtml';
 import AbstractJoiningTransformer from './AbstractJoiningTransformer.js';
-import Stringifier from 'jhtml/SAJJ/SAJJ.Stringifier.js';
 
 const camelCase = /[a-z][A-Z]/gv;
 
@@ -26,12 +25,34 @@ function _makeDatasetAttribute (n0) {
  */
 class StringJoiningTransformer extends AbstractJoiningTransformer {
   /**
+   * @type {{
+   *   JHTMLForJSON?: boolean,
+   *   mode?: "JavaScript"|"JSON"
+   * }}
+   */
+  _cfg = {};
+  /**
    * @param {string} s - Initial string
    * @param {object} cfg - Configuration object
    */
   constructor (s, cfg) {
     super(cfg); // Include this in any subclass of AbstractJoiningTransformer
+
     this._str = s || '';
+    /** @type {any} */
+    this._objPropTemp = undefined;
+    /** @type {boolean | undefined} */
+    this.propOnlyState = undefined;
+    /** @type {boolean | undefined} */
+    this._arrItemState = undefined;
+    /** @type {boolean | undefined} */
+    this._objPropState = undefined;
+    /** @type {any} */
+    this._obj = undefined;
+    /** @type {any[]} */
+    this._arr = [];
+    /** @type {string | undefined} */
+    this._strTemp = undefined;
   }
 
   /**
@@ -98,6 +119,7 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
       );
     }
     this.propOnlyState = true;
+    /** @type {any} */
     const oldPropTemp = this._objPropTemp;
     this._objPropTemp = prop;
     cb.call(this);
@@ -109,28 +131,31 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
   }
 
   /**
-   * @param {object} obj - Object to serialize
+   * @param {object|Element} obj - Object to serialize
    * @param {Function} cb - Callback function
-   * @param {Array} usePropertySets - Property sets to use
-   * @param {object} propSets - Additional property sets
+   * @param {any[]} [usePropertySets] - Property sets to use
+   * @param {object} [propSets] - Additional property sets
    * @returns {StringJoiningTransformer}
    */
   object (obj, cb, usePropertySets, propSets) {
+    // eslint-disable-next-line unicorn/no-this-assignment -- Temporary
+    const that = this;
     this._requireSameChildren('string', 'object');
+    /** @type {any} */
     const oldObjPropState = this._objPropState;
+    /** @type {any} */
     const oldObj = this._obj;
-    this._obj = obj || {};
-    if (_isElement(obj)) {
-      this._obj = JHTML.toJSONObject(this._obj);
-    }
+    this._obj = _isElement(obj)
+      ? JHTML.toJSONObject(this._obj)
+      : obj || {};
 
     // Todo: Allow in this and subsequent JSON methods ability to create
     //   jml-based JHTML
 
     if (usePropertySets !== undefined) {
       usePropertySets.reduce(function (o, psName) {
-        return this._usePropertySets(o, psName); // Todo: Put in right scope
-      }.bind(this), {});
+        return that._usePropertySets(o, psName); // Todo: Put in right scope
+      }, {});
     }
     if (propSets !== undefined) {
       Object.assign(this._obj, propSets);
@@ -145,11 +170,11 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
     // Not ready to serialize yet as still inside another array or object
     if (oldObjPropState || this._arrItemState) {
       this.append(this._obj);
-    } else if (this._cfg.JHTMLForJSON) {
+    } else if (this._cfg && this._cfg.JHTMLForJSON) {
       this.append(JHTML.toJHTMLString(this._obj));
-    } else if (this._cfg.mode !== 'JavaScript') {
+    } else if (this._cfg && this._cfg.mode !== 'JavaScript') {
       // Allow this method to operate on non-finite numbers and functions
-      const stringifier = new Stringifier({mode: 'JavaScript'});
+      const stringifier = new JHTML.Stringifier({mode: 'JavaScript'});
       this.append(stringifier.walkJSONObject(this._obj));
     } else {
       this.append(JSON.stringify(this._obj));
@@ -159,19 +184,20 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
   }
 
   /**
-   * @param {Array} arr - Array to serialize
-   * @param {Function} cb - Callback function
+   * @param {any[]|Element} [arr] - Array to serialize
+   * @param {Function} [cb] - Callback function
    * @returns {StringJoiningTransformer}
    */
   array (arr, cb) {
     this._requireSameChildren('string', 'array');
+    /** @type {any} */
     const oldArr = this._arr;
     // Todo: copy array?
-    this._arr = arr || [];
-    if (_isElement(arr)) {
-      this._arr = JHTML.toJSONObject(this._arr);
-    }
+    this._arr = _isElement(arr)
+      ? JHTML.toJSONObject(this._arr)
+      : arr || [];
 
+    /** @type {any} */
     const oldArrItemState = this._arrItemState;
 
     if (cb) {
@@ -186,11 +212,11 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
     // Not ready to serialize yet as still inside another array or object
     if (oldArrItemState || this._objPropState) {
       this.append(this._arr);
-    } else if (this._cfg.JHTMLForJSON) {
+    } else if (this._cfg && this._cfg.JHTMLForJSON) {
       this.append(JHTML.toJHTMLString(this._arr));
-    } else if (this._cfg.mode !== 'JavaScript') {
+    } else if (this._cfg && this._cfg.mode !== 'JavaScript') {
       // Allow this method to operate on non-finite numbers and functions
-      const stringifier = new Stringifier({mode: 'JavaScript'});
+      const stringifier = new JHTML.Stringifier({mode: 'JavaScript'});
       this.append(stringifier.walkJSONObject(this._obj));
     } else {
       this.append(JSON.stringify(this._arr));
@@ -200,8 +226,8 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
   }
 
   /**
-   * @param {string|object} str - String value or element
-   * @param {Function} cb - Callback function
+   * @param {string|Element|object} str - String value or element
+   * @param {Function} [cb] - Callback function
    * @returns {StringJoiningTransformer}
    */
   string (str, cb) {
@@ -210,6 +236,7 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
     }
 
     let tmpStr = '';
+    /** @type {any} */
     const _oldStrTemp = this._strTemp;
     if (cb) {
       this._strTemp = '';
@@ -218,12 +245,12 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
       this._strTemp = _oldStrTemp;
     }
     if (_oldStrTemp !== undefined) {
-      this._strTemp += str;
+      this._strTemp = (this._strTemp || '') + str;
     /*
     // What was this for?
     } else if (this._cfg.mode !== 'JavaScript') {
       // Allow this method to operate on non-finite numbers and functions
-      var stringifier = new Stringifier({mode: 'JavaScript'});
+      const stringifier = new JHTML.Stringifier({mode: 'JavaScript'});
       this.append(stringifier.walkJSONObject(this._obj));
     */
     } else {
@@ -234,7 +261,7 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
   }
 
   /**
-   * @param {number|object} num - Number value or element
+   * @param {number|Element|object} num - Number value or element
    * @returns {StringJoiningTransformer}
    */
   number (num) {
@@ -246,7 +273,7 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
   }
 
   /**
-   * @param {boolean|object} bool - Boolean value or element
+   * @param {boolean|Element|object} bool - Boolean value or element
    * @returns {StringJoiningTransformer}
    */
   boolean (bool) {
@@ -269,7 +296,7 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
    * @returns {StringJoiningTransformer}
    */
   undefined () {
-    if (this._cfg.mode !== 'JavaScript') {
+    if (this._cfg && this._cfg.mode !== 'JavaScript') {
       throw new Error(
         'undefined is not allowed unless added in JavaScript mode'
       );
@@ -279,11 +306,11 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
   }
 
   /**
-   * @param {number} num - Non-finite number (NaN, Infinity, -Infinity)
+   * @param {number|Element} num - Non-finite number (NaN, Infinity, -Infinity)
    * @returns {StringJoiningTransformer}
    */
   nonfiniteNumber (num) {
-    if (this._cfg.mode !== 'JavaScript') {
+    if (this._cfg && this._cfg.mode !== 'JavaScript') {
       throw new Error(
         'Non-finite numbers are not allowed unless added in JavaScript mode'
       );
@@ -296,11 +323,11 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
   }
 
   /**
-   * @param {Function} func - Function to stringify
+   * @param {Function|Element} func - Function to stringify
    * @returns {StringJoiningTransformer}
    */
   function (func) {
-    if (this._cfg.mode !== 'JavaScript') {
+    if (this._cfg && this._cfg.mode !== 'JavaScript') {
       throw new Error(
         'function is not allowed unless added in JavaScript mode'
       );
@@ -314,29 +341,31 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
 
   /**
    * @param {string|object} elName - Element name or element object
-   * @param {object} atts - Element attributes
-   * @param {Array} childNodes - Child nodes
-   * @param {Function} cb - Callback function
+   * @param {object} [atts] - Element attributes
+   * @param {any[]} [childNodes] - Child nodes
+   * @param {Function} [cb] - Callback function
    * @returns {StringJoiningTransformer}
    */
   element (elName, atts, childNodes, cb) {
+    // eslint-disable-next-line unicorn/no-this-assignment -- Temporary
+    const that = this;
     if (Array.isArray(atts)) {
-      cb = childNodes;
+      cb = /** @type {Function} */ (childNodes);
       childNodes = atts;
       atts = {};
     } else if (typeof atts === 'function') {
       cb = atts;
-      childNodes = undefined;
+      childNodes = [];
       atts = {};
     }
     if (typeof childNodes === 'function') {
       cb = childNodes;
-      childNodes = undefined;
+      childNodes = [];
     }
 
     // Todo: allow for cfg to produce Jamilih string output or hXML
     //   string output
-    const method = this._cfg.xmlElements ? 'toXML' : 'toHTML';
+    const method = this._cfg && this._cfg.xmlElements ? 'toXML' : 'toHTML';
     if (!cb) {
       // Note that Jamilih currently has an issue with 'selected', 'checked',
       //  'value', 'defaultValue', 'for', 'on*', 'style' (workaround: pass
@@ -346,20 +375,24 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
     }
 
     if (typeof elName === 'object') {
+      /** @type {Record<string, any>} */
       const objAtts = {};
-      [...elName.attributes].forEach(function (att, i) {
+      /** @type {any} */
+      const elObj = elName;
+      [...elObj.attributes].forEach(function (att, i) {
         objAtts[att.name] = att.value;
       });
       atts = Object.assign(objAtts, atts);
-      elName = elName.nodeName;
+      elName = elObj.nodeName;
     }
 
     this.append('<' + elName);
+    /** @type {any} */
     const oldTagState = this._openTagState;
     this._openTagState = true;
     if (atts) {
       Object.keys(atts).forEach((att) => {
-        this.attribute(att, atts[att]);
+        that.attribute(att, atts[att], false);
       });
     }
     if (childNodes && childNodes.length) {
@@ -382,11 +415,13 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
   /**
    * @param {string} name - Attribute name
    * @param {string|object} val - Attribute value
-   * @param {boolean} avoidAttEscape - Whether to avoid escaping the
+   * @param {boolean} [avoidAttEscape] - Whether to avoid escaping the
    *   attribute value
    * @returns {StringJoiningTransformer}
    */
   attribute (name, val, avoidAttEscape) {
+    // eslint-disable-next-line unicorn/no-this-assignment -- Temporary
+    const that = this;
     if (!this._openTagState) {
       throw new Error(
         'An attribute cannot be added after an opening tag has been closed ' +
@@ -394,23 +429,29 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
       );
     }
 
-    if (!this._cfg.xmlElements) {
+    if (!this._cfg || !this._cfg.xmlElements) {
       if (typeof val === 'object') {
+        /** @type {Record<string, any>} */
+        const valObj = /** @type {any} */ (val);
         switch (name) {
-        case 'dataset':
-          Object.keys(val).forEach(function (att) {
-            this.attribute(
+        case 'dataset': {
+          Object.keys(valObj).forEach(function (att) {
+            that.attribute(
               'data-' + att.replaceAll(
                 camelCase, _makeDatasetAttribute
-              ), val[att]
+              ), valObj[att], false
             );
           });
           break;
-        case '$a': // Ordered attributes
-          val.forEach(function (attArr) {
-            this.attribute(attArr[0], attArr[1]);
+        }
+        case '$a': { // Ordered attributes
+          /** @type {any[]} */
+          const valArr = /** @type {any} */ (val);
+          valArr.forEach(function (attArr) {
+            that.attribute(attArr[0], attArr[1], false);
           });
           break;
+        }
         default:
           break;
         }
@@ -419,9 +460,11 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
       name = {className: 'class', htmlFor: 'for'}[name] || name;
     }
 
-    val = (this._cfg.preEscapedAttributes || avoidAttEscape)
-      ? val
-      : val.replaceAll('&', '&amp;').replaceAll('"', '&quot;');
+    /** @type {string} */
+    const valStr = /** @type {any} */ (val);
+    val = ((this._cfg && this._cfg.preEscapedAttributes) || avoidAttEscape)
+      ? valStr
+      : valStr.replaceAll('&', '&amp;').replaceAll('"', '&quot;');
     this.append(' ' + name + '="' + val + '"');
     return this;
   }
@@ -458,6 +501,18 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
   plainText (str) {
     this._str += str;
     return this;
+  }
+
+  /**
+   * Helper method to use property sets (to be implemented).
+   * @param {object} obj - Object to apply property set to
+   * @param {string} psName - Property set name
+   * @returns {object}
+   */
+  // eslint-disable-next-line class-methods-use-this -- Placeholder
+  _usePropertySets (obj, psName) {
+    // Todo: Implement property set functionality
+    return obj;
   }
 }
 

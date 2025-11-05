@@ -1,7 +1,7 @@
 # jtlt
 
 JavaScript Template Language Transformations (JTLT, pronounced as
-"Jetlet")—a JavaScript equivalent of [XSLT](http://www.w3.org/Style/XSL/),
+"Jetlet")—a JavaScript equivalent of [XSLT](https://www.w3.org/Style/XSL/),
 for JSON/JavaScript object data sources.
 
 As with XSLT, allows for declarative, linear declaration of
@@ -14,7 +14,7 @@ formats (e.g., HTML strings, JSON, DOM objects, etc.).
 
 Packaged with [JSONPath Plus](https://github.com/s3u/JSONPath).
 
-The sample file is from <http://goessner.net/articles/JsonPath/>
+The sample file is from <https://goessner.net/articles/JsonPath/>
 
 ## Installation
 
@@ -50,12 +50,12 @@ from XSLT):
 
 ## To-dos
 
-1.  Document and add test cases to cover current features!
+1.  Document and add test cases to cover current features! (Could adapt an XSLT/XQuery test suite)
 
     1.  Implement and demo equivalent to applying and calling templates, and
         root template
 
-    2.  Demo chaining of methods, including [equivalents](http://www.saxonica.com/papers/XTech2005/mhkpaper.html#S4.)
+    2.  Demo chaining of methods, including [equivalents](https://www.saxonica.com/papers/XTech2005/mhkpaper.html#S4.)
         to XQuery's FLWOR expressions (see also Promises to-do), perhaps
         even making aliases so that XQuery's friendlier terms can be used
         instead of XSLT's.
@@ -89,6 +89,9 @@ from XSLT):
     so one can submit and evaluate
     through [HTTPQuery](https://github.com/brettz9/httpquery) (and also
     supply to JSONEditor, etc.). Utilize updating by reference.
+
+8. Demo narrowing to subset of JavaScript (as with `jspe`) to make
+    JTLT truly "declarative" as far as freedom from scripting
 
 ## Possible to-dos
 

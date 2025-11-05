@@ -5,12 +5,17 @@ import AbstractJoiningTransformer from './AbstractJoiningTransformer.js';
  */
 class JSONJoiningTransformer extends AbstractJoiningTransformer {
   /**
-   * @param {Array|object} o - Initial object or array
-   * @param {object} cfg - Configuration object
+   * @param {any[]|object} [o] - Initial object or array
+   * @param {object} [cfg] - Configuration object
    */
   constructor (o, cfg) {
     super(cfg);
+    /** @type {any[]|object} */
     this._obj = o || [];
+    /** @type {boolean | undefined} */
+    this._objPropState = undefined;
+    /** @type {boolean | undefined} */
+    this._arrItemState = undefined;
   }
 
   /**
@@ -64,22 +69,24 @@ class JSONJoiningTransformer extends AbstractJoiningTransformer {
   }
 
   /**
-   * @param {Function} cb - Callback to be executed on this transformer but
+   * @param {Function} [cb] - Callback to be executed on this transformer but
    *   with a context nested within the newly created object
-   * @param {Array} usePropertySets - Array of string property set names to
+   * @param {any[]} [usePropertySets] - Array of string property set names to
    *   copy onto the new object
-   * @param {object} propSets - An object of key-value pairs to copy onto
+   * @param {object} [propSets] - An object of key-value pairs to copy onto
    *   the new object
    * @returns {JSONJoiningTransformer}
    */
   object (cb, usePropertySets, propSets) {
+    // eslint-disable-next-line unicorn/no-this-assignment -- Temporary
+    const that = this;
     // Todo: Conditionally add as JHTML-based jml (and in subsequent methods
     //   as well)
     const tempObj = this._obj;
     let obj = {};
     if (usePropertySets !== undefined) {
       obj = usePropertySets.reduce((o, psName) => {
-        return this._usePropertySets(o, psName); // Todo: Put in right scope
+        return that._usePropertySets(o, psName); // Todo: Put in right scope
       }, {});
     }
     if (propSets !== undefined) {
@@ -87,10 +94,13 @@ class JSONJoiningTransformer extends AbstractJoiningTransformer {
     }
 
     this.append(obj);
+    /** @type {any} */
     const oldObjPropState = this._objPropState;
     this._objPropState = true;
     // We pass the object, but user should usually use other methods
-    cb.call(this, obj);
+    if (cb) {
+      cb.call(this, obj);
+    }
     this._obj = tempObj;
     this._objPropState = oldObjPropState;
     return this;
@@ -98,15 +108,18 @@ class JSONJoiningTransformer extends AbstractJoiningTransformer {
 
   /**
    * Creates a new array and executes a callback in its context.
-   * @param {Function} cb - Callback function
+   * @param {Function} [cb] - Callback function
    * @returns {JSONJoiningTransformer}
    */
   array (cb) {
     const tempObj = this._obj;
+    /** @type {any[]} */
     const arr = [];
     this.append(arr); // Todo: set current position and deal with children
     // We pass the array, but user should usually use other methods
-    cb.call(this, arr);
+    if (cb) {
+      cb.call(this, arr);
+    }
     this._obj = tempObj;
     return this;
   }
@@ -157,7 +170,7 @@ class JSONJoiningTransformer extends AbstractJoiningTransformer {
    * @returns {JSONJoiningTransformer}
    */
   undefined () {
-    if (this._cfg.mode !== 'JavaScript') {
+    if (this._cfg && /** @type {any} */ (this._cfg).mode !== 'JavaScript') {
       throw new Error(
         'undefined is not allowed unless added in JavaScript mode'
       );
@@ -172,7 +185,7 @@ class JSONJoiningTransformer extends AbstractJoiningTransformer {
    * @returns {JSONJoiningTransformer}
    */
   nonfiniteNumber (num) {
-    if (this._cfg.mode !== 'JavaScript') {
+    if (this._cfg && /** @type {any} */ (this._cfg).mode !== 'JavaScript') {
       throw new Error(
         'Non-finite numbers are not allowed unless added in JavaScript mode'
       );
@@ -187,7 +200,7 @@ class JSONJoiningTransformer extends AbstractJoiningTransformer {
    * @returns {JSONJoiningTransformer}
    */
   function (func) {
-    if (this._cfg.mode !== 'JavaScript') {
+    if (this._cfg && /** @type {any} */ (this._cfg).mode !== 'JavaScript') {
       throw new Error(
         'function is not allowed unless added in JavaScript mode'
       );
@@ -234,6 +247,18 @@ class JSONJoiningTransformer extends AbstractJoiningTransformer {
   plainText (str) {
     this.string(str);
     return this;
+  }
+
+  /**
+   * Helper method to use property sets (to be implemented).
+   * @param {object} obj - Object to apply property set to
+   * @param {string} psName - Property set name
+   * @returns {object}
+   */
+  // eslint-disable-next-line class-methods-use-this -- Placeholder
+  _usePropertySets (obj, psName) {
+    // Todo: Implement property set functionality
+    return obj;
   }
 }
 
