@@ -1,7 +1,11 @@
 import {JSONPath} from 'jsonpath-plus';
 
 /**
+ * Computes a simple specificity score for JSONPath selectors inspired by XSLT.
  *
+ * Used by the engine to break ties between templates when multiple JSONPath
+ * expressions match the same node. Lower values indicate broader matches
+ * (e.g., wildcards), while higher values indicate more specific matches.
  */
 class XSLTStyleJSONPathResolver {
   /**

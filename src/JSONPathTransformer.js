@@ -1,7 +1,12 @@
 import JSONPathTransformerContext from './JSONPathTransformerContext.js';
 
 /**
- * JSONPath-based transformer for applying templates to JSON data.
+ * Applies named JSONPath-driven templates to JSON data.
+ *
+ * This engine finds templates whose `path` match the current node (plus an
+ * optional `mode`), sorts by priority, and invokes the winning template.
+ * If no template matches, built-in default rules emulate XSLT-like behavior
+ * for objects, arrays, scalars, etc.
  */
 class JSONPathTransformer {
   /**
@@ -11,8 +16,9 @@ class JSONPathTransformer {
    * @param {any[]} config.templates - Array of template objects
    */
   constructor (config) {
-    let map = {};
+    let map = /** @type {Record<string, boolean>} */ ({});
     this._config = config;
+    /** @type {any[]} */
     this.rootTemplates = [];
     this.templates = config.templates;
     this.templates = this.templates.map(function (template) {
@@ -33,7 +39,7 @@ class JSONPathTransformer {
         this.rootTemplates = this.rootTemplates.concat(templates.splice(i, 1));
       }
     });
-    map = null;
+    map = /** @type {any} */ (null);
   }
 
   /**
@@ -53,7 +59,9 @@ class JSONPathTransformer {
    * @returns {*} The transformation result
    */
   transform (mode) {
-    const jte = new JSONPathTransformerContext(this._config, this.templates);
+    const jte = new JSONPathTransformerContext(
+      /** @type {any} */ (this._config), this.templates
+    );
     const len = this.rootTemplates.length;
     const templateObj = len
       ? this.rootTemplates.pop()
@@ -64,7 +72,7 @@ class JSONPathTransformer {
     const ret = templateObj.template.call(jte, undefined, {mode});
     if (typeof ret !== 'undefined') {
       // Will vary by jte._config.outputType
-      jte._getJoiningTransformer().append(ret);
+      /** @type {any} */ (jte)._getJoiningTransformer().append(ret);
     }
     const result = jte.getOutput();
     return result;

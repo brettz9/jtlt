@@ -55,7 +55,12 @@ const {window} = new JSDOM();
 const {document} = window;
 
 /**
+ * High-level façade for running a JTLT transform.
  *
+ * Accepts data and templates (or a root template/query), constructs a joining
+ * transformer based on `outputType`, and invokes the JSONPath-based engine.
+ * The result is returned to the required `success` callback and also returned
+ * from transform().
  */
 class JTLT {
   /**
@@ -77,7 +82,7 @@ class JTLT {
       getJSON(this.config.ajaxData, (function (cfg) {
         return function (json) {
           that.config.data = json;
-          that._autoStart(cfg.mode);
+          that._autoStart(/** @type {any} */ (cfg).mode);
         };
       }(config)));
       return;
@@ -85,7 +90,7 @@ class JTLT {
     if (this.config.data === undefined) {
       throw new Error('You must supply either config.ajaxData or config.data');
     }
-    this._autoStart(config.mode);
+    this._autoStart(/** @type {any} */ (config).mode);
   }
 
   /**
@@ -106,8 +111,17 @@ class JTLT {
       break;
     }
 
-    return new JT(/* this.config.data, */
-      undefined,
+    /** @type {any} */
+    let initial;
+    if (JT === StringJoiningTransformer) {
+      initial = '';
+    } else if (JT === DOMJoiningTransformer) {
+      initial = document.createDocumentFragment();
+    } else {
+      initial = [];
+    }
+    return new JT(
+      initial,
       this.config.joiningConfig || {
         string: {}, json: {}, dom: {}, jamilih: {},
         document
@@ -140,8 +154,8 @@ class JTLT {
     this.config = config || {};
     const cfg = this.config;
     const query = cfg.forQuery
-      ? function () {
-        /** @type {any} */ (this).forEach([].slice.call(cfg.forQuery));
+      ? /** @this {any} */ function () {
+        (/** @type {any} */ (this)).forEach([].slice.call(cfg.forQuery));
       }
       : cfg.query || (
         typeof cfg.templates === 'function'
@@ -162,8 +176,8 @@ class JTLT {
      * @returns {any}
      */
     function (configParam) {
-      const jpt = new JSONPathTransformer(configParam);
-      const ret = jpt.transform(configParam.mode);
+      const jpt = new JSONPathTransformer(/** @type {any} */ (configParam));
+      const ret = jpt.transform(/** @type {any} */ (configParam).mode);
 
       return ret;
     };
@@ -199,7 +213,9 @@ class JTLT {
     }
 
     this.config.mode = mode;
-    const ret = this.config.success(this.config.engine(this.config));
+    const ret = /** @type {Function} */ (this.config.success)(
+      (/** @type {any} */ (this.config.engine))(this.config)
+    );
     return ret;
   }
 }

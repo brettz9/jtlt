@@ -2,7 +2,12 @@ import {JSONPath as jsonpath} from 'jsonpath-plus';
 import JSONPathTransformer from './JSONPathTransformer.js';
 
 /**
- * Context for JSONPath transformations.
+ * Execution context for JSONPath-driven template application.
+ *
+ * Holds the current node, parent, path, variables, and property sets while
+ * running templates. Exposes helper methods that mirror the underlying
+ * joining transformer (e.g., string(), object(), array()) so templates can
+ * emit results without referencing the joiner directly.
  */
 class JSONPathTransformerContext {
   /**
@@ -54,7 +59,7 @@ class JSONPathTransformerContext {
 
   /**
    * Gets the joining transformer from config.
-   * @returns {object} The joining transformer
+   * @returns {any} The joining transformer
    */
   _getJoiningTransformer () {
     return this._config.joiningTransformer;
@@ -65,7 +70,7 @@ class JSONPathTransformerContext {
    * @returns {JSONPathTransformerContext}
    */
   appendOutput (item) {
-    this._getJoiningTransformer().append(item);
+    /** @type {any} */ (this._getJoiningTransformer()).append(item);
     return this;
   }
 
@@ -74,7 +79,7 @@ class JSONPathTransformerContext {
    * @returns {*} The output from the joining transformer
    */
   getOutput () {
-    return this._getJoiningTransformer().get();
+    return /** @type {any} */ (this._getJoiningTransformer()).get();
   }
 
   /**
@@ -87,7 +92,7 @@ class JSONPathTransformerContext {
    */
   get (select, wrap) {
     if (select) {
-      return jsonpath({
+      return /** @type {any} */ (jsonpath)({
         path: select, json: this._contextObj,
         preventEval: this._config.preventEval,
         wrap: wrap || false, returnType: 'value'
@@ -101,7 +106,7 @@ class JSONPathTransformerContext {
    * @returns {JSONPathTransformerContext}
    */
   set (v) {
-    this._parent[this._parentProperty] = v;
+    (/** @type {Record<string, any>} */ (this._parent))[this._parentProperty] = v;
     return this;
   }
 
@@ -113,12 +118,15 @@ class JSONPathTransformerContext {
    * @returns {JSONPathTransformerContext}
    */
   applyTemplates (select, mode, sort) {
+    // Matches templates by (path, mode), resolves priority, and invokes each
+    // template in document order for all nodes selected by `select`.
     // eslint-disable-next-line unicorn/no-this-assignment -- Temporary
     const that = this;
     if (select && typeof select === 'object') {
       /** @type {{mode?: string, select?: string}} */
       const selectObj = /** @type {any} */ (select);
-      ({mode, select} = selectObj);
+      mode = selectObj.mode ?? mode;
+      select = selectObj.select ?? select;
     }
     if (!this._initialized) {
       select = select || '$';
@@ -127,7 +135,7 @@ class JSONPathTransformerContext {
     } else {
       select = select || '*';
     }
-    select = JSONPathTransformer.makeJSONPathAbsolute(select);
+  select = JSONPathTransformer.makeJSONPathAbsolute(/** @type {string} */ (select));
     // Todo: Use results here?
     /* const results = */ this._getJoiningTransformer();
     const modeMatchedTemplates = this._templates.filter(function (templateObj) {
@@ -137,13 +145,13 @@ class JSONPathTransformerContext {
 
     // s(select);
     // s(this._contextObj);
-    jsonpath({
+    /** @type {any} */ (jsonpath)({
       path: select,
       resultType: 'all',
       wrap: false,
       json: this._contextObj,
       preventEval: this._config.preventEval,
-      callback (o /* {value, parent, parentProperty, path} */) {
+  callback (/** @type {any} */ o /* {value, parent, parentProperty, path} */) {
         const {value} = o,
           {parent, parentProperty, path} = o;
         // Todo: For remote JSON stores, could optimize this to first get
@@ -155,16 +163,16 @@ class JSONPathTransformerContext {
         // Todo: Normalize templateObj.path's
         const pathMatchedTemplates = modeMatchedTemplates.filter(
           function (templateObj) {
-            const queryResult = jsonpath({
+            const queryResult = /** @type {any[]} */ ((/** @type {any} */ (jsonpath))({
               path: JSONPathTransformer.makeJSONPathAbsolute(templateObj.path),
               json: that._origObj,
               resultType: 'path',
               preventEval: that._config.preventEval,
               wrap: true
-            });
+            }));
             // s(queryResult);
             // s('currPath:'+that._currPath);
-            return queryResult.includes(that._currPath);
+            return (/** @type {any[]} */ (queryResult)).includes(that._currPath);
           }
         );
 
@@ -199,10 +207,14 @@ class JSONPathTransformerContext {
           pathMatchedTemplates.sort(function (a, b) {
             const aPriority = typeof a.priority === 'number'
               ? a.priority
-              : that._config.specificityPriorityResolver(a.path);
+              : (that._config.specificityPriorityResolver
+                ? that._config.specificityPriorityResolver(a.path)
+                : 0);
             const bPriority = typeof b.priority === 'number'
               ? b.priority
-              : that._config.specificityPriorityResolver(b.path);
+              : (that._config.specificityPriorityResolver
+                ? that._config.specificityPriorityResolver(b.path)
+                : 0);
 
             if (aPriority === bPriority) {
               that._triggerEqualPriorityError();
@@ -243,13 +255,14 @@ class JSONPathTransformerContext {
    * @returns {JSONPathTransformerContext}
    */
   callTemplate (name, withParams) {
+    // Invokes a named template, optionally passing values via withParam.
     // eslint-disable-next-line unicorn/no-this-assignment -- Temporary
     const that = this;
     if (name && typeof name === 'object') {
       /** @type {{name?: string, withParam?: any[]}} */
       const nameObj = /** @type {any} */ (name);
       withParams = nameObj.withParam || withParams;
-      ({name} = nameObj);
+  name = nameObj.name ?? name;
     }
     withParams = withParams || [];
     const paramValues = withParams.map(function (withParam) {
@@ -266,7 +279,7 @@ class JSONPathTransformerContext {
     }
 
     const result = templateObj.template.apply(this, paramValues);
-    results.append(result);
+    /** @type {any} */ (results).append(result);
     return this;
   }
 
@@ -282,11 +295,11 @@ class JSONPathTransformerContext {
   forEach (select, cb, sort) {
     // eslint-disable-next-line unicorn/no-this-assignment -- Temporary
     const that = this;
-    jsonpath({
+    /** @type {any} */ (jsonpath)({
       path: select, json: this._contextObj,
       preventEval: this._config.preventEval, wrap: false,
       returnType: 'value',
-      callback (value) {
+      callback (/** @type {any} */ value) {
         cb.call(that, value);
       }
     });
@@ -298,12 +311,14 @@ class JSONPathTransformerContext {
    * @returns {JSONPathTransformerContext}
    */
   valueOf (select) {
-    const results = this._getJoiningTransformer();
+    // Appends the value of the given JSONPath (or the current context when
+    // `{select: '.'}` is passed) to the output via the joining transformer.
+  const results = this._getJoiningTransformer();
     const result = select && typeof select === 'object' &&
     /** @type {{select?: string}} */ (select).select === '.'
       ? this._contextObj
       : this.get(/** @type {string} */ (select), false);
-    results.append(result);
+    /** @type {any} */ (results).append(result);
     return this;
   }
 

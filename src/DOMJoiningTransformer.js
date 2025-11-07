@@ -2,7 +2,12 @@ import * as JHTML from 'jhtml';
 import AbstractJoiningTransformer from './AbstractJoiningTransformer.js';
 
 /**
- * This transformer expects the templates to do their own DOM building.
+ * Joining transformer that accumulates into a DOM tree.
+ *
+ * This transformer appends strings and nodes to a DocumentFragment/Element.
+ * It expects templates to build DOM nodes explicitly (e.g., via element(),
+ * attribute(), and text()), though string/number/boolean will append text
+ * nodes for convenience.
  */
 class DOMJoiningTransformer extends AbstractJoiningTransformer {
   /**
@@ -59,7 +64,7 @@ class DOMJoiningTransformer extends AbstractJoiningTransformer {
   object (obj, cb, usePropertySets, propSets) {
     this._requireSameChildren('dom', 'object');
     if (this._cfg && /** @type {any} */ (this._cfg).JHTMLForJSON) {
-      this.append(JHTML.toJHTMLDOM(obj));
+      this.append(JHTML.toJHTMLDOM(/** @type {any} */ (obj)));
     } else {
       // Todo: set current position and deal with children
       this.append('');
@@ -75,7 +80,7 @@ class DOMJoiningTransformer extends AbstractJoiningTransformer {
   array (arr, cb) {
     this._requireSameChildren('dom', 'array');
     if (this._cfg && /** @type {any} */ (this._cfg).JHTMLForJSON) {
-      this.append(JHTML.toJHTMLDOM(arr));
+      this.append(JHTML.toJHTMLDOM(/** @type {any} */ (arr)));
     } else {
       // Todo: set current position and deal with children
       this.append('');
@@ -206,7 +211,7 @@ class DOMJoiningTransformer extends AbstractJoiningTransformer {
         this._dom.nodeType !== 1) {
       throw new Error('You may only set an attribute on an element');
     }
-    this._dom.setAttribute(name, val);
+    (/** @type {Element} */ (this._dom)).setAttribute(name, val);
     return this;
   }
 

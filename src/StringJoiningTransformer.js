@@ -5,8 +5,9 @@ import AbstractJoiningTransformer from './AbstractJoiningTransformer.js';
 const camelCase = /[a-z][A-Z]/gv;
 
 /**
- * @param {any} item
- * @returns {boolean}
+ * Type guard to detect DOM Elements.
+ * @param {*} item
+ * @returns {item is Element}
  */
 function _isElement (item) {
   return item && typeof item === 'object' && item.nodeType === 1;
@@ -23,11 +24,40 @@ function _makeDatasetAttribute (n0) {
 /**
  *
  */
+/**
+ * Joining transformer that builds a string result.
+ *
+ * This transformer provides a fluent API to compose strings while supporting
+ * object/array-building semantics similar to template languages. Most methods
+ * funnel through append(), which is state-aware:
+ *
+ * - Inside object(): values go to object properties via propOnly()/propValue().
+ * - Inside array(): values are pushed to the current array.
+ * - Otherwise: values are concatenated into the internal string buffer.
+ *
+ * Escaping rules:
+ * - text(): escapes HTML special chars (& and <) and will close an open tag.
+ * - string(): no HTML escaping or JSON stringification; context-aware.
+ * - plainText(): raw append to the top-level string buffer (bypasses state).
+ * - rawAppend(): like plainText() but documented as lower-level.
+ *
+ * HTML/XML helpers:
+ * - element() and attribute() allow building tags with optional auto-escaping
+ *   for attribute values unless cfg.preEscapedAttributes is set.
+ *
+ * Configuration hints (see joiningConfig in JTLT):
+ * - cfg.xmlElements: switch element() serializer to XML mode (self-closing,
+ *   name mapping rules differ, etc.).
+ * - cfg.preEscapedAttributes: skip escaping attribute values.
+ * - cfg.JHTMLForJSON / cfg.mode: affect how object()/array() serialize.
+ */
 class StringJoiningTransformer extends AbstractJoiningTransformer {
   /**
    * @type {{
    *   JHTMLForJSON?: boolean,
-   *   mode?: "JavaScript"|"JSON"
+  *   mode?: "JavaScript"|"JSON",
+  *   xmlElements?: boolean,
+  *   preEscapedAttributes?: boolean
    * }}
    */
   _cfg = {};
@@ -138,6 +168,10 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
    * @returns {StringJoiningTransformer}
    */
   object (obj, cb, usePropertySets, propSets) {
+    // Builds up an internal object (or converts a supplied Element via JHTML)
+    // and, depending on context, either appends the object to the current
+    // array/object or serializes it into the output string (JSON, JavaScript,
+    // or JHTML), based on cfg.
     // eslint-disable-next-line unicorn/no-this-assignment -- Temporary
     const that = this;
     this._requireSameChildren('string', 'object');
@@ -189,12 +223,14 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
    * @returns {StringJoiningTransformer}
    */
   array (arr, cb) {
+    // Similar to object(), but for arrays. Context determines whether to
+    // append the array structure or to serialize into the string.
     this._requireSameChildren('string', 'array');
     /** @type {any} */
     const oldArr = this._arr;
     // Todo: copy array?
     this._arr = _isElement(arr)
-      ? JHTML.toJSONObject(this._arr)
+      ? /** @type {any[]} */ (JHTML.toJSONObject(arr))
       : arr || [];
 
     /** @type {any} */
@@ -231,8 +267,11 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
    * @returns {StringJoiningTransformer}
    */
   string (str, cb) {
+    // Context-aware string emission. If inside object/array/propOnly states,
+    // the produced string participates in those structures via append().
+    // If a callback is provided, it composes a nested string value first.
     if (_isElement(str)) {
-      str = JHTML.toJSONObject(str);
+      str = /** @type {any} */ (JHTML.toJSONObject(str));
     }
 
     let tmpStr = '';
@@ -254,7 +293,7 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
       this.append(stringifier.walkJSONObject(this._obj));
     */
     } else {
-      // argument had been wrapped in JSON.stringify()
+      // Append to the output (or current container via append()).
       this.append(tmpStr + str);
     }
     return this;
@@ -265,8 +304,9 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
    * @returns {StringJoiningTransformer}
    */
   number (num) {
+    // Appends the number as a string; no localization/formatting is applied.
     if (_isElement(num)) {
-      num = JHTML.toJSONObject(num);
+      num = /** @type {any} */ (JHTML.toJSONObject(num));
     }
     this.append(num.toString());
     return this;
@@ -277,8 +317,9 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
    * @returns {StringJoiningTransformer}
    */
   boolean (bool) {
+    // Appends 'true' or 'false'.
     if (_isElement(bool)) {
-      bool = JHTML.toJSONObject(bool);
+      bool = /** @type {any} */ (JHTML.toJSONObject(bool));
     }
     this.append(bool ? 'true' : 'false');
     return this;
@@ -288,6 +329,7 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
    * @returns {StringJoiningTransformer}
    */
   null () {
+    // Appends the literal 'null'.
     this.append('null');
     return this;
   }
@@ -296,6 +338,7 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
    * @returns {StringJoiningTransformer}
    */
   undefined () {
+    // Appends the literal 'undefined' (only in JavaScript mode).
     if (this._cfg && this._cfg.mode !== 'JavaScript') {
       throw new Error(
         'undefined is not allowed unless added in JavaScript mode'
@@ -310,13 +353,14 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
    * @returns {StringJoiningTransformer}
    */
   nonfiniteNumber (num) {
+    // Appends NaN/Infinity/-Infinity as-is (only in JavaScript mode).
     if (this._cfg && this._cfg.mode !== 'JavaScript') {
       throw new Error(
         'Non-finite numbers are not allowed unless added in JavaScript mode'
       );
     }
     if (_isElement(num)) {
-      num = JHTML.toJSONObject(num);
+      num = /** @type {any} */ (JHTML.toJSONObject(num));
     }
     this.append(num.toString());
     return this;
@@ -327,13 +371,14 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
    * @returns {StringJoiningTransformer}
    */
   function (func) {
+    // Appends function source (only in JavaScript mode).
     if (this._cfg && this._cfg.mode !== 'JavaScript') {
       throw new Error(
         'function is not allowed unless added in JavaScript mode'
       );
     }
     if (_isElement(func)) {
-      func = JHTML.toJSONObject(func);
+      func = /** @type {any} */ (JHTML.toJSONObject(func));
     }
     this.append(func.toString());
     return this;
@@ -347,10 +392,14 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
    * @returns {StringJoiningTransformer}
    */
   element (elName, atts, childNodes, cb) {
+    // Emits an HTML/XML element using Jamilih under the hood, or allows a
+    // callback to build attributes/children incrementally. Attribute values
+    // are escaped unless cfg.preEscapedAttributes is true. When a callback is
+    // provided, this manages open-tag state so text() can close it safely.
     // eslint-disable-next-line unicorn/no-this-assignment -- Temporary
     const that = this;
     if (Array.isArray(atts)) {
-      cb = /** @type {Function} */ (childNodes);
+      cb = /** @type {Function} */ (/** @type {unknown} */ (childNodes));
       childNodes = atts;
       atts = {};
     } else if (typeof atts === 'function') {
@@ -370,7 +419,11 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
       // Note that Jamilih currently has an issue with 'selected', 'checked',
       //  'value', 'defaultValue', 'for', 'on*', 'style' (workaround: pass
       //   an empty callback as the last argument to element())
-      this.append(jml[method](elName, atts, childNodes));
+      this.append(
+        // Casts to satisfy TS when using JS + JSDoc
+        /** @type {any} */ (jml[method])(elName,
+          /** @type {any} */ (atts), /** @type {any} */ (childNodes))
+      );
       return this;
     }
 
@@ -391,8 +444,9 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
     const oldTagState = this._openTagState;
     this._openTagState = true;
     if (atts) {
-      Object.keys(atts).forEach((att) => {
-        that.attribute(att, atts[att], false);
+      const attsObj = /** @type {Record<string, any>} */ (atts);
+      Object.keys(attsObj).forEach((att) => {
+        that.attribute(att, attsObj[att], false);
       });
     }
     if (childNodes && childNodes.length) {
@@ -420,6 +474,9 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
    * @returns {StringJoiningTransformer}
    */
   attribute (name, val, avoidAttEscape) {
+    // Adds an attribute to the most recently opened start tag. Supports
+    // special objects for dataset and ordered attributes ($a). Escapes '&'
+    // and '"' unless cfg.preEscapedAttributes or avoidAttEscape are set.
     // eslint-disable-next-line unicorn/no-this-assignment -- Temporary
     const that = this;
     if (!this._openTagState) {
@@ -474,6 +531,8 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
    * @returns {StringJoiningTransformer}
    */
   text (txt) {
+    // Adds escaped text content. If currently within an unclosed start tag,
+    // it will first close the tag ('>'). Escapes '&' and '<'.
     if (this._openTagState) {
       this.append('>');
       this._openTagState = false;
@@ -490,6 +549,7 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
   * @returns {StringJoiningTransformer}
   */
   rawAppend (str) {
+    // Lowest-level append: bypasses append() semantics and state checks.
     this._str += str;
     return this;
   }
@@ -499,6 +559,9 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
    * @returns {StringJoiningTransformer}
    */
   plainText (str) {
+    // Bypasses append() semantics: always writes directly to the top-level
+    // string buffer with no escaping. Prefer string() when you want the value
+    // to participate in object/array contexts.
     this._str += str;
     return this;
   }

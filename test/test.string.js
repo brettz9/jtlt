@@ -2,7 +2,7 @@ import {expect} from 'chai';
 import JTLT from '../src/index.js';
 
 /**
- * @param {() => void} done - Test done callback
+ * @param {(err?: Error) => void} done - Test done callback
  * @param {string} expected - Expected result
  * @param {any[]} templates - Array of template objects
  * @param {object} [replace] - Properties to replace in config

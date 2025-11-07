@@ -11,7 +11,7 @@
     "declarationMap": true,
     "emitDeclarationOnly": true,
     "strict": true,
-    "target": "es2020",
+    "target": "es2024",
     "outDir": "dist"
   },
   "include": ["src/**/*.js"],

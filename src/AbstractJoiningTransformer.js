@@ -4,6 +4,18 @@
 
 /**
  * Base class for joining transformers.
+ *
+ * A "joining transformer" is the sink that receives template outputs and
+ * accumulates them into a particular representation (string, DOM, JSON).
+ * Subclasses implement a consistent set of methods (string, number, object,
+ * array, element, text, etc.) but may interpret them differently according
+ * to their target representation.
+ *
+ * Common patterns supported by all joiners:
+ * - append(): central method that either concatenates, pushes, or assigns
+ *   based on the current state.
+ * - get(): returns the accumulated result.
+ * - config(): temporarily tweak a config flag for the duration of a callback.
  */
 class AbstractJoiningTransformer {
   /**

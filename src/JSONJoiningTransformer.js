@@ -2,6 +2,11 @@ import AbstractJoiningTransformer from './AbstractJoiningTransformer.js';
 
 /**
  * JSON-based joining transformer for building JSON/JavaScript objects.
+ *
+ * This joiner accumulates into an in-memory JSON value (object or array).
+ * append() will push to arrays or shallow-merge into objects; string/number/
+ * boolean/null add primitives accordingly. It does not perform HTML escaping
+ * or string serialization; it builds real JS values.
  */
 class JSONJoiningTransformer extends AbstractJoiningTransformer {
   /**
@@ -24,7 +29,7 @@ class JSONJoiningTransformer extends AbstractJoiningTransformer {
    * @returns {void}
    */
   rawAppend (item) {
-    this._obj.push(item);
+    /** @type {any[]} */ (this._obj).push(item);
   }
 
   /**
@@ -47,7 +52,7 @@ class JSONJoiningTransformer extends AbstractJoiningTransformer {
 
   /**
    * Gets the current object or array.
-   * @returns {Array|object}
+   * @returns {any[]|object}
    */
   get () {
     return this._obj;
@@ -65,7 +70,7 @@ class JSONJoiningTransformer extends AbstractJoiningTransformer {
         'propValue() can only be called after an object state has been set up.'
       );
     }
-    this._obj[prop] = val;
+    (/** @type {Record<string, any>} */ (this._obj))[prop] = val;
   }
 
   /**
@@ -127,7 +132,7 @@ class JSONJoiningTransformer extends AbstractJoiningTransformer {
   /**
    * Appends a string value.
    * @param {string} str - String value
-   * @param {Function} cb - Callback function (unused)
+  * @param {Function} [cb] - Callback function (unused)
    * @returns {JSONJoiningTransformer}
    */
   string (str, cb) {

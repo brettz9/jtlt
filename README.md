@@ -33,7 +33,80 @@ See the [test file](test/test.html).
 
 ## API
 
-See the [docs](docs/API.md).
+See the [docs](docs/API.md). A high‑level overview is below.
+
+## API overview
+
+JTLT has two layers:
+
+- Engine (template application):
+    - JSONPathTransformer: Applies templates to JSON by matching JSONPath selectors (and optional modes), resolving priority, and invoking the winning template. Falls back to built‑in default rules when no user template matches.
+    - JSONPathTransformerContext: The execution context passed to templates. It mirrors the joiner API (e.g., string(), object(), array()) so templates can emit results. It also provides helpers like applyTemplates(), callTemplate(), valueOf(), variable(), and forEach().
+
+- Joiners (output builders):
+    - StringJoiningTransformer: Builds a string. Context‑aware append() routes into objects/arrays when inside object()/array() scopes, otherwise concatenates to a buffer. Includes element(), attribute(), and text() helpers for HTML/XML emission.
+    - DOMJoiningTransformer: Builds a DocumentFragment/Element tree. element()/attribute()/text() add real nodes; primitives append as text nodes.
+    - JSONJoiningTransformer: Builds real JS values (objects/arrays/primitives) without serialization.
+
+### Common joiner methods
+
+- append(value): Central sink. Based on context, concatenates to string, pushes to array, or assigns to an object property.
+- get(): Return the accumulated result.
+- object(obj?, cb?, usePropertySets?, propSets?): Enter object context; optionally seed from an object or build via cb.
+- array(arr?, cb?): Enter array context; optionally seed from an array or build via cb.
+- string(str, cb?): Emit a string value (no HTML escaping). In String joiner, optional cb lets you compose nested fragments before emitting.
+- number(num), boolean(bool), null(), undefined() (JS mode only), nonfiniteNumber(NaN|Infinity), function(fn) (JS mode only): Emit primitives/functions.
+- element(name, attrs?, children?, cb?): Build elements (String and DOM joiners). In String joiner, uses Jamilih under the hood to serialize; in DOM joiner, creates Elements.
+- attribute(name, value, avoidEscape?): Add attributes to the most recently opened element (String joiner) or to the current Element (DOM joiner).
+- text(txt): Emit text content. In String joiner, escapes & and <, and closes an open start tag if needed.
+- plainText(str): Raw, no‑escape append that bypasses context routing in the String joiner (always writes to top‑level buffer). In DOM/JSON joiners, it maps to text()/string() respectively.
+
+### string() vs text() vs plainText() (String joiner)
+
+- text(): Escapes &, < and closes an open start tag. Use for safe text nodes in markup.
+- string(): No HTML escaping or JSON stringify; routes via append() so it participates in object()/array()/propOnly() states. Optional cb to build a composite string before emitting.
+- plainText(): Always writes directly to the top‑level string buffer with no escaping, ignoring object/array state. Useful for deliberate raw insertion.
+
+### Configuration quick reference
+
+Provide joiningConfig when constructing JTLT:
+
+- joiningConfig.mode: 'JavaScript' or 'JSON' controls allowance of undefined/functions/non‑finite numbers in the String joiner.
+- joiningConfig.JHTMLForJSON: If true, object()/array() serialize via JHTML instead of JSON.
+- joiningConfig.xmlElements: Switch element() to XML serialization mode in the String joiner.
+- joiningConfig.preEscapedAttributes: Skip escaping attribute values in the String joiner.
+
+## Quick start
+
+```js
+import JTLT from 'jtlt';
+
+const data = {title: 'Hello', items: ['a', 'b']};
+
+const templates = [
+  {path: '$', template () {
+    this.applyTemplates({mode: 'html'});
+  }},
+  {mode: 'html', path: '$.title', template (v) {
+    this.string('<h1>', () => this.text(v));
+    this.string('</h1>');
+  }},
+  {mode: 'html', path: '$.items[*]', template (v) {
+    this.element('li', {}, [], () => this.text(v));
+  }}
+];
+
+const out = new JTLT({data, templates, outputType: 'string'}).
+  transform('html');
+
+console.log(out);
+```
+
+Notes:
+
+- Modes let you organize multiple passes or output targets.
+- You can also call templates by name via this.callTemplate('name').
+- For DOM output, use outputType: 'dom'. For JSON output, use 'json'.
 
 ## Differences between an exact equivalence with XSLT
 
