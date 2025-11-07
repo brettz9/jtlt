@@ -1,11 +1,16 @@
 {
   "name": "jtlt",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "module",
   "author": "Brett Zamir",
   "contributors": [],
   "license": "MIT",
+  "types": "./dist/index.d.ts",
   "main": "src/index.js",
+  "exports": {
+    "types": "./dist/index.d.ts",
+    "import": "./src/index.js"
+  },
   "engines": {
     "node": ">=22.16.0"
   },
@@ -25,6 +30,7 @@
     "xpath2.js": "1.0.0-alpha-6"
   },
   "devDependencies": {
+    "@arethetypeswrong/cli": "^0.18.2",
     "@types/chai": "^5.2.3",
     "@types/jsdom": "^27.0.0",
     "@types/mocha": "^10.0.10",
@@ -37,6 +43,7 @@
   },
   "scripts": {
     "prepublishOnly": "pnpm i && pnpm build",
+    "attw": "attw --pack",
     "tsc": "tsc",
     "build": "tsc -p tsconfig-prod.json",
     "lint": "eslint .",
