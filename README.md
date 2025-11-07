@@ -8,7 +8,7 @@ As with XSLT, allows for declarative, linear declaration of
 (recursive) templates and can be transformed into different
 formats (e.g., HTML strings, JSON, DOM objects, etc.).
 
-***Early alpha state!!!***
+***Beta state!!!***
 
 ## Credits
 
@@ -42,6 +42,14 @@ JTLT has two layers:
 - Engine (template application):
     - JSONPathTransformer: Applies templates to JSON by matching JSONPath selectors (and optional modes), resolving priority, and invoking the winning template. Falls back to built‑in default rules when no user template matches.
     - JSONPathTransformerContext: The execution context passed to templates. It mirrors the joiner API (e.g., string(), object(), array()) so templates can emit results. It also provides helpers like applyTemplates(), callTemplate(), valueOf(), variable(), and forEach().
+    - XPathTransformer (experimental): Applies templates to
+      XML/HTML DOM by matching XPath selectors (and optional modes).
+      Supports two evaluation modes: version 1 (native
+      XPathEvaluator) and version 2 (via xpath2.js). Falls back to
+      built‑in default rules when no template matches.
+    - XPathTransformerContext (experimental): Execution context for
+      XPath. Offers get(), forEach(), valueOf(), variable(), key()
+      and the same joiner helpers as the JSONPath context.
 
 - Joiners (output builders):
     - StringJoiningTransformer: Builds a string. Context‑aware append() routes into objects/arrays when inside object()/array() scopes, otherwise concatenates to a buffer. Includes element(), attribute(), and text() helpers for HTML/XML emission.
@@ -75,6 +83,89 @@ Provide joiningConfig when constructing JTLT:
 - joiningConfig.JHTMLForJSON: If true, object()/array() serialize via JHTML instead of JSON.
 - joiningConfig.xmlElements: Switch element() to XML serialization mode in the String joiner.
 - joiningConfig.preEscapedAttributes: Skip escaping attribute values in the String joiner.
+
+### XPath (experimental)
+
+You can run templates against XML/HTML using XPath instead of JSONPath.
+
+- Construct with `new XPathTransformer({data, templates,
+  joiningTransformer, xpathVersion})`.
+- `data` should be a Document or Element (e.g., from DOMParser with
+  `text/xml`).
+- `xpathVersion`: `1` uses native XPath (browser like). `2` uses
+  `xpath2.js` for XPath 2.0‑style evaluation.
+- In version 2, some functions may be missing; prefer simple path
+  expressions. Use version 1 for wide XPath 1.0 function support.
+
+Example (string output):
+
+```js
+import {JSDOM} from 'jsdom';
+import {StringJoiningTransformer, XPathTransformer} from 'jtlt';
+
+const {window} = new JSDOM('<!doctype><html><body></body></html>');
+const parser = new window.DOMParser();
+const doc = parser.parseFromString(
+  '<root><item>a</item><item>b</item></root>', 'text/xml'
+);
+
+const joiner = new StringJoiningTransformer('', {document: doc});
+const templates = [
+  {name: 'root', path: '/', template () {
+    this.applyTemplates('//item');
+  }},
+  {name: 'item', path: '//item', template (node) {
+    this.element('li', {}, [], () => this.text(node.textContent));
+  }}
+];
+
+const out = new XPathTransformer({
+  data: doc,
+  templates,
+  joiningTransformer: joiner,
+  xpathVersion: 1 // or 2
+}).transform('');
+// -> <li>a</li><li>b</li>
+```
+
+Using the JTLT facade with XPath (no manual joiner needed):
+
+```js
+import {JSDOM} from 'jsdom';
+import JTLT from 'jtlt';
+
+const {window} = new JSDOM('<!doctype><html><body></body></html>');
+const parser = new window.DOMParser();
+const doc = parser.parseFromString(
+  '<root><item>a</item><item>b</item></root>', 'text/xml'
+);
+
+const templates = [
+  {
+    path: '/',
+    template () {
+      this.applyTemplates('//item');
+    }
+  },
+  {
+    path: '//item',
+    template (n) {
+      this.string('<li>', () => this.text(n.textContent));
+      this.string('</li>');
+    }
+  }
+];
+
+const out = new JTLT({
+  data: doc,
+  templates,
+  outputType: 'string',
+  engineType: 'xpath',
+  xpathVersion: 1, // or 2
+  success: (res) => res
+}).transform('');
+// -> <li>a</li><li>b</li>
+```
 
 ## Quick start
 
@@ -336,12 +427,10 @@ Advantages (strong parallels with XSLT):
 
 Differences / current limitations:
 
-- Expression language: uses JSONPath (not XPath/XSLT functions). JSONPath is simpler and less expressive than XPath 2.0+.
-- Identity/copy helpers: deep/shallow copy helpers are stubs (planned), not full `copy-of` yet.
+- Expression language: XPath 2.0 implementation is not fully feature complete.
 - Stylesheet composition/precedence: no `xsl:import`/`xsl:include` equivalents; only basic priority and modes.
 - Schema awareness: no type-aware processing (a major XSLT/XQuery feature).
 - Multi-output (`xsl:result-document`): not built-in; pick one output type per transform.
-- Early alpha: some placeholders remain; APIs may evolve.
 
 ## Differences between an exact equivalence with XSLT
 

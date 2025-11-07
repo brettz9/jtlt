@@ -9,6 +9,6 @@
     "noEmit": true,
     "strict": true
   },
-  "include": ["*.js", "*.d.ts", "src/**/*.js", "test/*.js", "test.d.ts"],
+  "include": ["*.js", "*.d.ts", "src/**/*.js", "test/*.js", "typings/xpath2-js.d.ts"],
   "exclude": ["node_modules", "./dist/**/*.js"]
 }

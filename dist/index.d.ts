@@ -5,6 +5,8 @@ export { default as JSONJoiningTransformer } from "./JSONJoiningTransformer.js";
 export { default as XSLTStyleJSONPathResolver } from "./XSLTStyleJSONPathResolver.js";
 export { default as JSONPathTransformerContext } from "./JSONPathTransformerContext.js";
 export { default as JSONPathTransformer } from "./JSONPathTransformer.js";
+export { default as XPathTransformerContext } from "./XPathTransformerContext.js";
+export { default as XPathTransformer } from "./XPathTransformer.js";
 export default JTLT;
 export type JTLTOptions = {
     /**
@@ -76,6 +78,16 @@ export type JTLTOptions = {
      * processing templates.
      */
     engine?: Function | undefined;
+    /**
+     * Choose built-in engine.
+     * Defaults to 'jsonpath'. When 'xpath', `xpathVersion` may be used.
+     */
+    engineType?: "jsonpath" | "xpath" | undefined;
+    /**
+     * XPath engine version: 1 (native) or 2
+     * (xpath2.js) when `engineType` is 'xpath'.
+     */
+    xpathVersion?: 1 | 2 | undefined;
     /**
      * Callback for getting the priority by specificity
      */

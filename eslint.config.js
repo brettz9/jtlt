@@ -21,6 +21,7 @@ export default [
   {
     files: ['**/*.md/*.js'],
     rules: {
+      'import/unambiguous': 'off',
       'import/no-unresolved': 'off',
       'no-console': 'off',
       'no-undef': 'off'

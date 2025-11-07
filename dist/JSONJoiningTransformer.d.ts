@@ -19,6 +19,11 @@ declare class JSONJoiningTransformer extends AbstractJoiningTransformer {
     _objPropState: boolean | undefined;
     /** @type {boolean | undefined} */
     _arrItemState: boolean | undefined;
+    /** @type {{attsObj: Record<string, any>, jmlChildren: any[]}[]} */
+    _elementStack: {
+        attsObj: Record<string, any>;
+        jmlChildren: any[];
+    }[];
     /**
      * Directly appends an item to the internal array without checks.
      * @param {*} item - Item to append
@@ -109,22 +114,30 @@ declare class JSONJoiningTransformer extends AbstractJoiningTransformer {
      */
     function(func: Function): JSONJoiningTransformer;
     /**
-     * Placeholder for element method (not implemented for JSON).
-     * @param {string} elName - Element name
-     * @param {object} atts - Attributes
-     * @param {Function} cb - Callback function
+    * Build a Jamilih-style element JSON array and append to current container.
+    * Result form: ['tag', {attr: 'val'}, child1, child2, ...]
+    * Helpers: dataset -> data-*; $a -> ordered attributes.
+    * Supported signatures mirror StringJoiningTransformer.element.
+     * @param {string|Element|object} elName - Element name or Element-like
+     * @param {object|any[]|Function} [atts] - Attributes object or children or cb
+     * @param {any[]|Function} [childNodes] - Child nodes array or callback
+     * @param {Function} [cb] - Callback for building children/attributes
      * @returns {JSONJoiningTransformer}
      */
-    element(elName: string, atts: object, cb: Function): JSONJoiningTransformer;
+    element(elName: string | Element | object, atts?: object | any[] | Function, childNodes?: any[] | Function, cb?: Function): JSONJoiningTransformer;
     /**
-     * Placeholder for attribute method (not implemented for JSON).
-     * @param {string} name - Attribute name
-     * @param {*} val - Attribute value
+     * Adds/updates an attribute for the most recently open element built via
+     * a callback-driven element(). When not in an element callback context,
+     * throws. Supports the same dataset/$a helpers as string joiner.
+     * @param {string} name - Attribute name (or helper: dataset, $a)
+     * @param {string|object|any[]} val - Attribute value or helper object
      * @returns {JSONJoiningTransformer}
      */
-    attribute(name: string, val: any): JSONJoiningTransformer;
+    attribute(name: string, val: string | object | any[]): JSONJoiningTransformer;
     /**
-     * Placeholder for text method (not implemented for JSON).
+     * Adds a text node (string) as a child within the current element() callback
+     * context. Outside of an element callback, simply appends the text to the
+     * current array/object like string().
      * @param {string} txt - Text content
      * @returns {JSONJoiningTransformer}
      */

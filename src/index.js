@@ -9,6 +9,7 @@ import {JSDOM} from 'jsdom';
 import DOMJoiningTransformer from './DOMJoiningTransformer.js';
 import JSONJoiningTransformer from './JSONJoiningTransformer.js';
 import JSONPathTransformer from './JSONPathTransformer.js';
+import XPathTransformer from './XPathTransformer.js';
 import StringJoiningTransformer from './StringJoiningTransformer.js';
 import XSLTStyleJSONPathResolver from './XSLTStyleJSONPathResolver.js';
 
@@ -41,6 +42,10 @@ import XSLTStyleJSONPathResolver from './XSLTStyleJSONPathResolver.js';
  * same config as passed to this instance. Defaults to a transforming
  * function based on JSONPath and with its own set of priorities for
  * processing templates.
+ * @property {'jsonpath'|'xpath'} [engineType] Choose built-in engine.
+ * Defaults to 'jsonpath'. When 'xpath', `xpathVersion` may be used.
+ * @property {1|2} [xpathVersion] XPath engine version: 1 (native) or 2
+ * (xpath2.js) when `engineType` is 'xpath'.
  * @property {Function} [specificityPriorityResolver]
  * Callback for getting the priority by specificity
  * @property {{get: Function, append: Function, string?: Function,
@@ -120,10 +125,26 @@ class JTLT {
 
     /** @type {any} */
     let initial;
+
+    // Derive a document to use for joiners when running XPath engine
+    /** @type {Document|undefined} */
+    let docForJoiner;
+    if ((/** @type {any} */ (this.config)).engineType === 'xpath') {
+      const {data} = /** @type {any} */ (this.config);
+      if (data && typeof data === 'object') {
+        // Document
+        if (data.nodeType === 9) {
+          docForJoiner = data;
+        // Element or Node with ownerDocument
+        } else if (data.ownerDocument) {
+          docForJoiner = data.ownerDocument;
+        }
+      }
+    }
     if (JT === StringJoiningTransformer) {
       initial = '';
     } else if (JT === DOMJoiningTransformer) {
-      initial = document.createDocumentFragment();
+      initial = (docForJoiner || document).createDocumentFragment();
     } else {
       initial = [];
     }
@@ -131,7 +152,7 @@ class JTLT {
     // Build config for joining transformer
     const joiningConfig = this.config.joiningConfig || {
       string: {}, json: {}, dom: {}, jamilih: {},
-      document
+      document: docForJoiner || document
     };
 
     // Pass unwrapSingleResult to JSON joiner if configured
@@ -195,10 +216,12 @@ class JTLT {
        * @returns {any}
        */
       function (configParam) {
+        if ((/** @type {any} */ (configParam)).engineType === 'xpath') {
+          const xt = new XPathTransformer(/** @type {any} */ (configParam));
+          return xt.transform(/** @type {any} */ (configParam).mode);
+        }
         const jpt = new JSONPathTransformer(/** @type {any} */ (configParam));
-        const ret = jpt.transform(/** @type {any} */ (configParam).mode);
-
-        return ret;
+        return jpt.transform(/** @type {any} */ (configParam).mode);
       };
     // Todo: Let's also, unlike XSLT and the following, give options for
     //   higher priority to absolute fixed paths over recursive descent
@@ -266,5 +289,11 @@ export {
 export {
   default as JSONPathTransformer
 } from './JSONPathTransformer.js';
+export {
+  default as XPathTransformerContext
+} from './XPathTransformerContext.js';
+export {
+  default as XPathTransformer
+} from './XPathTransformer.js';
 
 export default JTLT;

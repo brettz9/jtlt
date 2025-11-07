@@ -1,5 +1,15 @@
 import AbstractJoiningTransformer from './AbstractJoiningTransformer.js';
 
+// Regex and helper for converting dataset camelCase to dash-lower
+const camelCase = /[a-z][A-Z]/gv;
+/**
+ * @param {string} n0
+ * @returns {string}
+ */
+function _makeDatasetAttribute (n0) {
+  return n0.charAt(0) + '-' + n0.charAt(1).toLowerCase();
+}
+
 /**
  * JSON-based joining transformer for building JSON/JavaScript objects.
  *
@@ -21,6 +31,8 @@ class JSONJoiningTransformer extends AbstractJoiningTransformer {
     this._objPropState = undefined;
     /** @type {boolean | undefined} */
     this._arrItemState = undefined;
+    /** @type {{attsObj: Record<string, any>, jmlChildren: any[]}[]} */
+    this._elementStack = [];
   }
 
   /**
@@ -272,32 +284,160 @@ class JSONJoiningTransformer extends AbstractJoiningTransformer {
   }
 
   /**
-   * Placeholder for element method (not implemented for JSON).
-   * @param {string} elName - Element name
-   * @param {object} atts - Attributes
-   * @param {Function} cb - Callback function
+  * Build a Jamilih-style element JSON array and append to current container.
+  * Result form: ['tag', {attr: 'val'}, child1, child2, ...]
+  * Helpers: dataset -> data-*; $a -> ordered attributes.
+  * Supported signatures mirror StringJoiningTransformer.element.
+   * @param {string|Element|object} elName - Element name or Element-like
+   * @param {object|any[]|Function} [atts] - Attributes object or children or cb
+   * @param {any[]|Function} [childNodes] - Child nodes array or callback
+   * @param {Function} [cb] - Callback for building children/attributes
    * @returns {JSONJoiningTransformer}
    */
-  element (elName, atts, cb) {
+  element (elName, atts, childNodes, cb) {
+    this._requireSameChildren('json', 'element');
+    // Normalize arguments similarly to StringJoiningTransformer.element
+    if (Array.isArray(atts)) {
+      cb = /** @type {Function} */ (childNodes);
+      childNodes = atts;
+      atts = {};
+    } else if (typeof atts === 'function') {
+      cb = /** @type {Function} */ (atts);
+      childNodes = [];
+      atts = {};
+    }
+    if (typeof childNodes === 'function') {
+      cb = /** @type {Function} */ (childNodes);
+      childNodes = [];
+    }
+
+    // Element-like object (DOM Element) -> extract attributes
+    if (typeof elName === 'object' && elName && 'attributes' in elName) {
+      /** @type {Record<string, any>} */
+      const objAtts = {};
+      // @ts-ignore - treat elName as Element-like
+      [...elName.attributes].forEach((att) => {
+        objAtts[att.name] = att.value;
+      });
+      atts = Object.assign(objAtts, atts);
+      // @ts-ignore
+      elName = /** @type {any} */ (elName).nodeName;
+    }
+
+    /** @type {Record<string, any>} */
+    let attsObj = /** @type {any} */ (atts) || {};
+    /** @type {any[]} */
+    const jmlChildren = [];
+
+    // Preprocess special attribute helpers present directly on attsObj
+    if (attsObj.dataset && typeof attsObj.dataset === 'object' &&
+      !Array.isArray(attsObj.dataset)
+    ) {
+      const ds = attsObj.dataset;
+      for (const k in ds) {
+        if (Object.hasOwn(ds, k)) {
+          const dashed = k.replaceAll(camelCase, _makeDatasetAttribute);
+          attsObj['data-' + dashed] = ds[k];
+        }
+      }
+      delete attsObj.dataset;
+    }
+    if (Array.isArray(attsObj.$a)) {
+      attsObj.$a.forEach((pair) => {
+        if (Array.isArray(pair) && pair.length > 1) {
+          attsObj[pair[0]] = pair[1];
+        }
+      });
+      delete attsObj.$a;
+    }
+
+    // If children provided as array, copy (may be primitives or nested JML)
+    if (Array.isArray(childNodes) && childNodes.length) {
+      jmlChildren.push(...childNodes);
+    }
+
+    // Callback-driven building (attribute/text/nested element mutate stack)
+    if (cb) {
+      // Push current state onto a stack
+      this._elementStack.push({attsObj, jmlChildren});
+      cb.call(this);
+      const state = /** @type {any} */ (this._elementStack.pop());
+      ({attsObj} = state);
+      // Children may have been mutated by nested element()/text();
+      // already in jmlChildren
+    }
+
+    // Build Jamilih array
+    /** @type {any[]} */
+    const jmlEl = [elName];
+    if (Object.keys(attsObj).length) {
+      jmlEl.push(attsObj);
+    }
+    jmlEl.push(...jmlChildren);
+
+    // If inside a parent element, append as its child; otherwise append to root
+    if (this._elementStack.length) {
+      const top = /** @type {any} */ (this._elementStack.at(-1));
+      top.jmlChildren.push(jmlEl);
+    } else {
+      this.append(jmlEl);
+    }
     return this;
   }
 
   /**
-   * Placeholder for attribute method (not implemented for JSON).
-   * @param {string} name - Attribute name
-   * @param {*} val - Attribute value
+   * Adds/updates an attribute for the most recently open element built via
+   * a callback-driven element(). When not in an element callback context,
+   * throws. Supports the same dataset/$a helpers as string joiner.
+   * @param {string} name - Attribute name (or helper: dataset, $a)
+   * @param {string|object|any[]} val - Attribute value or helper object
    * @returns {JSONJoiningTransformer}
    */
   attribute (name, val) {
+    if (!this._elementStack.length) {
+      // No-op outside an element() callback (JSON joiner semantics)
+      return this;
+    }
+    const top = /** @type {any} */ (this._elementStack.at(-1));
+    const {attsObj} = top;
+    if (name === 'dataset' && val && typeof val === 'object' &&
+      !Array.isArray(val)
+    ) {
+      for (const k in val) {
+        if (Object.hasOwn(val, k)) {
+          const dashed = k.replaceAll(camelCase, _makeDatasetAttribute);
+          attsObj['data-' + dashed] = (/** @type {any} */ (val))[k];
+        }
+      }
+      return this;
+    }
+    if (name === '$a' && Array.isArray(val)) {
+      val.forEach((pair) => {
+        if (Array.isArray(pair) && pair.length > 1) {
+          attsObj[pair[0]] = pair[1];
+        }
+      });
+      return this;
+    }
+    attsObj[name] = val;
     return this;
   }
 
   /**
-   * Placeholder for text method (not implemented for JSON).
+   * Adds a text node (string) as a child within the current element() callback
+   * context. Outside of an element callback, simply appends the text to the
+   * current array/object like string().
    * @param {string} txt - Text content
    * @returns {JSONJoiningTransformer}
    */
   text (txt) {
+    if (this._elementStack.length) {
+      const top = /** @type {any} */ (this._elementStack.at(-1));
+      const {jmlChildren} = top;
+      jmlChildren.push(txt);
+      return this;
+    }
+    // No-op outside element context in JSON joiner
     return this;
   }
 

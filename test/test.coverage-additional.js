@@ -533,13 +533,13 @@ describe('Coverage - additional edge cases', function () {
       assert.equal(out, 'true');
     });
 
-    it('copyOf/copy stubs are chainable (coverage)', function () {
+    it('copyOf/copy are chainable and append output', function () {
       const data = {a: 1};
       let out;
       const templates = [{path: '$', template () {
-        // Should not throw and should be chainable
-        this.copyOf('$.a').copy({});
-        this.string('ok');
+        // Should not throw and should be chainable; copyOf appends deep copy
+        // and copy appends shallow copy; then we append marker string.
+        this.copyOf('$.a').copy().string('ok');
       }}];
       new JTLT({
         data, templates, outputType: 'string',
@@ -547,7 +547,8 @@ describe('Coverage - additional edge cases', function () {
           out = result; return result;
         }
       });
-      assert.equal(out, 'ok');
+      // Expect the numeric deep copy, then shallow copy object, then marker
+      assert.match(out, /^1\[object Object\]ok$/v);
     });
 
     it('propertySet merging with usePropertySets', function () {

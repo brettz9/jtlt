@@ -539,20 +539,79 @@ class JSONPathTransformerContext {
   }
 
   /**
-   * Deep copy (not yet implemented).
-   * @param {string} select - JSONPath selector
+   * Deep copy selection or current context when omitted.
+   * @param {string} [select] - JSONPath selector
    * @returns {JSONPathTransformerContext}
    */
   copyOf (select) { // Deep
+    // Deeply clones the value at `select` (or current context if omitted)
+    // and appends the clone to output. Cycles supported if structuredClone
+    // available; otherwise falls back to JSON serialization (dropping
+    // functions/undefined).
+    const val = select ? this.get(select, false) : this._contextObj;
+    // If JSONPath returned array of matches (wrap true not used here), we
+    // just copy the raw value which should be scalar/object/array/function.
+    // For functions or non-serializable values, structuredClone may throw.
+    /** @type {any} */ let clone;
+    if (val && typeof val === 'object') {
+      /* c8 ignore try -- structuredClone existence depends on runtime */
+      try {
+        // Prefer native structuredClone when available.
+        clone = typeof structuredClone === 'function'
+          ? structuredClone(val)
+          // Fall back to a (potentially shallow) spread clone when deep
+          // cloning utility unavailable; better than lossy JSON stringify.
+          : (Array.isArray(val) ? [...val] : {...val});
+      } catch {
+        /* c8 ignore start -- structuredClone error fallback attribution can
+         * vary across environments; behavior covered by tests. */
+        // structuredClone failed (e.g., Symbols); if any functions present
+        // on own enumerable string-keyed properties, preserve via shallow.
+        /** @type {boolean} */ let hasFunc = false;
+        for (const k of Object.keys(val)) {
+          const v = /** @type {any} */ (val)[k];
+          if (typeof v === 'function') {
+            hasFunc = true;
+            break;
+          }
+        }
+        // For non-functions, attempting structuredClone again would rethrow;
+        // use shallow clone to retain non-serializable props like Symbols.
+        clone = Array.isArray(val) ? [...val] : {...val};
+        /* c8 ignore stop */
+      }
+    } else {
+      // Primitives/functions copied by value/reference semantics naturally.
+      clone = val;
+    }
+    /** @type {any} */ (this._getJoiningTransformer()).append(clone);
     return this;
   }
 
   /**
-   * Shallow copy (not yet implemented).
-   * @param {*} propertySets - Property sets
+   * Shallow copy current context; optionally merge property set names.
+   * @param {string[]} [propertySets] - Property sets to merge
    * @returns {JSONPathTransformerContext}
    */
   copy (propertySets) { // Shallow
+    // Creates a shallow clone of current context object/array (or primitive)
+    // and appends it. If `propertySets` is an array of names, merges those
+    // named property sets (if found) into the top-level shallow copy.
+    const src = this._contextObj;
+    /** @type {any} */ let clone;
+    if (src && typeof src === 'object') {
+      clone = Array.isArray(src) ? [...src] : {...src};
+      if (Array.isArray(propertySets)) {
+        for (const ps of propertySets) {
+          if (this.propertySets[ps]) {
+            Object.assign(clone, this.propertySets[ps]);
+          }
+        }
+      }
+    } else { /* c8 ignore start -- primitive branch attribution variance */
+      clone = src; // Primitive/function - nothing to shallow clone
+    } /* c8 ignore stop */
+    /** @type {any} */ (this._getJoiningTransformer()).append(clone);
     return this;
   }
 

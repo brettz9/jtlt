@@ -141,17 +141,17 @@ declare class JSONPathTransformerContext {
      */
     valueOf(select?: string | object): JSONPathTransformerContext;
     /**
-     * Deep copy (not yet implemented).
-     * @param {string} select - JSONPath selector
+     * Deep copy selection or current context when omitted.
+     * @param {string} [select] - JSONPath selector
      * @returns {JSONPathTransformerContext}
      */
-    copyOf(select: string): JSONPathTransformerContext;
+    copyOf(select?: string): JSONPathTransformerContext;
     /**
-     * Shallow copy (not yet implemented).
-     * @param {*} propertySets - Property sets
+     * Shallow copy current context; optionally merge property set names.
+     * @param {string[]} [propertySets] - Property sets to merge
      * @returns {JSONPathTransformerContext}
      */
-    copy(propertySets: any): JSONPathTransformerContext;
+    copy(propertySets?: string[]): JSONPathTransformerContext;
     /**
      * @param {string} name - Variable name
      * @param {string} select - JSONPath selector
