@@ -32,10 +32,12 @@ declare class JSONJoiningTransformer extends AbstractJoiningTransformer {
      */
     append(item: any): JSONJoiningTransformer;
     /**
-     * Gets the current object or array.
-     * @returns {any[]|object}
+     * Gets the current object or array. If unwrapSingleResult config option is
+     * enabled and the root array contains exactly one element, returns that
+     * element directly (unwrapped).
+     * @returns {any[]|object|any}
      */
-    get(): any[] | object;
+    get(): any[] | object | any;
     /**
      * Sets a property value on the current object.
      * @param {string} prop - Property name
@@ -44,21 +46,27 @@ declare class JSONJoiningTransformer extends AbstractJoiningTransformer {
      */
     propValue(prop: string, val: any): void;
     /**
-     * @param {Function} [cb] - Callback to be executed on this transformer but
-     *   with a context nested within the newly created object
-     * @param {any[]} [usePropertySets] - Array of string property set names to
-     *   copy onto the new object
+     * @param {object|Function} [objOrCb] - Seed object to start with, or
+     *   callback if no seed provided
+     * @param {Function|any[]} [cbOrUsePropertySets] - Callback to be executed
+     *   on this transformer but with a context nested within the newly created
+     *   object, or array of property set names if first arg was an object
+     * @param {any[]|object} [usePropertySetsOrPropSets] - Array of string
+     *   property set names to copy onto the new object, or propSets if second
+     *   arg was a callback
      * @param {object} [propSets] - An object of key-value pairs to copy onto
      *   the new object
      * @returns {JSONJoiningTransformer}
      */
-    object(cb?: Function, usePropertySets?: any[], propSets?: object): JSONJoiningTransformer;
+    object(objOrCb?: object | Function, cbOrUsePropertySets?: Function | any[], usePropertySetsOrPropSets?: any[] | object, propSets?: object): JSONJoiningTransformer;
     /**
      * Creates a new array and executes a callback in its context.
-     * @param {Function} [cb] - Callback function
+     * @param {any[]|Function} [arrOrCb] - Seed array to start with, or callback
+     *   if no seed provided
+     * @param {Function} [cb] - Callback function (if first arg was a seed array)
      * @returns {JSONJoiningTransformer}
      */
-    array(cb?: Function): JSONJoiningTransformer;
+    array(arrOrCb?: any[] | Function, cb?: Function): JSONJoiningTransformer;
     /**
      * Appends a string value.
      * @param {string} str - String value

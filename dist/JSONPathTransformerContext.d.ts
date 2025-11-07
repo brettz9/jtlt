@@ -104,13 +104,21 @@ declare class JSONPathTransformerContext {
      */
     set(v: any): JSONPathTransformerContext;
     /**
-     * @todo implement sort (allow as callback or as object)
+     * Apply matching templates to nodes selected by JSONPath, optionally sorted.
+     *
+     * Sort parameter forms:
+     * - string: JSONPath relative to each match (e.g., '$.name' or '@')
+     * - function: comparator (aValue, bValue, ctx) => number
+     * - object: { select, order='ascending'|'descending', type='text'|'number',
+     *            locale, localeOptions }
+     * - array: multiple key objects/strings in priority order.
+     *
      * @param {string|object} select - JSONPath selector or options object
      * @param {string} [mode] - Mode to apply
-     * @param {*} [sort] - Sort parameter (not yet implemented)
+     * @param {string|Function|object|Array<string|object>} [sort] - Sort spec
      * @returns {JSONPathTransformerContext}
      */
-    applyTemplates(select: string | object, mode?: string, sort?: any): JSONPathTransformerContext;
+    applyTemplates(select: string | object, mode?: string, sort?: string | Function | object | Array<string | object>): JSONPathTransformerContext;
     /**
      * @param {string|object} name - Template name or options object
      * @param {any[]} [withParams] - Parameters to pass to template
@@ -118,12 +126,15 @@ declare class JSONPathTransformerContext {
      */
     callTemplate(name: string | object, withParams?: any[]): JSONPathTransformerContext;
     /**
+     * Iterate over values selected by JSONPath, optionally sorted.
+     *
+     * Sort parameter forms are the same as applyTemplates().
      * @param {string} select - JSONPath selector
      * @param {Function} cb - Callback function
-     * @param {*} sort - Sort parameter (not yet implemented)
+     * @param {string|Function|object|Array<string|object>} [sort] - Sort spec
      * @returns {JSONPathTransformerContext}
      */
-    forEach(select: string, cb: Function, sort: any): JSONPathTransformerContext;
+    forEach(select: string, cb: Function, sort?: string | Function | object | Array<string | object>): JSONPathTransformerContext;
     /**
      * @param {string|object} [select] - JSONPath selector
      * @returns {JSONPathTransformerContext}
@@ -159,6 +170,13 @@ declare class JSONPathTransformerContext {
      */
     string(str: string, cb: Function): JSONPathTransformerContext;
     /**
+     * Append a number to JSON output. Mirrors the joining transformer API so
+     *   templates can call `this.number()`.
+     * @param {number} num - Number value to append
+     * @returns {JSONPathTransformerContext}
+     */
+    number(num: number): JSONPathTransformerContext;
+    /**
      * Append plain text directly to the output without escaping or JSON
      *   stringification. Mirrors the joining transformer API so templates can
      *   call `this.plainText()`.
@@ -167,17 +185,54 @@ declare class JSONPathTransformerContext {
      */
     plainText(str: string): JSONPathTransformerContext;
     /**
-     * @param {Function} cb - Callback function
-     * @param {*} usePropertySets - Property sets to use
-     * @param {*} propSets - Property sets
+     * Set a property value on the current object (JSON joiner). Mirrors the
+     *   joining transformer API so templates can call `this.propValue()`.
+     * @param {string} prop - Property name
+     * @param {*} val - Property value
      * @returns {JSONPathTransformerContext}
      */
-    object(cb: Function, usePropertySets: any, propSets: any): JSONPathTransformerContext;
+    propValue(prop: string, val: any): JSONPathTransformerContext;
     /**
-     * @param {Function} cb - Callback function
+     * Build an object. Mirrors the joining transformer API. All joiners now
+     * support both signatures: (obj, cb, usePropertySets, propSets) with seed
+     * object or (cb, usePropertySets, propSets) without.
+     * @param {...any} args - Arguments to pass to joiner
      * @returns {JSONPathTransformerContext}
      */
-    array(cb: Function): JSONPathTransformerContext;
+    object(...args: any[]): JSONPathTransformerContext;
+    /**
+     * Build an array. Mirrors the joining transformer API. All joiners now
+     * support both signatures: (arr, cb) with seed array or (cb) without.
+     * @param {...any} args - Arguments to pass to joiner
+     * @returns {JSONPathTransformerContext}
+     */
+    array(...args: any[]): JSONPathTransformerContext;
+    /**
+     * Create an element. Mirrors the joining transformer API so templates can
+     * call `this.element()`.
+     * @param {string} name - Element name
+     * @param {object} [atts] - Attributes object
+     * @param {any[]} [children] - Child nodes
+     * @param {Function} [cb] - Callback function
+     * @returns {JSONPathTransformerContext}
+     */
+    element(name: string, atts?: object, children?: any[], cb?: Function): JSONPathTransformerContext;
+    /**
+     * Add an attribute to the most recently opened element. Mirrors the joining
+     * transformer API so templates can call `this.attribute()`.
+     * @param {string} name - Attribute name
+     * @param {string|object} val - Attribute value
+     * @param {boolean} [avoidAttEscape] - Whether to avoid escaping
+     * @returns {JSONPathTransformerContext}
+     */
+    attribute(name: string, val: string | object, avoidAttEscape?: boolean): JSONPathTransformerContext;
+    /**
+     * Append text content. Mirrors the joining transformer API so templates can
+     * call `this.text()`.
+     * @param {string} txt - Text content
+     * @returns {JSONPathTransformerContext}
+     */
+    text(txt: string): JSONPathTransformerContext;
     /**
      * @param {string} name - Property set name
      * @param {object} propertySetObj - Property set object

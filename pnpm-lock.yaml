@@ -9,11 +9,11 @@ importers:
   .:
     dependencies:
       jamilih:
-        specifier: 0.60.0
-        version: 0.60.0
+        specifier: 0.61.4
+        version: 0.61.4
       jhtml:
-        specifier: 0.6.2
-        version: 0.6.2
+        specifier: 0.7.1
+        version: 0.7.1
       jsdom:
         specifier: 27.1.0
         version: 27.1.0
@@ -29,6 +29,9 @@ importers:
       simple-get-json:
         specifier: 10.0.0
         version: 10.0.0
+      xpath2.js:
+        specifier: 1.0.0-alpha-6
+        version: 1.0.0-alpha-6
     devDependencies:
       '@types/chai':
         specifier: ^5.2.3
@@ -1679,12 +1682,12 @@ packages:
   jackspeak@3.4.3:
     resolution: {integrity: sha512-OGlZQpz2yfahA/Rd1Y8Cd9SIEsqvXkLVoSw/cgwhnhFMDbsQFeZYoJJ7bIZBS9BcamUW96asq/npPWugM+RQBw==}
 
-  jamilih@0.60.0:
-    resolution: {integrity: sha512-qH/1Sr5QK2/6IkMVRHZwY9MstMZ6zyVHIeJDIhI4Qhkzfl/TUNx2wThR3IpQ7yrp9rxSesEs2iFYUNzmjprjBg==}
+  jamilih@0.61.4:
+    resolution: {integrity: sha512-t4Cb6kdD0SKd8U9+0gS4DUqb+8V9hYDP3cP4qvuPu7PchztUphqbPeOwSw5lA7VH9puxQPwSO1cwGYSyYURqcA==}
     engines: {node: '>=18.0.0'}
 
-  jhtml@0.6.2:
-    resolution: {integrity: sha512-7xryICcBfesVkgTwjU1If6uSWsD1QSHf5UrEQSc2af2JHif7yFXLs0IHCwHlc3p30cURR+CMUeShdi/DGeWCZg==}
+  jhtml@0.7.1:
+    resolution: {integrity: sha512-eeVsOvnGKTiroORdgRi2kC54NCY16ugA2BvHex3uCWPaNuYgrQmCTiAkpj13ULpN0+vIB8Xa9L1YxH778DG+9g==}
     engines: {node: '>=22.16.0'}
 
   js-tokens@4.0.0:
@@ -2634,6 +2637,9 @@ packages:
 
   xmlchars@2.2.0:
     resolution: {integrity: sha512-JZnDKK8B0RCDw84FNdDAIpZK+JuJw+s7Lz8nksI7SIuU3UXJJslUthsi+uWBUYOwPFwW7W7PRLRfUKpxjtjFCw==}
+
+  xpath2.js@1.0.0-alpha-6:
+    resolution: {integrity: sha512-qXg4Dzmpg1VKDEkGfjxFPrkZ9BOJv+PB/1LK+jJQf5EqTIx8BcBU38dTrCUeY+iIi4VGIsTV80wUa7wsyMjzYw==}
 
   y18n@5.0.8:
     resolution: {integrity: sha512-0pfFzegeDWJHJIAmTLRP2DwHjdF5s7jo9tuztdQxAhINCdvS+3nGINqPd00AphqJR/0LhANUS6/+7SCb98YOfA==}
@@ -4469,9 +4475,9 @@ snapshots:
     optionalDependencies:
       '@pkgjs/parseargs': 0.11.0
 
-  jamilih@0.60.0: {}
+  jamilih@0.61.4: {}
 
-  jhtml@0.6.2:
+  jhtml@0.7.1:
     dependencies:
       jsdom: 27.1.0
     transitivePeerDependencies:
@@ -5689,6 +5695,8 @@ snapshots:
   xml-name-validator@5.0.0: {}
 
   xmlchars@2.2.0: {}
+
+  xpath2.js@1.0.0-alpha-6: {}
 
   y18n@5.0.8: {}
 

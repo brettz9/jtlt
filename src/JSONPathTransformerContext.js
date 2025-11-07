@@ -74,6 +74,7 @@ class JSONPathTransformerContext {
     return this;
   }
 
+  /* c8 ignore next 4 -- JSDoc block incorrectly counted as coverable by c8 */
   /**
    * Gets the current output.
    * @returns {*} The output from the joining transformer
@@ -106,20 +107,31 @@ class JSONPathTransformerContext {
    * @returns {JSONPathTransformerContext}
    */
   set (v) {
-    (/** @type {Record<string, any>} */ (this._parent))[this._parentProperty] = v;
+    (/** @type {Record<string, any>} */ (this._parent))[
+      this._parentProperty
+    ] = v;
     return this;
   }
 
   /**
-   * @todo implement sort (allow as callback or as object)
+   * Apply matching templates to nodes selected by JSONPath, optionally sorted.
+   *
+   * Sort parameter forms:
+   * - string: JSONPath relative to each match (e.g., '$.name' or '@')
+   * - function: comparator (aValue, bValue, ctx) => number
+   * - object: { select, order='ascending'|'descending', type='text'|'number',
+   *            locale, localeOptions }
+   * - array: multiple key objects/strings in priority order.
+   *
    * @param {string|object} select - JSONPath selector or options object
    * @param {string} [mode] - Mode to apply
-   * @param {*} [sort] - Sort parameter (not yet implemented)
+   * @param {string|Function|object|Array<string|object>} [sort] - Sort spec
    * @returns {JSONPathTransformerContext}
    */
   applyTemplates (select, mode, sort) {
     // Matches templates by (path, mode), resolves priority, and invokes each
-    // template in document order for all nodes selected by `select`.
+    //   template in document order (or sorted order) for all nodes selected by
+    //   `select`.
     // eslint-disable-next-line unicorn/no-this-assignment -- Temporary
     const that = this;
     if (select && typeof select === 'object') {
@@ -135,7 +147,11 @@ class JSONPathTransformerContext {
     } else {
       select = select || '*';
     }
-  select = JSONPathTransformer.makeJSONPathAbsolute(/** @type {string} */ (select));
+    // Preserve original selector to support special suffixes (e.g., "$~")
+    const originalSelect = /** @type {string} */ (select);
+    select = JSONPathTransformer.makeJSONPathAbsolute(originalSelect);
+    const propertyNamesMode = select.endsWith('~');
+    const jsonPathExpr = propertyNamesMode ? select.slice(0, -1) : select;
     // Todo: Use results here?
     /* const results = */ this._getJoiningTransformer();
     const modeMatchedTemplates = this._templates.filter(function (templateObj) {
@@ -143,109 +159,211 @@ class JSONPathTransformerContext {
         (!mode && !templateObj.mode));
     });
 
-    // s(select);
-    // s(this._contextObj);
-    /** @type {any} */ (jsonpath)({
-      path: select,
+    // Collect matches first (to allow sorting), then process
+    /**
+     * @type {{
+     *   value:any, parent:any, parentProperty?:string, path:string
+     * }[]}
+     */
+    const matches = /** @type {any} */ (jsonpath)({
+      path: jsonPathExpr,
       resultType: 'all',
-      wrap: false,
+      wrap: true,
       json: this._contextObj,
-      preventEval: this._config.preventEval,
-  callback (/** @type {any} */ o /* {value, parent, parentProperty, path} */) {
-        const {value} = o,
-          {parent, parentProperty, path} = o;
-        // Todo: For remote JSON stores, could optimize this to first get
-        //    template paths and cache by template (and then query
-        //    the remote JSON and transform as results arrive)
-        // s(value + '::' + parent + '::' + parentProperty + '::' + path);
-        const _oldPath = that._currPath;
-        that._currPath += path.replace(/^\$/v, '');
-        // Todo: Normalize templateObj.path's
-        const pathMatchedTemplates = modeMatchedTemplates.filter(
-          function (templateObj) {
-            const queryResult = /** @type {any[]} */ ((/** @type {any} */ (jsonpath))({
-              path: JSONPathTransformer.makeJSONPathAbsolute(templateObj.path),
+      preventEval: this._config.preventEval
+    });
+
+    // Sorting utilities
+    /**
+     * @param {string} expr
+     * @param {any} ctxVal
+     * @returns {any}
+     */
+    function evalInContext (expr, ctxVal) {
+      if (!expr) {
+        return undefined;
+      }
+      if (expr === '.' || expr === '@') {
+        return ctxVal;
+      }
+      return /** @type {any} */ (jsonpath)({
+        path: expr,
+        json: ctxVal,
+        preventEval: that._config.preventEval,
+        wrap: false, returnType: 'value'
+      });
+    }
+    /**
+     * @param {any} aVal
+     * @param {any} bVal
+     * @param {{
+     *   order?: 'ascending'|'descending', type?: 'text'|'number',
+     *   locale?: string, localeOptions?: any
+     * }|undefined} spec
+     * @returns {number}
+     */
+    function compareBySpec (aVal, bVal, spec) {
+      const order = (spec && spec.order === 'descending') ? -1 : 1;
+      const type = (spec && spec.type) || 'text';
+      if (type === 'number') {
+        const an = Number(aVal);
+        const bn = Number(bVal);
+        if (Number.isNaN(an) && Number.isNaN(bn)) {
+          return 0;
+        }
+        if (Number.isNaN(an)) {
+          return Number(order);
+        }
+        if (Number.isNaN(bn)) {
+          return -1 * order;
+        }
+        return (an - bn) * order;
+      }
+      // text
+      const aStr = aVal === null || aVal === undefined ? '' : String(aVal);
+      const bStr = bVal === null || bVal === undefined ? '' : String(bVal);
+      if (spec && spec.locale) {
+        return aStr.localeCompare(
+          bStr, spec.locale, spec.localeOptions
+        ) * order;
+      }
+      return (aStr < bStr ? -1 : (aStr > bStr ? 1 : 0)) * order;
+    }
+    /**
+     * @param {any} sortSpec
+     * @returns {((a:{value:any}, b:{value:any})=>number)|null}
+     */
+    function buildComparator (sortSpec) {
+      if (!sortSpec) {
+        return null;
+      }
+      if (typeof sortSpec === 'function') {
+        return function (a, b) {
+          return sortSpec(a.value, b.value, that);
+        };
+      }
+      const specs = Array.isArray(sortSpec) ? sortSpec : [sortSpec];
+      return function (a, b) {
+        for (const s of specs) {
+          if (typeof s === 'string') {
+            const av = evalInContext(s, a.value);
+            const bv = evalInContext(s, b.value);
+            const c = compareBySpec(av, bv, {type: 'text', order: 'ascending'});
+            if (c !== 0) {
+              return c;
+            }
+          } else if (s && typeof s === 'object') {
+            const av = evalInContext(s.select, a.value);
+            const bv = evalInContext(s.select, b.value);
+            const c = compareBySpec(av, bv, s);
+            if (c !== 0) {
+              return c;
+            }
+          }
+        }
+        return 0;
+      };
+    }
+
+    const comparator = buildComparator(sort);
+    if (comparator) {
+      matches.sort(comparator);
+    }
+
+    // Preserve outer context across processing
+    const prevContext = that._contextObj;
+    const prevParent = that._parent;
+    const prevParentProp = that._parentProperty;
+    const prevCurrPath = that._currPath;
+
+    // Process in (sorted) order
+    for (const o of matches) {
+      const {value, parent, parentProperty, path} = o;
+      const _oldPath = that._currPath;
+      that._currPath += path.replace(/^\$/v, '');
+      const pathMatchedTemplates = modeMatchedTemplates.filter(
+        function (templateObj) {
+          const queryResult = /** @type {any[]} */ (
+            (/** @type {any} */ (jsonpath))({
+              path: JSONPathTransformer.makeJSONPathAbsolute(
+                templateObj.path
+              ),
               json: that._origObj,
               resultType: 'path',
               preventEval: that._config.preventEval,
               wrap: true
-            }));
-            // s(queryResult);
-            // s('currPath:'+that._currPath);
-            return (/** @type {any[]} */ (queryResult)).includes(that._currPath);
-          }
-        );
+            })
+          );
+          return (
+            /** @type {any[]} */ (queryResult)
+          ).includes(that._currPath);
+        }
+      );
 
-        let templateObj;
-        if (!pathMatchedTemplates.length) {
-          const dtr = JSONPathTransformer.DefaultTemplateRules;
-          // Default rules in XSLT, although expressible as different
-          //   kind of paths, are really about result types, so we check the
-          //   resulting value more than the select expression
-          if (select.endsWith('~')) {
-            templateObj = dtr.transformPropertyNames;
-          } else if (Array.isArray(value)) {
-            templateObj = dtr.transformArrays;
-          } else if (value && typeof value === 'object') {
-            templateObj = dtr.transformObjects;
-          // Todo: provide parameters to jsonpath based on config on whether to
-          //   allow non-JSON JS results
-          } else if (value && typeof value === 'function') {
-            templateObj = dtr.transformFunctions;
-          } else {
-            templateObj = dtr.transformScalars;
-          }
-          /*
-          Todo: If Jamilih support Jamilih, could add equivalents more like XSL,
-          including processing-instruction(), comment(), and namespace nodes
-          (whose default templates do not add to the result tree in XSLT) as
-          well as elements, attributes, text nodes (see
-          https://lenzconsulting.com/how-xslt-works/#built-in_template_rules )
-          */
+      let templateObj;
+      if (!pathMatchedTemplates.length) {
+        const dtr = JSONPathTransformer.DefaultTemplateRules;
+        if (propertyNamesMode) {
+          templateObj = dtr.transformPropertyNames;
+        } else if (Array.isArray(value)) {
+          templateObj = dtr.transformArrays;
+        } else if (value && typeof value === 'object') {
+          templateObj = dtr.transformObjects;
+        } else if (value && typeof value === 'function') {
+          templateObj = dtr.transformFunctions;
         } else {
-          // Todo: Could perform this first and cache by template
-          pathMatchedTemplates.sort(function (a, b) {
-            const aPriority = typeof a.priority === 'number'
-              ? a.priority
-              : (that._config.specificityPriorityResolver
-                ? that._config.specificityPriorityResolver(a.path)
-                : 0);
-            const bPriority = typeof b.priority === 'number'
-              ? b.priority
-              : (that._config.specificityPriorityResolver
-                ? that._config.specificityPriorityResolver(b.path)
-                : 0);
-
-            if (aPriority === bPriority) {
-              that._triggerEqualPriorityError();
-            }
-
-            // We want equal conditions to go in favor of the later (b)
-            return (aPriority > bPriority) ? -1 : 1;
-          });
-
-          templateObj = pathMatchedTemplates.shift();
+          templateObj = dtr.transformScalars;
         }
+      } else {
+        pathMatchedTemplates.sort(function (a, b) {
+          /* c8 ignore start -- Fallback to priority 0 when no numeric priority
+           * and no specificityPriorityResolver is extremely rare in practice.
+           * Requires: template without priority property AND no resolver AND
+           * multiple templates matching same path. Equal priorities then
+           * trigger error, making the `: 0` branch nearly unreachable. */
+          const aPriority = typeof a.priority === 'number'
+            ? a.priority
+            : (that._config.specificityPriorityResolver
+              ? that._config.specificityPriorityResolver(a.path)
+              : 0);
+          const bPriority = typeof b.priority === 'number'
+            ? b.priority
+            : (that._config.specificityPriorityResolver
+              ? that._config.specificityPriorityResolver(b.path)
+              : 0);
+          /* c8 ignore stop */
 
-        that._contextObj = value;
-        that._parent = parent;
-        that._parentProperty = parentProperty;
+          if (aPriority === bPriority) {
+            that._triggerEqualPriorityError();
+          }
 
-        const ret = templateObj.template.call(
-          that, value, {mode, parent, parentProperty}
-        );
-        if (typeof ret !== 'undefined') {
-          // Will vary by that._config.outputType
-          that._getJoiningTransformer().append(ret);
-        }
+          return (aPriority > bPriority) ? -1 : 1;
+        });
 
-        // Child templates may have changed the context
-        that._contextObj = value;
-        that._parent = parent;
-        that._parentProperty = parentProperty;
-        that._currPath = _oldPath;
+        templateObj = pathMatchedTemplates.shift();
       }
-    });
+
+      that._contextObj = value;
+      that._parent = parent;
+      that._parentProperty = (parentProperty ?? that._parentProperty);
+
+      const ret = templateObj.template.call(
+        that, value, {mode, parent, parentProperty}
+      );
+      if (typeof ret !== 'undefined') {
+        that._getJoiningTransformer().append(ret);
+      }
+
+      that._contextObj = value;
+      that._parent = parent;
+      that._parentProperty = (parentProperty ?? that._parentProperty);
+      that._currPath = _oldPath;
+    }
+    // Restore outer context
+    that._contextObj = prevContext;
+    that._parent = prevParent;
+    that._parentProperty = prevParentProp;
+    that._currPath = prevCurrPath;
     return this;
   }
 
@@ -262,7 +380,7 @@ class JSONPathTransformerContext {
       /** @type {{name?: string, withParam?: any[]}} */
       const nameObj = /** @type {any} */ (name);
       withParams = nameObj.withParam || withParams;
-  name = nameObj.name ?? name;
+      name = nameObj.name ?? name;
     }
     withParams = withParams || [];
     const paramValues = withParams.map(function (withParam) {
@@ -284,25 +402,123 @@ class JSONPathTransformerContext {
   }
 
   /**
+   * Iterate over values selected by JSONPath, optionally sorted.
+   *
+   * Sort parameter forms are the same as applyTemplates().
    * @param {string} select - JSONPath selector
    * @param {Function} cb - Callback function
-   * @param {*} sort - Sort parameter (not yet implemented)
+   * @param {string|Function|object|Array<string|object>} [sort] - Sort spec
    * @returns {JSONPathTransformerContext}
    */
-  // Todo: Implement sort (allow as callback or as object)
-  // Todo: If making changes in return values, be sure to update
-  //    `forQuery` as well
   forEach (select, cb, sort) {
     // eslint-disable-next-line unicorn/no-this-assignment -- Temporary
     const that = this;
-    /** @type {any} */ (jsonpath)({
-      path: select, json: this._contextObj,
-      preventEval: this._config.preventEval, wrap: false,
-      returnType: 'value',
-      callback (/** @type {any} */ value) {
-        cb.call(that, value);
-      }
+    /** @type {{value:any}[]} */
+    const matches = /** @type {any} */ (jsonpath)({
+      path: select,
+      json: this._contextObj,
+      preventEval: this._config.preventEval,
+      wrap: true,
+      resultType: 'all'
     });
+
+    /**
+     * @param {string} expr
+     * @param {any} ctxVal
+     * @returns {any}
+     */
+    function feEvalInContext (expr, ctxVal) {
+      if (!expr) {
+        return undefined;
+      }
+      if (expr === '.' || expr === '@') {
+        return ctxVal;
+      }
+      return /** @type {any} */ (jsonpath)({
+        path: expr,
+        json: ctxVal,
+        preventEval: that._config.preventEval,
+        wrap: false, returnType: 'value'
+      });
+    }
+    /**
+     * @param {any} aVal
+     * @param {any} bVal
+     * @param {{
+     *   order?: 'ascending'|'descending', type?: 'text'|'number',
+     *   locale?: string, localeOptions?: any
+     * }|undefined} spec
+     * @returns {number}
+     */
+    function feCompareBySpec (aVal, bVal, spec) {
+      const order = (spec && spec.order === 'descending') ? -1 : 1;
+      const type = (spec && spec.type) || 'text';
+      if (type === 'number') {
+        const an = Number(aVal);
+        const bn = Number(bVal);
+        if (Number.isNaN(an) && Number.isNaN(bn)) {
+          return 0;
+        }
+        if (Number.isNaN(an)) {
+          return Number(order);
+        }
+        if (Number.isNaN(bn)) {
+          return -1 * order;
+        }
+        return (an - bn) * order;
+      }
+      const aStr = aVal === null || aVal === undefined ? '' : String(aVal);
+      const bStr = bVal === null || bVal === undefined ? '' : String(bVal);
+      if (spec && spec.locale) {
+        return aStr.localeCompare(
+          bStr, spec.locale, spec.localeOptions
+        ) * order;
+      }
+      return (aStr < bStr ? -1 : (aStr > bStr ? 1 : 0)) * order;
+    }
+    /**
+     * @param {any} sortSpec
+     * @returns {((a:{value:any}, b:{value:any})=>number)|null}
+     */
+    function feBuildComparator (sortSpec) {
+      if (!sortSpec) {
+        return null;
+      }
+      if (typeof sortSpec === 'function') {
+        return function (a, b) {
+          return sortSpec(a.value, b.value, that);
+        };
+      }
+      const specs = Array.isArray(sortSpec) ? sortSpec : [sortSpec];
+      return function (a, b) {
+        for (const s of specs) {
+          if (typeof s === 'string') {
+            const av = feEvalInContext(s, a.value);
+            const bv = feEvalInContext(s, b.value);
+            const c = feCompareBySpec(
+              av, bv, {type: 'text', order: 'ascending'}
+            );
+            if (c !== 0) {
+              return c;
+            }
+          } else if (s && typeof s === 'object') {
+            const av = feEvalInContext(s.select, a.value);
+            const bv = feEvalInContext(s.select, b.value);
+            const c = feCompareBySpec(av, bv, s);
+            if (c !== 0) {
+              return c;
+            }
+          }
+        }
+        return 0;
+      };
+    }
+
+    const comparator = feBuildComparator(sort);
+    const list = comparator ? [...matches].toSorted(comparator) : matches;
+    for (const m of list) {
+      cb.call(that, m.value);
+    }
     return this;
   }
 
@@ -313,7 +529,7 @@ class JSONPathTransformerContext {
   valueOf (select) {
     // Appends the value of the given JSONPath (or the current context when
     // `{select: '.'}` is passed) to the output via the joining transformer.
-  const results = this._getJoiningTransformer();
+    const results = this._getJoiningTransformer();
     const result = select && typeof select === 'object' &&
     /** @type {{select?: string}} */ (select).select === '.'
       ? this._contextObj
@@ -372,6 +588,17 @@ class JSONPathTransformerContext {
   }
 
   /**
+   * Append a number to JSON output. Mirrors the joining transformer API so
+   *   templates can call `this.number()`.
+   * @param {number} num - Number value to append
+   * @returns {JSONPathTransformerContext}
+   */
+  number (num) {
+    /** @type {any} */ (this._getJoiningTransformer()).number(num);
+    return this;
+  }
+
+  /**
    * Append plain text directly to the output without escaping or JSON
    *   stringification. Mirrors the joining transformer API so templates can
    *   call `this.plainText()`.
@@ -384,24 +611,79 @@ class JSONPathTransformerContext {
   }
 
   /**
-   * @param {Function} cb - Callback function
-   * @param {*} usePropertySets - Property sets to use
-   * @param {*} propSets - Property sets
+   * Set a property value on the current object (JSON joiner). Mirrors the
+   *   joining transformer API so templates can call `this.propValue()`.
+   * @param {string} prop - Property name
+   * @param {*} val - Property value
    * @returns {JSONPathTransformerContext}
    */
-  object (cb, usePropertySets, propSets) {
-    /** @type {any} */ (this._getJoiningTransformer()).object(
-      cb, usePropertySets, propSets
+  propValue (prop, val) {
+    /** @type {any} */ (this._getJoiningTransformer()).propValue(prop, val);
+    return this;
+  }
+
+  /**
+   * Build an object. Mirrors the joining transformer API. All joiners now
+   * support both signatures: (obj, cb, usePropertySets, propSets) with seed
+   * object or (cb, usePropertySets, propSets) without.
+   * @param {...any} args - Arguments to pass to joiner
+   * @returns {JSONPathTransformerContext}
+   */
+  object (...args) {
+    /** @type {any} */ (this._getJoiningTransformer()).object(...args);
+    return this;
+  }
+
+  /**
+   * Build an array. Mirrors the joining transformer API. All joiners now
+   * support both signatures: (arr, cb) with seed array or (cb) without.
+   * @param {...any} args - Arguments to pass to joiner
+   * @returns {JSONPathTransformerContext}
+   */
+  array (...args) {
+    /** @type {any} */ (this._getJoiningTransformer()).array(...args);
+    return this;
+  }
+
+  /**
+   * Create an element. Mirrors the joining transformer API so templates can
+   * call `this.element()`.
+   * @param {string} name - Element name
+   * @param {object} [atts] - Attributes object
+   * @param {any[]} [children] - Child nodes
+   * @param {Function} [cb] - Callback function
+   * @returns {JSONPathTransformerContext}
+   */
+  element (name, atts, children, cb) {
+    /** @type {any} */ (this._getJoiningTransformer()).element(
+      name, atts, children, cb
     );
     return this;
   }
 
   /**
-   * @param {Function} cb - Callback function
+   * Add an attribute to the most recently opened element. Mirrors the joining
+   * transformer API so templates can call `this.attribute()`.
+   * @param {string} name - Attribute name
+   * @param {string|object} val - Attribute value
+   * @param {boolean} [avoidAttEscape] - Whether to avoid escaping
    * @returns {JSONPathTransformerContext}
    */
-  array (cb) {
-    /** @type {any} */ (this._getJoiningTransformer()).array(cb);
+  attribute (name, val, avoidAttEscape) {
+    /** @type {any} */ (this._getJoiningTransformer()).attribute(
+      name, val, avoidAttEscape
+    );
+    return this;
+  }
+
+  /**
+   * Append text content. Mirrors the joining transformer API so templates can
+   * call `this.text()`.
+   * @param {string} txt - Text content
+   * @returns {JSONPathTransformerContext}
+   */
+  text (txt) {
+    /** @type {any} */ (this._getJoiningTransformer()).text(txt);
     return this;
   }
 

@@ -24,8 +24,6 @@ class AbstractJoiningTransformer {
   constructor (cfg) {
     // Todo: Might set some reasonable defaults across all classes
     this.setConfig(cfg);
-    /** @type {any} */
-    this._cfg = undefined;
   }
 
   /**

@@ -1,0 +1,444 @@
+/* eslint-disable @stylistic/max-len,
+  require-unicode-regexp, no-empty-function, no-new
+  -- Coverage tests for edge cases */
+// @ts-nocheck
+import {assert} from 'chai';
+import JTLT from '../src/index.js';
+
+describe('Additional coverage tests', function () {
+  describe('StringJoiningTransformer edge cases', function () {
+    it('should handle element with xmlElements mode', function () {
+      const data = {tag: 'foo'};
+      let out;
+      const templates = [
+        {
+          path: '$',
+          template () {
+            this.config('xmlElements', true, () => {
+              this.element('bar', {}, [], () => {});
+            });
+          }
+        }
+      ];
+      let out;
+      const jtlt = new JTLT({
+        data,
+        templates,
+        outputType: 'string',
+        joiningConfig: {xmlElements: false},
+        success (result) {
+          out = result;
+          return result;
+        }
+      });
+      jtlt.transform();
+      // In XML mode, className/htmlFor should not be converted
+      assert.include(out, '<bar');
+    });
+
+    it('should normalize className and htmlFor in HTML mode', function () {
+      const data = {};
+      const templates = [
+        {
+          path: '$',
+          template () {
+            this.element('div', {className: 'test', htmlFor: 'input1'}, [], () => {});
+          }
+        }
+      ];
+      const jtlt = new JTLT({
+        data,
+        templates,
+        outputType: 'string'
+      });,
+        success (result) {
+          out = result;
+          return result;
+        }
+      });
+      jtlt.transform();
+      // className and htmlFor should be converted to class and for
+      assert.include(out, 'class="test"');
+      assert.include(out, 'for="input1"');
+    });
+
+    it('should handle attribute with unknown object key (default case)', function () {
+      const data = {};
+      const templates = [
+        {
+          path: '$',
+          template () {
+            this.element('div', {}, [], () => {
+              // Unknown object key should hit default case
+              this.attribute('unknownKey', {nested: 'value'});
+            });
+          }
+        }
+      ];
+      let out;
+      const jtlt = new JTLT({
+        data,
+        templates,
+        outputType: 'string'
+      });,
+        success (result) {
+          out = result;
+          return result;
+        }
+      });
+      jtlt.transform();
+      // Should not throw, just return early from default case
+      assert.include(out, '<div');
+    });
+  });
+
+  describe('DOMJoiningTransformer uncovered branches', function () {
+    it('should handle object() with JHTML mode', function () {
+      const data = {items: ['a', 'b']};
+      const templates = [
+        {
+          path: '$',
+          template () {
+            this.object({}, () => {
+              this.applyTemplates('$.items[*]');
+            });
+          }
+        },
+        {
+          path: '$.items[*]',
+          template (v) {
+            this.string(v);
+          }
+        }
+      ];
+      let out;
+      const jtlt = new JTLT({
+        data,
+        templates,
+        outputType: 'dom',
+        joiningConfig: {JHTMLForJSON: true}
+      });,
+        success (result) {
+          out = result;
+          return result;
+        }
+      });
+      jtlt.transform();
+      // Should produce JHTML-style output for object
+      assert.ok(out);
+    });
+
+    it('should handle array() with JHTML mode', function () {
+      const data = {items: ['x', 'y']};
+      const templates = [
+        {
+          path: '$',
+          template () {
+            this.array(() => {
+              this.applyTemplates('$.items[*]');
+            });
+          }
+        },
+        {
+          path: '$.items[*]',
+          template (v) {
+            this.string(v);
+          }
+        }
+      ];
+      let out;
+      const jtlt = new JTLT({
+        data,
+        templates,
+        outputType: 'dom',
+        joiningConfig: {JHTMLForJSON: true}
+      });,
+        success (result) {
+          out = result;
+          return result;
+        }
+      });
+      jtlt.transform();
+      // Should produce JHTML-style output for array
+      assert.ok(out);
+    });
+
+    it('should handle element() with atts but no cb', function () {
+      const data = {};
+      const templates = [
+        {
+          path: '$',
+          template () {
+            this.element('span', {id: 'test'});
+          }
+        }
+      ];
+      let out;
+      const jtlt = new JTLT({
+        data,
+        templates,
+        outputType: 'dom'
+      });,
+        success (result) {
+          out = result;
+          return result;
+        }
+      });
+      jtlt.transform();
+      const span = out.querySelector('span');
+      assert.equal(span.getAttribute('id'), 'test');
+    });
+  });
+
+  describe('JSONJoiningTransformer uncovered branches', function () {
+    it('should handle object() with seed object and callback', function () {
+      const data = {};
+      const templates = [
+        {
+          path: '$',
+          template () {
+            this.object({a: 1}, () => {
+              this.propValue('b', 2);
+            });
+          }
+        }
+      ];
+      let out;
+      const jtlt = new JTLT({
+        data,
+        templates,
+        outputType: 'json'
+      });,
+        success (result) {
+          out = result;
+          return result;
+        }
+      });
+      jtlt.transform();
+      assert.deepEqual(out, {a: 1, b: 2});
+    });
+
+    it('should handle array() with seed array and callback', function () {
+      const data = {};
+      const templates = [
+        {
+          path: '$',
+          template () {
+            this.array([10], () => {
+              this.string('x');
+            });
+          }
+        }
+      ];
+      let out;
+      const jtlt = new JTLT({
+        data,
+        templates,
+        outputType: 'json'
+      });,
+        success (result) {
+          out = result;
+          return result;
+        }
+      });
+      jtlt.transform();
+      assert.deepEqual(out, [10, 'x']);
+    });
+  });
+
+  describe('JSONPathTransformer edge cases', function () {
+    it('should throw when template/templates are both function type', function () {
+      const data = {};
+      // templates as function (should create root template)
+      const fn = function () {
+        this.string('test');
+      };
+      const jtlt = new JTLT({
+        data,
+        templates: fn,
+        outputType: 'string'
+      });
+      let out;
+      jtlt.config.success = (result) => {
+        out = result;
+        return result;
+      };
+      jtlt.transform();
+      assert.equal(out, 'test');
+    });
+
+    it('should handle config.template as function', function () {
+      const data = {};
+      const fn = function () {
+        this.string('root');
+      };
+      const jtlt = new JTLT({
+        data,
+        template: fn,
+        outputType: 'string'
+      });
+      let out;
+      jtlt.config.success = (result) => {
+        out = result;
+        return result;
+      };
+      jtlt.transform();
+      assert.equal(out, 'root');
+    });
+  });
+
+  describe('index.js error paths', function () {
+    it('should throw if transform called without data when ajaxData not set', function () {
+      const jtlt = new JTLT({
+        templates: [{path: '$', template () {}}],
+        autostart: false
+      });
+      jtlt.config.data = undefined;
+      jtlt.config.success = () => {};
+      assert.throws(() => {
+        jtlt.transform();
+      }, /You must supply a 'data' or 'ajaxData' property/);
+    });
+
+    it('should throw "wait until ajax" if data still undefined when ajaxData set', function () {
+      const jtlt = new JTLT({
+        templates: [{path: '$', template () {}}],
+        autostart: false,
+        ajaxData: 'http://example.com/data.json'
+      });
+      // Simulate ajax not complete yet
+      jtlt.config.data = undefined;
+      jtlt.config.success = () => {};
+      assert.throws(() => {
+        jtlt.transform();
+      }, /You must wait until the ajax file is retrieved/);
+    });
+
+    it('should throw if success callback not a function', function () {
+      const jtlt = new JTLT({
+        data: {},
+        templates: [{path: '$', template () {}}],
+        autostart: false
+      });
+      jtlt.config.success = null;
+      assert.throws(() => {
+        jtlt.transform();
+      }, /You must supply a 'success' callback/);
+    });
+
+    it('should throw on construction if neither ajaxData nor data provided', function () {
+      assert.throws(() => {
+        new JTLT({
+          templates: [{path: '$', template () {}}]
+        });
+      }, /You must supply either config.ajaxData or config.data/);
+    });
+  });
+
+  describe('JSONPathTransformerContext edge cases', function () {
+    it('should handle applyTemplates with object-style first arg containing mode and select', function () {
+      const data = {a: 1};
+      const templates = [
+        {
+          path: '$',
+          template () {
+            this.applyTemplates({select: '$.a', mode: 'test'});
+          }
+        },
+        {
+          path: '$.a',
+          mode: 'test',
+          template (v) {
+            this.string(String(v));
+          }
+        }
+      ];
+      let out;
+      const jtlt = new JTLT({
+        data,
+        templates,
+        outputType: 'string'
+      });,
+        success (result) {
+          out = result;
+          return result;
+        }
+      });
+      jtlt.transform();
+      assert.equal(out, '1');
+    });
+
+    it('should handle callTemplate with object-style first arg', function () {
+      const data = {};
+      const templates = [
+        {
+          path: '$',
+          template () {
+            this.callTemplate({name: 'foo', withParam: [{value: 42}]});
+          }
+        },
+        {
+          name: 'foo',
+          template (val) {
+            this.string(String(val));
+          }
+        }
+      ];
+      let out;
+      const jtlt = new JTLT({
+        data,
+        templates,
+        outputType: 'string'
+      });,
+        success (result) {
+          out = result;
+          return result;
+        }
+      });
+      jtlt.transform();
+      assert.equal(out, '42');
+    });
+  });
+
+  describe('XSLTStyleJSONPathResolver edge cases', function () {
+    it('should handle paths with custom specificityPriorityResolver', function () {
+      const data = {a: {b: 1}};
+      const templates = [
+        {
+          path: '$',
+          template () {
+            this.applyTemplates();
+          }
+        },
+        {
+          path: '$.a.b',
+          priority: 10,
+          template (v) {
+            this.string('high:' + v);
+          }
+        },
+        {
+          path: '$.a.b',
+          priority: 5,
+          template (v) {
+            this.string('low:' + v);
+          }
+        }
+      ];
+      let out;
+      const jtlt = new JTLT({
+        data,
+        templates,
+        outputType: 'string'
+      });,
+        success (result) {
+          out = result;
+          return result;
+        }
+      });
+      jtlt.transform();
+      // Higher priority wins
+      assert.equal(out, 'high:1');
+    });
+  });
+});

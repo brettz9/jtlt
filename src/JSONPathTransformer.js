@@ -104,10 +104,15 @@ class JSONPathTransformer {
     },
     transformPropertyNames: {
       /**
+       * @param {*} value - Current context value
        * @returns {*}
        */
-      template () {
-        return /** @type {any} */ (this).valueOf({select: '.'});
+      template (value) {
+        // Emit property names for the current object context
+        if (value && typeof value === 'object' && !Array.isArray(value)) {
+          return Object.keys(value).join('');
+        }
+        return '';
       }
     },
     transformObjects: {
@@ -140,10 +145,12 @@ class JSONPathTransformer {
     },
     transformFunctions: {
       /**
+       * @param {Function} value - Function at current context
        * @returns {*}
        */
-      template () {
-        return /** @type {any} */ (this).valueOf({select: '.'})();
+      template (value) {
+        // Call the function and return its result
+        return value();
       }
     }
   };

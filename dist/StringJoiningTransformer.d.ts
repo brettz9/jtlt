@@ -35,20 +35,6 @@ declare class StringJoiningTransformer extends AbstractJoiningTransformer {
      * @param {object} cfg - Configuration object
      */
     constructor(s: string, cfg: object);
-    /**
-     * @type {{
-     *   JHTMLForJSON?: boolean,
-    *   mode?: "JavaScript"|"JSON",
-    *   xmlElements?: boolean,
-    *   preEscapedAttributes?: boolean
-     * }}
-     */
-    _cfg: {
-        JHTMLForJSON?: boolean;
-        mode?: "JavaScript" | "JSON";
-        xmlElements?: boolean;
-        preEscapedAttributes?: boolean;
-    };
     _str: string;
     /** @type {any} */
     _objPropTemp: any;
@@ -64,6 +50,8 @@ declare class StringJoiningTransformer extends AbstractJoiningTransformer {
     _arr: any[];
     /** @type {string | undefined} */
     _strTemp: string | undefined;
+    /** @type {Record<string, any>} */
+    propertySets: Record<string, any>;
     /**
      * @param {string|*} s - String or value to append
      * @returns {StringJoiningTransformer}
@@ -169,7 +157,7 @@ declare class StringJoiningTransformer extends AbstractJoiningTransformer {
      */
     plainText(str: string): StringJoiningTransformer;
     /**
-     * Helper method to use property sets (to be implemented).
+     * Helper method to use property sets.
      * @param {object} obj - Object to apply property set to
      * @param {string} psName - Property set name
      * @returns {object}

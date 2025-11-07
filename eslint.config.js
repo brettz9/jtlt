@@ -17,5 +17,13 @@ export default [
       'no-unused-vars': 0,
       'promise/prefer-await-to-callbacks': 0
     }
+  },
+  {
+    files: ['**/*.md/*.js'],
+    rules: {
+      'import/no-unresolved': 'off',
+      'no-console': 'off',
+      'no-undef': 'off'
+    }
   }
 ];

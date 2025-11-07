@@ -19,13 +19,12 @@ declare class AbstractJoiningTransformer {
      * @param {object} [cfg] - Configuration object
      */
     constructor(cfg?: object);
-    /** @type {any} */
-    _cfg: any;
     /**
      * @param {any} [cfg] - Configuration object
      * @returns {void}
      */
     setConfig(cfg?: any): void;
+    _cfg: any;
     /**
      * @param {string} type - Type name
      * @param {string} embedType - Embed type name

@@ -108,6 +108,241 @@ Notes:
 - You can also call templates by name via this.callTemplate('name').
 - For DOM output, use outputType: 'dom'. For JSON output, use 'json'.
 
+## One-off queries with forQuery (XQuery-like)
+
+If you just want to run a single, non-recursive query (similar to an XQuery "for … where … return …"), you can skip defining templates and use `forQuery` to seed a root function that iterates a JSONPath and emits results.
+
+- `forQuery` takes the same arguments you’d pass to `this.forEach(select, cb)`: an absolute JSONPath selector and a callback invoked for each match.
+- You can set variables via `this.variable(name, select)` and use plain JavaScript `if` for conditions (there is no dedicated `this.if`).
+
+Example: collect item names whose price meets a threshold, using a variable sourced from the root.
+
+```js
+import JTLT from 'jtlt';
+
+const data = {
+  threshold: 10,
+  items: [
+    {name: 'A', price: 8},
+    {name: 'B', price: 12},
+    {name: 'C', price: 10}
+  ]
+};
+
+const jtlt = new JTLT({
+  data,
+  outputType: 'json', // Top-level result will be a JSON array
+  // forQuery mirrors: this.forEach(select, cb)
+  forQuery: [
+    '$.items[*]',
+    function (item) {
+      // Set a reusable variable from the root context
+      this.variable('threshold', '$.threshold');
+      const {threshold} = this.vars;
+
+      // Use normal JS conditionals (no this.if helper)
+      if (item.price >= threshold) {
+        // In JSON output mode, appending a string pushes into
+        //   the top-level array
+        this.string(item.name);
+      }
+    }
+  ],
+  // success receives the final result; return it for convenience
+  success: (out) => out
+});
+
+const result = jtlt.transform();
+// result => ['B', 'C']
+```
+
+Tips:
+
+- For string output, set `outputType: 'string'` and emit with `this.text()`/`this.string()` in the callback.
+- `this.variable(name, select)` evaluates the JSONPath against the current context (root for `forQuery`), storing it in `this.vars[name]`.
+- If you need multiple passes or richer logic, switch to named templates and modes.
+
+## FLWOR-style (XQuery) example
+
+You can express the essentials of a FLWOR expression (For, Let, Where, Order by, Return) using a template with `forEach()` and the new `sort` support:
+
+Scenario: list book titles whose price is at/above a threshold, ordered by price descending and then title ascending.
+
+```js
+import JTLT from 'jtlt';
+
+const data = {
+  threshold: 10,
+  store: {
+    book: [
+      {title: 'A Tale', price: 8},
+      {title: 'Brave New', price: 12},
+      {title: 'Cobalt', price: 12},
+      {title: 'Delta', price: 10}
+    ]
+  }
+};
+
+const templates = [
+  // Root template builds an HTML list
+  {path: '$', mode: 'html', template () {
+    // Let: bind a reusable variable from root
+    this.variable('threshold', '$.threshold');
+
+    this.element('ul', {}, [], () => {
+      // For + Order by: iterate books with multi-key sort
+      this.forEach('$.store.book[*]', function (b) {
+        // Where: filter in JS
+        if (b.price >= this.vars.threshold) {
+          // Return: emit a list item for each match
+          this.element('li', {}, [], () => this.text(b.title));
+        }
+      }, [
+        {select: '$.price', type: 'number', order: 'descending'},
+        {select: '$.title', type: 'text', order: 'ascending'}
+      ]);
+    });
+  }}
+];
+
+const out = new JTLT({data, templates, outputType: 'string'}).
+  transform('html');
+
+// -> <ul><li>Brave New</li><li>Cobalt</li><li>Delta</li></ul>
+console.log(out);
+```
+
+Notes:
+
+- You can also drive a FLWOR-like flow with `applyTemplates({select, mode}, sort)` and a dedicated template `mode` instead of using an inline `forEach()` callback.
+- The `sort` parameter accepts:
+  - a JSONPath string relative to each item (e.g., `$.name` or `.`)
+  - a comparator function `(aValue, bValue, ctx) => number`
+  - an object `{select, order, type, locale, localeOptions}`
+  - an array of such strings/objects for multi-key sorting
+
+## FLWOR-style join (two forEach loops)
+
+You can model a join across two arrays (e.g., orders ↔ customers) using two `forEach()` passes: the first builds a lookup (an index), the second consumes it to emit joined rows. This mirrors a FLWOR-style join while keeping intent explicit and fast.
+
+Example: render an HTML list of orders annotated with customer names.
+
+```js
+import JTLT from 'jtlt';
+
+const data = {
+  customers: [
+    {id: 1, name: 'Alice'},
+    {id: 2, name: 'Bob'}
+  ],
+  orders: [
+    {id: 'o-10', customerId: 2, item: 'Keyboard', date: '2024-10-01'},
+    {id: 'o-11', customerId: 1, item: 'Mouse', date: '2024-09-20'}
+  ]
+};
+
+const templates = [
+  {path: '$', mode: 'html', template () {
+    // 1) Build an index by id (first forEach)
+    const byId = {};
+    this.forEach('$.customers[*]', function (c) {
+      byId[c.id] = c;
+    });
+
+    // 2) Emit joined rows (second forEach)
+    this.element('ul', {}, [], () => {
+      this.forEach('$.orders[*]', function (o) {
+        const c = byId[o.customerId];
+        if (!c) {
+          return; // skip if no matching customer
+        }
+        this.element('li', {}, [], () => {
+          this.text(`${c.name} — ${o.item}`);
+        });
+      }, {select: '$.date', type: 'text', order: 'ascending'}); // optional sort
+    });
+  }}
+];
+
+const out = new JTLT({data, templates, outputType: 'string'}).transform('html');
+// -> <ul><li>Bob — Keyboard</li><li>Alice — Mouse</li></ul>
+console.log(out);
+```
+
+Notes:
+
+- This pattern uses two `forEach()` calls rather than nesting them, which avoids repeatedly scanning the second array for each outer item.
+- If you already maintain keys in your data, you can skip the first pass and derive `byId` with `Object.fromEntries` or similar.
+- For locale-aware or numeric ordering of the second pass, use the `sort` parameter (string/comparator/object/array as shown above).
+
+
+## Joins with key()/getKey() (xsl:key-like)
+
+Define an index once, then perform O(1) lookups from another sequence when rendering. If no match is found, `getKey()` returns the current context (`this`) as a sentinel; check for that to skip safely.
+
+```js
+import JTLT from 'jtlt';
+
+const data = {
+  customers: [
+    {id: 1, name: 'Alice'},
+    {id: 2, name: 'Bob'}
+  ],
+  orders: [
+    {id: 'o-10', customerId: 2, item: 'Keyboard'},
+    {id: 'o-11', customerId: 3, item: 'Cable'} // no matching customer
+  ]
+};
+
+const templates = [
+  {path: '$', mode: 'html', template () {
+    // Define an index by id: key(name, match, use)
+    this.key('customerById', '$.customers[*]', 'id');
+
+    this.element('ul', {}, [], () => {
+      this.forEach('$.orders[*]', function (o) {
+        const c = this.getKey('customerById', o.customerId);
+        // getKey returns `this` if no match; skip such rows
+        if (c === this) {
+          return;
+        }
+        this.element('li', {}, [], () => this.text(`${c.name}: ${o.item}`));
+      }, {select: '$.id', order: 'ascending'});
+    });
+  }}
+];
+
+const out = new JTLT({data, templates, outputType: 'string'}).transform('html');
+// -> <ul><li>Bob: Keyboard</li></ul>
+console.log(out);
+```
+
+Tips:
+
+- You can define multiple keys with different `use` properties (e.g., lookup by `email`, `id`, etc.).
+- The `match` expression can target nested arrays (e.g., `$.stores[*].customers[*]`).
+- For JSON output joins, switch `outputType: 'json'` and use `object()`/`array()` to build structured results.
+
+## How this compares to XSLT: pros and cons
+
+Advantages (strong parallels with XSLT):
+
+- Template matching by path and mode: templates use JSONPath selectors and optional `mode`, with priority resolution and an option to error on equal priority.
+- Built‑in default rules: when no template matches, defaults traverse and render objects, arrays, scalars, property names, and functions, similar to XSLT’s built‑in templates.
+- applyTemplates/forEach and sorting: `applyTemplates(select, mode, sort)` and `forEach(select, cb, sort)` mirror `xsl:apply-templates`/`xsl:for-each` and `xsl:sort`.
+- Named templates and parameters: `callTemplate(name, withParam)` reflects `xsl:call-template` + `xsl:with-param`.
+- Keys and lookups: `key(name, match, use)` + `getKey(name, value)` provide `xsl:key`-style indexing for joins and fast lookups.
+- Multiple output forms: string, DOM, and JSON builders ("joiners") allow emitting different result trees like XSLT’s result tree model.
+
+Differences / current limitations:
+
+- Expression language: uses JSONPath (not XPath/XSLT functions). JSONPath is simpler and less expressive than XPath 2.0+.
+- Identity/copy helpers: deep/shallow copy helpers are stubs (planned), not full `copy-of` yet.
+- Stylesheet composition/precedence: no `xsl:import`/`xsl:include` equivalents; only basic priority and modes.
+- Schema awareness: no type-aware processing (a major XSLT/XQuery feature).
+- Multi-output (`xsl:result-document`): not built-in; pick one output type per transform.
+- Early alpha: some placeholders remain; APIs may evolve.
+
 ## Differences between an exact equivalence with XSLT
 
 JTLT, having the freedom to start a new pattern from XSLT, and though

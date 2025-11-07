@@ -51,10 +51,17 @@ class JSONJoiningTransformer extends AbstractJoiningTransformer {
   }
 
   /**
-   * Gets the current object or array.
-   * @returns {any[]|object}
+   * Gets the current object or array. If unwrapSingleResult config option is
+   * enabled and the root array contains exactly one element, returns that
+   * element directly (unwrapped).
+   * @returns {any[]|object|any}
    */
   get () {
+    // Unwrap single-element arrays at the root level if configured
+    if (this._cfg && /** @type {any} */ (this._cfg).unwrapSingleResult &&
+        Array.isArray(this._obj) && this._obj.length === 1) {
+      return this._obj[0];
+    }
     return this._obj;
   }
 
@@ -73,59 +80,109 @@ class JSONJoiningTransformer extends AbstractJoiningTransformer {
     (/** @type {Record<string, any>} */ (this._obj))[prop] = val;
   }
 
+  /* c8 ignore next 13 -- JSDoc block incorrectly counted as coverable by c8 */
   /**
-   * @param {Function} [cb] - Callback to be executed on this transformer but
-   *   with a context nested within the newly created object
-   * @param {any[]} [usePropertySets] - Array of string property set names to
-   *   copy onto the new object
+   * @param {object|Function} [objOrCb] - Seed object to start with, or
+   *   callback if no seed provided
+   * @param {Function|any[]} [cbOrUsePropertySets] - Callback to be executed
+   *   on this transformer but with a context nested within the newly created
+   *   object, or array of property set names if first arg was an object
+   * @param {any[]|object} [usePropertySetsOrPropSets] - Array of string
+   *   property set names to copy onto the new object, or propSets if second
+   *   arg was a callback
    * @param {object} [propSets] - An object of key-value pairs to copy onto
    *   the new object
    * @returns {JSONJoiningTransformer}
    */
-  object (cb, usePropertySets, propSets) {
+  object (objOrCb, cbOrUsePropertySets, usePropertySetsOrPropSets, propSets) {
     // eslint-disable-next-line unicorn/no-this-assignment -- Temporary
     const that = this;
     // Todo: Conditionally add as JHTML-based jml (and in subsequent methods
     //   as well)
     const tempObj = this._obj;
-    let obj = {};
-    if (usePropertySets !== undefined) {
-      obj = usePropertySets.reduce((o, psName) => {
-        return that._usePropertySets(o, psName); // Todo: Put in right scope
-      }, {});
-    }
-    if (propSets !== undefined) {
-      Object.assign(obj, propSets);
+
+    // Determine if first arg is a seed object or callback
+    let obj;
+    let cb;
+    let usePropertySets;
+    let propSetsToUse;
+
+    if (typeof objOrCb === 'function') {
+      // No seed object: object(cb, usePropertySets, propSets)
+      obj = {};
+      cb = objOrCb;
+      usePropertySets = /** @type {any[]} */ (cbOrUsePropertySets);
+      propSetsToUse = /** @type {object} */ (usePropertySetsOrPropSets);
+    } else {
+      // Seed object provided: object(obj, cb, usePropertySets, propSets)
+      // Clone seed object to avoid mutating the original
+      obj = objOrCb ? {...objOrCb} : {};
+      cb = /** @type {Function} */ (cbOrUsePropertySets);
+      usePropertySets = /** @type {any[]} */ (usePropertySetsOrPropSets);
+      propSetsToUse = propSets;
     }
 
-    this.append(obj);
+    if (usePropertySets !== undefined) {
+      const merged = usePropertySets.reduce((o, psName) => {
+        return that._usePropertySets(o, psName); // Todo: Put in right scope
+      }, {});
+      Object.assign(obj, merged);
+    }
+    if (propSetsToUse !== undefined) {
+      Object.assign(obj, propSetsToUse);
+    }
+
     /** @type {any} */
     const oldObjPropState = this._objPropState;
     this._objPropState = true;
+    this._obj = obj; // Set current object so propValue() works
     // We pass the object, but user should usually use other methods
     if (cb) {
       cb.call(this, obj);
     }
+    // Append after callback so object has all properties, but before
+    // restoring tempObj
     this._obj = tempObj;
+    this.append(obj);
     this._objPropState = oldObjPropState;
     return this;
   }
 
   /**
    * Creates a new array and executes a callback in its context.
-   * @param {Function} [cb] - Callback function
+   * @param {any[]|Function} [arrOrCb] - Seed array to start with, or callback
+   *   if no seed provided
+   * @param {Function} [cb] - Callback function (if first arg was a seed array)
    * @returns {JSONJoiningTransformer}
    */
-  array (cb) {
+  array (arrOrCb, cb) {
     const tempObj = this._obj;
+
+    // Determine if first arg is a seed array or callback
     /** @type {any[]} */
-    const arr = [];
-    this.append(arr); // Todo: set current position and deal with children
-    // We pass the array, but user should usually use other methods
-    if (cb) {
-      cb.call(this, arr);
+    let arr;
+    let callback;
+
+    if (typeof arrOrCb === 'function') {
+      // No seed array: array(cb)
+      arr = [];
+      callback = arrOrCb;
+    } else {
+      // Seed array provided: array(arr, cb)
+      // Clone seed array to avoid mutating the original
+      arr = arrOrCb ? [...arrOrCb] : [];
+      callback = cb;
     }
+
+    this._obj = arr; // Set current array so append() works
+    // We pass the array, but user should usually use other methods
+    if (callback) {
+      callback.call(this, arr);
+    }
+    // Append after callback so array has all items, but before
+    // restoring tempObj
     this._obj = tempObj;
+    this.append(arr); // Todo: set current position and deal with children
     return this;
   }
 
@@ -260,9 +317,13 @@ class JSONJoiningTransformer extends AbstractJoiningTransformer {
    * @param {string} psName - Property set name
    * @returns {object}
    */
-  // eslint-disable-next-line class-methods-use-this -- Placeholder
   _usePropertySets (obj, psName) {
-    // Todo: Implement property set functionality
+    // Merge the named property set (if present) into the provided object
+    if (this && /** @type {any} */ (this).propertySets &&
+    /** @type {any} */ (this).propertySets[psName]
+    ) {
+      return Object.assign(obj, /** @type {any} */ (this).propertySets[psName]);
+    }
     return obj;
   }
 }

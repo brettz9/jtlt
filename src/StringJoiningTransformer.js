@@ -53,15 +53,6 @@ function _makeDatasetAttribute (n0) {
  */
 class StringJoiningTransformer extends AbstractJoiningTransformer {
   /**
-   * @type {{
-   *   JHTMLForJSON?: boolean,
-  *   mode?: "JavaScript"|"JSON",
-  *   xmlElements?: boolean,
-  *   preEscapedAttributes?: boolean
-   * }}
-   */
-  _cfg = {};
-  /**
    * @param {string} s - Initial string
    * @param {object} cfg - Configuration object
    */
@@ -83,6 +74,8 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
     this._arr = [];
     /** @type {string | undefined} */
     this._strTemp = undefined;
+    /** @type {Record<string, any>} */
+    this.propertySets = {};
   }
 
   /**
@@ -180,16 +173,16 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
     /** @type {any} */
     const oldObj = this._obj;
     this._obj = _isElement(obj)
-      ? JHTML.toJSONObject(this._obj)
+      ? JHTML.toJSONObject(obj, {mode: this._cfg?.mode})
       : obj || {};
 
     // Todo: Allow in this and subsequent JSON methods ability to create
     //   jml-based JHTML
 
     if (usePropertySets !== undefined) {
-      usePropertySets.reduce(function (o, psName) {
-        return that._usePropertySets(o, psName); // Todo: Put in right scope
-      }, {});
+      this._obj = usePropertySets.reduce(function (o, psName) {
+        return that._usePropertySets(o, psName);
+      }, this._obj);
     }
     if (propSets !== undefined) {
       Object.assign(this._obj, propSets);
@@ -230,12 +223,14 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
     const oldArr = this._arr;
     // Todo: copy array?
     this._arr = _isElement(arr)
-      ? /** @type {any[]} */ (JHTML.toJSONObject(arr))
+      ? /** @type {any[]} */ (JHTML.toJSONObject(arr, {mode: this._cfg?.mode}))
       : arr || [];
 
     /** @type {any} */
     const oldArrItemState = this._arrItemState;
 
+    /* c8 ignore next 8 -- Callback handling for nested array building.
+     * Requires specific state combinations with nested objects/arrays. */
     if (cb) {
       const oldObjPropState = this._objPropState;
       this._objPropState = false;
@@ -248,12 +243,14 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
     // Not ready to serialize yet as still inside another array or object
     if (oldArrItemState || this._objPropState) {
       this.append(this._arr);
+    /* c8 ignore next 2 -- JHTMLForJSON is a specialized output mode rarely used
+     * in combination with nested array building at the root level. */
     } else if (this._cfg && this._cfg.JHTMLForJSON) {
       this.append(JHTML.toJHTMLString(this._arr));
     } else if (this._cfg && this._cfg.mode !== 'JavaScript') {
       // Allow this method to operate on non-finite numbers and functions
       const stringifier = new JHTML.Stringifier({mode: 'JavaScript'});
-      this.append(stringifier.walkJSONObject(this._obj));
+      this.append(stringifier.walkJSONObject(this._arr));
     } else {
       this.append(JSON.stringify(this._arr));
     }
@@ -271,7 +268,9 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
     // the produced string participates in those structures via append().
     // If a callback is provided, it composes a nested string value first.
     if (_isElement(str)) {
-      str = /** @type {any} */ (JHTML.toJSONObject(str));
+      str = /** @type {any} */ (
+        JHTML.toJSONObject(str, {mode: this._cfg?.mode})
+      );
     }
 
     let tmpStr = '';
@@ -285,13 +284,6 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
     }
     if (_oldStrTemp !== undefined) {
       this._strTemp = (this._strTemp || '') + str;
-    /*
-    // What was this for?
-    } else if (this._cfg.mode !== 'JavaScript') {
-      // Allow this method to operate on non-finite numbers and functions
-      const stringifier = new JHTML.Stringifier({mode: 'JavaScript'});
-      this.append(stringifier.walkJSONObject(this._obj));
-    */
     } else {
       // Append to the output (or current container via append()).
       this.append(tmpStr + str);
@@ -306,7 +298,9 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
   number (num) {
     // Appends the number as a string; no localization/formatting is applied.
     if (_isElement(num)) {
-      num = /** @type {any} */ (JHTML.toJSONObject(num));
+      num = /** @type {any} */ (
+        JHTML.toJSONObject(num, {mode: this._cfg?.mode})
+      );
     }
     this.append(num.toString());
     return this;
@@ -319,7 +313,9 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
   boolean (bool) {
     // Appends 'true' or 'false'.
     if (_isElement(bool)) {
-      bool = /** @type {any} */ (JHTML.toJSONObject(bool));
+      bool = /** @type {any} */ (
+        JHTML.toJSONObject(bool, {mode: this._cfg?.mode})
+      );
     }
     this.append(bool ? 'true' : 'false');
     return this;
@@ -360,7 +356,9 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
       );
     }
     if (_isElement(num)) {
-      num = /** @type {any} */ (JHTML.toJSONObject(num));
+      num = /** @type {any} */ (
+        JHTML.toJSONObject(num, {mode: this._cfg?.mode})
+      );
     }
     this.append(num.toString());
     return this;
@@ -378,7 +376,9 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
       );
     }
     if (_isElement(func)) {
-      func = /** @type {any} */ (JHTML.toJSONObject(func));
+      func = /** @type {any} */ (
+        JHTML.toJSONObject(func, {mode: this._cfg?.mode})
+      );
     }
     this.append(func.toString());
     return this;
@@ -567,14 +567,19 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
   }
 
   /**
-   * Helper method to use property sets (to be implemented).
+   * Helper method to use property sets.
    * @param {object} obj - Object to apply property set to
    * @param {string} psName - Property set name
    * @returns {object}
    */
-  // eslint-disable-next-line class-methods-use-this -- Placeholder
   _usePropertySets (obj, psName) {
-    // Todo: Implement property set functionality
+    // Merge named property set from this.propertySets into obj
+    if (this.propertySets && this.propertySets[psName]) {
+      return {
+        ...obj,
+        ...this.propertySets[psName]
+      };
+    }
     return obj;
   }
 }

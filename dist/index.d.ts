@@ -57,6 +57,11 @@ export type JTLTOptions = {
      */
     preventEval?: boolean | undefined;
     /**
+     * For JSON output, whether to
+     * unwrap single-element root arrays to return just the element
+     */
+    unwrapSingleResult?: boolean | undefined;
+    /**
      * The mode in which to begin the transform.
      */
     mode?: string | undefined;

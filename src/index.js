@@ -33,6 +33,8 @@ import XSLTStyleJSONPathResolver from './XSLTStyleJSONPathResolver.js';
  * @property {boolean} [preventEval] Whether to prevent
  * parenthetical evaluations in JSONPath. Safer if relying on user
  * input, but reduces capabilities of JSONPath.
+ * @property {boolean} [unwrapSingleResult] For JSON output, whether to
+ * unwrap single-element root arrays to return just the element
  * @property {string} [mode] The mode in which to begin the transform.
  * @property {string} [outputType] Output type: 'string', 'dom', or 'json'
  * @property {Function} [engine] Will be based the
@@ -74,6 +76,11 @@ class JTLT {
   constructor (config) {
     /** @type {JTLTOptions} */
     this.config = config || {};
+
+    // Track if a custom joiner was provided
+    /** @type {any} */ (this.config)._customJoiningTransformer =
+      Boolean(this.config.joiningTransformer);
+
     this.setDefaults(config);
 
     // eslint-disable-next-line unicorn/no-this-assignment -- Temporary
@@ -120,13 +127,20 @@ class JTLT {
     } else {
       initial = [];
     }
-    return new JT(
-      initial,
-      this.config.joiningConfig || {
-        string: {}, json: {}, dom: {}, jamilih: {},
-        document
-      }
-    );
+
+    // Build config for joining transformer
+    const joiningConfig = this.config.joiningConfig || {
+      string: {}, json: {}, dom: {}, jamilih: {},
+      document
+    };
+
+    // Pass unwrapSingleResult to JSON joiner if configured
+    if (JT === JSONJoiningTransformer &&
+    /** @type {any} */ (this.config).unwrapSingleResult) {
+      /** @type {any} */ (joiningConfig).unwrapSingleResult = true;
+    }
+
+    return new JT(initial, joiningConfig);
   }
 
   /**
@@ -154,8 +168,13 @@ class JTLT {
     this.config = config || {};
     const cfg = this.config;
     const query = cfg.forQuery
-      ? /** @this {any} */ function () {
-        (/** @type {any} */ (this)).forEach([].slice.call(cfg.forQuery));
+      // eslint-disable-next-line @stylistic/operator-linebreak -- TS
+      ? /**
+       * @this {any}
+       * @returns {void}
+       */
+      function () {
+        this.forEach([].slice.call(cfg.forQuery));
       }
       : cfg.query || (
         typeof cfg.templates === 'function'
@@ -171,16 +190,16 @@ class JTLT {
       : cfg.templates || [cfg.template];
     this.config.errorOnEqualPriority = cfg.errorOnEqualPriority || false;
     this.config.engine = this.config.engine ||
-    /**
-     * @param {JTLTOptions} configParam
-     * @returns {any}
-     */
-    function (configParam) {
-      const jpt = new JSONPathTransformer(/** @type {any} */ (configParam));
-      const ret = jpt.transform(/** @type {any} */ (configParam).mode);
+      /**
+       * @param {JTLTOptions} configParam
+       * @returns {any}
+       */
+      function (configParam) {
+        const jpt = new JSONPathTransformer(/** @type {any} */ (configParam));
+        const ret = jpt.transform(/** @type {any} */ (configParam).mode);
 
-      return ret;
-    };
+        return ret;
+      };
     // Todo: Let's also, unlike XSLT and the following, give options for
     //   higher priority to absolute fixed paths over recursive descent
     //   and priority to longer paths and lower to wildcard terminal points
@@ -210,6 +229,12 @@ class JTLT {
     }
     if (typeof this.config.success !== 'function') {
       throw new TypeError("You must supply a 'success' callback");
+    }
+
+    // Create a fresh joining transformer for each transform to avoid
+    // accumulation, but only if a custom one wasn't provided
+    if (!(/** @type {any} */ (this.config))._customJoiningTransformer) {
+      this.config.joiningTransformer = this._createJoiningTransformer();
     }
 
     this.config.mode = mode;

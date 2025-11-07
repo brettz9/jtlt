@@ -26,9 +26,10 @@ declare class JSONPathTransformer {
         };
         transformPropertyNames: {
             /**
+             * @param {*} value - Current context value
              * @returns {*}
              */
-            template(): any;
+            template(value: any): any;
         };
         transformObjects: {
             /**
@@ -58,9 +59,10 @@ declare class JSONPathTransformer {
         };
         transformFunctions: {
             /**
+             * @param {Function} value - Function at current context
              * @returns {*}
              */
-            template(): any;
+            template(value: Function): any;
         };
     };
     /**
