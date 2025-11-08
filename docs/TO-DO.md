@@ -94,7 +94,7 @@
   ~~"xsl:apply-templates",~~
   ~~"xsl:attribute",~~
   "xsl:attribute-set",
-  "xsl:call-template",
+  ~~"xsl:call-template",~~
   "xsl:character-map",
   "xsl:choose",
   "xsl:comment",
@@ -107,7 +107,7 @@
   ~~"xsl:for-each",~~
   "xsl:for-each-group",
   "xsl:function",
-  "xsl:if",
+  ~~"xsl:if",~~
   "xsl:import",
   "xsl:import-schema",
   "xsl:include",
@@ -137,5 +137,5 @@
   ~~"xsl:value-of",~~
   ~~"xsl:variable",~~
   "xsl:when",
-  "xsl:with-param"
+  ~~"xsl:with-param"~~
 
