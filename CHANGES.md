@@ -4,6 +4,7 @@
 
 - feat: `if()`
 - feat: `choose()`
+- feat: propSets for DOM
 
 ## 0.2.0
 

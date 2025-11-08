@@ -63,6 +63,7 @@ class DOMJoiningTransformer extends AbstractJoiningTransformer {
   object (obj, cb, usePropertySets, propSets) {
     this._requireSameChildren('dom', 'object');
     if (this._cfg && /** @type {any} */ (this._cfg).JHTMLForJSON) {
+      Object.assign(obj, propSets);
       this.append(JHTML.toJHTMLDOM(/** @type {any} */ (obj)));
     } else {
       // Todo: set current position and deal with children
