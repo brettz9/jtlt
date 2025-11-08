@@ -259,5 +259,21 @@ declare class JSONPathTransformerContext {
      * @returns {JSONPathTransformerContext}
      */
     key(name: string, match: string, use: string): JSONPathTransformerContext;
+    /**
+     * Conditionally execute a callback when a JSONPath selector evaluates
+     * to a truthy scalar or a non-empty result set (node set analogue).
+     * Mirrors XSLT's xsl:if semantics where a non-empty node set is truthy.
+     *
+     * Truthiness rules:
+     * - If the selection (with wrap) yields an array with length > 0, the
+     *   condition passes.
+     * - Otherwise the (non-wrapped) scalar value is coerced with Boolean();
+     *   e.g., 0, '', null, undefined => false; others => true.
+     *
+     * @param {string} select - JSONPath selector expression
+     * @param {Function} cb - Callback to invoke if condition is met
+     * @returns {JSONPathTransformerContext}
+     */
+    if(select: string, cb: Function): JSONPathTransformerContext;
 }
 //# sourceMappingURL=JSONPathTransformerContext.d.ts.map

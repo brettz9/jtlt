@@ -131,6 +131,8 @@ Methods (subset):
 - `applyTemplates(select, mode?, sort?)`
 - `forEach(select, cb, sort?)`
 - `valueOf(select?)`
+- `if(select, cb)` — conditionally execute `cb` when selection is truthy
+  (non-empty result set or truthy scalar)
 - `variable(name, select)` – stores value/array from JSONPath.
 - `callTemplate(name, withParam?)`
 - `key(name, match, use)` / `getKey(name, value)`
@@ -142,6 +144,9 @@ Parallels JSONPath context with XPath evaluation:
 - `get(select, asNodes?)` – returns node array when `asNodes=true` (v1 uses snapshot type; v2 coerces scalar to array).
 - `forEach(select, cb)` – iterates matches.
 - `applyTemplates(select, mode?)` – default initialization to `.` then `*` for subsequent calls.
+- `if(select, cb)` — conditionally executes `cb` when XPath selects nodes
+  (non-empty) or evaluates to a truthy scalar value. In XPath v1 environments
+  without strict result typing, node-set existence is the primary check.
 - `variable(name, select)` – always stores node arrays for XPath.
 - `key(name, match, use)` – index by attribute value; `getKey` returns matching Element or context sentinel (`this`).
 - Default template rules: root traverses `.`, element traverses `*`, text nodes emit `nodeValue`, scalars emit `valueOf('.')`.

@@ -256,5 +256,18 @@ declare class XPathTransformerContext {
      * @returns {XPathTransformerContext}
      */
     key(name: string, match: string, use: string): XPathTransformerContext;
+    /**
+     * Conditionally execute a callback when an XPath evaluates to a truthy
+     * scalar or a non-empty node set (akin to xsl:if semantics).
+     *
+     * Truthiness rules:
+     * - Node set: length > 0 passes.
+     * - Scalar: Boolean(value) must be true.
+     *
+     * @param {string} select XPath expression
+     * @param {Function} cb Callback invoked if condition passes
+     * @returns {XPathTransformerContext}
+     */
+    if(select: string, cb: Function): XPathTransformerContext;
 }
 //# sourceMappingURL=XPathTransformerContext.d.ts.map

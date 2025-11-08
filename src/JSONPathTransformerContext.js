@@ -802,6 +802,53 @@ class JSONPathTransformerContext {
     this.keys[name] = {match, use};
     return this;
   }
+
+  /**
+   * Conditionally execute a callback when a JSONPath selector evaluates
+   * to a truthy scalar or a non-empty result set (node set analogue).
+   * Mirrors XSLT's xsl:if semantics where a non-empty node set is truthy.
+   *
+   * Truthiness rules:
+   * - If the selection (with wrap) yields an array with length > 0, the
+   *   condition passes.
+   * - Otherwise the (non-wrapped) scalar value is coerced with Boolean();
+   *   e.g., 0, '', null, undefined => false; others => true.
+   *
+   * @param {string} select - JSONPath selector expression
+   * @param {Function} cb - Callback to invoke if condition is met
+   * @returns {JSONPathTransformerContext}
+   */
+  if (select, cb) {
+    // Evaluate with wrapping to detect non-empty match sets
+    /** @type {any} */ const wrapped = this.get(select, true);
+    let passes;
+    if (Array.isArray(wrapped)) {
+      if (wrapped.length === 0) {
+        passes = false;
+      } else if (wrapped.length > 1) {
+        // Multiple matches (node set analogue) => truthy
+        passes = true;
+      } else { // Single item; apply scalar truthiness
+        const single = wrapped[0];
+        // Objects (arrays) always truthy; primitives use Boolean()
+        // eslint-disable-next-line unicorn/prefer-ternary -- For coverage
+        if (single && typeof single === 'object') {
+          passes = true;
+        } else {
+          passes = Boolean(single);
+        }
+      }
+    // jsonpath-plus with wrap:true always returns arrays; this else branch
+    // is unreachable in normal usage.
+    /* c8 ignore next 3 */
+    } else {
+      passes = Boolean(wrapped);
+    }
+    if (passes && typeof cb === 'function') {
+      cb.call(this);
+    }
+    return this;
+  }
 }
 
 export default JSONPathTransformerContext;

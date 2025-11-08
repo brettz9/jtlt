@@ -24,13 +24,14 @@ describe('XPathTransformerContext additional coverage', () => {
       joiningTransformer: joiner,
       xpathVersion: 1
     }, []);
-    // Use ANY_TYPE by calling without asNodes; environment may not
-    // yield iterator type in jsdom, so assert default fallback behavior
+    // Use ANY_TYPE by calling without asNodes; jsdom returns iterator type
+    // which gets converted to an array via iterateNext()
     const res = ctx._evalXPath('//*');
-    // When not asNodes, non-iterator types fall back to context node
-    // which here is the document element
+    // Should return array of nodes from iterator
+    expect(Array.isArray(res)).to.equal(true);
+    expect(res.length).to.be.greaterThan(0);
     // @ts-ignore jsdom element
-    expect(res.nodeType).to.equal(1);
+    expect(res[0].nodeType).to.equal(1);
   });
 
   it('covers v2 scalar return (line 132) without asNodes', () => {

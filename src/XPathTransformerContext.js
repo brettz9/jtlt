@@ -97,16 +97,12 @@ class XPathTransformerContext {
         return arr;
       }
       // Handle primitive types from XPathResult
-      const XR = globalThis.XPathResult || {};
-      /* c8 ignore start -- JSDOM's XPath implementation does not properly
-       * set resultType for STRING_TYPE, NUMBER_TYPE, or BOOLEAN_TYPE. These
-       * branches work in real browsers but cannot be tested in JSDOM. */
+      const XR = doc.defaultView?.XPathResult || globalThis.XPathResult || {};
       switch (resultObj.resultType) {
       case XR.STRING_TYPE: return resultObj.stringValue;
       case XR.NUMBER_TYPE: return resultObj.numberValue;
-      case XR.BOOLEAN_TYPE: return resultObj.booleanValue;
-        /* c8 ignore stop */
-        /* c8 ignore start -- iterator result branch env-dependent */
+      case XR.BOOLEAN_TYPE:
+        return resultObj.booleanValue;
       case XR.UNORDERED_NODE_ITERATOR_TYPE:
       case XR.ORDERED_NODE_ITERATOR_TYPE: {
         /* c8 ignore start -- jsdom yields snapshots; iterator traversal
@@ -118,8 +114,8 @@ class XPathTransformerContext {
           n = resultObj.iterateNext();
         }
         return nodes;
+        /* c8 ignore stop */
       }
-      /* c8 ignore stop */
       /* c8 ignore start -- Default fallback for unsupported XPathResult
        * types; environment-dependent and not hit under jsdom. */
       default:
@@ -448,6 +444,67 @@ class XPathTransformerContext {
    */
   key (name, match, use) {
     this.keys[name] = {match, use};
+    return this;
+  }
+
+  /**
+   * Conditionally execute a callback when an XPath evaluates to a truthy
+   * scalar or a non-empty node set (akin to xsl:if semantics).
+   *
+   * Truthiness rules:
+   * - Node set: length > 0 passes.
+   * - Scalar: Boolean(value) must be true.
+   *
+   * @param {string} select XPath expression
+   * @param {Function} cb Callback invoked if condition passes
+   * @returns {XPathTransformerContext}
+   */
+  if (select, cb) {
+    /** @type {any} */ let passes = false;
+    // Try scalar evaluation first (handles boolean/comparison expressions)
+    try {
+      /** @type {any} */ const scalar = this.get(select, false);
+      let normalized;
+      // Unwrap single-item array if it contains a primitive
+      /* c8 ignore next 6 -- Defensive code for edge case where _evalXPath
+       * returns single-item array with asNodes=false; both native XPath v1
+       * and xpath2.js v2 return scalars directly in standard usage. */
+      if (
+        Array.isArray(scalar) &&
+        scalar.length === 1 &&
+        ['boolean', 'number', 'string'].includes(typeof scalar[0])
+      ) {
+        normalized = scalar[0];
+      } else if (['boolean', 'number', 'string'].includes(typeof scalar)) {
+        normalized = scalar;
+      }
+      if (typeof normalized !== 'undefined') {
+        passes = Boolean(normalized);
+      }
+    } catch {
+      // Scalar eval failed; will try node selection
+    }
+    // If not yet truthy, attempt node selection (location paths)
+    if (!passes && (/[\/@*]/v).test(select)) {
+      try {
+        /** @type {any} */ const nodes = this.get(select, true);
+        // eslint-disable-next-line unicorn/prefer-ternary -- for coverage
+        if (Array.isArray(nodes)) {
+          passes = nodes.length > 0;
+        // Defensive for non-array nodes, but _evalXPath with asNodes=true
+        // always returns arrays in both v1 and v2.
+        /* c8 ignore start */
+        } else {
+          passes = Boolean(nodes);
+        }
+        /* c8 ignore stop */
+      } catch {
+        passes = false;
+      }
+    }
+    if (passes && typeof cb === 'function') {
+      cb.call(this);
+    }
     return this;
   }
 
