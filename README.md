@@ -427,7 +427,7 @@ Advantages (strong parallels with XSLT):
 
 Differences / current limitations:
 
-- Expression language: XPath 2.0 implementation is not fully feature complete.
+- Expression language: XPath 2.0 implementation is not fully feature complete and the XPath 1.0 implementation from `jsdom` may not be either.
 - Stylesheet composition/precedence: no `xsl:import`/`xsl:include` equivalents; only basic priority and modes.
 - Schema awareness: no type-aware processing (a major XSLT/XQuery feature).
 - Multi-output (`xsl:result-document`): not built-in; pick one output type per transform.
@@ -447,88 +447,4 @@ from XSLT):
 
 ## To-dos
 
-1.  Document and add test cases to cover current features! (Could adapt an XSLT/XQuery test suite)
-
-    1.  Implement and demo equivalent to applying and calling templates, and
-        root template
-
-    2.  Demo chaining of methods, including [equivalents](https://www.saxonica.com/papers/XTech2005/mhkpaper.html#S4.)
-        to XQuery's FLWOR expressions (see also Promises to-do), perhaps
-        even making aliases so that XQuery's friendlier terms can be used
-        instead of XSLT's.
-
-2.  Support processing of JSON documents with `$jtlt-stylesheet` to let
-    documents define their own targeted stylesheets.
-
-3.  When sufficiently documented, add as example library/tool to
-    JSONPath wiki.
-
-4.  Allow alternative to `element()`, `array()`, etc. methods by just
-    detecting those types from return values (and generic of each
-    type like `dom()` and `json()`).
-
-5.  Allow, depending on mode, containers to contain containers of other
-    types (e.g., a JS container containing DOM objects, or temporary use
-    of a string container, etc.).
-
-    1.  Support XML and add [hXML](https://github.com/brettz9/hxml) methods.
-
-    2.  Support [JHTML](https://github.com/brettz9/jhtml).
-
-    3.  Support `appendJSON()`/`appendDOM()` and
-        `appendType('json', ...)` (allowing type extensions).
-
-6.  Add `appendResult(function () {return result})`.
-
-7.  Add JSON update functions (equivalent to Xquery Update Facility for
-    XML ([overview](http://www.xmlplease.com/xquery-update))) and create
-    JSON serialization (as with XSLT expressed itself in declarative XML)
-    so one can submit and evaluate
-    through [HTTPQuery](https://github.com/brettz9/httpquery) (and also
-    supply to JSONEditor, etc.). Utilize updating by reference.
-
-8. Demo narrowing to subset of JavaScript (as with `jspe`) to make
-    JTLT truly "declarative" as far as freedom from scripting
-
-## Possible to-dos
-
-1.  Make schema-aware so that templates could target types. Most reusable
-    application may be having a type-driven view of a JSON Schema instance
-    (e.g., dates could be shown inside a calendar widget). Perhaps this
-    schema-awareness could also drive a JSON editor (as with other existing
-    projects) (even using same API as JSONEditor?) (or type-aware filtered
-    search/raw queries). This would help not only for editors which edit a
-    JSON file in full, but also for providing schema paths or other identifiers
-    so that a transformed/queried subset of a file (or joining of multiple
-    files) could point the way for edited contents to be saved back to the
-    correct JSON file and position in the JSON file.
-
-2.  Add a [non-eval PR for JSONPath](https://github.com/s3u/JSONPath/pull/4).
-    The OR condition (outside of filters) is another important feature as
-    would be schema-aware path results.
-
-3.  Allow hybrid JSON/[Jamilih](https://github.com/brettz9/jamilih) or
-    JSON/(X)HTML/XML so that one can add
-    XPath or query into HTML in a relevant manner
-
-4.  Support pull parsing/streaming? Pass `done()` function to templates to
-    signal completion?
-
-5.  Support Promise API in addition to callbacks (reconcile with
-    current chaining; see also XQuery FLWOR to-do)
-
-6.  Add [XQuery Functions](https://code.google.com/p/jsxqueryparser/source/browse/trunk/jsxqueryparser/XQueryParser.js#1768)
-    (also supporting DOM and JSON where possible) as plug-in (also any
-    missing from XSLT/XQuery 3.0). Also add, if not present among these
-    functions (or in XQuery), add equivalents to XSLT's
-    `document()` and `unparsed-text()` for allowing non-JSON file
-    retrieval (as well as variables/parameters) and also methods for
-    iterating or retrieving IndexedDB, `localStorage`, and cookies
-    (names, keys and values).
-
-7.  Add `outputType` which uses a DOM joiner but allows specialized
-    serialized output (e.g., pretty-printed HTML) so the users
-    don't need to build it themselves (likewise with stringified
-    JSON output).
-
-8.  See code for other possible to-dos
+See [TO-DO](./docs/TO.DO.md).
