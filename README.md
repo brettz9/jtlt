@@ -428,6 +428,8 @@ Advantages (strong parallels with XSLT):
 Differences / current limitations:
 
 - Expression language: XPath 2.0 implementation is not fully feature complete and the XPath 1.0 implementation from `jsdom` may not be either.
+- As the syntax is JavaScript, it is not feasible to recursively transform
+  JTLT syntax with itself (at least not easily) as one can do with XSLT.
 - Stylesheet composition/precedence: no `xsl:import`/`xsl:include` equivalents; only basic priority and modes.
 - Schema awareness: no type-aware processing (a major XSLT/XQuery feature).
 - Multi-output (`xsl:result-document`): not built-in; pick one output type per transform.
