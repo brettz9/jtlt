@@ -275,5 +275,24 @@ declare class JSONPathTransformerContext {
      * @returns {JSONPathTransformerContext}
      */
     if(select: string, cb: Function): JSONPathTransformerContext;
+    /**
+     * Internal helper: determine if `select` passes truthiness test.
+     * Non-empty wrapped results => true; single item: objects truthy,
+     * primitives coerced via Boolean().
+     * @param {string} select
+     * @returns {boolean}
+     */
+    _passesIf(select: string): boolean;
+    /**
+     * Like `if()`, but also supports an optional fallback callback
+     * executed when the test does not pass (similar to
+     * xsl:choose/xsl:otherwise semantics).
+     *
+     * @param {string} select JSONPath selector
+     * @param {Function} whenCb Callback when condition passes
+     * @param {Function} [otherwiseCb] Callback when condition fails
+     * @returns {JSONPathTransformerContext}
+     */
+    choose(select: string, whenCb: Function, otherwiseCb?: Function): JSONPathTransformerContext;
 }
 //# sourceMappingURL=JSONPathTransformerContext.d.ts.map

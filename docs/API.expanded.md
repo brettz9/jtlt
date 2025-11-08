@@ -133,6 +133,10 @@ Methods (subset):
 - `valueOf(select?)`
 - `if(select, cb)` — conditionally execute `cb` when selection is truthy
   (non-empty result set or truthy scalar)
+- `choose(select, whenCb, otherwiseCb?)` — like `if()`, but invokes
+  `otherwiseCb` when the condition is not met (akin to xsl:choose +
+  xsl:otherwise). Selection is evaluated relative to current context
+  object (its own `$`).
 - `variable(name, select)` – stores value/array from JSONPath.
 - `callTemplate(name, withParam?)`
 - `key(name, match, use)` / `getKey(name, value)`
@@ -147,6 +151,9 @@ Parallels JSONPath context with XPath evaluation:
 - `if(select, cb)` — conditionally executes `cb` when XPath selects nodes
   (non-empty) or evaluates to a truthy scalar value. In XPath v1 environments
   without strict result typing, node-set existence is the primary check.
+- `choose(select, whenCb, otherwiseCb?)` — same semantics as `if()` but with
+  fallback callback when condition fails. Relative XPath resolves from the
+  current context node; absolute paths (`/`, `//`) target the document root.
 - `variable(name, select)` – always stores node arrays for XPath.
 - `key(name, match, use)` – index by attribute value; `getKey` returns matching Element or context sentinel (`this`).
 - Default template rules: root traverses `.`, element traverses `*`, text nodes emit `nodeValue`, scalars emit `valueOf('.')`.

@@ -819,33 +819,63 @@ class JSONPathTransformerContext {
    * @returns {JSONPathTransformerContext}
    */
   if (select, cb) {
-    // Evaluate with wrapping to detect non-empty match sets
-    /** @type {any} */ const wrapped = this.get(select, true);
-    let passes;
-    if (Array.isArray(wrapped)) {
-      if (wrapped.length === 0) {
-        passes = false;
-      } else if (wrapped.length > 1) {
-        // Multiple matches (node set analogue) => truthy
-        passes = true;
-      } else { // Single item; apply scalar truthiness
-        const single = wrapped[0];
-        // Objects (arrays) always truthy; primitives use Boolean()
-        // eslint-disable-next-line unicorn/prefer-ternary -- For coverage
-        if (single && typeof single === 'object') {
-          passes = true;
-        } else {
-          passes = Boolean(single);
-        }
-      }
-    // jsonpath-plus with wrap:true always returns arrays; this else branch
-    // is unreachable in normal usage.
-    /* c8 ignore next 3 */
-    } else {
-      passes = Boolean(wrapped);
-    }
+    const passes = this._passesIf(select);
     if (passes && typeof cb === 'function') {
       cb.call(this);
+    }
+    return this;
+  }
+
+  /**
+   * Internal helper: determine if `select` passes truthiness test.
+   * Non-empty wrapped results => true; single item: objects truthy,
+   * primitives coerced via Boolean().
+   * @param {string} select
+   * @returns {boolean}
+   */
+  _passesIf (select) {
+    // Evaluate with wrapping to detect non-empty match sets
+    /** @type {any} */ const wrapped = this.get(select, true);
+    if (Array.isArray(wrapped)) {
+      if (wrapped.length === 0) {
+        return false;
+      }
+      if (wrapped.length > 1) {
+        // Multiple matches (node set analogue) => truthy
+        return true;
+      }
+      // Single item; apply scalar truthiness
+      const single = wrapped[0];
+      // Objects (arrays) always truthy; primitives use Boolean()
+      if (single && typeof single === 'object') {
+        return true;
+      }
+      return Boolean(single);
+    }
+    /* c8 ignore next 3 -- unreachable defensive non-array branch:
+     * jsonpath-plus with wrap:true always returns arrays. */
+    // Fallback if library behavior changed in future
+    return Boolean(wrapped);
+  }
+
+  /**
+   * Like `if()`, but also supports an optional fallback callback
+   * executed when the test does not pass (similar to
+   * xsl:choose/xsl:otherwise semantics).
+   *
+   * @param {string} select JSONPath selector
+   * @param {Function} whenCb Callback when condition passes
+   * @param {Function} [otherwiseCb] Callback when condition fails
+   * @returns {JSONPathTransformerContext}
+   */
+  choose (select, whenCb, otherwiseCb) {
+    const passes = this._passesIf(select);
+    if (passes) {
+      if (typeof whenCb === 'function') {
+        whenCb.call(this);
+      }
+    } else if (typeof otherwiseCb === 'function') {
+      otherwiseCb.call(this);
     }
     return this;
   }

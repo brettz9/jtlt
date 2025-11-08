@@ -269,5 +269,20 @@ declare class XPathTransformerContext {
      * @returns {XPathTransformerContext}
      */
     if(select: string, cb: Function): XPathTransformerContext;
+    /**
+     * Internal helper: evaluate XPath truthiness like if().
+     * @param {string} select
+     * @returns {boolean}
+     */
+    _passesIf(select: string): boolean;
+    /**
+     * Conditional with optional fallback (like choose/otherwise).
+     * Truthiness same as `if()`.
+     * @param {string} select XPath expression
+     * @param {Function} whenCb Callback when condition passes
+     * @param {Function} [otherwiseCb] Callback when condition fails
+     * @returns {XPathTransformerContext}
+     */
+    choose(select: string, whenCb: Function, otherwiseCb?: Function): XPathTransformerContext;
 }
 //# sourceMappingURL=XPathTransformerContext.d.ts.map

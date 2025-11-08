@@ -96,7 +96,7 @@
   "xsl:attribute-set",
   ~~"xsl:call-template",~~
   "xsl:character-map",
-  "xsl:choose",
+  ~~"xsl:choose",~~
   "xsl:comment",
   ~~"xsl:copy",~~
   ~~"xsl:copy-of",~~
@@ -119,7 +119,7 @@
   "xsl:next-match",
   "xsl:non-matching-substring",
   "xsl:number",
-  "xsl:otherwise",
+  ~~"xsl:otherwise",~~
   "xsl:output",
   "xsl:output-character",
   "xsl:param",
@@ -136,6 +136,6 @@
   ~~"xsl:transform",~~
   ~~"xsl:value-of",~~
   ~~"xsl:variable",~~
-  "xsl:when",
+  ~~"xsl:when",~~
   ~~"xsl:with-param"~~
 

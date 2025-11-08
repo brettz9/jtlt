@@ -3,6 +3,7 @@
 ## 0.3.0 (unreleased)
 
 - feat: `if()`
+- feat: `choose()`
 
 ## 0.2.0
 

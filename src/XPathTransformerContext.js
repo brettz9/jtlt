@@ -460,6 +460,19 @@ class XPathTransformerContext {
    * @returns {XPathTransformerContext}
    */
   if (select, cb) {
+    const passes = this._passesIf(select);
+    if (passes && typeof cb === 'function') {
+      cb.call(this);
+    }
+    return this;
+  }
+
+  /**
+   * Internal helper: evaluate XPath truthiness like if().
+   * @param {string} select
+   * @returns {boolean}
+   */
+  _passesIf (select) {
     /** @type {any} */ let passes = false;
     // Try scalar evaluation first (handles boolean/comparison expressions)
     try {
@@ -502,8 +515,25 @@ class XPathTransformerContext {
         passes = false;
       }
     }
-    if (passes && typeof cb === 'function') {
-      cb.call(this);
+    return passes;
+  }
+
+  /**
+   * Conditional with optional fallback (like choose/otherwise).
+   * Truthiness same as `if()`.
+   * @param {string} select XPath expression
+   * @param {Function} whenCb Callback when condition passes
+   * @param {Function} [otherwiseCb] Callback when condition fails
+   * @returns {XPathTransformerContext}
+   */
+  choose (select, whenCb, otherwiseCb) {
+    const passes = this._passesIf(select);
+    if (passes) {
+      if (typeof whenCb === 'function') {
+        whenCb.call(this);
+      }
+    } else if (typeof otherwiseCb === 'function') {
+      otherwiseCb.call(this);
     }
     return this;
   }
