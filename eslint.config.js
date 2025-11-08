@@ -10,11 +10,12 @@ export default [
   {
     rules: {
       // Temporary only:
-      'sonarjs/public-static-readonly': 'off', // Until ash-nazg disables
+      'no-unused-vars': 0,
       'jsdoc/check-types': 0,
       'jsdoc/reject-any-type': 0,
       'jsdoc/reject-function-type': 0,
-      'no-unused-vars': 0,
+
+      // We frequently use callbacks for nested interactions
       'promise/prefer-await-to-callbacks': 0
     }
   },
