@@ -163,10 +163,12 @@ describe('JSONPath choose() method', () => {
         path: '$',
         template () {
           // whenCb non-function: do nothing though condition truthy
+          // @ts-expect-error non-function whenCb
           this.choose('$.val', 'not-fn', null);
           // otherwiseCb non-function: do nothing though condition falsy
           this.choose('$.none', () => {
             this.string('bad');
+          // @ts-expect-error non-function otherwiseCb
           }, 'not-fn');
           // Add sentinel output to assert graceful handling
           this.string('ok');

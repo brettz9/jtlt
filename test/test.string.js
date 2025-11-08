@@ -12,7 +12,7 @@ function runTest (done, expected, templates, replace) {
   const config = {
     autostart: true,
     ajaxData: import.meta.dirname + '/data/jsonpath-sample.json',
-    outputType: 'string', // string is default
+    outputType: /** @type {'string'} */ ('string'), // string is default
     templates: [
       { // We could instead try a root template which applied on the author path
         name: 'scalars',

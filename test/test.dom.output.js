@@ -10,6 +10,7 @@ describe('DOMJoiningTransformer output', () => {
       templates: [
         {path: '$', template () {
           /** @type {any} */
+          // @ts-expect-error accessing private _cfg for test environment
           const doc = this._config.joiningTransformer._cfg.document;
           const ul = doc.createElement('ul');
           this.forEach('$.items[*]', function (/** @type {any} */ v) {

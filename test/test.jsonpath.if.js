@@ -82,6 +82,7 @@ describe('JSONPath if() method', () => {
       templates: [{
         path: '$',
         template () {
+          // @ts-expect-error intentional missing callback
           this.if('$.x');
         }
       }],
@@ -174,8 +175,11 @@ describe('JSONPath if() method', () => {
         path: '$',
         template () {
           // Pass non-function as callback
+          // @ts-expect-error non-function callback string
           this.if('$.val', 'not-a-function');
+          // @ts-expect-error non-function callback null
           this.if('$.val', null);
+          // @ts-expect-error non-function callback undefined
           this.if('$.val', undefined);
           this.string('done');
         }

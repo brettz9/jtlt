@@ -285,6 +285,7 @@ describe('Coverage: uncovered functionality', () => {
         path: '$',
         template () {
           /** @type {any} */
+          // @ts-expect-error accessing private _cfg for test environment
           const doc = this._config.joiningTransformer._cfg.document;
           const el = doc.createElement('span');
           el.setAttribute('class', 'test');

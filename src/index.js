@@ -14,17 +14,34 @@ import StringJoiningTransformer from './StringJoiningTransformer.js';
 import XSLTStyleJSONPathResolver from './XSLTStyleJSONPathResolver.js';
 
 /**
- * @typedef {object} JTLTOptions
+ * A template declaration whose `template` executes with `this` bound
+ * to the engine-specific context type `TCtx`.
+ * @template TCtx
+ * @typedef {object} TemplateObject
+ * @property {string} path
+ * @property {string} [name]
+ * @property {string} [mode]
+ * @property {number} [priority]
+ * @property {(this: TCtx, value?: any, cfg?: {mode:string}) => any} template
+ */
+
+/**
+ * @typedef {TemplateObject<
+ *   import('./JSONPathTransformerContext.js').default
+ * >} JSONPathTemplateObject
+ */
+/**
+ * @typedef {TemplateObject<
+ *   import('./XPathTransformerContext.js').default
+ * >} XPathTemplateObject
+ */
+
+/**
+ * Options common to both engines.
+ * @typedef {object} BaseJTLTOptions
  * @property {Function} success A callback supplied with a single
  * argument that is the result of this instance's transform() method.
- * @property {any[]} [templates] An array of template objects
- * @property {object|Function} [template] A function assumed to be a
- * root template or a single, complete template object
- * @property {Function} [query] A function assumed to be a root template
- * @property {any[]} [forQuery] An array with arguments to be supplied
- * to a single call to `forEach` (and which will serve as the root
- * template)
- * @property {any} [data] A JSON object
+ * @property {any} [data] A JSON object or DOM document (XPath)
  * @property {string} [ajaxData] URL of a JSON file to retrieve for
  * evaluation
  * @property {boolean} [errorOnEqualPriority] Whether or not to
@@ -37,15 +54,11 @@ import XSLTStyleJSONPathResolver from './XSLTStyleJSONPathResolver.js';
  * @property {boolean} [unwrapSingleResult] For JSON output, whether to
  * unwrap single-element root arrays to return just the element
  * @property {string} [mode] The mode in which to begin the transform.
- * @property {string} [outputType] Output type: 'string', 'dom', or 'json'
+ * @property {'string'|'dom'|'json'} [outputType] Output type
  * @property {Function} [engine] Will be based the
  * same config as passed to this instance. Defaults to a transforming
  * function based on JSONPath and with its own set of priorities for
  * processing templates.
- * @property {'jsonpath'|'xpath'} [engineType] Choose built-in engine.
- * Defaults to 'jsonpath'. When 'xpath', `xpathVersion` may be used.
- * @property {1|2} [xpathVersion] XPath engine version: 1 (native) or 2
- * (xpath2.js) when `engineType` is 'xpath'.
  * @property {Function} [specificityPriorityResolver]
  * Callback for getting the priority by specificity
  * @property {{get: Function, append: Function, string?: Function,
@@ -57,6 +70,47 @@ import XSLTStyleJSONPathResolver from './XSLTStyleJSONPathResolver.js';
  * @property {any} [parent] Parent object for context
  * @property {string} [parentProperty] Parent property name for context
  */
+
+/**
+ * JSONPath engine options with context-aware template typing.
+ * @typedef {BaseJTLTOptions & {
+ *   templates?: JSONPathTemplateObject[] | Function,
+ *   template?: JSONPathTemplateObject | ((
+ *     this: import('./JSONPathTransformerContext.js').default,
+ *     value?: any,
+ *     cfg?: {mode:string}
+ *   ) => any),
+ *   query?: (
+ *     this: import('./JSONPathTransformerContext.js').default,
+ *     value?: any,
+ *     cfg?: {mode:string}
+ *   ) => any,
+ *   forQuery?: any[],
+ *   engineType?: 'jsonpath',
+ * }} JSONPathJTLTOptions
+ */
+
+/**
+ * XPath engine options with context-aware template typing.
+ * @typedef {BaseJTLTOptions & {
+ *   templates?: XPathTemplateObject[] | Function,
+ *   template?: XPathTemplateObject | ((
+ *     this: import('./XPathTransformerContext.js').default,
+ *     value?: any,
+ *     cfg?: {mode:string}
+ *   ) => any),
+ *   query?: (
+ *     this: import('./XPathTransformerContext.js').default,
+ *     value?: any,
+ *     cfg?: {mode:string}
+ *   ) => any,
+ *   forQuery?: any[],
+ *   engineType: 'xpath',
+ *   xpathVersion?: 1|2,
+ * }} XPathJTLTOptions
+ */
+
+/** @typedef {JSONPathJTLTOptions | XPathJTLTOptions} JTLTOptions */
 
 const {window} = new JSDOM();
 const {document} = window;
@@ -75,6 +129,14 @@ class JTLT {
    * config.template, or config.templates, but one must be
    * present and of valid type. For the source json, one must use
    * either a valid config.ajaxData or config.data parameter.
+   * @overload
+   * @param {JSONPathJTLTOptions} config Options for JSONPath engine
+   */
+  /**
+   * @overload
+   * @param {XPathJTLTOptions} config Options for XPath engine
+   */
+  /**
    * @param {JTLTOptions} config Options
    * @todo Remove JSONPath dependency in query use of '$'?
    */
@@ -205,10 +267,10 @@ class JTLT {
             : null
       );
     this.config.templates = query
-      ? [
-        {name: 'root', path: '$', template: query}
-      ]
-      : cfg.templates || [cfg.template];
+      ? /** @type {any} */ ([
+        {name: 'root', path: '$', template: /** @type {any} */ (query)}
+      ])
+      : /** @type {any} */ (cfg.templates || [cfg.template]);
     this.config.errorOnEqualPriority = cfg.errorOnEqualPriority || false;
     this.config.engine = this.config.engine ||
       /**

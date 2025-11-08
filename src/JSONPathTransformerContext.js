@@ -637,7 +637,7 @@ class JSONPathTransformerContext {
 
   /**
    * @param {string} str - String value
-   * @param {Function} cb - Callback function
+   * @param {Function} [cb] - Optional callback to build nested string content
    * @returns {JSONPathTransformerContext}
    */
   // Todo: Add other methods from the joining transformers
@@ -859,10 +859,8 @@ class JSONPathTransformerContext {
   }
 
   /**
-   * Like `if()`, but also supports an optional fallback callback
-   * executed when the test does not pass (similar to
-   * xsl:choose/xsl:otherwise semantics).
-   *
+   * Like `if()`, but also supports an optional fallback callback executed
+   * when the test does not pass (similar to xsl:choose/xsl:otherwise).
    * @param {string} select JSONPath selector
    * @param {Function} whenCb Callback when condition passes
    * @param {Function} [otherwiseCb] Callback when condition fails
