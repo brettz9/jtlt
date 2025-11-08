@@ -97,9 +97,9 @@ describe('Coverage - additional edge cases', function () {
       assert.include(out, '[1,2,3]');
     });
 
-    it('string() handles JHTML element conversion (line 265)', function () {
+    it('string() handles JHTML element conversion', function () {
       const {document} = new JSDOM('').window;
-      const st = new StringJoiningTransformer('', {document});
+      const st = new StringJoiningTransformer('', {});
       // Use JHTML.toJHTMLDOM to create a properly formatted JHTML element for a string
       const elem = toJHTMLDOM('hello', {document});
       st.string(elem);
@@ -107,9 +107,9 @@ describe('Coverage - additional edge cases', function () {
       assert.include(out, 'hello');
     });
 
-    it('number() handles JHTML element conversion (line 293)', function () {
+    it('number() handles JHTML element conversion', function () {
       const {document} = new JSDOM('').window;
-      const st = new StringJoiningTransformer('', {document});
+      const st = new StringJoiningTransformer('', {});
       // Use JHTML.toJHTMLDOM to create a properly formatted JHTML element for a number
       const elem = toJHTMLDOM(42, {document});
       st.number(elem);
@@ -117,9 +117,9 @@ describe('Coverage - additional edge cases', function () {
       assert.include(out, '42');
     });
 
-    it('boolean() handles JHTML element conversion (line 306)', function () {
+    it('boolean() handles JHTML element conversion', function () {
       const {document} = new JSDOM('').window;
-      const st = new StringJoiningTransformer('', {document});
+      const st = new StringJoiningTransformer('', {});
       // Use JHTML.toJHTMLDOM to create a properly formatted JHTML element for a boolean
       const elem = toJHTMLDOM(true, {document});
       st.boolean(elem);
@@ -1912,7 +1912,7 @@ describe('StringJoiningTransformer - edge cases', function () {
     const {document} = (new JSDOM('')).window;
     const el = document.createElement('a');
     el.setAttribute('href', '/go');
-    const jt = new StringJoiningTransformer('', {document});
+    const jt = new StringJoiningTransformer('');
     jt.element(el, {title: 't'}, [], function () {
       jt.text('X');
     });
@@ -2085,7 +2085,7 @@ describe('StringJoiningTransformer - edge cases', function () {
     el.dataset.x = 'y';
     el.setAttribute('title', 't');
     el.textContent = 'Z';
-    const st = new StringJoiningTransformer('', {document});
+    const st = new StringJoiningTransformer('');
     st.element(el, {id: 'test'}, [], function () {
       this.text('X');
     });

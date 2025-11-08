@@ -56,7 +56,7 @@ class JSONPathTransformer {
 
   /**
    * @param {string} mode - Transformation mode
-   * @returns {*} The transformation result
+   * @returns {any} The transformation result
    */
   transform (mode) {
     const jte = new JSONPathTransformerContext(
@@ -94,7 +94,7 @@ class JSONPathTransformer {
   static DefaultTemplateRules = {
     transformRoot: {
       /**
-       * @param {*} value - Value
+       * @param {any} value - Value
        * @param {{mode: string}} cfg - Configuration
        * @returns {void}
        */
@@ -104,8 +104,8 @@ class JSONPathTransformer {
     },
     transformPropertyNames: {
       /**
-       * @param {*} value - Current context value
-       * @returns {*}
+       * @param {any} value - Current context value
+       * @returns {any}
        */
       template (value) {
         // Emit property names for the current object context
@@ -117,7 +117,7 @@ class JSONPathTransformer {
     },
     transformObjects: {
       /**
-       * @param {*} value - Value
+       * @param {any} value - Value
        * @param {{mode: string}} cfg - Configuration
        * @returns {void}
        */
@@ -127,7 +127,7 @@ class JSONPathTransformer {
     },
     transformArrays: {
       /**
-       * @param {*} value - Value
+       * @param {any} value - Value
        * @param {{mode: string}} cfg - Configuration
        * @returns {void}
        */
@@ -137,7 +137,7 @@ class JSONPathTransformer {
     },
     transformScalars: {
       /**
-       * @returns {*}
+       * @returns {any}
        */
       template () {
         return /** @type {any} */ (this).valueOf({select: '.'});
@@ -145,8 +145,8 @@ class JSONPathTransformer {
     },
     transformFunctions: {
       /**
-       * @param {Function} value - Function at current context
-       * @returns {*}
+       * @param {( ...args: any[]) => any} value - Function at current context
+       * @returns {any}
        */
       template (value) {
         // Call the function and return its result

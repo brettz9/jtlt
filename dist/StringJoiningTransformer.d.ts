@@ -32,9 +32,19 @@ export default StringJoiningTransformer;
 declare class StringJoiningTransformer extends AbstractJoiningTransformer {
     /**
      * @param {string} s - Initial string
-     * @param {object} cfg - Configuration object
+     * @param {{
+     *   mode?: "JavaScript"|"JSON",
+     *   JHTMLForJSON?: boolean,
+     *   xmlElements?: boolean,
+     *   preEscapedAttributes?: boolean
+     * }} [cfg] - Configuration object
      */
-    constructor(s: string, cfg: object);
+    constructor(s: string, cfg?: {
+        mode?: "JavaScript" | "JSON";
+        JHTMLForJSON?: boolean;
+        xmlElements?: boolean;
+        preEscapedAttributes?: boolean;
+    });
     _str: string;
     /** @type {any} */
     _objPropTemp: any;
@@ -50,10 +60,10 @@ declare class StringJoiningTransformer extends AbstractJoiningTransformer {
     _arr: any[];
     /** @type {string | undefined} */
     _strTemp: string | undefined;
-    /** @type {Record<string, any>} */
-    propertySets: Record<string, any>;
+    /** @type {Record<string, unknown>} */
+    propertySets: Record<string, unknown>;
     /**
-     * @param {string|*} s - String or value to append
+     * @param {string|any} s - String or value to append
      * @returns {StringJoiningTransformer}
      */
     append(s: string | any): StringJoiningTransformer;
@@ -63,46 +73,49 @@ declare class StringJoiningTransformer extends AbstractJoiningTransformer {
     get(): string;
     /**
      * @param {string} prop - Property name
-     * @param {*} val - Property value
+     * @param {any} val - Property value
      * @returns {StringJoiningTransformer}
      */
     propValue(prop: string, val: any): StringJoiningTransformer;
     /**
      * @param {string} prop - Property name
-     * @param {Function} cb - Callback function
+     * @param {(this: StringJoiningTransformer) => void} cb - Callback function
      * @returns {StringJoiningTransformer}
      */
-    propOnly(prop: string, cb: Function): StringJoiningTransformer;
+    propOnly(prop: string, cb: (this: StringJoiningTransformer) => void): StringJoiningTransformer;
     /**
-     * @param {object|Element} obj - Object to serialize
-     * @param {Function} cb - Callback function
+     * @param {Record<string, unknown>|Element} obj - Object to serialize
+     * @param {(this: StringJoiningTransformer) => void} cb - Callback function
      * @param {any[]} [usePropertySets] - Property sets to use
-     * @param {object} [propSets] - Additional property sets
+     * @param {Record<string, unknown>} [propSets] - Additional property sets
      * @returns {StringJoiningTransformer}
      */
-    object(obj: object | Element, cb: Function, usePropertySets?: any[], propSets?: object): StringJoiningTransformer;
+    object(obj: Record<string, unknown> | Element, cb: (this: StringJoiningTransformer) => void, usePropertySets?: any[], propSets?: Record<string, unknown>): StringJoiningTransformer;
     /**
      * @param {any[]|Element} [arr] - Array to serialize
-     * @param {Function} [cb] - Callback function
+     * @param {(this: StringJoiningTransformer) => void} [cb] - Callback function
      * @returns {StringJoiningTransformer}
      */
-    array(arr?: any[] | Element, cb?: Function): StringJoiningTransformer;
+    array(arr?: any[] | Element, cb?: (this: StringJoiningTransformer) => void): StringJoiningTransformer;
     /**
-     * @param {string|Element|object} str - String value or element
-     * @param {Function} [cb] - Callback function
+     * @param {string|Element|Record<string, unknown>} str
+     *   String value or element
+     * @param {(this: StringJoiningTransformer) => void} [cb] - Callback function
      * @returns {StringJoiningTransformer}
      */
-    string(str: string | Element | object, cb?: Function): StringJoiningTransformer;
+    string(str: string | Element | Record<string, unknown>, cb?: (this: StringJoiningTransformer) => void): StringJoiningTransformer;
     /**
-     * @param {number|Element|object} num - Number value or element
+     * @param {number|Element|Record<string, unknown>} num
+     *   Number value or element
      * @returns {StringJoiningTransformer}
      */
-    number(num: number | Element | object): StringJoiningTransformer;
+    number(num: number | Element | Record<string, unknown>): StringJoiningTransformer;
     /**
-     * @param {boolean|Element|object} bool - Boolean value or element
+     * @param {boolean|Element|Record<string, unknown>} bool
+     *   Boolean value or element
      * @returns {StringJoiningTransformer}
      */
-    boolean(bool: boolean | Element | object): StringJoiningTransformer;
+    boolean(bool: boolean | Element | Record<string, unknown>): StringJoiningTransformer;
     /**
      * @returns {StringJoiningTransformer}
      */
@@ -117,39 +130,50 @@ declare class StringJoiningTransformer extends AbstractJoiningTransformer {
      */
     nonfiniteNumber(num: number | Element): StringJoiningTransformer;
     /**
-     * @param {Function|Element} func - Function to stringify
+     * @param {((...args: any[]) => any)|Element} func - Function to stringify
      * @returns {StringJoiningTransformer}
      */
-    function(func: Function | Element): StringJoiningTransformer;
+    function(func: ((...args: any[]) => any) | Element): StringJoiningTransformer;
     /**
-     * @param {string|object} elName - Element name or element object
-     * @param {object} [atts] - Element attributes
+     * Attributes object for element() allowing standard string attributes
+     * plus special helpers: dataset (object) and $a (ordered attribute array).
+     * @typedef {Record<string, string> & {
+     *   dataset?: Record<string, string>,
+     *   $a?: Array<[string, string]>
+     * }} ElementAttributes
+     */
+    /**
+     * @param {string|Element} elName - Element name or element object
+     * @param {ElementAttributes} [atts] - Element attributes
      * @param {any[]} [childNodes] - Child nodes
-     * @param {Function} [cb] - Callback function
+     * @param {(this: StringJoiningTransformer) => void} [cb] - Callback function
      * @returns {StringJoiningTransformer}
      */
-    element(elName: string | object, atts?: object, childNodes?: any[], cb?: Function): StringJoiningTransformer;
+    element(elName: string | Element, atts?: Record<string, string> & {
+        dataset?: Record<string, string>;
+        $a?: Array<[string, string]>;
+    }, childNodes?: any[], cb?: (this: StringJoiningTransformer) => void): StringJoiningTransformer;
     _openTagState: any;
     /**
      * @param {string} name - Attribute name
-     * @param {string|object} val - Attribute value
+     * @param {string|Record<string, unknown>} val - Attribute value
      * @param {boolean} [avoidAttEscape] - Whether to avoid escaping the
      *   attribute value
      * @returns {StringJoiningTransformer}
      */
-    attribute(name: string, val: string | object, avoidAttEscape?: boolean): StringJoiningTransformer;
+    attribute(name: string, val: string | Record<string, unknown>, avoidAttEscape?: boolean): StringJoiningTransformer;
     /**
      * @param {string} txt - Text content to escape and append
      * @returns {StringJoiningTransformer}
      */
     text(txt: string): StringJoiningTransformer;
     /**
-    * Unlike text(), does not escape for HTML; unlike string(), does not perform
-    *   JSON stringification; unlike append(), does not do other checks (but still
-    *   varies in its role across transformers).
-    * @param {string} str
-    * @returns {StringJoiningTransformer}
-    */
+     * Unlike text(), does not escape for HTML; unlike string(), does not perform
+     *   JSON stringification; unlike append(), does not do other checks (but
+     *   still varies in its role across transformers).
+     * @param {string} str
+     * @returns {StringJoiningTransformer}
+     */
     rawAppend(str: string): StringJoiningTransformer;
     /**
      * @param {string} str - Plain text to append without escaping
@@ -158,11 +182,11 @@ declare class StringJoiningTransformer extends AbstractJoiningTransformer {
     plainText(str: string): StringJoiningTransformer;
     /**
      * Helper method to use property sets.
-     * @param {object} obj - Object to apply property set to
+     * @param {Record<string, unknown>} obj - Object to apply property set to
      * @param {string} psName - Property set name
-     * @returns {object}
+     * @returns {Record<string, unknown>}
      */
-    _usePropertySets(obj: object, psName: string): object;
+    _usePropertySets(obj: Record<string, unknown>, psName: string): Record<string, unknown>;
 }
 import AbstractJoiningTransformer from './AbstractJoiningTransformer.js';
 //# sourceMappingURL=StringJoiningTransformer.d.ts.map

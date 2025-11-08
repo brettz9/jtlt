@@ -10,7 +10,7 @@ declare class XPathTransformer {
     static DefaultTemplateRules: {
         transformRoot: {
             /**
-             * @param {*} node Node
+             * @param {any} node Node
              * @param {{mode:string}} cfg Config
              * @returns {void}
              */
@@ -44,7 +44,7 @@ declare class XPathTransformer {
     _triggerEqualPriorityError(): void;
     /**
      * @param {string} mode Transformation mode
-     * @returns {*} Result of transformation
+     * @returns {any} Result of transformation
      */
     transform(mode: string): any;
 }

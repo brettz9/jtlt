@@ -37,7 +37,7 @@
     "c8": "^10.1.3",
     "chai": "^6.2.0",
     "eslint": "^9.39.1",
-    "eslint-config-ash-nazg": "^39.7.1",
+    "eslint-config-ash-nazg": "^39.8.0",
     "mocha": "^11.7.5",
     "typescript": "^5.9.3"
   },

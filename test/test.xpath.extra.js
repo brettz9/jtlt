@@ -27,7 +27,7 @@ function buildDom () {
 describe('XPathTransformerContext extended branches (version 1)', () => {
   it('handles ITERATOR and snapshot (native v1)', () => {
     const {document} = buildDom();
-    const joiner = new StringJoiningTransformer('', {document});
+    const joiner = new StringJoiningTransformer('');
     const ctx = new XPathTransformerContext({
       data: document,
       joiningTransformer: joiner,
@@ -53,7 +53,7 @@ describe('XPathTransformerContext extended branches (version 1)', () => {
 describe('XPathTransformerContext extended branches (version 2)', () => {
   it('wraps non-array result in array (v2)', () => {
     const {document} = buildDom();
-    const joiner = new StringJoiningTransformer('', {document});
+    const joiner = new StringJoiningTransformer('');
     const ctx = new XPathTransformerContext({
       data: document,
       joiningTransformer: joiner,
@@ -68,7 +68,7 @@ describe('XPathTransformerContext extended branches (version 2)', () => {
 describe('XPathTransformerContext utility and default rule coverage', () => {
   it('covers appendOutput and propertySet helpers', () => {
     const {document} = buildDom();
-    const joiner = new StringJoiningTransformer('', {document});
+    const joiner = new StringJoiningTransformer('');
     const ctx = new XPathTransformerContext({
       data: document,
       joiningTransformer: joiner,
@@ -95,7 +95,7 @@ describe('XPathTransformerContext utility and default rule coverage', () => {
 
   it('getKey returns context when no match', () => {
     const {document} = buildDom();
-    const joiner = new StringJoiningTransformer('', {document});
+    const joiner = new StringJoiningTransformer('');
     const ctx = new XPathTransformerContext({
       data: document,
       joiningTransformer: joiner,
@@ -110,7 +110,7 @@ describe('XPathTransformerContext utility and default rule coverage', () => {
 describe('XPathTransformerContext init and sorting', () => {
   it('initializes then defaults select to * on subsequent calls', () => {
     const {document} = buildDom();
-    const joiner = new StringJoiningTransformer('', {document});
+    const joiner = new StringJoiningTransformer('');
     const templates = [
       {
         path: '//item',
@@ -138,7 +138,7 @@ describe('XPathTransformerContext init and sorting', () => {
 
   it('prefers higher numeric priority', () => {
     const {document} = buildDom();
-    const joiner = new StringJoiningTransformer('', {document});
+    const joiner = new StringJoiningTransformer('');
     const templates = [
       {
         path: '//item',
@@ -171,7 +171,7 @@ describe('XPathTransformerContext init and sorting', () => {
 
   it('throws on equal priority when configured', () => {
     const {document} = buildDom();
-    const joiner = new StringJoiningTransformer('', {document});
+    const joiner = new StringJoiningTransformer('');
     const templates = [
       {
         path: '//item',
@@ -203,7 +203,7 @@ describe('XPathTransformerContext init and sorting', () => {
 describe('XPathTransformerContext misc branches', () => {
   it('get with empty expression returns context node', () => {
     const {document} = buildDom();
-    const joiner = new StringJoiningTransformer('', {document});
+    const joiner = new StringJoiningTransformer('');
     const ctx = new XPathTransformerContext({
       data: document,
       joiningTransformer: joiner,
@@ -215,7 +215,7 @@ describe('XPathTransformerContext misc branches', () => {
 
   it('getKey returns matching element when present', () => {
     const {document} = buildDom();
-    const joiner = new StringJoiningTransformer('', {document});
+    const joiner = new StringJoiningTransformer('');
     const ctx = new XPathTransformerContext({
       data: document,
       joiningTransformer: joiner,
@@ -230,7 +230,7 @@ describe('XPathTransformerContext misc branches', () => {
 
   it('default scalar rule executes for attribute nodes', () => {
     const {document} = buildDom();
-    const joiner = new StringJoiningTransformer('', {document});
+    const joiner = new StringJoiningTransformer('');
     const ctx = new XPathTransformerContext({
       data: document,
       joiningTransformer: joiner,
@@ -248,7 +248,7 @@ describe('XPathTransformerContext misc branches', () => {
 describe('XPathTransformer return append path', () => {
   it('appends return value from root template', () => {
     const {document} = buildDom();
-    const joiner = new StringJoiningTransformer('', {document});
+    const joiner = new StringJoiningTransformer('');
     const templates = [
       {
         path: '/',

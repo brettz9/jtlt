@@ -1,5 +1,38 @@
 export default JSONPathTransformerContext;
 /**
+ * Sort spec types used by applyTemplates() and forEach().
+ */
+export type SortObject = {
+    select?: string;
+    order?: "ascending" | "descending";
+    type?: "text" | "number";
+    locale?: string;
+    localeOptions?: any;
+};
+/**
+ * Sort spec types used by applyTemplates() and forEach().
+ */
+export type SortComparator = (a: any, b: any, ctx: JSONPathTransformerContext) => number;
+/**
+ * Sort spec types used by applyTemplates() and forEach().
+ */
+export type SortSpec = string | SortObject | SortComparator | Array<string | SortObject>;
+/**
+ * Sort spec types used by applyTemplates() and forEach().
+ * @typedef {{
+ *   select?: string,
+ *   order?: 'ascending'|'descending',
+ *   type?: 'text'|'number',
+ *   locale?: string,
+ *   localeOptions?: any
+ * }} SortObject
+ * @typedef {(a:any, b:any,
+ *   ctx: JSONPathTransformerContext
+ * ) => number} SortComparator
+ * @typedef {string | SortObject | SortComparator |
+ *   Array<string|SortObject>} SortSpec
+ */
+/**
  * Execution context for JSONPath-driven template application.
  *
  * Holds the current node, parent, path, variables, and property sets while
@@ -15,13 +48,18 @@ declare class JSONPathTransformerContext {
      * @param {string} [config.parentProperty] - Parent property name
      * @param {boolean} [config.errorOnEqualPriority] - Whether to error on
      *   equal priority
-     * @param {{append: Function, get: Function, string: Function,
-     *   object: Function, array: Function}} config.joiningTransformer -
+     * @param {{
+     *   append: (item:any)=>void,
+     *   get: ()=>any,
+     *   string: (str:string, cb?: (this: any)=>void)=>void,
+     *   object: (...args:any[])=>void,
+     *   array: (...args:any[])=>void
+     * }} config.joiningTransformer -
      *   Joining transformer
      * @param {boolean} [config.preventEval] - Whether to prevent eval in
      *   JSONPath
-     * @param {Function} [config.specificityPriorityResolver] - Function to
-     *   resolve priority
+     * @param {(path:string)=>number} [config.specificityPriorityResolver]
+     *   Priority resolver function
      * @param {any[]} templates - Array of template objects
      */
     constructor(config: {
@@ -30,14 +68,14 @@ declare class JSONPathTransformerContext {
         parentProperty?: string | undefined;
         errorOnEqualPriority?: boolean | undefined;
         joiningTransformer: {
-            append: Function;
-            get: Function;
-            string: Function;
-            object: Function;
-            array: Function;
+            append: (item: any) => void;
+            get: () => any;
+            string: (str: string, cb?: (this: any) => void) => void;
+            object: (...args: any[]) => void;
+            array: (...args: any[]) => void;
         };
         preventEval?: boolean | undefined;
-        specificityPriorityResolver?: Function | undefined;
+        specificityPriorityResolver?: ((path: string) => number) | undefined;
     }, templates: any[]);
     _config: {
         data: object;
@@ -45,26 +83,29 @@ declare class JSONPathTransformerContext {
         parentProperty?: string | undefined;
         errorOnEqualPriority?: boolean | undefined;
         joiningTransformer: {
-            append: Function;
-            get: Function;
-            string: Function;
-            object: Function;
-            array: Function;
+            append: (item: any) => void;
+            get: () => any;
+            string: (str: string, cb?: (this: any) => void) => void;
+            object: (...args: any[]) => void;
+            array: (...args: any[]) => void;
         };
         preventEval?: boolean | undefined;
-        specificityPriorityResolver?: Function | undefined;
+        specificityPriorityResolver?: ((path: string) => number) | undefined;
     };
     _templates: any[];
     _contextObj: object;
     _origObj: object;
     _parent: object;
     _parentProperty: string;
-    /** @type {Record<string, any>} */
-    vars: Record<string, any>;
-    /** @type {Record<string, any>} */
-    propertySets: Record<string, any>;
-    /** @type {Record<string, any>} */
-    keys: Record<string, any>;
+    /** @type {Record<string, unknown>} */
+    vars: Record<string, unknown>;
+    /** @type {Record<string, Record<string, unknown>>} */
+    propertySets: Record<string, Record<string, unknown>>;
+    /** @type {Record<string, {match: string, use: string}>} */
+    keys: Record<string, {
+        match: string;
+        use: string;
+    }>;
     /** @type {boolean | undefined} */
     _initialized: boolean | undefined;
     /** @type {string | undefined} */
@@ -80,13 +121,13 @@ declare class JSONPathTransformerContext {
      */
     _getJoiningTransformer(): any;
     /**
-     * @param {*} item - Item to append to output
+     * @param {any} item - Item to append to output
      * @returns {JSONPathTransformerContext}
      */
     appendOutput(item: any): JSONPathTransformerContext;
     /**
      * Gets the current output.
-     * @returns {*} The output from the joining transformer
+     * @returns {any} The output from the joining transformer
      */
     getOutput(): any;
     /**
@@ -95,11 +136,11 @@ declare class JSONPathTransformerContext {
      *   to the result tree instead).
      * @param {string} select - JSONPath selector
      * @param {boolean} wrap - Whether to wrap results
-     * @returns {*} The selected value(s)
+     * @returns {any} The selected value(s)
      */
     get(select: string, wrap: boolean): any;
     /**
-     * @param {*} v - Value to set
+     * @param {any} v - Value to set
      * @returns {JSONPathTransformerContext}
      */
     set(v: any): JSONPathTransformerContext;
@@ -115,10 +156,10 @@ declare class JSONPathTransformerContext {
      *
      * @param {string|object} select - JSONPath selector or options object
      * @param {string} [mode] - Mode to apply
-     * @param {string|Function|object|Array<string|object>} [sort] - Sort spec
+     * @param {SortSpec} [sort] - Sort spec
      * @returns {JSONPathTransformerContext}
      */
-    applyTemplates(select: string | object, mode?: string, sort?: string | Function | object | Array<string | object>): JSONPathTransformerContext;
+    applyTemplates(select: string | object, mode?: string, sort?: SortSpec): JSONPathTransformerContext;
     /**
      * @param {string|object} name - Template name or options object
      * @param {any[]} [withParams] - Parameters to pass to template
@@ -130,11 +171,13 @@ declare class JSONPathTransformerContext {
      *
      * Sort parameter forms are the same as applyTemplates().
      * @param {string} select - JSONPath selector
-     * @param {Function} cb - Callback function
-     * @param {string|Function|object|Array<string|object>} [sort] - Sort spec
+     * @param {(this: JSONPathTransformerContext,
+     *   value:any
+     * )=>void} cb - Callback function
+     * @param {SortSpec} [sort] - Sort spec
      * @returns {JSONPathTransformerContext}
      */
-    forEach(select: string, cb: Function, sort?: string | Function | object | Array<string | object>): JSONPathTransformerContext;
+    forEach(select: string, cb: (this: JSONPathTransformerContext, value: any) => void, sort?: SortSpec): JSONPathTransformerContext;
     /**
      * @param {string|object} [select] - JSONPath selector
      * @returns {JSONPathTransformerContext}
@@ -159,16 +202,17 @@ declare class JSONPathTransformerContext {
      */
     variable(name: string, select: string): JSONPathTransformerContext;
     /**
-     * @param {*} json - JSON data to log
+     * @param {any} json - JSON data to log
      * @returns {void}
      */
     message(json: any): void;
     /**
      * @param {string} str - String value
-     * @param {Function} cb - Callback function
+     * @param {(this: JSONPathTransformerContext)
+     *   => void} [cb] - Optional callback to build nested string content
      * @returns {JSONPathTransformerContext}
      */
-    string(str: string, cb: Function): JSONPathTransformerContext;
+    string(str: string, cb?: (this: JSONPathTransformerContext) => void): JSONPathTransformerContext;
     /**
      * Append a number to JSON output. Mirrors the joining transformer API so
      *   templates can call `this.number()`.
@@ -188,7 +232,7 @@ declare class JSONPathTransformerContext {
      * Set a property value on the current object (JSON joiner). Mirrors the
      *   joining transformer API so templates can call `this.propValue()`.
      * @param {string} prop - Property name
-     * @param {*} val - Property value
+     * @param {any} val - Property value
      * @returns {JSONPathTransformerContext}
      */
     propValue(prop: string, val: any): JSONPathTransformerContext;
@@ -211,21 +255,22 @@ declare class JSONPathTransformerContext {
      * Create an element. Mirrors the joining transformer API so templates can
      * call `this.element()`.
      * @param {string} name - Element name
-     * @param {object} [atts] - Attributes object
+     * @param {Record<string, string>} [atts] - Attributes object
      * @param {any[]} [children] - Child nodes
-     * @param {Function} [cb] - Callback function
+     * @param {(this: JSONPathTransformerContext)
+     *   => void} [cb] - Callback function
      * @returns {JSONPathTransformerContext}
      */
-    element(name: string, atts?: object, children?: any[], cb?: Function): JSONPathTransformerContext;
+    element(name: string, atts?: Record<string, string>, children?: any[], cb?: (this: JSONPathTransformerContext) => void): JSONPathTransformerContext;
     /**
      * Add an attribute to the most recently opened element. Mirrors the joining
      * transformer API so templates can call `this.attribute()`.
      * @param {string} name - Attribute name
-     * @param {string|object} val - Attribute value
+     * @param {string|Record<string, unknown>} val - Attribute value
      * @param {boolean} [avoidAttEscape] - Whether to avoid escaping
      * @returns {JSONPathTransformerContext}
      */
-    attribute(name: string, val: string | object, avoidAttEscape?: boolean): JSONPathTransformerContext;
+    attribute(name: string, val: string | Record<string, unknown>, avoidAttEscape?: boolean): JSONPathTransformerContext;
     /**
      * Append text content. Mirrors the joining transformer API so templates can
      * call `this.text()`.
@@ -235,21 +280,21 @@ declare class JSONPathTransformerContext {
     text(txt: string): JSONPathTransformerContext;
     /**
      * @param {string} name - Property set name
-     * @param {object} propertySetObj - Property set object
+     * @param {Record<string, unknown>} propertySetObj - Property set object
      * @param {any[]} [usePropertySets] - Property sets to use
      * @returns {JSONPathTransformerContext}
      */
-    propertySet(name: string, propertySetObj: object, usePropertySets?: any[]): JSONPathTransformerContext;
+    propertySet(name: string, propertySetObj: Record<string, unknown>, usePropertySets?: any[]): JSONPathTransformerContext;
     /**
-     * @param {object} obj - Object to assign properties to
+     * @param {Record<string, unknown>} obj - Object to assign properties to
      * @param {string} name - Property set name
-     * @returns {object}
+     * @returns {Record<string, unknown>}
      */
-    _usePropertySets(obj: object, name: string): object;
+    _usePropertySets(obj: Record<string, unknown>, name: string): Record<string, unknown>;
     /**
      * @param {string} name - Key name
-     * @param {*} value - Value to match
-     * @returns {*}
+     * @param {any} value - Value to match
+     * @returns {any}
      */
     getKey(name: string, value: any): any;
     /**
@@ -271,10 +316,11 @@ declare class JSONPathTransformerContext {
      *   e.g., 0, '', null, undefined => false; others => true.
      *
      * @param {string} select - JSONPath selector expression
-     * @param {Function} cb - Callback to invoke if condition is met
+     * @param {(this: JSONPathTransformerContext)
+     *   => void} cb - Callback to invoke if condition is met
      * @returns {JSONPathTransformerContext}
      */
-    if(select: string, cb: Function): JSONPathTransformerContext;
+    if(select: string, cb: (this: JSONPathTransformerContext) => void): JSONPathTransformerContext;
     /**
      * Internal helper: determine if `select` passes truthiness test.
      * Non-empty wrapped results => true; single item: objects truthy,
@@ -284,15 +330,15 @@ declare class JSONPathTransformerContext {
      */
     _passesIf(select: string): boolean;
     /**
-     * Like `if()`, but also supports an optional fallback callback
-     * executed when the test does not pass (similar to
-     * xsl:choose/xsl:otherwise semantics).
-     *
+     * Like `if()`, but also supports an optional fallback callback executed
+     * when the test does not pass (similar to xsl:choose/xsl:otherwise).
      * @param {string} select JSONPath selector
-     * @param {Function} whenCb Callback when condition passes
-     * @param {Function} [otherwiseCb] Callback when condition fails
+     * @param {(this: JSONPathTransformerContext)
+     *   => void} whenCb Callback when condition passes
+     * @param {(this: JSONPathTransformerContext)
+     *   => void} [otherwiseCb] Callback when condition fails
      * @returns {JSONPathTransformerContext}
      */
-    choose(select: string, whenCb: Function, otherwiseCb?: Function): JSONPathTransformerContext;
+    choose(select: string, whenCb: (this: JSONPathTransformerContext) => void, otherwiseCb?: (this: JSONPathTransformerContext) => void): JSONPathTransformerContext;
 }
 //# sourceMappingURL=JSONPathTransformerContext.d.ts.map

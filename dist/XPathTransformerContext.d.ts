@@ -15,14 +15,14 @@ export default XPathTransformerContext;
 declare class XPathTransformerContext {
     /**
      * Log a message (for debugging).
-     * @param {*} json Any value
+     * @param {any} json Any value
      * @returns {void}
      */
     static message(json: any): void;
     static DefaultTemplateRules: {
         transformRoot: {
             /**
-             * @param {*} node Root node
+             * @param {any} node Root node
              * @param {{mode:string}} cfg Config
              * @returns {void}
              */
@@ -32,7 +32,7 @@ declare class XPathTransformerContext {
         };
         transformElements: {
             /**
-             * @param {*} node Element node
+             * @param {any} node Element node
              * @param {{mode:string}} cfg Config
              * @returns {void}
              */
@@ -50,7 +50,7 @@ declare class XPathTransformerContext {
             }): string;
         };
         transformScalars: {
-            /** @returns {*} */
+            /** @returns {any} */
             template(): any;
         };
     };
@@ -58,51 +58,56 @@ declare class XPathTransformerContext {
      * @param {object} config - Configuration object
      * @param {Document|Element|any} config.data - XML/DOM root to transform
      * @param {number} [config.xpathVersion] - 1 or 2 (default 1)
-    * @param {object} config.joiningTransformer Joiner
-    * @param {Function} config.joiningTransformer.append Append output
-    * @param {Function} config.joiningTransformer.get Get output
-    * @param {Function} config.joiningTransformer.string Emit string
-    * @param {Function} config.joiningTransformer.object Emit object
-    * @param {Function} config.joiningTransformer.array Emit array
+     * @param {object} config.joiningTransformer Joiner
+     * @param {(item:any)=>void} config.joiningTransformer.append Append output
+     * @param {()=>any} config.joiningTransformer.get Get output
+     * @param {(str:string,
+     *   cb?: (this: any)=>void
+     * )=>void} config.joiningTransformer.string Emit string
+     * @param {(...args:any[])=>void} config.joiningTransformer.object Emit object
+     * @param {(...args:any[])=>void} config.joiningTransformer.array Emit array
      * @param {boolean} [config.errorOnEqualPriority]
-     * @param {Function} [config.specificityPriorityResolver]
+     * @param {(path:string)=>number} [config.specificityPriorityResolver]
      * @param {any[]} templates - Template objects
      */
     constructor(config: {
         data: Document | Element | any;
         xpathVersion?: number | undefined;
         joiningTransformer: {
-            append: Function;
-            get: Function;
-            string: Function;
-            object: Function;
-            array: Function;
+            append: (item: any) => void;
+            get: () => any;
+            string: (str: string, cb?: (this: any) => void) => void;
+            object: (...args: any[]) => void;
+            array: (...args: any[]) => void;
         };
         errorOnEqualPriority?: boolean | undefined;
-        specificityPriorityResolver?: Function | undefined;
+        specificityPriorityResolver?: ((path: string) => number) | undefined;
     }, templates: any[]);
     _config: {
         data: Document | Element | any;
         xpathVersion?: number | undefined;
         joiningTransformer: {
-            append: Function;
-            get: Function;
-            string: Function;
-            object: Function;
-            array: Function;
+            append: (item: any) => void;
+            get: () => any;
+            string: (str: string, cb?: (this: any) => void) => void;
+            object: (...args: any[]) => void;
+            array: (...args: any[]) => void;
         };
         errorOnEqualPriority?: boolean | undefined;
-        specificityPriorityResolver?: Function | undefined;
+        specificityPriorityResolver?: ((path: string) => number) | undefined;
     };
     _templates: any[];
     _contextNode: any;
     _origNode: any;
-    /** @type {Record<string, any>} */
-    vars: Record<string, any>;
-    /** @type {Record<string, any>} */
-    propertySets: Record<string, any>;
-    /** @type {Record<string, any>} */
-    keys: Record<string, any>;
+    /** @type {Record<string, unknown>} */
+    vars: Record<string, unknown>;
+    /** @type {Record<string, Record<string, unknown>>} */
+    propertySets: Record<string, Record<string, unknown>>;
+    /** @type {Record<string, {match: string, use: string}>} */
+    keys: Record<string, {
+        match: string;
+        use: string;
+    }>;
     /** @type {boolean|undefined} */
     _initialized: boolean | undefined;
     /** @type {string|undefined} */
@@ -112,29 +117,29 @@ declare class XPathTransformerContext {
     /**
      * Evaluate an XPath expression against the current context node.
      * @param {string} expr - XPath expression
-    * @param {boolean} [asNodes] Return nodes (array) instead of scalar
+     * @param {boolean} [asNodes] Return nodes (array) instead of scalar
      * @returns {any}
      */
     _evalXPath(expr: string, asNodes?: boolean): any;
     /**
      * Append raw item to output.
-     * @param {*} item
+     * @param {any} item
      * @returns {XPathTransformerContext}
      */
     appendOutput(item: any): XPathTransformerContext;
-    /** @returns {*} */
+    /** @returns {any} */
     getOutput(): any;
     /**
      * Get value(s) by XPath relative to current context.
      * @param {string} select - XPath expression
      * @param {boolean} [asNodes]
-     * @returns {*}
+     * @returns {any}
      */
     get(select: string, asNodes?: boolean): any;
     /**
      * Set current context's parent property (for parity with JSONPath context).
      * Mostly placeholder for object-mirroring behavior.
-     * @param {*} v
+     * @param {any} v
      * @returns {XPathTransformerContext}
      */
     set(v: any): XPathTransformerContext;
@@ -148,10 +153,12 @@ declare class XPathTransformerContext {
     /**
      * Iterate over nodes selected by XPath.
      * @param {string} select - XPath expression
-     * @param {Function} cb - Callback invoked per node
+     * @param {(this: XPathTransformerContext,
+     *   node:any
+     * )=>void} cb - Callback invoked per node
      * @returns {XPathTransformerContext}
      */
-    forEach(select: string, cb: Function): XPathTransformerContext;
+    forEach(select: string, cb: (this: XPathTransformerContext, node: any) => void): XPathTransformerContext;
     /**
      * Append the value from an XPath expression or the context node text.
      * @param {string|object} [select]
@@ -168,10 +175,10 @@ declare class XPathTransformerContext {
     /**
      * Append string.
      * @param {string} str String to append
-     * @param {Function} [cb] Callback
+     * @param {(this: XPathTransformerContext)=>void} [cb] Callback
      * @returns {XPathTransformerContext}
      */
-    string(str: string, cb?: Function): XPathTransformerContext;
+    string(str: string, cb?: (this: XPathTransformerContext) => void): XPathTransformerContext;
     /**
      * Append number.
      * @param {number} num Number
@@ -187,7 +194,7 @@ declare class XPathTransformerContext {
     /**
      * Append property/value pair.
      * @param {string} prop Property name
-     * @param {*} val Value
+     * @param {any} val Value
      * @returns {XPathTransformerContext}
      */
     propValue(prop: string, val: any): XPathTransformerContext;
@@ -206,20 +213,20 @@ declare class XPathTransformerContext {
     /**
      * Append element.
      * @param {string} name Tag name
-     * @param {object} [atts] Attributes
+     * @param {Record<string, string>} [atts] Attributes
      * @param {any[]} [children] Children
-     * @param {Function} [cb] Callback
+     * @param {(this: XPathTransformerContext)=>void} [cb] Callback
      * @returns {XPathTransformerContext}
      */
-    element(name: string, atts?: object, children?: any[], cb?: Function): XPathTransformerContext;
+    element(name: string, atts?: Record<string, string>, children?: any[], cb?: (this: XPathTransformerContext) => void): XPathTransformerContext;
     /**
      * Append attribute.
      * @param {string} name Attribute name
-     * @param {string|object} val Value
+     * @param {string|Record<string, unknown>} val Value
      * @param {boolean} [avoid] Avoid duplicates
      * @returns {XPathTransformerContext}
      */
-    attribute(name: string, val: string | object, avoid?: boolean): XPathTransformerContext;
+    attribute(name: string, val: string | Record<string, unknown>, avoid?: boolean): XPathTransformerContext;
     /**
      * Append text node content.
      * @param {string} txt Text
@@ -229,23 +236,23 @@ declare class XPathTransformerContext {
     /**
      * Define a property set (optionally composed from other sets).
      * @param {string} name Property set name
-     * @param {object} obj Base properties
+     * @param {Record<string, unknown>} obj Base properties
      * @param {string[]} [use] Property set names to merge
      * @returns {XPathTransformerContext}
      */
-    propertySet(name: string, obj: object, use?: string[]): XPathTransformerContext;
+    propertySet(name: string, obj: Record<string, unknown>, use?: string[]): XPathTransformerContext;
     /**
      * Merge properties from a named property set into obj.
-     * @param {object} obj Target object
+     * @param {Record<string, unknown>} obj Target object
      * @param {string} name Property set name
-     * @returns {object}
+     * @returns {Record<string, unknown>}
      */
-    _usePropertySets(obj: object, name: string): object;
+    _usePropertySets(obj: Record<string, unknown>, name: string): Record<string, unknown>;
     /**
      * Retrieve a key-mapped node matching a value or return context.
      * @param {string} name Key name
-     * @param {*} value Value to match
-     * @returns {*}
+     * @param {any} value Value to match
+     * @returns {any}
      */
     getKey(name: string, value: any): any;
     /**
@@ -265,10 +272,11 @@ declare class XPathTransformerContext {
      * - Scalar: Boolean(value) must be true.
      *
      * @param {string} select XPath expression
-     * @param {Function} cb Callback invoked if condition passes
+     * @param {(this: XPathTransformerContext)
+     *   => void} cb Callback invoked if condition passes
      * @returns {XPathTransformerContext}
      */
-    if(select: string, cb: Function): XPathTransformerContext;
+    if(select: string, cb: (this: XPathTransformerContext) => void): XPathTransformerContext;
     /**
      * Internal helper: evaluate XPath truthiness like if().
      * @param {string} select
@@ -279,10 +287,12 @@ declare class XPathTransformerContext {
      * Conditional with optional fallback (like choose/otherwise).
      * Truthiness same as `if()`.
      * @param {string} select XPath expression
-     * @param {Function} whenCb Callback when condition passes
-     * @param {Function} [otherwiseCb] Callback when condition fails
+     * @param {(this: XPathTransformerContext)
+     *   => void} whenCb Callback when condition passes
+     * @param {(this: XPathTransformerContext)
+     *   => void} [otherwiseCb] Callback when condition fails
      * @returns {XPathTransformerContext}
      */
-    choose(select: string, whenCb: Function, otherwiseCb?: Function): XPathTransformerContext;
+    choose(select: string, whenCb: (this: XPathTransformerContext) => void, otherwiseCb?: (this: XPathTransformerContext) => void): XPathTransformerContext;
 }
 //# sourceMappingURL=XPathTransformerContext.d.ts.map

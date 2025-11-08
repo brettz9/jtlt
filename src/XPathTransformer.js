@@ -57,7 +57,7 @@ class XPathTransformer {
 
   /**
    * @param {string} mode Transformation mode
-   * @returns {*} Result of transformation
+   * @returns {any} Result of transformation
    */
   transform (mode) {
     const xte = new XPathTransformerContext(
@@ -80,7 +80,7 @@ class XPathTransformer {
   static DefaultTemplateRules = {
     transformRoot: {
       /**
-       * @param {*} node Node
+       * @param {any} node Node
        * @param {{mode:string}} cfg Config
        * @returns {void}
        */

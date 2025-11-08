@@ -9,11 +9,13 @@ export default [
   ...ashNazg(['sauron']),
   {
     rules: {
+      'jsdoc/reject-any-type': 0,
+
       // Temporary only:
       'no-unused-vars': 0,
-      'jsdoc/check-types': 0,
-      'jsdoc/reject-any-type': 0,
-      'jsdoc/reject-function-type': 0,
+
+      // AI was frequently making egregious mistakes here, so make fixable
+      'jsdoc/check-alignment': 'error',
 
       // We frequently use callbacks for nested interactions
       'promise/prefer-await-to-callbacks': 0

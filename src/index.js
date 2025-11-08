@@ -12,6 +12,7 @@ import JSONPathTransformer from './JSONPathTransformer.js';
 import XPathTransformer from './XPathTransformer.js';
 import StringJoiningTransformer from './StringJoiningTransformer.js';
 import XSLTStyleJSONPathResolver from './XSLTStyleJSONPathResolver.js';
+import AbstractJoiningTransformer from './AbstractJoiningTransformer.js';
 
 /**
  * A template declaration whose `template` executes with `this` bound
@@ -22,7 +23,19 @@ import XSLTStyleJSONPathResolver from './XSLTStyleJSONPathResolver.js';
  * @property {string} [name]
  * @property {string} [mode]
  * @property {number} [priority]
- * @property {(this: TCtx, value?: any, cfg?: {mode:string}) => any} template
+ * @property {(this: TCtx,
+ *   value?: any,
+ *   cfg?: {mode:string}
+ * ) => any} template
+ */
+
+/**
+ * A callable template function with an engine-specific `this`.
+ * @template TCtx
+ * @typedef {(this: TCtx,
+ *   value?: any,
+ *   cfg?: {mode:string}
+ * ) => any} TemplateFunction
  */
 
 /**
@@ -39,9 +52,12 @@ import XSLTStyleJSONPathResolver from './XSLTStyleJSONPathResolver.js';
 /**
  * Options common to both engines.
  * @typedef {object} BaseJTLTOptions
- * @property {Function} success A callback supplied with a single
- * argument that is the result of this instance's transform() method.
- * @property {any} [data] A JSON object or DOM document (XPath)
+ * @property {(result: any) => void} success A callback supplied
+ *   with a single
+ * argument that is the result of this instance's transform() method. When
+ * used in TypeScript, this can be made generic as
+ * `success<T>(result: T): void`.
+ * @property {unknown} [data] A JSON object or DOM document (XPath)
  * @property {string} [ajaxData] URL of a JSON file to retrieve for
  * evaluation
  * @property {boolean} [errorOnEqualPriority] Whether or not to
@@ -55,37 +71,35 @@ import XSLTStyleJSONPathResolver from './XSLTStyleJSONPathResolver.js';
  * unwrap single-element root arrays to return just the element
  * @property {string} [mode] The mode in which to begin the transform.
  * @property {'string'|'dom'|'json'} [outputType] Output type
- * @property {Function} [engine] Will be based the
+ * @property {(opts: JTLTOptions) => unknown} [engine] Will be based the
  * same config as passed to this instance. Defaults to a transforming
  * function based on JSONPath and with its own set of priorities for
  * processing templates.
- * @property {Function} [specificityPriorityResolver]
+ * @property {(path: string) => 0 | 0.5 | -0.5} [specificityPriorityResolver]
  * Callback for getting the priority by specificity
- * @property {{get: Function, append: Function, string?: Function,
- *   object?: Function, array?: Function}} [joiningTransformer] Can
- * be a singleton or class instance. Defaults to string joining for output
- * transformation.
- * @property {object} [joiningConfig] Config to pass on to the joining
+ * @property {AbstractJoiningTransformer} [joiningTransformer]
+ * A concrete joining transformer instance (or custom subclass) responsible
+ * for accumulating output. When omitted, one is created automatically based
+ * on `outputType`.
+ * @property {Record<string, unknown>} [joiningConfig] Config for the joining
  *   transformer
- * @property {any} [parent] Parent object for context
+ * @property {unknown} [parent] Parent object for context
  * @property {string} [parentProperty] Parent property name for context
  */
 
 /**
  * JSONPath engine options with context-aware template typing.
  * @typedef {BaseJTLTOptions & {
- *   templates?: JSONPathTemplateObject[] | Function,
- *   template?: JSONPathTemplateObject | ((
- *     this: import('./JSONPathTransformerContext.js').default,
- *     value?: any,
- *     cfg?: {mode:string}
- *   ) => any),
- *   query?: (
- *     this: import('./JSONPathTransformerContext.js').default,
- *     value?: any,
- *     cfg?: {mode:string}
- *   ) => any,
- *   forQuery?: any[],
+ *   templates?: JSONPathTemplateObject[] | TemplateFunction<
+ *     import('./JSONPathTransformerContext.js').default
+ *   >,
+ *   template?: JSONPathTemplateObject | TemplateFunction<
+ *     import('./JSONPathTransformerContext.js').default
+ *   >,
+ *   query?: TemplateFunction<
+ *     import('./JSONPathTransformerContext.js').default
+ *   >,
+ *   forQuery?: unknown[],
  *   engineType?: 'jsonpath',
  * }} JSONPathJTLTOptions
  */
@@ -93,18 +107,16 @@ import XSLTStyleJSONPathResolver from './XSLTStyleJSONPathResolver.js';
 /**
  * XPath engine options with context-aware template typing.
  * @typedef {BaseJTLTOptions & {
- *   templates?: XPathTemplateObject[] | Function,
- *   template?: XPathTemplateObject | ((
- *     this: import('./XPathTransformerContext.js').default,
- *     value?: any,
- *     cfg?: {mode:string}
- *   ) => any),
- *   query?: (
- *     this: import('./XPathTransformerContext.js').default,
- *     value?: any,
- *     cfg?: {mode:string}
- *   ) => any,
- *   forQuery?: any[],
+ *   templates?: XPathTemplateObject[] | TemplateFunction<
+ *     import('./XPathTransformerContext.js').default
+ *   >,
+ *   template?: XPathTemplateObject | TemplateFunction<
+ *     import('./XPathTransformerContext.js').default
+ *   >,
+ *   query?: TemplateFunction<
+ *     import('./XPathTransformerContext.js').default
+ *   >,
+ *   forQuery?: unknown[],
  *   engineType: 'xpath',
  *   xpathVersion?: 1|2,
  * }} XPathJTLTOptions
@@ -145,7 +157,10 @@ class JTLT {
     this.config = config || {};
 
     // Track if a custom joiner was provided
-    /** @type {any} */ (this.config)._customJoiningTransformer =
+    /**
+     * @type {import('./types.js').InternalJTLTOptions}
+     */
+    (this.config)._customJoiningTransformer =
       Boolean(this.config.joiningTransformer);
 
     this.setDefaults(config);
@@ -156,7 +171,7 @@ class JTLT {
       getJSON(this.config.ajaxData, (function (cfg) {
         return function (json) {
           that.config.data = json;
-          that._autoStart(/** @type {any} */ (cfg).mode);
+          that._autoStart(cfg.mode);
         };
       }(config)));
       return;
@@ -164,7 +179,7 @@ class JTLT {
     if (this.config.data === undefined) {
       throw new Error('You must supply either config.ajaxData or config.data');
     }
-    this._autoStart(/** @type {any} */ (config).mode);
+    this._autoStart(config.mode);
   }
 
   /**
@@ -172,6 +187,10 @@ class JTLT {
    *   StringJoiningTransformer}
    */
   _createJoiningTransformer () {
+    /**
+     * @type {typeof DOMJoiningTransformer|typeof JSONJoiningTransformer|
+     *   typeof StringJoiningTransformer}
+     */
     let JT;
     switch (this.config.outputType) {
     case 'dom':
@@ -191,15 +210,16 @@ class JTLT {
     // Derive a document to use for joiners when running XPath engine
     /** @type {Document|undefined} */
     let docForJoiner;
-    if ((/** @type {any} */ (this.config)).engineType === 'xpath') {
-      const {data} = /** @type {any} */ (this.config);
+    if (this.config.engineType === 'xpath') {
+      const {data} = this.config;
       if (data && typeof data === 'object') {
+        const dataNode = /** @type {Document|Element} */ (data);
         // Document
-        if (data.nodeType === 9) {
-          docForJoiner = data;
+        if ((/** @type {Document} */ (dataNode)).nodeType === 9) {
+          docForJoiner = /** @type {Document} */ (dataNode);
         // Element or Node with ownerDocument
-        } else if (data.ownerDocument) {
-          docForJoiner = data.ownerDocument;
+        } else if ((/** @type {Element} */ (dataNode)).ownerDocument) {
+          docForJoiner = (/** @type {Element} */ (dataNode)).ownerDocument;
         }
       }
     }
@@ -218,16 +238,16 @@ class JTLT {
     };
 
     // Pass unwrapSingleResult to JSON joiner if configured
-    if (JT === JSONJoiningTransformer &&
-    /** @type {any} */ (this.config).unwrapSingleResult) {
-      /** @type {any} */ (joiningConfig).unwrapSingleResult = true;
+    if (JT === JSONJoiningTransformer && this.config.unwrapSingleResult) {
+      (/** @type {Record<string, unknown>} */ (joiningConfig)).
+        unwrapSingleResult = true;
     }
 
     return new JT(initial, joiningConfig);
   }
 
   /**
-   * @param {string} mode
+   * @param {string|undefined} mode
    * @returns {void}
    */
   _autoStart (mode) {
@@ -239,7 +259,7 @@ class JTLT {
       return;
     }
 
-    this.transform(mode);
+    this.transform(/** @type {string} */ (mode));
   }
 
   /**
@@ -253,9 +273,9 @@ class JTLT {
     const query = cfg.forQuery
       // eslint-disable-next-line @stylistic/operator-linebreak -- TS
       ? /**
-       * @this {any}
-       * @returns {void}
-       */
+         * @this {any}
+         * @returns {void}
+         */
       function () {
         this.forEach([].slice.call(cfg.forQuery));
       }
@@ -318,12 +338,17 @@ class JTLT {
 
     // Create a fresh joining transformer for each transform to avoid
     // accumulation, but only if a custom one wasn't provided
-    if (!(/** @type {any} */ (this.config))._customJoiningTransformer) {
+    if (!(
+      /**
+       * @type {import('./types.js').InternalJTLTOptions}
+       */
+      (this.config)
+    )._customJoiningTransformer) {
       this.config.joiningTransformer = this._createJoiningTransformer();
     }
 
     this.config.mode = mode;
-    const ret = /** @type {Function} */ (this.config.success)(
+    const ret = this.config.success(
       (/** @type {any} */ (this.config.engine))(this.config)
     );
     return ret;

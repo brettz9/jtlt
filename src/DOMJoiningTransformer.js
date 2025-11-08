@@ -12,13 +12,12 @@ import AbstractJoiningTransformer from './AbstractJoiningTransformer.js';
 class DOMJoiningTransformer extends AbstractJoiningTransformer {
   /**
    * @param {DocumentFragment|Element} o - Initial DOM node
-   * @param {object} cfg - Configuration object
-   * @param {object} [cfg.document] - Document object
+   * @param {{document?: Document}} cfg - Configuration object
    */
   constructor (o, cfg) {
     super(cfg); // Include this in any subclass of AbstractJoiningTransformer
     this._dom = o ||
-    /** @type {any} */ (cfg).document.createDocumentFragment();
+    cfg.document?.createDocumentFragment();
   }
 
   /**
@@ -46,7 +45,7 @@ class DOMJoiningTransformer extends AbstractJoiningTransformer {
 
   /**
    * @param {string} prop - Property name
-   * @param {*} val - Property value
+   * @param {any} val - Property value
    * @returns {void}
    */
   // eslint-disable-next-line class-methods-use-this -- Incomplete?
@@ -55,10 +54,10 @@ class DOMJoiningTransformer extends AbstractJoiningTransformer {
   }
 
   /**
-   * @param {object} obj - Object to serialize
-   * @param {Function} [cb] - Callback function.
+   * @param {Record<string, unknown>} obj - Object to serialize
+   * @param {(this: DOMJoiningTransformer) => void} [cb] - Callback function.
    * @param {any[]} [usePropertySets] - Property sets to use
-   * @param {object} [propSets] - Additional property sets
+   * @param {Record<string, unknown>} [propSets] - Additional property sets
    * @returns {DOMJoiningTransformer}
    */
   object (obj, cb, usePropertySets, propSets) {
@@ -74,7 +73,7 @@ class DOMJoiningTransformer extends AbstractJoiningTransformer {
 
   /**
    * @param {any[]|Element} arr
-   * @param {Function} [cb] - Callback function
+   * @param {(this: DOMJoiningTransformer) => void} [cb] - Callback function
    * @returns {DOMJoiningTransformer}
    */
   array (arr, cb) {
@@ -90,7 +89,8 @@ class DOMJoiningTransformer extends AbstractJoiningTransformer {
 
   /**
    * @param {string} str - String value
-   * @param {Function} cb - Callback function (unused)
+   * @param {(this: DOMJoiningTransformer) => void} cb - Callback
+   *   function (unused)
    * @returns {DOMJoiningTransformer}
    */
   string (str, cb) {
@@ -153,7 +153,7 @@ class DOMJoiningTransformer extends AbstractJoiningTransformer {
   }
 
   /**
-   * @param {Function} func - Function to stringify
+   * @param {(...args: any[]) => any} func - Function to stringify
    * @returns {DOMJoiningTransformer}
    */
   function (func) {
@@ -168,8 +168,8 @@ class DOMJoiningTransformer extends AbstractJoiningTransformer {
 
   /**
    * @param {string} elName - Element name
-   * @param {object} [atts] - Attributes object
-   * @param {Function} [cb] - Callback function
+   * @param {Record<string, string>} [atts] - Attributes object
+   * @param {(this: DOMJoiningTransformer) => void} [cb] - Callback function
    * @returns {DOMJoiningTransformer}
    */
   element (elName, atts, cb) {
@@ -183,7 +183,7 @@ class DOMJoiningTransformer extends AbstractJoiningTransformer {
     /** @type {any} */ (this._cfg).document.createElement(elName);
     for (const att in atts) {
       if (Object.hasOwn(atts, att)) {
-        /** @type {Record<string, any>} */
+        /** @type {Record<string, string>} */
         const attsObj = /** @type {any} */ (atts);
         el.setAttribute(att, attsObj[att]);
       }

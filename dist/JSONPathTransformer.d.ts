@@ -16,7 +16,7 @@ declare class JSONPathTransformer {
     static DefaultTemplateRules: {
         transformRoot: {
             /**
-             * @param {*} value - Value
+             * @param {any} value - Value
              * @param {{mode: string}} cfg - Configuration
              * @returns {void}
              */
@@ -26,14 +26,14 @@ declare class JSONPathTransformer {
         };
         transformPropertyNames: {
             /**
-             * @param {*} value - Current context value
-             * @returns {*}
+             * @param {any} value - Current context value
+             * @returns {any}
              */
             template(value: any): any;
         };
         transformObjects: {
             /**
-             * @param {*} value - Value
+             * @param {any} value - Value
              * @param {{mode: string}} cfg - Configuration
              * @returns {void}
              */
@@ -43,7 +43,7 @@ declare class JSONPathTransformer {
         };
         transformArrays: {
             /**
-             * @param {*} value - Value
+             * @param {any} value - Value
              * @param {{mode: string}} cfg - Configuration
              * @returns {void}
              */
@@ -53,16 +53,16 @@ declare class JSONPathTransformer {
         };
         transformScalars: {
             /**
-             * @returns {*}
+             * @returns {any}
              */
             template(): any;
         };
         transformFunctions: {
             /**
-             * @param {Function} value - Function at current context
-             * @returns {*}
+             * @param {( ...args: any[]) => any} value - Function at current context
+             * @returns {any}
              */
-            template(value: Function): any;
+            template(value: (...args: any[]) => any): any;
         };
     };
     /**
@@ -88,7 +88,7 @@ declare class JSONPathTransformer {
     _triggerEqualPriorityError(): void;
     /**
      * @param {string} mode - Transformation mode
-     * @returns {*} The transformation result
+     * @returns {any} The transformation result
      */
     transform(mode: string): any;
 }

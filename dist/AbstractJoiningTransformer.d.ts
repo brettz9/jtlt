@@ -33,10 +33,11 @@ declare class AbstractJoiningTransformer {
     _requireSameChildren(type: string, embedType: string): void;
     /**
      * @param {string} prop - Configuration property name
-     * @param {*} val - Configuration property value
-     * @param {Function} [cb] - Callback function
+     * @param {any} val - Configuration property value
+     * @param {(this: AbstractJoiningTransformer) => void} [cb]
+     *   Optional callback invoked with this instance
      * @returns {void}
      */
-    config(prop: string, val: any, cb?: Function): void;
+    config(prop: string, val: any, cb?: (this: AbstractJoiningTransformer) => void): void;
 }
 //# sourceMappingURL=AbstractJoiningTransformer.d.ts.map

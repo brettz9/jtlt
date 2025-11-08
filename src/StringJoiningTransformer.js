@@ -6,7 +6,7 @@ const camelCase = /[a-z][A-Z]/gv;
 
 /**
  * Type guard to detect DOM Elements.
- * @param {*} item
+ * @param {any} item
  * @returns {item is Element}
  */
 function _isElement (item) {
@@ -20,6 +20,15 @@ function _isElement (item) {
 function _makeDatasetAttribute (n0) {
   return n0.charAt(0) + '-' + n0.charAt(1).toLowerCase();
 }
+
+/**
+ * Attributes object for element() allowing standard string attributes
+ * plus special helpers: dataset (object) and $a (ordered attribute array).
+ * @typedef {Record<string, unknown> & {
+ *   dataset?: Record<string, string>,
+ *   $a?: Array<[string, string]>
+ * }} ElementAttributes
+ */
 
 /**
  *
@@ -54,7 +63,12 @@ function _makeDatasetAttribute (n0) {
 class StringJoiningTransformer extends AbstractJoiningTransformer {
   /**
    * @param {string} s - Initial string
-   * @param {object} cfg - Configuration object
+   * @param {{
+   *   mode?: "JavaScript"|"JSON",
+   *   JHTMLForJSON?: boolean,
+   *   xmlElements?: boolean,
+   *   preEscapedAttributes?: boolean
+   * }} [cfg] - Configuration object
    */
   constructor (s, cfg) {
     super(cfg); // Include this in any subclass of AbstractJoiningTransformer
@@ -74,12 +88,12 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
     this._arr = [];
     /** @type {string | undefined} */
     this._strTemp = undefined;
-    /** @type {Record<string, any>} */
+    /** @type {Record<string, unknown>} */
     this.propertySets = {};
   }
 
   /**
-   * @param {string|*} s - String or value to append
+   * @param {string|any} s - String or value to append
    * @returns {StringJoiningTransformer}
    */
   append (s) {
@@ -112,7 +126,7 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
 
   /**
    * @param {string} prop - Property name
-   * @param {*} val - Property value
+   * @param {any} val - Property value
    * @returns {StringJoiningTransformer}
    */
   propValue (prop, val) {
@@ -127,7 +141,7 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
 
   /**
    * @param {string} prop - Property name
-   * @param {Function} cb - Callback function
+   * @param {(this: StringJoiningTransformer) => void} cb - Callback function
    * @returns {StringJoiningTransformer}
    */
   propOnly (prop, cb) {
@@ -154,10 +168,10 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
   }
 
   /**
-   * @param {object|Element} obj - Object to serialize
-   * @param {Function} cb - Callback function
+   * @param {Record<string, unknown>|Element} obj - Object to serialize
+   * @param {(this: StringJoiningTransformer) => void} cb - Callback function
    * @param {any[]} [usePropertySets] - Property sets to use
-   * @param {object} [propSets] - Additional property sets
+   * @param {Record<string, unknown>} [propSets] - Additional property sets
    * @returns {StringJoiningTransformer}
    */
   object (obj, cb, usePropertySets, propSets) {
@@ -212,7 +226,7 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
 
   /**
    * @param {any[]|Element} [arr] - Array to serialize
-   * @param {Function} [cb] - Callback function
+   * @param {(this: StringJoiningTransformer) => void} [cb] - Callback function
    * @returns {StringJoiningTransformer}
    */
   array (arr, cb) {
@@ -259,8 +273,9 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
   }
 
   /**
-   * @param {string|Element|object} str - String value or element
-   * @param {Function} [cb] - Callback function
+   * @param {string|Element|Record<string, unknown>} str
+   *   String value or element
+   * @param {(this: StringJoiningTransformer) => void} [cb] - Callback function
    * @returns {StringJoiningTransformer}
    */
   string (str, cb) {
@@ -292,7 +307,8 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
   }
 
   /**
-   * @param {number|Element|object} num - Number value or element
+   * @param {number|Element|Record<string, unknown>} num
+   *   Number value or element
    * @returns {StringJoiningTransformer}
    */
   number (num) {
@@ -307,7 +323,8 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
   }
 
   /**
-   * @param {boolean|Element|object} bool - Boolean value or element
+   * @param {boolean|Element|Record<string, unknown>} bool
+   *   Boolean value or element
    * @returns {StringJoiningTransformer}
    */
   boolean (bool) {
@@ -365,7 +382,7 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
   }
 
   /**
-   * @param {Function|Element} func - Function to stringify
+   * @param {((...args: any[]) => any)|Element} func - Function to stringify
    * @returns {StringJoiningTransformer}
    */
   function (func) {
@@ -385,10 +402,10 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
   }
 
   /**
-   * @param {string|object} elName - Element name or element object
-   * @param {object} [atts] - Element attributes
+   * @param {string|Element} elName - Element name or element object
+   * @param {ElementAttributes} [atts] - Element attributes
    * @param {any[]} [childNodes] - Child nodes
-   * @param {Function} [cb] - Callback function
+   * @param {(this: StringJoiningTransformer) => void} [cb] - Callback function
    * @returns {StringJoiningTransformer}
    */
   element (elName, atts, childNodes, cb) {
@@ -399,16 +416,18 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
     // eslint-disable-next-line unicorn/no-this-assignment -- Temporary
     const that = this;
     if (Array.isArray(atts)) {
-      cb = /** @type {Function} */ (/** @type {unknown} */ (childNodes));
+      cb = /** @type {(this: StringJoiningTransformer) => void} */ (
+        /** @type {unknown} */ (childNodes)
+      );
       childNodes = atts;
       atts = {};
     } else if (typeof atts === 'function') {
-      cb = atts;
+      cb = /** @type {(this: StringJoiningTransformer) => void} */ (atts);
       childNodes = [];
       atts = {};
     }
     if (typeof childNodes === 'function') {
-      cb = childNodes;
+      cb = /** @type {(this: StringJoiningTransformer) => void} */ (childNodes);
       childNodes = [];
     }
 
@@ -428,7 +447,7 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
     }
 
     if (typeof elName === 'object') {
-      /** @type {Record<string, any>} */
+      /** @type {Record<string, string>} */
       const objAtts = {};
       /** @type {any} */
       const elObj = elName;
@@ -444,9 +463,13 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
     const oldTagState = this._openTagState;
     this._openTagState = true;
     if (atts) {
-      const attsObj = /** @type {Record<string, any>} */ (atts);
+      const attsObj = /** @type {Record<string, unknown>} */ (atts);
       Object.keys(attsObj).forEach((att) => {
-        that.attribute(att, attsObj[att], false);
+        that.attribute(
+          att,
+          /** @type {string|Record<string, unknown>} */ (attsObj[att]),
+          false
+        );
       });
     }
     if (childNodes && childNodes.length) {
@@ -468,7 +491,7 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
 
   /**
    * @param {string} name - Attribute name
-   * @param {string|object} val - Attribute value
+   * @param {string|Record<string, unknown>} val - Attribute value
    * @param {boolean} [avoidAttEscape] - Whether to avoid escaping the
    *   attribute value
    * @returns {StringJoiningTransformer}
@@ -488,7 +511,7 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
 
     if (!this._cfg || !this._cfg.xmlElements) {
       if (typeof val === 'object') {
-        /** @type {Record<string, any>} */
+        /** @type {Record<string, unknown>} */
         const valObj = /** @type {any} */ (val);
         switch (name) {
         case 'dataset': {
@@ -496,16 +519,22 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
             that.attribute(
               'data-' + att.replaceAll(
                 camelCase, _makeDatasetAttribute
-              ), valObj[att], false
+              ),
+              /** @type {string|Record<string, unknown>} */ (valObj[att]),
+              false
             );
           });
           break;
         }
         case '$a': { // Ordered attributes
-          /** @type {any[]} */
+          /** @type {unknown[][]} */
           const valArr = /** @type {any} */ (val);
           valArr.forEach(function (attArr) {
-            that.attribute(attArr[0], attArr[1], false);
+            that.attribute(
+              String(attArr[0]),
+              /** @type {string|Record<string, unknown>} */ (attArr[1]),
+              false
+            );
           });
           break;
         }
@@ -542,12 +571,12 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
   }
 
   /**
-  * Unlike text(), does not escape for HTML; unlike string(), does not perform
-  *   JSON stringification; unlike append(), does not do other checks (but still
-  *   varies in its role across transformers).
-  * @param {string} str
-  * @returns {StringJoiningTransformer}
-  */
+   * Unlike text(), does not escape for HTML; unlike string(), does not perform
+   *   JSON stringification; unlike append(), does not do other checks (but
+   *   still varies in its role across transformers).
+   * @param {string} str
+   * @returns {StringJoiningTransformer}
+   */
   rawAppend (str) {
     // Lowest-level append: bypasses append() semantics and state checks.
     this._str += str;
@@ -568,9 +597,9 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
 
   /**
    * Helper method to use property sets.
-   * @param {object} obj - Object to apply property set to
+   * @param {Record<string, unknown>} obj - Object to apply property set to
    * @param {string} psName - Property set name
-   * @returns {object}
+   * @returns {Record<string, unknown>}
    */
   _usePropertySets (obj, psName) {
     // Merge named property set from this.propertySets into obj

@@ -40,8 +40,9 @@ class AbstractJoiningTransformer {
    * @returns {void}
    */
   _requireSameChildren (type, embedType) {
-    if (this._cfg && /** @type {any} */ (this._cfg)[type] &&
-    /** @type {any} */ (this._cfg)[type].requireSameChildren) {
+    const cfg = /** @type {Record<string, unknown>} */ (this._cfg);
+    if (this._cfg && cfg[type] &&
+    (/** @type {Record<string, unknown>} */ (cfg[type])).requireSameChildren) {
       throw new Error(
         'Cannot embed ' + embedType + ' children for a ' + type +
           ' joining transformer.'
@@ -51,20 +52,21 @@ class AbstractJoiningTransformer {
 
   /**
    * @param {string} prop - Configuration property name
-   * @param {*} val - Configuration property value
-   * @param {Function} [cb] - Callback function
+   * @param {any} val - Configuration property value
+   * @param {(this: AbstractJoiningTransformer) => void} [cb]
+   *   Optional callback invoked with this instance
    * @returns {void}
    */
   config (prop, val, cb) {
-    const oldCfgProp = this._cfg &&
-    /** @type {any} */ (this._cfg)[prop];
+    const cfg = /** @type {Record<string, unknown>} */ (this._cfg);
+    const oldCfgProp = this._cfg && cfg[prop];
     if (this._cfg) {
-      /** @type {any} */ (this._cfg)[prop] = val;
+      cfg[prop] = val;
     }
     if (cb) {
       cb.call(this);
       if (this._cfg) {
-        /** @type {any} */ (this._cfg)[prop] = oldCfgProp;
+        cfg[prop] = oldCfgProp;
       }
     }
   }

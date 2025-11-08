@@ -10,11 +10,10 @@ export default DOMJoiningTransformer;
 declare class DOMJoiningTransformer extends AbstractJoiningTransformer {
     /**
      * @param {DocumentFragment|Element} o - Initial DOM node
-     * @param {object} cfg - Configuration object
-     * @param {object} [cfg.document] - Document object
+     * @param {{document?: Document}} cfg - Configuration object
      */
     constructor(o: DocumentFragment | Element, cfg: {
-        document?: object | undefined;
+        document?: Document;
     });
     _dom: DocumentFragment | Element;
     /**
@@ -33,30 +32,31 @@ declare class DOMJoiningTransformer extends AbstractJoiningTransformer {
     get(): DocumentFragment | Element;
     /**
      * @param {string} prop - Property name
-     * @param {*} val - Property value
+     * @param {any} val - Property value
      * @returns {void}
      */
     propValue(prop: string, val: any): void;
     /**
-     * @param {object} obj - Object to serialize
-     * @param {Function} [cb] - Callback function.
+     * @param {Record<string, unknown>} obj - Object to serialize
+     * @param {(this: DOMJoiningTransformer) => void} [cb] - Callback function.
      * @param {any[]} [usePropertySets] - Property sets to use
-     * @param {object} [propSets] - Additional property sets
+     * @param {Record<string, unknown>} [propSets] - Additional property sets
      * @returns {DOMJoiningTransformer}
      */
-    object(obj: object, cb?: Function, usePropertySets?: any[], propSets?: object): DOMJoiningTransformer;
+    object(obj: Record<string, unknown>, cb?: (this: DOMJoiningTransformer) => void, usePropertySets?: any[], propSets?: Record<string, unknown>): DOMJoiningTransformer;
     /**
      * @param {any[]|Element} arr
-     * @param {Function} [cb] - Callback function
+     * @param {(this: DOMJoiningTransformer) => void} [cb] - Callback function
      * @returns {DOMJoiningTransformer}
      */
-    array(arr: any[] | Element, cb?: Function): DOMJoiningTransformer;
+    array(arr: any[] | Element, cb?: (this: DOMJoiningTransformer) => void): DOMJoiningTransformer;
     /**
      * @param {string} str - String value
-     * @param {Function} cb - Callback function (unused)
+     * @param {(this: DOMJoiningTransformer) => void} cb - Callback
+     *   function (unused)
      * @returns {DOMJoiningTransformer}
      */
-    string(str: string, cb: Function): DOMJoiningTransformer;
+    string(str: string, cb: (this: DOMJoiningTransformer) => void): DOMJoiningTransformer;
     /**
      * @param {number} num - Number value
      * @returns {DOMJoiningTransformer}
@@ -81,17 +81,17 @@ declare class DOMJoiningTransformer extends AbstractJoiningTransformer {
      */
     nonfiniteNumber(num: number): DOMJoiningTransformer;
     /**
-     * @param {Function} func - Function to stringify
+     * @param {(...args: any[]) => any} func - Function to stringify
      * @returns {DOMJoiningTransformer}
      */
-    function(func: Function): DOMJoiningTransformer;
+    function(func: (...args: any[]) => any): DOMJoiningTransformer;
     /**
      * @param {string} elName - Element name
-     * @param {object} [atts] - Attributes object
-     * @param {Function} [cb] - Callback function
+     * @param {Record<string, string>} [atts] - Attributes object
+     * @param {(this: DOMJoiningTransformer) => void} [cb] - Callback function
      * @returns {DOMJoiningTransformer}
      */
-    element(elName: string, atts?: object, cb?: Function): DOMJoiningTransformer;
+    element(elName: string, atts?: Record<string, string>, cb?: (this: DOMJoiningTransformer) => void): DOMJoiningTransformer;
     /**
      * @param {string} name
      * @param {string} val

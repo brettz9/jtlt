@@ -5,8 +5,8 @@ import JSONJoiningTransformer from '../src/JSONJoiningTransformer.js';
 describe('JSONPathTransformerContext copy/copyOf', () => {
   /**
    * Helper to build a context and optionally register property sets.
-   * @param {*} data
-   * @param {Record<string, object>} [propertySets]
+   * @param {any} data
+   * @param {Record<string, Record<string, unknown>>} [propertySets]
    * @returns {{
    *   ctx: JSONPathTransformerContext,
    *   joiner: JSONJoiningTransformer

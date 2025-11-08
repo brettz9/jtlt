@@ -1,4 +1,24 @@
 export default JSONJoiningTransformer;
+export type ObjectCallback = (this: JSONJoiningTransformer, obj: Record<string, unknown>) => void;
+export type ArrayCallback = (this: JSONJoiningTransformer, arr: any[]) => void;
+export type SimpleCallback = (this: JSONJoiningTransformer) => void;
+/**
+ * @callback ObjectCallback
+ * @this {JSONJoiningTransformer}
+ * @param {Record<string, unknown>} obj
+ * @returns {void}
+ */
+/**
+ * @callback ArrayCallback
+ * @this {JSONJoiningTransformer}
+ * @param {any[]} arr
+ * @returns {void}
+ */
+/**
+ * @callback SimpleCallback
+ * @this {JSONJoiningTransformer}
+ * @returns {void}
+ */
 /**
  * JSON-based joining transformer for building JSON/JavaScript objects.
  *
@@ -9,30 +29,36 @@ export default JSONJoiningTransformer;
  */
 declare class JSONJoiningTransformer extends AbstractJoiningTransformer {
     /**
-     * @param {any[]|object} [o] - Initial object or array
-     * @param {object} [cfg] - Configuration object
+     * @param {any[]|Record<string, unknown>} [o] - Initial object or array
+     * @param {{
+     *   unwrapSingleResult?: boolean,
+     *   mode?: "JavaScript"|"JSON"
+     * }} [cfg] - Configuration object
      */
-    constructor(o?: any[] | object, cfg?: object);
-    /** @type {any[]|object} */
-    _obj: any[] | object;
+    constructor(o?: any[] | Record<string, unknown>, cfg?: {
+        unwrapSingleResult?: boolean;
+        mode?: "JavaScript" | "JSON";
+    });
+    /** @type {any[]|Record<string, unknown>} */
+    _obj: any[] | Record<string, unknown>;
     /** @type {boolean | undefined} */
     _objPropState: boolean | undefined;
     /** @type {boolean | undefined} */
     _arrItemState: boolean | undefined;
-    /** @type {{attsObj: Record<string, any>, jmlChildren: any[]}[]} */
+    /** @type {{attsObj: Record<string, unknown>, jmlChildren: unknown[]}[]} */
     _elementStack: {
-        attsObj: Record<string, any>;
-        jmlChildren: any[];
+        attsObj: Record<string, unknown>;
+        jmlChildren: unknown[];
     }[];
     /**
      * Directly appends an item to the internal array without checks.
-     * @param {*} item - Item to append
+     * @param {any} item - Item to append
      * @returns {void}
      */
     rawAppend(item: any): void;
     /**
      * Appends an item to the current object or array.
-     * @param {*} item - Item to append
+     * @param {any} item - Item to append
      * @returns {JSONJoiningTransformer}
      */
     append(item: any): JSONJoiningTransformer;
@@ -46,39 +72,34 @@ declare class JSONJoiningTransformer extends AbstractJoiningTransformer {
     /**
      * Sets a property value on the current object.
      * @param {string} prop - Property name
-     * @param {*} val - Property value
+     * @param {any} val - Property value
      * @returns {void}
      */
     propValue(prop: string, val: any): void;
     /**
-     * @param {object|Function} [objOrCb] - Seed object to start with, or
-     *   callback if no seed provided
-     * @param {Function|any[]} [cbOrUsePropertySets] - Callback to be executed
-     *   on this transformer but with a context nested within the newly created
-     *   object, or array of property set names if first arg was an object
-     * @param {any[]|object} [usePropertySetsOrPropSets] - Array of string
-     *   property set names to copy onto the new object, or propSets if second
-     *   arg was a callback
-     * @param {object} [propSets] - An object of key-value pairs to copy onto
-     *   the new object
+     * @param {Record<string, unknown>|ObjectCallback} [objOrCb]
+     *   Seed object or callback.
+     * @param {ObjectCallback|any[]} [cbOrUsePropertySets] Callback or sets.
+     * @param {any[]|Record<string, unknown>} [usePropertySetsOrPropSets]
+     *   Sets or prop sets.
+     * @param {Record<string, unknown>} [propSets] Key-value pairs to add.
      * @returns {JSONJoiningTransformer}
      */
-    object(objOrCb?: object | Function, cbOrUsePropertySets?: Function | any[], usePropertySetsOrPropSets?: any[] | object, propSets?: object): JSONJoiningTransformer;
+    object(objOrCb?: Record<string, unknown> | ObjectCallback, cbOrUsePropertySets?: ObjectCallback | any[], usePropertySetsOrPropSets?: any[] | Record<string, unknown>, propSets?: Record<string, unknown>): JSONJoiningTransformer;
     /**
      * Creates a new array and executes a callback in its context.
-     * @param {any[]|Function} [arrOrCb] - Seed array to start with, or callback
-     *   if no seed provided
-     * @param {Function} [cb] - Callback function (if first arg was a seed array)
+     * @param {any[]|ArrayCallback} [arrOrCb] Seed array or callback.
+     * @param {ArrayCallback} [cb] Callback when first arg was array.
      * @returns {JSONJoiningTransformer}
      */
-    array(arrOrCb?: any[] | Function, cb?: Function): JSONJoiningTransformer;
+    array(arrOrCb?: any[] | ArrayCallback, cb?: ArrayCallback): JSONJoiningTransformer;
     /**
      * Appends a string value.
-     * @param {string} str - String value
-    * @param {Function} [cb] - Callback function (unused)
+     * @param {string} str String value.
+     * @param {SimpleCallback} [cb] Unused callback.
      * @returns {JSONJoiningTransformer}
      */
-    string(str: string, cb?: Function): JSONJoiningTransformer;
+    string(str: string, cb?: SimpleCallback): JSONJoiningTransformer;
     /**
      * Appends a number value.
      * @param {number} num - Number value
@@ -109,31 +130,44 @@ declare class JSONJoiningTransformer extends AbstractJoiningTransformer {
     nonfiniteNumber(num: number): JSONJoiningTransformer;
     /**
      * Appends a function value (JavaScript mode only).
-     * @param {Function} func - Function to append
+     * @param {(...args: any[]) => any} func Function to append.
      * @returns {JSONJoiningTransformer}
      */
-    function(func: Function): JSONJoiningTransformer;
+    function(func: (...args: any[]) => any): JSONJoiningTransformer;
     /**
-    * Build a Jamilih-style element JSON array and append to current container.
-    * Result form: ['tag', {attr: 'val'}, child1, child2, ...]
-    * Helpers: dataset -> data-*; $a -> ordered attributes.
-    * Supported signatures mirror StringJoiningTransformer.element.
-     * @param {string|Element|object} elName - Element name or Element-like
-     * @param {object|any[]|Function} [atts] - Attributes object or children or cb
-     * @param {any[]|Function} [childNodes] - Child nodes array or callback
-     * @param {Function} [cb] - Callback for building children/attributes
+     * Attributes object for element() allowing standard string attributes
+     * plus special helpers: dataset (object) and $a (ordered attribute array).
+     * @typedef {Record<string, string> & {
+     *   dataset?: Record<string, string>,
+     *   $a?: Array<[string, string]>
+     * }} ElementAttributes
+     */
+    /**
+     * Build a Jamilih-style element JSON array and append to current container.
+     * Result form: ['tag', {attr: 'val'}, child1, child2, ...]
+     * Helpers: dataset -> data-*; $a -> ordered attributes.
+     * Supported signatures mirror StringJoiningTransformer.element.
+     * @param {string|Element} elName Element name or Element-like.
+     * @param {ElementAttributes|any[]|SimpleCallback} [atts]
+     *   Attrs, children, or cb.
+     * @param {any[]|SimpleCallback} [childNodes] Children or cb.
+     * @param {SimpleCallback} [cb] Builder callback.
      * @returns {JSONJoiningTransformer}
      */
-    element(elName: string | Element | object, atts?: object | any[] | Function, childNodes?: any[] | Function, cb?: Function): JSONJoiningTransformer;
+    element(elName: string | Element, atts?: (Record<string, string> & {
+        dataset?: Record<string, string>;
+        $a?: Array<[string, string]>;
+    }) | any[] | SimpleCallback, childNodes?: any[] | SimpleCallback, cb?: SimpleCallback): JSONJoiningTransformer;
     /**
      * Adds/updates an attribute for the most recently open element built via
      * a callback-driven element(). When not in an element callback context,
      * throws. Supports the same dataset/$a helpers as string joiner.
      * @param {string} name - Attribute name (or helper: dataset, $a)
-     * @param {string|object|any[]} val - Attribute value or helper object
+     * @param {string|Record<string, unknown>|unknown[]} val
+     *   Attribute value or helper object
      * @returns {JSONJoiningTransformer}
      */
-    attribute(name: string, val: string | object | any[]): JSONJoiningTransformer;
+    attribute(name: string, val: string | Record<string, unknown> | unknown[]): JSONJoiningTransformer;
     /**
      * Adds a text node (string) as a child within the current element() callback
      * context. Outside of an element callback, simply appends the text to the
@@ -150,11 +184,11 @@ declare class JSONJoiningTransformer extends AbstractJoiningTransformer {
     plainText(str: string): JSONJoiningTransformer;
     /**
      * Helper method to use property sets (to be implemented).
-     * @param {object} obj - Object to apply property set to
+     * @param {Record<string, unknown>} obj - Object to apply property set to
      * @param {string} psName - Property set name
-     * @returns {object}
+     * @returns {Record<string, unknown>}
      */
-    _usePropertySets(obj: object, psName: string): object;
+    _usePropertySets(obj: Record<string, unknown>, psName: string): Record<string, unknown>;
 }
 import AbstractJoiningTransformer from './AbstractJoiningTransformer.js';
 //# sourceMappingURL=JSONJoiningTransformer.d.ts.map

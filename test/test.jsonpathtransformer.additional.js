@@ -102,9 +102,9 @@ describe('JSONPathTransformer additional coverage', function () {
     const data = {obj: {a: 1, b: 2, c: 3}};
     const templates = [
       ['$', /**
-            * @this {import('../src/JSONPathTransformerContext.js').default}
-            * @returns {void}
-            */ function () {
+             * @this {import('../src/JSONPathTransformerContext.js').default}
+             * @returns {void}
+             */ function () {
           this.applyTemplates('$.obj~');
         }]
     ];
@@ -117,9 +117,9 @@ describe('JSONPathTransformer additional coverage', function () {
     const data = {fn: () => 'OK'};
     const templates = [
       ['$', /**
-            * @this {import('../src/JSONPathTransformerContext.js').default}
-            * @returns {void}
-            */ function () {
+             * @this {import('../src/JSONPathTransformerContext.js').default}
+             * @returns {void}
+             */ function () {
           this.applyTemplates('$.fn');
         }]
     ];
@@ -131,9 +131,9 @@ describe('JSONPathTransformer additional coverage', function () {
     const data = 'justAString';
     const templates = [
       ['$', /**
-            * @this {import('../src/JSONPathTransformerContext.js').default}
-            * @returns {void}
-            */ function () {
+             * @this {import('../src/JSONPathTransformerContext.js').default}
+             * @returns {void}
+             */ function () {
           this.applyTemplates('$~');
         }]
     ];
@@ -145,18 +145,19 @@ describe('JSONPathTransformer additional coverage', function () {
     const data = {items: [{value: 10}, {value: 20}]};
     const templates = [
       ['$', /**
-            * @this {import('../src/JSONPathTransformerContext.js').default}
-            * @returns {void}
-            */ function () {
+             * @this {import('../src/JSONPathTransformerContext.js').default}
+             * @returns {void}
+             */ function () {
           this.applyTemplates('$.items[*]');
           // After templates run, check if items were modified
           this.plainText(JSON.stringify(data.items));
         }],
-      ['$.items[*]', /**
-            * @this {import('../src/JSONPathTransformerContext.js').default}
-            * @param {any} item
-            * @returns {void}
-            */ function (item) {
+      ['$.items[*]',
+        /**
+         * @this {import('../src/JSONPathTransformerContext.js').default}
+         * @param {any} item
+         * @returns {void}
+         */ function (item) {
           // Use set() to modify the value in parent array
           this.set({value: item.value * 2, modified: true});
         }]

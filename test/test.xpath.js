@@ -23,7 +23,7 @@ function buildDom () {
 describe('XPathTransformer basics', () => {
   it('renders simple elements using templates', () => {
     const {document} = buildDom();
-    const joiner = new StringJoiningTransformer('', {document});
+    const joiner = new StringJoiningTransformer('');
     const templates = [
       {
         name: 'root',
@@ -65,7 +65,7 @@ describe('XPathTransformer basics', () => {
 
   it('throws on equal-priority root templates when configured', () => {
     const {document} = buildDom();
-    const joiner = new StringJoiningTransformer('', {document});
+    const joiner = new StringJoiningTransformer('');
     const templates = [
       {name: 'root1', path: '/', template () { /* no-op */ }},
       {name: 'root2', path: '/', template () { /* no-op */ }}
@@ -85,7 +85,7 @@ describe('XPathTransformer basics', () => {
 describe('XPathTransformerContext core methods', () => {
   it('supports get/forEach/valueOf/variable/key', () => {
     const {document} = buildDom();
-    const joiner = new StringJoiningTransformer('', {document});
+    const joiner = new StringJoiningTransformer('');
     const ctx = new XPathTransformerContext({
       data: document,
       joiningTransformer: joiner
@@ -129,7 +129,7 @@ describe('XPathTransformerContext core methods', () => {
 describe('XPathTransformer basics (version 1)', () => {
   it('renders items via native XPathEvaluator', () => {
     const {document} = buildDom();
-    const joiner = new StringJoiningTransformer('', {document});
+    const joiner = new StringJoiningTransformer('');
     const templates = [
       {
         name: 'root',

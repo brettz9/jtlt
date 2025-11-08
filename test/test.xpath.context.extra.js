@@ -18,7 +18,7 @@ describe('XPathTransformerContext additional coverage', () => {
       '<root><child>A</child><child>B</child><child>C</child></root>'
     );
     // Provide a joiner though we won't append output here
-    const joiner = new StringJoiningTransformer('', {document: doc});
+    const joiner = new StringJoiningTransformer('');
     const ctx = new XPathTransformerContext({
       data: doc.documentElement,
       joiningTransformer: joiner,
@@ -36,7 +36,7 @@ describe('XPathTransformerContext additional coverage', () => {
 
   it('covers v2 scalar return (line 132) without asNodes', () => {
     const doc = makeDoc('<root><child>Test</child></root>');
-    const joiner = new StringJoiningTransformer('', {document: doc});
+    const joiner = new StringJoiningTransformer('');
     const ctx = new XPathTransformerContext({
       data: doc.documentElement,
       joiningTransformer: joiner,

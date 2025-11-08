@@ -109,7 +109,7 @@ const doc = parser.parseFromString(
   '<root><item>a</item><item>b</item></root>', 'text/xml'
 );
 
-const joiner = new StringJoiningTransformer('', {document: doc});
+const joiner = new StringJoiningTransformer('');
 const templates = [
   {name: 'root', path: '/', template () {
     this.applyTemplates('//item');

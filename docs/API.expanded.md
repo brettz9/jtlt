@@ -93,7 +93,7 @@ Config additions:
 ```js
 import {XPathTransformer, StringJoiningTransformer} from 'jtlt';
 // Assume `doc` is an XML Document
-const joiner = new StringJoiningTransformer('', {document: doc});
+const joiner = new StringJoiningTransformer('');
 const templates = [
   {
     name: 'root',
