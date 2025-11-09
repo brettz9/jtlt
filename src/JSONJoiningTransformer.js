@@ -454,6 +454,43 @@ class JSONJoiningTransformer extends AbstractJoiningTransformer {
   }
 
   /**
+   * Adds a comment node (string) as a child within the current
+   *   element() callback context. Outside of an element callback,
+   *   simply appends the comment to the current array/object like string().
+   * @param {string} txt - Comment content
+   * @returns {JSONJoiningTransformer}
+   */
+  comment (txt) {
+    if (this._elementStack.length) {
+      const top = /** @type {any} */ (this._elementStack.at(-1));
+      const {jmlChildren} = top;
+      jmlChildren.push(['!', txt]);
+      return this;
+    }
+    // No-op outside element context in JSON joiner
+    return this;
+  }
+
+  /**
+   * Adds a comment node (string) as a child within the current
+   *   element() callback context. Outside of an element callback,
+   *   simply appends the comment to the current array/object like string().
+   * @param {string} target - processing instruction content
+   * @param {string} data - processing instruction content
+   * @returns {JSONJoiningTransformer}
+   */
+  processingInstruction (target, data) {
+    if (this._elementStack.length) {
+      const top = /** @type {any} */ (this._elementStack.at(-1));
+      const {jmlChildren} = top;
+      jmlChildren.push(['?', target, data]);
+      return this;
+    }
+    // No-op outside element context in JSON joiner
+    return this;
+  }
+
+  /**
    * Adds a text node (string) as a child within the current element() callback
    * context. Outside of an element callback, simply appends the text to the
    * current array/object like string().
@@ -464,7 +501,7 @@ class JSONJoiningTransformer extends AbstractJoiningTransformer {
     if (this._elementStack.length) {
       const top = /** @type {any} */ (this._elementStack.at(-1));
       const {jmlChildren} = top;
-      jmlChildren.push(txt);
+      jmlChildren.push(['!', txt]);
       return this;
     }
     // No-op outside element context in JSON joiner

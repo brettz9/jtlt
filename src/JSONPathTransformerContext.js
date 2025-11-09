@@ -761,6 +761,34 @@ class JSONPathTransformerContext {
   }
 
   /**
+   * Add a comment to the most recently opened element. Mirrors the joining
+   * transformer API so templates can call `this.comment()`.
+   * @param {string} text - Comment text
+   * @returns {JSONPathTransformerContext}
+   */
+  comment (text) {
+    /** @type {any} */ (this._getJoiningTransformer()).comment(
+      text
+    );
+    return this;
+  }
+
+  /**
+   * Add a processing instruction to the most recently opened element.
+   *   Mirrors the joining transformer API so templates can call
+   *   `this.processingInstruction()`.
+   * @param {string} target - Processing instruction target
+   * @param {string} data - Processing instruction data
+   * @returns {JSONPathTransformerContext}
+   */
+  processingInstruction (target, data) {
+    /** @type {any} */ (this._getJoiningTransformer()).processingInstruction(
+      target, data
+    );
+    return this;
+  }
+
+  /**
    * Append text content. Mirrors the joining transformer API so templates can
    * call `this.text()`.
    * @param {string} txt - Text content

@@ -97,7 +97,7 @@
   ~~"xsl:call-template",~~
   "xsl:character-map",
   ~~"xsl:choose",~~
-  "xsl:comment",
+  ~~"xsl:comment",~~
   ~~"xsl:copy",~~
   ~~"xsl:copy-of",~~
   "xsl:decimal-format",
@@ -125,7 +125,7 @@
   "xsl:param",
   "xsl:perform-sort",
   "xsl:preserve-space",
-  "xsl:processing-instruction",
+  ~~"xsl:processing-instruction",~~
   "xsl:result-document",
   "xsl:sequence",
   ~~"xsl:sort",~~

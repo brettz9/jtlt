@@ -31,7 +31,8 @@ describe('JSONJoiningTransformer coverage additions', () => {
     jt.element('p', {}, [], () => jt.text('kept'));
     const out = jt.get();
     expect(out[0][0]).to.equal('p');
-    expect(out[0]).to.include('kept');
+    // Text nodes represented as ['!', text]
+    expect(out[0]).to.deep.include.members([['!', 'kept']]);
     // Ensure the outside text did not append a raw string root element
     expect(out.length).to.equal(1);
   });

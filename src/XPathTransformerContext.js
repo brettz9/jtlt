@@ -399,6 +399,32 @@ class XPathTransformerContext {
     this._getJoiningTransformer().text(txt);
     return this;
   }
+
+  /**
+   * Append a comment.
+   * @param {string} text - Comment text
+   * @returns {XPathTransformerContext}
+   */
+  comment (text) {
+    /** @type {any} */ (this._getJoiningTransformer()).comment(
+      text
+    );
+    return this;
+  }
+
+  /**
+   * Append a processing instruction.
+   * @param {string} target - Processing instruction target
+   * @param {string} data - Processing instruction data
+   * @returns {XPathTransformerContext}
+   */
+  processingInstruction (target, data) {
+    /** @type {any} */ (this._getJoiningTransformer()).processingInstruction(
+      target, data
+    );
+    return this;
+  }
+
   /**
    * Define a property set (optionally composed from other sets).
    * @param {string} name Property set name

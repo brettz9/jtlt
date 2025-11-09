@@ -571,6 +571,25 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
   }
 
   /**
+   * @param {string} text
+   * @returns {StringJoiningTransformer}}
+   */
+  comment (text) {
+    this.append(`<!--${text}-->`);
+    return this;
+  }
+
+  /**
+   * @param {string} target
+   * @param {string} data
+   * @returns {StringJoiningTransformer}}
+   */
+  processingInstruction (target, data) {
+    this.append(`<?${target} ${data}?>`);
+    return this;
+  }
+
+  /**
    * Unlike text(), does not escape for HTML; unlike string(), does not perform
    *   JSON stringification; unlike append(), does not do other checks (but
    *   still varies in its role across transformers).
@@ -612,7 +631,5 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
     return obj;
   }
 }
-
-// Todo: Implement comment(), processingInstruction(), etc.
 
 export default StringJoiningTransformer;

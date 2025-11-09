@@ -5,6 +5,7 @@
 - feat: `if()`
 - feat: `choose()`
 - feat: propSets for DOM
+- feat: add `comment()` and `processingInstruction()`
 
 ## 0.2.0
 

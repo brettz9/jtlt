@@ -226,6 +226,40 @@ class DOMJoiningTransformer extends AbstractJoiningTransformer {
   }
 
   /**
+   * @param {string} text
+   * @returns {DOMJoiningTransformer}}
+   */
+  comment (text) {
+    if (!this._dom || typeof this._dom !== 'object' ||
+        (![1, 9, 11].includes(this._dom.nodeType))) {
+      throw new Error(
+        'You may only set a comment on a document, fragment, or element'
+      );
+    }
+    this._dom.append((this._dom.ownerDocument).createComment(text));
+    return this;
+  }
+
+  /**
+   * @param {string} target
+   * @param {string} data
+   * @returns {DOMJoiningTransformer}}
+   */
+  processingInstruction (target, data) {
+    if (!this._dom || typeof this._dom !== 'object' ||
+        (![1, 9, 11].includes(this._dom.nodeType))) {
+      throw new Error(
+        'You may only set a processing instruction on a ' +
+          'document, fragment, or element'
+      );
+    }
+    this._dom.append((this._dom.ownerDocument).createProcessingInstruction(
+      target, data
+    ));
+    return this;
+  }
+
+  /**
    * @param {string} str
    * @returns {DOMJoiningTransformer}
    */
