@@ -23,7 +23,7 @@ class AbstractJoiningTransformer {
    */
   constructor (cfg) {
     // Todo: Might set some reasonable defaults across all classes
-    this.setConfig(cfg);
+    this.setConfig(cfg ?? {});
   }
 
   /**
@@ -41,7 +41,7 @@ class AbstractJoiningTransformer {
    */
   _requireSameChildren (type, embedType) {
     const cfg = /** @type {Record<string, unknown>} */ (this._cfg);
-    if (this._cfg && cfg[type] &&
+    if (cfg[type] &&
     (/** @type {Record<string, unknown>} */ (cfg[type])).requireSameChildren) {
       throw new Error(
         'Cannot embed ' + embedType + ' children for a ' + type +
@@ -59,15 +59,11 @@ class AbstractJoiningTransformer {
    */
   config (prop, val, cb) {
     const cfg = /** @type {Record<string, unknown>} */ (this._cfg);
-    const oldCfgProp = this._cfg && cfg[prop];
-    if (this._cfg) {
-      cfg[prop] = val;
-    }
+    const oldCfgProp = cfg[prop];
+    cfg[prop] = val;
     if (cb) {
       cb.call(this);
-      if (this._cfg) {
-        cfg[prop] = oldCfgProp;
-      }
+      cfg[prop] = oldCfgProp;
     }
   }
 }

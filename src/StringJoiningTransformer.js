@@ -187,7 +187,7 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
     /** @type {any} */
     const oldObj = this._obj;
     this._obj = _isElement(obj)
-      ? JHTML.toJSONObject(obj, {mode: this._cfg?.mode})
+      ? JHTML.toJSONObject(obj, {mode: this._cfg.mode})
       : obj || {};
 
     // Todo: Allow in this and subsequent JSON methods ability to create
@@ -211,9 +211,9 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
     // Not ready to serialize yet as still inside another array or object
     if (oldObjPropState || this._arrItemState) {
       this.append(this._obj);
-    } else if (this._cfg && this._cfg.JHTMLForJSON) {
+    } else if (this._cfg.JHTMLForJSON) {
       this.append(JHTML.toJHTMLString(this._obj));
-    } else if (this._cfg && this._cfg.mode !== 'JavaScript') {
+    } else if (this._cfg.mode !== 'JavaScript') {
       // Allow this method to operate on non-finite numbers and functions
       const stringifier = new JHTML.Stringifier({mode: 'JavaScript'});
       this.append(stringifier.walkJSONObject(this._obj));
@@ -237,7 +237,7 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
     const oldArr = this._arr;
     // Todo: copy array?
     this._arr = _isElement(arr)
-      ? /** @type {any[]} */ (JHTML.toJSONObject(arr, {mode: this._cfg?.mode}))
+      ? /** @type {any[]} */ (JHTML.toJSONObject(arr, {mode: this._cfg.mode}))
       : arr || [];
 
     /** @type {any} */
@@ -259,9 +259,9 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
       this.append(this._arr);
     /* c8 ignore next 2 -- JHTMLForJSON is a specialized output mode rarely used
      * in combination with nested array building at the root level. */
-    } else if (this._cfg && this._cfg.JHTMLForJSON) {
+    } else if (this._cfg.JHTMLForJSON) {
       this.append(JHTML.toJHTMLString(this._arr));
-    } else if (this._cfg && this._cfg.mode !== 'JavaScript') {
+    } else if (this._cfg.mode !== 'JavaScript') {
       // Allow this method to operate on non-finite numbers and functions
       const stringifier = new JHTML.Stringifier({mode: 'JavaScript'});
       this.append(stringifier.walkJSONObject(this._arr));
@@ -284,7 +284,7 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
     // If a callback is provided, it composes a nested string value first.
     if (_isElement(str)) {
       str = /** @type {any} */ (
-        JHTML.toJSONObject(str, {mode: this._cfg?.mode})
+        JHTML.toJSONObject(str, {mode: this._cfg.mode})
       );
     }
 
@@ -315,7 +315,7 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
     // Appends the number as a string; no localization/formatting is applied.
     if (_isElement(num)) {
       num = /** @type {any} */ (
-        JHTML.toJSONObject(num, {mode: this._cfg?.mode})
+        JHTML.toJSONObject(num, {mode: this._cfg.mode})
       );
     }
     this.append(num.toString());
@@ -331,7 +331,7 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
     // Appends 'true' or 'false'.
     if (_isElement(bool)) {
       bool = /** @type {any} */ (
-        JHTML.toJSONObject(bool, {mode: this._cfg?.mode})
+        JHTML.toJSONObject(bool, {mode: this._cfg.mode})
       );
     }
     this.append(bool ? 'true' : 'false');
@@ -352,7 +352,7 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
    */
   undefined () {
     // Appends the literal 'undefined' (only in JavaScript mode).
-    if (this._cfg && this._cfg.mode !== 'JavaScript') {
+    if (this._cfg.mode !== 'JavaScript') {
       throw new Error(
         'undefined is not allowed unless added in JavaScript mode'
       );
@@ -367,14 +367,14 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
    */
   nonfiniteNumber (num) {
     // Appends NaN/Infinity/-Infinity as-is (only in JavaScript mode).
-    if (this._cfg && this._cfg.mode !== 'JavaScript') {
+    if (this._cfg.mode !== 'JavaScript') {
       throw new Error(
         'Non-finite numbers are not allowed unless added in JavaScript mode'
       );
     }
     if (_isElement(num)) {
       num = /** @type {any} */ (
-        JHTML.toJSONObject(num, {mode: this._cfg?.mode})
+        JHTML.toJSONObject(num, {mode: this._cfg.mode})
       );
     }
     this.append(num.toString());
@@ -387,14 +387,14 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
    */
   function (func) {
     // Appends function source (only in JavaScript mode).
-    if (this._cfg && this._cfg.mode !== 'JavaScript') {
+    if (this._cfg.mode !== 'JavaScript') {
       throw new Error(
         'function is not allowed unless added in JavaScript mode'
       );
     }
     if (_isElement(func)) {
       func = /** @type {any} */ (
-        JHTML.toJSONObject(func, {mode: this._cfg?.mode})
+        JHTML.toJSONObject(func, {mode: this._cfg.mode})
       );
     }
     this.append(func.toString());
@@ -433,7 +433,7 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
 
     // Todo: allow for cfg to produce Jamilih string output or hXML
     //   string output
-    const method = this._cfg && this._cfg.xmlElements ? 'toXML' : 'toHTML';
+    const method = this._cfg.xmlElements ? 'toXML' : 'toHTML';
     if (!cb) {
       // Note that Jamilih currently has an issue with 'selected', 'checked',
       //  'value', 'defaultValue', 'for', 'on*', 'style' (workaround: pass
@@ -509,7 +509,7 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
       );
     }
 
-    if (!this._cfg || !this._cfg.xmlElements) {
+    if (!this._cfg.xmlElements) {
       if (typeof val === 'object') {
         /** @type {Record<string, unknown>} */
         const valObj = /** @type {any} */ (val);
@@ -548,7 +548,7 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
 
     /** @type {string} */
     const valStr = /** @type {any} */ (val);
-    val = ((this._cfg && this._cfg.preEscapedAttributes) || avoidAttEscape)
+    val = (this._cfg.preEscapedAttributes || avoidAttEscape)
       ? valStr
       : valStr.replaceAll('&', '&amp;').replaceAll('"', '&quot;');
     this.append(' ' + name + '="' + val + '"');

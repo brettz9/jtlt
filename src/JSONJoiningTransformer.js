@@ -100,7 +100,7 @@ class JSONJoiningTransformer extends AbstractJoiningTransformer {
    */
   get () {
     // Unwrap single-element arrays at the root level if configured
-    if (this._cfg && /** @type {any} */ (this._cfg).unwrapSingleResult &&
+    if (this._cfg.unwrapSingleResult &&
         Array.isArray(this._obj) && this._obj.length === 1) {
       return this._obj[0];
     }
@@ -271,7 +271,7 @@ class JSONJoiningTransformer extends AbstractJoiningTransformer {
    * @returns {JSONJoiningTransformer}
    */
   undefined () {
-    if (this._cfg && /** @type {any} */ (this._cfg).mode !== 'JavaScript') {
+    if (this._cfg.mode !== 'JavaScript') {
       throw new Error(
         'undefined is not allowed unless added in JavaScript mode'
       );
@@ -286,7 +286,7 @@ class JSONJoiningTransformer extends AbstractJoiningTransformer {
    * @returns {JSONJoiningTransformer}
    */
   nonfiniteNumber (num) {
-    if (this._cfg && /** @type {any} */ (this._cfg).mode !== 'JavaScript') {
+    if (this._cfg.mode !== 'JavaScript') {
       throw new Error(
         'Non-finite numbers are not allowed unless added in JavaScript mode'
       );
@@ -301,7 +301,7 @@ class JSONJoiningTransformer extends AbstractJoiningTransformer {
    * @returns {JSONJoiningTransformer}
    */
   function (func) {
-    if (this._cfg && /** @type {any} */ (this._cfg).mode !== 'JavaScript') {
+    if (this._cfg.mode !== 'JavaScript') {
       throw new Error(
         'function is not allowed unless added in JavaScript mode'
       );

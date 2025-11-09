@@ -62,7 +62,7 @@ class DOMJoiningTransformer extends AbstractJoiningTransformer {
    */
   object (obj, cb, usePropertySets, propSets) {
     this._requireSameChildren('dom', 'object');
-    if (this._cfg && /** @type {any} */ (this._cfg).JHTMLForJSON) {
+    if (this._cfg.JHTMLForJSON) {
       Object.assign(obj, propSets);
       this.append(JHTML.toJHTMLDOM(/** @type {any} */ (obj)));
     } else {
@@ -79,7 +79,7 @@ class DOMJoiningTransformer extends AbstractJoiningTransformer {
    */
   array (arr, cb) {
     this._requireSameChildren('dom', 'array');
-    if (this._cfg && /** @type {any} */ (this._cfg).JHTMLForJSON) {
+    if (this._cfg.JHTMLForJSON) {
       this.append(JHTML.toJHTMLDOM(/** @type {any} */ (arr)));
     } else {
       // Todo: set current position and deal with children
@@ -130,7 +130,7 @@ class DOMJoiningTransformer extends AbstractJoiningTransformer {
    * @returns {DOMJoiningTransformer}
    */
   undefined () {
-    if (this._cfg && /** @type {any} */ (this._cfg).mode !== 'JavaScript') {
+    if (this._cfg.mode !== 'JavaScript') {
       throw new Error(
         'undefined is not allowed unless added in JavaScript mode'
       );
@@ -144,7 +144,7 @@ class DOMJoiningTransformer extends AbstractJoiningTransformer {
    * @returns {DOMJoiningTransformer}
    */
   nonfiniteNumber (num) {
-    if (this._cfg && /** @type {any} */ (this._cfg).mode !== 'JavaScript') {
+    if (this._cfg.mode !== 'JavaScript') {
       throw new Error(
         'Non-finite numbers are not allowed unless added in JavaScript mode'
       );
@@ -158,7 +158,7 @@ class DOMJoiningTransformer extends AbstractJoiningTransformer {
    * @returns {DOMJoiningTransformer}
    */
   function (func) {
-    if (this._cfg && /** @type {any} */ (this._cfg).mode !== 'JavaScript') {
+    if (this._cfg.mode !== 'JavaScript') {
       throw new Error(
         'function is not allowed unless added in JavaScript mode'
       );
@@ -180,8 +180,7 @@ class DOMJoiningTransformer extends AbstractJoiningTransformer {
     // Todo: allow separate XML DOM one with XML String and hXML conversions
     //   (HTML to XHTML is inevitably safe?)
 
-    const el = this._cfg &&
-    /** @type {any} */ (this._cfg).document.createElement(elName);
+    const el = this._cfg.document.createElement(elName);
     for (const att in atts) {
       if (Object.hasOwn(atts, att)) {
         /** @type {Record<string, string>} */
