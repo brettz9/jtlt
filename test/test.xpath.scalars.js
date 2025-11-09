@@ -140,8 +140,8 @@ describe('XPathTransformerContext scalar return types (v1)', () => {
            * @this {any}
            */
           template () {
-            // Call static message method
-            /** @type {any} */ (this.constructor).message({test: 'data'});
+            // Call message method
+            /** @type {any} */ this.message({test: 'data'});
           }
         }
       ];

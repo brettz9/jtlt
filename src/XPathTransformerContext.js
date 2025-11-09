@@ -307,7 +307,8 @@ class XPathTransformerContext {
    * @param {any} json Any value
    * @returns {void}
    */
-  static message (json) {
+  // eslint-disable-next-line class-methods-use-this -- Convenient
+  message (json) {
     /* eslint-disable-next-line no-console -- Debug output */
     console.log(json);
   }

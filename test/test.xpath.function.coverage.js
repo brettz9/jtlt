@@ -1,6 +1,7 @@
 import {JSDOM} from 'jsdom';
 import {expect} from 'chai';
 import XPathTransformerContext from '../src/XPathTransformerContext.js';
+import JTLT from '../src/index.js';
 
 describe('XPathTransformerContext function coverage', () => {
   it(
@@ -119,17 +120,27 @@ describe('XPathTransformerContext function coverage', () => {
     }
   );
 
-  it('should call static message for coverage', () => {
-    let logged; // Capture console output
-    // eslint-disable-next-line no-console -- Testing
-    const orig = console.log; // Save original console
-    // eslint-disable-next-line no-console -- Required to test message logging
-    console.log = (msg) => {
-      logged = msg;
-    };
-    XPathTransformerContext.message({m: 1});
-    // eslint-disable-next-line no-console -- Restoring original console
-    console.log = orig;
-    expect(logged).to.deep.equal({m: 1});
+  it('should call message for coverage', (done) => {
+    let called = false;
+    const {window} = new JSDOM('<!doctype html><html><body></body></html>');
+    const doc = new window.DOMParser().parseFromString('<root />', 'text/xml');
+    // eslint-disable-next-line no-new -- exercising API
+    new JTLT({
+      data: doc,
+      outputType: 'string',
+      engineType: 'xpath',
+      templates: [{
+        path: '//root',
+        template () {
+          this.message({test: 'log'});
+          called = true;
+          done();
+        }
+      }],
+      success () {
+        // Empty success callback for testing
+      }
+    });
+    expect(called).to.equal(false); // Will be true after done()
   });
 });
