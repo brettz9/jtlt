@@ -239,8 +239,7 @@ class JTLT {
 
     // Pass unwrapSingleResult to JSON joiner if configured
     if (JT === JSONJoiningTransformer && this.config.unwrapSingleResult) {
-      (/** @type {Record<string, unknown>} */ (joiningConfig)).
-        unwrapSingleResult = true;
+      joiningConfig.unwrapSingleResult = true;
     }
 
     return new JT(initial, joiningConfig);
@@ -287,10 +286,12 @@ class JTLT {
             : null
       );
     this.config.templates = query
-      ? /** @type {any} */ ([
-        {name: 'root', path: '$', template: /** @type {any} */ (query)}
+      ? /** @type {JSONPathTemplateObject[]|XPathTemplateObject[]} */ ([
+        {name: 'root', path: '$', template: query}
       ])
-      : /** @type {any} */ (cfg.templates || [cfg.template]);
+      : /** @type {JSONPathTemplateObject[]|XPathTemplateObject[]} */ (
+        cfg.templates || [cfg.template]
+      );
     this.config.errorOnEqualPriority = cfg.errorOnEqualPriority || false;
     this.config.engine = this.config.engine ||
       /**
@@ -298,12 +299,12 @@ class JTLT {
        * @returns {any}
        */
       function (configParam) {
-        if ((/** @type {any} */ (configParam)).engineType === 'xpath') {
+        if (configParam.engineType === 'xpath') {
           const xt = new XPathTransformer(/** @type {any} */ (configParam));
-          return xt.transform(/** @type {any} */ (configParam).mode);
+          return xt.transform(/** @type {string} */ (configParam.mode));
         }
         const jpt = new JSONPathTransformer(/** @type {any} */ (configParam));
-        return jpt.transform(/** @type {any} */ (configParam).mode);
+        return jpt.transform(/** @type {string} */ (configParam.mode));
       };
     // Todo: Let's also, unlike XSLT and the following, give options for
     //   higher priority to absolute fixed paths over recursive descent

@@ -16,7 +16,8 @@ describe('JSONPathTransformerContext copy/copyOf', () => {
     const joiner = new JSONJoiningTransformer([]);
     const ctx = new JSONPathTransformerContext({
       data,
-      joiningTransformer: joiner
+      joiningTransformer: joiner,
+      templates: []
     }, []);
     if (propertySets) {
       for (const [name, obj] of Object.entries(propertySets)) {
@@ -122,13 +123,14 @@ describe('JSONPathTransformerContext copy/copyOf', () => {
   it('copyOf uses shallow path when structuredClone missing', () => {
     const data = {x: {y: 1}};
     const {ctx, joiner} = makeCtx(data);
-    const oldSC = /** @type {any} */ (globalThis).structuredClone;
+    const oldSC = globalThis.structuredClone;
     // Remove structuredClone to force else branch in initial try
-    /** @type {any} */ (globalThis).structuredClone = undefined;
+    // @ts-expect-error Testing
+    globalThis.structuredClone = undefined;
     try {
       ctx.copyOf();
     } finally {
-      /** @type {any} */ (globalThis).structuredClone = oldSC;
+      globalThis.structuredClone = oldSC;
     }
     const copied = joiner.get()[0];
     expect(copied).to.deep.equal({x: {y: 1}});
@@ -137,12 +139,13 @@ describe('JSONPathTransformerContext copy/copyOf', () => {
   it('copyOf shallow-path covers array when structuredClone missing', () => {
     const data = [1, {y: 2}];
     const {ctx, joiner} = makeCtx(data);
-    const oldSC = /** @type {any} */ (globalThis).structuredClone;
-    /** @type {any} */ (globalThis).structuredClone = undefined;
+    const oldSC = globalThis.structuredClone;
+    // @ts-expect-error Testing
+    globalThis.structuredClone = undefined;
     try {
       ctx.copyOf();
     } finally {
-      /** @type {any} */ (globalThis).structuredClone = oldSC;
+      globalThis.structuredClone = oldSC;
     }
     const copied = joiner.get()[0];
     expect(copied).to.deep.equal([1, {y: 2}]);

@@ -130,7 +130,7 @@ describe('XPathTransformerContext init and sorting', () => {
       xpathVersion: 2
     }, templates);
     ctx.applyTemplates('//item'); // explicit
-    // @ts-ignore Deliberately call with no args to hit default '*'
+    // @ts-expect-error Deliberately call with no args to hit default '*'
     ctx.applyTemplates();
     const out = ctx.getOutput();
     expect(out).to.include('text').and.to.include('more');
@@ -224,7 +224,6 @@ describe('XPathTransformerContext misc branches', () => {
     ctx.key('byId', '//item', 'id');
     const ret = ctx.getKey('byId', 'a');
     // Should return the element with id="a"
-    // @ts-ignore
     expect(ret.tagName.toLowerCase()).to.equal('item');
   });
 

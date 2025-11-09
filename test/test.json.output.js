@@ -16,18 +16,18 @@ describe('JSONJoiningTransformer output', () => {
         {path: '$', template () {
           this.applyTemplates('$.store.book[*].author');
         }},
-        {path: '$.store.book[*].author', template (/** @type {any} */ author) {
+        {path: '$.store.book[*].author', template (author) {
           return author;
         }}
       ],
-      success (/** @type {any} */ result) {
+      success (result) {
         try {
           expect(result).to.be.an('array');
           expect(result).to.have.length(4);
           expect(result[0]).to.equal('Nigel Rees');
           done();
         } catch (err) {
-          done(/** @type {any} */ (err));
+          done(err);
         }
       }
     });
@@ -43,22 +43,22 @@ describe('JSONJoiningTransformer output', () => {
         {}, {unwrapSingleResult: true}
       ),
       templates: [
-        {path: '$.store.book[0]', template (/** @type {any} */ book) {
-          /** @type {any} */ const jt = this._config.joiningTransformer;
+        {path: '$.store.book[0]', template (book) {
+          const jt = this._config.joiningTransformer;
           this.object(function () {
             jt.propValue('author', book.author);
             jt.propValue('price', book.price);
           });
         }}
       ],
-      success (/** @type {any} */ result) {
+      success (result) {
         try {
           expect(result).to.be.an('object');
           expect(result.author).to.equal('Nigel Rees');
           expect(result.price).to.equal(8.95);
           done();
         } catch (err) {
-          done(/** @type {any} */ (err));
+          done(err);
         }
       }
     });

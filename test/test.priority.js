@@ -15,12 +15,12 @@ describe('Template priority and equal handling', () => {
           this.string('second');
         }}
       ],
-      success (/** @type {any} */ result) {
+      success (result) {
         try {
           expect(result).to.equal('first');
           done();
         } catch (err) {
-          done(/** @type {any} */ (err));
+          done(err);
         }
       }
     });

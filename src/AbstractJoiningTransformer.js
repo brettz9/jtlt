@@ -3,6 +3,35 @@
 //    string transformer but adding as text node in a DOM transformer)
 
 /**
+ * @typedef {object} BaseTransformerConfig
+ * @property {boolean} [JHTMLForJSON] - Use JHTML for JSON
+ * @property {'JavaScript'|'JSON'} [mode] - Mode
+ */
+
+/**
+ * @typedef {BaseTransformerConfig & {
+ *   document?: Document
+ * }} DOMJoiningTransformerConfig
+ */
+/**
+ * @typedef {object} JSONJoiningTransformerConfig
+ * @property {boolean} [unwrapSingleResult]
+ * @property {"JSON"|"JavaScript"} [mode]
+ */
+/**
+ * @typedef {BaseTransformerConfig & {
+ *   xmlElements?: boolean,
+ *   preEscapedAttributes?: boolean
+ * }} StringJoiningTransformerConfig
+ */
+/**
+ * @typedef {StringJoiningTransformerConfig &
+ *    DOMJoiningTransformerConfig &
+ *    JSONJoiningTransformerConfig
+ * } JoiningTransformerConfig
+ */
+
+/**
  * Base class for joining transformers.
  *
  * A "joining transformer" is the sink that receives template outputs and
@@ -19,15 +48,15 @@
  */
 class AbstractJoiningTransformer {
   /**
-   * @param {object} [cfg] - Configuration object
+   * @param {JoiningTransformerConfig} [cfg] - Configuration object
    */
   constructor (cfg) {
     // Todo: Might set some reasonable defaults across all classes
-    this.setConfig(cfg ?? {});
+    this._cfg = cfg ?? {};
   }
 
   /**
-   * @param {any} [cfg] - Configuration object
+   * @param {JoiningTransformerConfig} cfg - Configuration object
    * @returns {void}
    */
   setConfig (cfg) {

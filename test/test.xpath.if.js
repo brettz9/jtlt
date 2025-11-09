@@ -23,7 +23,7 @@ describe('XPath if() method', () => {
           });
         }
       }],
-      success (/** @type {any} */ out) {
+      success (out) {
         return out;
       }
     });
@@ -47,7 +47,7 @@ describe('XPath if() method', () => {
           });
         }
       }],
-      success (/** @type {any} */ out) {
+      success (out) {
         return out;
       }
     });
@@ -67,7 +67,7 @@ describe('XPath if() method', () => {
           this.if('//li[@class="x"]');
         }
       }],
-      success (/** @type {any} */ out) {
+      success (out) {
         return out;
       }
     });
@@ -94,7 +94,7 @@ describe('XPath if() method', () => {
           });
         }
       }],
-      success (/** @type {any} */ out) {
+      success (out) {
         return out;
       }
     });
@@ -118,7 +118,7 @@ describe('XPath if() method', () => {
           this.string('ok');
         }
       }],
-      success (/** @type {any} */ out) {
+      success (out) {
         return out;
       }
     });
@@ -145,7 +145,7 @@ describe('XPath if() method', () => {
           }); // Non-empty string => truthy
         }
       }],
-      success (/** @type {any} */ out) {
+      success (out) {
         return out;
       }
     });
@@ -172,7 +172,7 @@ describe('XPath if() method', () => {
           }); // Non-empty string => truthy
         }
       }],
-      success (/** @type {any} */ out) {
+      success (out) {
         return out;
       }
     });
@@ -201,7 +201,7 @@ describe('XPath if() method', () => {
           }); // Numeric literal 0 => falsy
         }
       }],
-      success (/** @type {any} */ out) {
+      success (out) {
         return out;
       }
     });
@@ -225,7 +225,7 @@ describe('XPath if() method', () => {
           });
         }
       }],
-      success (/** @type {any} */ out) {
+      success (out) {
         return out;
       }
     });

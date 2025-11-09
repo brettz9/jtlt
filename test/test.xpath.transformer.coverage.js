@@ -22,7 +22,7 @@ describe('XPathTransformer additional coverage', () => {
      * @returns {void}
      */
     function itemTpl (n) {
-      // @ts-ignore test context
+      // @ts-expect-error test context
       this.element('x', {}, [], () => this.text(n.textContent));
     }
     const templates = [
@@ -81,7 +81,7 @@ describe('XPathTransformer additional coverage', () => {
         path: '//item',
         /** @param {Element} n */
         template (n) {
-          // @ts-ignore test context
+          // @ts-expect-error test context
           this.string(n.textContent);
         }
       }
@@ -110,12 +110,11 @@ describe('XPathTransformer additional coverage', () => {
           path: '/',
           /** @this {any} */
           template () {
-            // @ts-ignore test context
             this.string('R');
           }
         },
         ['//item', /** @returns {void} */ function () {
-          // @ts-ignore test context
+          // @ts-expect-error test context
           this.string('I');
         }]
       ],
@@ -199,7 +198,6 @@ describe('XPathTransformer additional coverage', () => {
           path: '/',
           /** @this {any} */
           template () {
-            // @ts-ignore test context
             this.applyTemplates('//item', '');
           }
         },
@@ -210,7 +208,6 @@ describe('XPathTransformer additional coverage', () => {
            * @this {any}
            */
           template (n) {
-            // @ts-ignore test context
             this.string(n.textContent);
           }
         }

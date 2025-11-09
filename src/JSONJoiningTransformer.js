@@ -38,6 +38,13 @@ function _makeDatasetAttribute (n0) {
  */
 
 /**
+ * @typedef {{
+ *   attsObj: Record<string, unknown>,
+ *   jmlChildren: unknown[]
+ * }} ElementInfo
+ */
+
+/**
  * JSON-based joining transformer for building JSON/JavaScript objects.
  *
  * This joiner accumulates into an in-memory JSON value (object or array).
@@ -48,10 +55,8 @@ function _makeDatasetAttribute (n0) {
 class JSONJoiningTransformer extends AbstractJoiningTransformer {
   /**
    * @param {any[]|Record<string, unknown>} [o] - Initial object or array
-   * @param {{
-   *   unwrapSingleResult?: boolean,
-   *   mode?: "JavaScript"|"JSON"
-   * }} [cfg] - Configuration object
+   * @param {import('./AbstractJoiningTransformer.js').
+   *   JSONJoiningTransformerConfig} [cfg] - Configuration object
    */
   constructor (o, cfg) {
     super(cfg);
@@ -61,8 +66,10 @@ class JSONJoiningTransformer extends AbstractJoiningTransformer {
     this._objPropState = undefined;
     /** @type {boolean | undefined} */
     this._arrItemState = undefined;
-    /** @type {{attsObj: Record<string, unknown>, jmlChildren: unknown[]}[]} */
+    /** @type {ElementInfo[]} */
     this._elementStack = [];
+    /** @type {Record<string, unknown>} */
+    this.propertySets = {};
   }
 
   /**
@@ -172,7 +179,6 @@ class JSONJoiningTransformer extends AbstractJoiningTransformer {
       Object.assign(obj, propSetsToUse);
     }
 
-    /** @type {any} */
     const oldObjPropState = this._objPropState;
     this._objPropState = true;
     this._obj = obj; // Set current object so propValue() works
@@ -311,6 +317,20 @@ class JSONJoiningTransformer extends AbstractJoiningTransformer {
   }
 
   /**
+   * @param {import('./StringJoiningTransformer.js').OutputConfig} cfg
+   * @returns {JSONJoiningTransformer}
+   */
+  output (cfg) {
+    // We wait until first element is set in `element()` to add
+    //   XML declaration and DOCTYPE as latter depends on root element
+    this._outputConfig = cfg;
+
+    // Use for file extension if making downloadable?
+    this.mediaType = cfg.mediaType;
+    return this;
+  }
+
+  /**
    * Build a Jamilih-style element JSON array and append to current container.
    * Result form: ['tag', {attr: 'val'}, child1, child2, ...]
    * Helpers: dataset -> data-*; $a -> ordered attributes.
@@ -324,6 +344,10 @@ class JSONJoiningTransformer extends AbstractJoiningTransformer {
    */
   element (elName, atts, childNodes, cb) {
     this._requireSameChildren('json', 'element');
+    const isRoot = !this.root;
+    if (isRoot) {
+      this.root = elName;
+    }
     // Normalize arguments similarly to StringJoiningTransformer.element
     if (Array.isArray(atts)) {
       cb = /** @type {SimpleCallback} */ (childNodes);
@@ -339,29 +363,28 @@ class JSONJoiningTransformer extends AbstractJoiningTransformer {
       childNodes = [];
     }
 
+    const elementName = typeof elName === 'string'
+      ? elName
+      : elName.localName;
     // Element-like object (DOM Element) -> extract attributes
     if (typeof elName === 'object' && elName && 'attributes' in elName) {
       /** @type {Record<string, string>} */
       const objAtts = {};
-      // @ts-ignore - treat elName as Element-like
       [...elName.attributes].forEach((att) => {
         objAtts[att.name] = att.value;
       });
       atts = Object.assign(objAtts, atts);
-      // @ts-ignore
-      elName = /** @type {any} */ (elName).nodeName;
     }
 
-    /** @type {Record<string, unknown>} */
-    let attsObj = /** @type {any} */ (atts) || {};
-    /** @type {any[]} */
+    let attsObj = atts || {};
+    /** @type {import('jamilih').JamilihChildren} */
     const jmlChildren = [];
 
     // Preprocess special attribute helpers present directly on attsObj
     if (attsObj.dataset && typeof attsObj.dataset === 'object' &&
       !Array.isArray(attsObj.dataset)
     ) {
-      const ds = /** @type {Record<string, unknown>} */ (attsObj.dataset);
+      const ds = attsObj.dataset;
       for (const k in ds) {
         if (Object.hasOwn(ds, k)) {
           const dashed = k.replaceAll(camelCase, _makeDatasetAttribute);
@@ -389,7 +412,7 @@ class JSONJoiningTransformer extends AbstractJoiningTransformer {
       // Push current state onto a stack
       this._elementStack.push({attsObj, jmlChildren});
       cb.call(this);
-      const state = /** @type {any} */ (this._elementStack.pop());
+      const state = /** @type {ElementInfo} */ (this._elementStack.pop());
       ({attsObj} = state);
       // Children may have been mutated by nested element()/text();
       // already in jmlChildren
@@ -397,15 +420,60 @@ class JSONJoiningTransformer extends AbstractJoiningTransformer {
 
     // Build Jamilih array
     /** @type {any[]} */
-    const jmlEl = [elName];
+    const jmlEl = [elementName];
     if (Object.keys(attsObj).length) {
       jmlEl.push(attsObj);
     }
     jmlEl.push(...jmlChildren);
 
+    if (isRoot) {
+      // todo: indent, cdataSectionElements
+      const {
+        omitXmlDeclaration, doctypePublic, doctypeSystem, method
+      } = this._outputConfig ?? {};
+
+      const dtd = {$DOCTYPE: {
+        name: elementName,
+        publicId: doctypePublic ?? null, // Public ID (optional)
+        systemId: doctypeSystem ?? null // System ID (optional)
+      }};
+
+      let xmlns;
+      if (elementName.includes(':')) {
+        const prefix = elementName.slice(0, elementName.indexOf(':'));
+        xmlns = atts?.[prefix];
+      } else {
+        ({xmlns} = atts ?? {});
+      }
+
+      let xmlDeclaration;
+      if (!omitXmlDeclaration && (
+        method === 'xml' || omitXmlDeclaration === false)
+      ) {
+        const {version, encoding, standalone} = this._outputConfig ?? {};
+
+        xmlDeclaration = {
+          version,
+          encoding,
+          standalone
+        };
+      }
+
+      const doc = {$document: {
+        ...(xmlDeclaration ? {xmlDeclaration} : {}),
+        childNodes: [
+          dtd,
+          jmlEl
+        ]
+      }};
+
+      // Todo: Expose
+      this._doc = doc;
+    }
+
     // If inside a parent element, append as its child; otherwise append to root
     if (this._elementStack.length) {
-      const top = /** @type {any} */ (this._elementStack.at(-1));
+      const top = /** @type {ElementInfo} */ (this._elementStack.at(-1));
       top.jmlChildren.push(jmlEl);
     } else {
       this.append(jmlEl);
@@ -427,7 +495,7 @@ class JSONJoiningTransformer extends AbstractJoiningTransformer {
       // No-op outside an element() callback (JSON joiner semantics)
       return this;
     }
-    const top = /** @type {any} */ (this._elementStack.at(-1));
+    const top = /** @type {ElementInfo} */ (this._elementStack.at(-1));
     const {attsObj} = top;
     if (name === 'dataset' && val && typeof val === 'object' &&
       !Array.isArray(val)
@@ -462,7 +530,7 @@ class JSONJoiningTransformer extends AbstractJoiningTransformer {
    */
   comment (txt) {
     if (this._elementStack.length) {
-      const top = /** @type {any} */ (this._elementStack.at(-1));
+      const top = /** @type {ElementInfo} */ (this._elementStack.at(-1));
       const {jmlChildren} = top;
       jmlChildren.push(['!', txt]);
       return this;
@@ -481,7 +549,7 @@ class JSONJoiningTransformer extends AbstractJoiningTransformer {
    */
   processingInstruction (target, data) {
     if (this._elementStack.length) {
-      const top = /** @type {any} */ (this._elementStack.at(-1));
+      const top = /** @type {ElementInfo} */ (this._elementStack.at(-1));
       const {jmlChildren} = top;
       jmlChildren.push(['?', target, data]);
       return this;
@@ -499,7 +567,7 @@ class JSONJoiningTransformer extends AbstractJoiningTransformer {
    */
   text (txt) {
     if (this._elementStack.length) {
-      const top = /** @type {any} */ (this._elementStack.at(-1));
+      const top = /** @type {ElementInfo} */ (this._elementStack.at(-1));
       const {jmlChildren} = top;
       jmlChildren.push(['!', txt]);
       return this;
@@ -519,17 +587,16 @@ class JSONJoiningTransformer extends AbstractJoiningTransformer {
   }
 
   /**
-   * Helper method to use property sets (to be implemented).
-   * @param {Record<string, unknown>} obj - Object to apply property set to
+   * Helper method to use property sets.
+   * @param {Record<string, unknown>} obj - Object to which to apply
+   *   property set
    * @param {string} psName - Property set name
    * @returns {Record<string, unknown>}
    */
   _usePropertySets (obj, psName) {
     // Merge the named property set (if present) into the provided object
-    if (this && /** @type {any} */ (this).propertySets &&
-    /** @type {any} */ (this).propertySets[psName]
-    ) {
-      return Object.assign(obj, /** @type {any} */ (this).propertySets[psName]);
+    if (this.propertySets[psName]) {
+      return Object.assign(obj, this.propertySets[psName]);
     }
     return obj;
   }

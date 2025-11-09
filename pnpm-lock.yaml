@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       jamilih:
-        specifier: 0.61.4
-        version: 0.61.4
+        specifier: 0.62.1
+        version: 0.62.1
       jhtml:
         specifier: 0.7.1
         version: 0.7.1
@@ -1754,8 +1754,8 @@ packages:
   jackspeak@3.4.3:
     resolution: {integrity: sha512-OGlZQpz2yfahA/Rd1Y8Cd9SIEsqvXkLVoSw/cgwhnhFMDbsQFeZYoJJ7bIZBS9BcamUW96asq/npPWugM+RQBw==}
 
-  jamilih@0.61.4:
-    resolution: {integrity: sha512-t4Cb6kdD0SKd8U9+0gS4DUqb+8V9hYDP3cP4qvuPu7PchztUphqbPeOwSw5lA7VH9puxQPwSO1cwGYSyYURqcA==}
+  jamilih@0.62.1:
+    resolution: {integrity: sha512-15oFB2gdLnTtIT6Z7iGRgpFZZcgYRP2KzLd3hD8wuerDVpdgdL5/ky/e9NMqJbNlgfiUQWnWp3x2phph55VyjA==}
     engines: {node: '>=18.0.0'}
 
   jhtml@0.7.1:
@@ -4685,7 +4685,7 @@ snapshots:
     optionalDependencies:
       '@pkgjs/parseargs': 0.11.0
 
-  jamilih@0.61.4: {}
+  jamilih@0.62.1: {}
 
   jhtml@0.7.1:
     dependencies:

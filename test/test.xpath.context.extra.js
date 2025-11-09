@@ -30,7 +30,6 @@ describe('XPathTransformerContext additional coverage', () => {
     // Should return array of nodes from iterator
     expect(Array.isArray(res)).to.equal(true);
     expect(res.length).to.be.greaterThan(0);
-    // @ts-ignore jsdom element
     expect(res[0].nodeType).to.equal(1);
   });
 

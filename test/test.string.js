@@ -33,7 +33,7 @@ function runTest (done, expected, templates, replace) {
       try {
         expect(result).to.equal(expected);
         done();
-      } catch (/** @type {any} */ err) {
+      } catch (err) {
         done(/** @type {Error} */ (err));
       }
     }
@@ -47,7 +47,7 @@ function runTest (done, expected, templates, replace) {
   try {
     // eslint-disable-next-line no-new -- API
     new JTLT(config);
-  } catch (/** @type {any} */ e) {
+  } catch (e) {
     // eslint-disable-next-line no-console -- Testing
     console.error('Error', e);
     done();
@@ -87,9 +87,9 @@ describe('jtlt', () => {
        * @returns {void}
        */
       template () {
-        /** @type {any} */ (this).string('<b>');
-        /** @type {any} */ (this).valueOf({select: '.'});
-        /** @type {any} */ (this).string('</b>');
+        this.string('<b>');
+        this.valueOf({select: '.'});
+        this.string('</b>');
       }
     }]);
   });
@@ -104,7 +104,7 @@ describe('jtlt', () => {
        * @returns {void}
        */
       template (author) {
-        /** @type {any} */ (this).string(`<b>${author}</b>`);
+        this.string(`<b>${author}</b>`);
       }
     }]);
   });
@@ -208,9 +208,9 @@ describe('jtlt', () => {
        * @returns {void}
        */
       template (/* book */) {
-        /** @type {any} */ (this).string('<i>');
-        /** @type {any} */ (this).applyTemplates();
-        /** @type {any} */ (this).string('</i>');
+        this.string('<i>');
+        this.applyTemplates();
+        this.string('</i>');
       }
     }, {
       name: 'author', // For use with calling templates

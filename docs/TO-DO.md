@@ -43,6 +43,9 @@
 8. Demo narrowing to subset of JavaScript (as with `jspe`) to make
     JTLT truly "declarative" as far as freedom from scripting
 
+9. Use [fontoxpath](https://github.com/FontoXML/fontoxpath)
+    for XPath 3.1 implementation?
+
 ## Possible to-dos
 
 1.  Make schema-aware so that templates could target types. Most reusable
@@ -120,7 +123,7 @@
   "xsl:non-matching-substring",
   "xsl:number",
   ~~"xsl:otherwise",~~
-  "xsl:output",
+  ~~"xsl:output",~~
   "xsl:output-character",
   "xsl:param",
   "xsl:perform-sort",

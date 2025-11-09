@@ -29,7 +29,7 @@ describe('XPath choose() method', () => {
           });
         }
       }],
-      success (/** @type {any} */ out) {
+      success (out) {
         return out;
       }
     });
@@ -57,7 +57,7 @@ describe('XPath choose() method', () => {
           });
         }
       }],
-      success (/** @type {any} */ out) {
+      success (out) {
         return out;
       }
     });
@@ -85,7 +85,7 @@ describe('XPath choose() method', () => {
           this.string('ok');
         }
       }],
-      success (/** @type {any} */ out) {
+      success (out) {
         return out;
       }
     });

@@ -46,7 +46,7 @@ describe('XPathTransformerContext branch coverage', () => {
       xpathVersion: 2
     }, templates);
     // First call without select triggers select = select || '.' path
-    // @ts-ignore Deliberately call without args to exercise fallback
+    // @ts-expect-error Deliberately call without args to exercise fallback
     ctx.applyTemplates();
     const out = ctx.getOutput();
     expect(out).to.include('x');

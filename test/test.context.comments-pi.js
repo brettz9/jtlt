@@ -12,23 +12,21 @@ import {JSONJoiningTransformer, DOMJoiningTransformer} from '../src/index.js';
  */
 function makeJSONCtx () {
   const joiner = new JSONJoiningTransformer([], {});
-  /** @type {{path: string, template: (this: any)=> void}} */
-  const tpl = {
-    path: '$',
-    template () {
-      // Open root element then emit comment and PI within its callback.
-      this.element('root', {}, [], () => {
-        this.comment('jc');
-        this.processingInstruction('jpi', 'jdata');
-      });
-    }
-  };
   // Cast config to any; constructor JSDoc doesn't list joiningTransformer.
-  const engine = new JSONPathTransformer(/** @type {any} */ ({
+  const engine = new JSONPathTransformer({
     data: {a: 1},
-    templates: [tpl],
+    templates: [{
+      path: '$',
+      template () {
+        // Open root element then emit comment and PI within its callback.
+        this.element('root', {}, [], () => {
+          this.comment('jc');
+          this.processingInstruction('jpi', 'jdata');
+        });
+      }
+    }],
     joiningTransformer: joiner
-  }));
+  });
   const out = engine.transform('');
   return {out};
 }

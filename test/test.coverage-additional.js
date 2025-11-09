@@ -832,7 +832,6 @@ describe('JSONJoiningTransformer extra', function () {
   it('append throws on scalar root', function () {
     const jt = new JSONJoiningTransformer(5, {});
     assert.throws(() => {
-      // @ts-ignore intentional misuse
       jt.append('x');
     }, /append to a scalar/v);
   });
@@ -847,7 +846,6 @@ describe('JSONJoiningTransformer extra', function () {
   it('object with usePropertySets and propSets merges all', function () {
     const jt = new JSONJoiningTransformer([], {});
     // Seed property sets via direct monkey patch for coverage
-    // @ts-ignore internal access
     jt.propertySets = {ps1: {a: 1}};
     jt.object({base: true}, function () {
       this.propValue('b', 2);

@@ -20,7 +20,7 @@
     "url": "https://github.com/brettz9/jtlt.git"
   },
   "dependencies": {
-    "jamilih": "0.61.4",
+    "jamilih": "0.62.1",
     "jhtml": "0.7.1",
     "jsdom": "27.1.0",
     "jsonpath-plus": "10.3.0",

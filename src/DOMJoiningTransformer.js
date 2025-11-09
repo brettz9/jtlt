@@ -12,7 +12,8 @@ import AbstractJoiningTransformer from './AbstractJoiningTransformer.js';
 class DOMJoiningTransformer extends AbstractJoiningTransformer {
   /**
    * @param {DocumentFragment|Element} o - Initial DOM node
-   * @param {{document?: Document}} cfg - Configuration object
+   * @param {import('./AbstractJoiningTransformer.js').
+   *   DOMJoiningTransformerConfig} cfg - Configuration object
    */
   constructor (o, cfg) {
     super(cfg); // Include this in any subclass of AbstractJoiningTransformer
@@ -168,7 +169,21 @@ class DOMJoiningTransformer extends AbstractJoiningTransformer {
   }
 
   /**
-   * @param {string} elName - Element name
+   * @param {import('./StringJoiningTransformer.js').OutputConfig} cfg
+   * @returns {DOMJoiningTransformer}
+   */
+  output (cfg) {
+    // We wait until first element is set in `element()` to add
+    //   XML declaration and DOCTYPE as latter depends on root element
+    this._outputConfig = cfg;
+
+    // Use for file extension if making downloadable?
+    this.mediaType = cfg.mediaType;
+    return this;
+  }
+
+  /**
+   * @param {Element|string} elName - Element name
    * @param {Record<string, string>} [atts] - Attributes object
    * @param {(this: DOMJoiningTransformer) => void} [cb] - Callback function
    * @returns {DOMJoiningTransformer}
@@ -180,12 +195,16 @@ class DOMJoiningTransformer extends AbstractJoiningTransformer {
     // Todo: allow separate XML DOM one with XML String and hXML conversions
     //   (HTML to XHTML is inevitably safe?)
 
-    const el = this._cfg.document.createElement(elName);
+    const el = elName && typeof elName === 'object'
+      ? elName
+      : /** @type {Element} */ (
+        this._cfg.document?.createElement(elName)
+      );
+    const elementName = el.localName;
+
     for (const att in atts) {
       if (Object.hasOwn(atts, att)) {
-        /** @type {Record<string, string>} */
-        const attsObj = /** @type {any} */ (atts);
-        el.setAttribute(att, attsObj[att]);
+        el.setAttribute(att, atts[att]);
       }
     }
     this.append(el);
@@ -193,6 +212,62 @@ class DOMJoiningTransformer extends AbstractJoiningTransformer {
     const oldDOM = this._dom;
 
     this._dom = el;
+
+    if (!this.root) {
+      this.root = elName;
+
+      // todo: indent, cdataSectionElements
+      const {
+        omitXmlDeclaration, doctypePublic, doctypeSystem, method
+      } = this._outputConfig ?? {};
+
+      const dtd = this._cfg.document?.implementation.createDocumentType(
+        elementName, // Qualified name of the root element
+        doctypePublic ?? '', // Public ID (optional)
+        doctypeSystem ?? '' // System ID (optional)
+      );
+
+      let xmlns;
+      if (elementName.includes(':')) {
+        const prefix = elementName.slice(0, elementName.indexOf(':'));
+        xmlns = atts?.[prefix];
+      } else {
+        ({xmlns} = atts ?? {});
+      }
+
+      const doc = /** @type {XMLDocument} */ (
+        this._cfg.document?.implementation.createDocument(
+          xmlns ?? null, // Namespace URI (null for no namespace)
+          elementName, // Qualified name of the root element
+          dtd // The DocumentType object
+        )
+      );
+
+      if (!omitXmlDeclaration && (
+        method === 'xml' || omitXmlDeclaration === false)
+      ) {
+        const {version, encoding, standalone} = this._outputConfig ?? {};
+
+        const xmlDeclarationData = `${
+          version ? ` version="${version}"` : ''
+        }${
+          encoding ? ` encoding="${encoding}"` : ''
+        }${
+          standalone ? ` standalone="${standalone ? 'yes' : 'no'}"` : ''
+        }`.slice(1);
+
+        const xmlDecl = doc.createProcessingInstruction(
+          'xml', xmlDeclarationData
+        );
+        doc.insertBefore(
+          xmlDecl, this._dom // this._cfg.document.firstChild
+        );
+      }
+
+      // Todo: Expose
+      this._doc = doc;
+    }
+
     if (cb) {
       cb.call(this);
     }

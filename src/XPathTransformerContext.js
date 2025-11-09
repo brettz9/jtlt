@@ -368,6 +368,17 @@ class XPathTransformerContext {
     this._getJoiningTransformer().array(...args);
     return this;
   }
+
+  /**
+   * Append text node content.
+   * @param {import('./StringJoiningTransformer.js').OutputConfig} cfg Text
+   * @returns {XPathTransformerContext}
+   */
+  output (cfg) {
+    this._getJoiningTransformer().output(cfg);
+    return this;
+  }
+
   /**
    * Append element.
    * @param {string} name Tag name

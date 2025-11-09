@@ -10,18 +10,18 @@ describe('StringJoiningTransformer helpers', () => {
       templates: [
         {path: '$', template () {
           // Use string() callback so `this` is the joiner
-          /** @type {any} */ const jt = this._config.joiningTransformer;
+          const jt = this._config.joiningTransformer;
           jt.element('span', {className: 'x'}, [], function () {
             jt.text('<&');
           });
         }}
       ],
-      success (/** @type {any} */ result) {
+      success (result) {
         try {
           expect(result).to.equal('<span class="x">&lt;&amp;</span>');
           done();
         } catch (err) {
-          done(/** @type {any} */ (err));
+          done(err);
         }
       }
     });
@@ -34,19 +34,19 @@ describe('StringJoiningTransformer helpers', () => {
       outputType: 'string',
       templates: [
         {path: '$', template () {
-          /** @type {any} */ const jt = this._config.joiningTransformer;
+          const jt = this._config.joiningTransformer;
           jt.element('div', {}, [], function () {
             jt.attribute('dataset', {fooBar: 'baz'});
             jt.attribute('$a', [['z', '1'], ['a', '2']]);
           });
         }}
       ],
-      success (/** @type {any} */ result) {
+      success (result) {
         try {
           expect(result).to.equal('<div data-foo-bar="baz" z="1" a="2"></div>');
           done();
         } catch (err) {
-          done(/** @type {any} */ (err));
+          done(err);
         }
       }
     });
@@ -60,18 +60,18 @@ describe('StringJoiningTransformer helpers', () => {
       templates: [{
         path: '$',
         template () {
-          /** @type {any} */ const jt = this._config.joiningTransformer;
+          const jt = this._config.joiningTransformer;
           jt.element('br', {}, [], function () {
             jt.text('');
           });
         }
       }],
-      success (/** @type {any} */ html) {
+      success (html) {
         try {
           expect(html).to.equal('<br></br>');
           done();
         } catch (err) {
-          done(/** @type {any} */ (err));
+          done(err);
         }
       }
     });
@@ -90,12 +90,12 @@ describe('StringJoiningTransformer helpers', () => {
           this.plainText('<i>y</i>');
         }}
       ],
-      success (/** @type {any} */ result) {
+      success (result) {
         try {
           expect(result).to.equal('<b>x</b><i>y</i>');
           done();
         } catch (err) {
-          done(/** @type {any} */ (err));
+          done(err);
         }
       }
     });

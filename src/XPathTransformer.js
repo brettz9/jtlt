@@ -11,7 +11,8 @@ class XPathTransformer {
   /**
    * @param {object} config Configuration
    * @param {boolean} [config.errorOnEqualPriority] Throw on equal priority
-   * @param {any[]} config.templates Template objects
+   * @param {import('./index.js').
+   *   XPathTemplateObject[]} config.templates Template objects
    * @param {number} [config.xpathVersion] XPath version (1|2)
    */
   constructor (config) {
@@ -19,15 +20,14 @@ class XPathTransformer {
     this._config = config;
     /** @type {any[]} */
     this.rootTemplates = [];
-    this.templates = config.templates;
-    this.templates = this.templates.map(function (template) {
+    this.templates = config.templates.map(function (template) {
       if (Array.isArray(template)) {
         return {path: template[0], template: template[1]};
       }
       return template;
     });
     this.templates.forEach((template) => {
-      if (template.name && map[template.name]) {
+      if ('name' in template && template.name && map[template.name]) {
         /* c8 ignore next 6 -- c8/Istanbul known limitation: arrow function
         * predicates within filter assignments to instance properties are not
         * instrumented. Functionality fully tested via direct assertions on
@@ -35,7 +35,9 @@ class XPathTransformer {
         * test suite. */
         throw new Error('Templates must all have different names.');
       }
-      map[template.name] = true;
+      if ('name' in template && template.name) {
+        map[template.name] = true;
+      }
     });
     // Collect root templates without mutating during iteration
     this.rootTemplates = this.templates.filter((t) => t.path === '/');

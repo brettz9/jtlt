@@ -23,7 +23,7 @@ describe('JSONPath if() method', () => {
           });
         }
       }],
-      success (/** @type {any} */ out) {
+      success (out) {
         return out;
       }
     });
@@ -44,7 +44,7 @@ describe('JSONPath if() method', () => {
           });
         }
       }],
-      success (/** @type {any} */ out) {
+      success (out) {
         return out;
       }
     });
@@ -67,7 +67,7 @@ describe('JSONPath if() method', () => {
           }); // 1 => truthy -> match
         }
       }],
-      success (/** @type {any} */ out) {
+      success (out) {
         return out;
       }
     });
@@ -86,7 +86,7 @@ describe('JSONPath if() method', () => {
           this.if('$.x');
         }
       }],
-      success (/** @type {any} */ out) {
+      success (out) {
         return out;
       }
     });
@@ -112,7 +112,7 @@ describe('JSONPath if() method', () => {
           }); // Number => Boolean(5) => truthy
         }
       }],
-      success (/** @type {any} */ out) {
+      success (out) {
         return out;
       }
     });
@@ -135,7 +135,7 @@ describe('JSONPath if() method', () => {
           }); // Non-empty string => truthy
         }
       }],
-      success (/** @type {any} */ out) {
+      success (out) {
         return out;
       }
     });
@@ -159,7 +159,7 @@ describe('JSONPath if() method', () => {
           this.string('ok');
         }
       }],
-      success (/** @type {any} */ out) {
+      success (out) {
         return out;
       }
     });
@@ -184,7 +184,7 @@ describe('JSONPath if() method', () => {
           this.string('done');
         }
       }],
-      success (/** @type {any} */ out) {
+      success (out) {
         return out;
       }
     });

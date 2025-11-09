@@ -9,11 +9,11 @@ describe('DOMJoiningTransformer output', () => {
       outputType: 'dom',
       templates: [
         {path: '$', template () {
-          /** @type {any} */
-          // @ts-expect-error accessing private _cfg for test environment
-          const doc = this._config.joiningTransformer._cfg.document;
+          const doc = /** @type {Document} */ (
+            this._config.joiningTransformer._cfg.document
+          );
           const ul = doc.createElement('ul');
-          this.forEach('$.items[*]', function (/** @type {any} */ v) {
+          this.forEach('$.items[*]', function (v) {
             const li = doc.createElement('li');
             li.textContent = v;
             ul.append(li);
@@ -21,14 +21,14 @@ describe('DOMJoiningTransformer output', () => {
           return ul;
         }}
       ],
-      success (/** @type {any} */ frag) {
+      success (frag) {
         try {
           // Result is a DocumentFragment; check text contents
           expect(frag.textContent).to.equal('abc');
           expect(frag.querySelectorAll('li').length).to.equal(3);
           done();
         } catch (err) {
-          done(/** @type {any} */ (err));
+          done(err);
         }
       }
     });

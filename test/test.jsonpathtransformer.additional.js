@@ -40,7 +40,7 @@ describe('JSONPathTransformer additional coverage', function () {
       function noop () {
         return undefined;
       }
-      // @ts-ignore - testing runtime behavior
+      // @ts-expect-error Testing
       return new JSONPathTransformer({
         templates: [
           {name: 'dup', path: '$.a', template: noop},
@@ -54,7 +54,7 @@ describe('JSONPathTransformer additional coverage', function () {
     const noop = function () {
       return '';
     };
-    const jpt = new JSONPathTransformer(/** @type {any} */ ({
+    const jpt = new JSONPathTransformer(({
       errorOnEqualPriority: true,
       data: {x: 1},
       // Two root templates ('$') implies equal priority for root
@@ -63,10 +63,10 @@ describe('JSONPathTransformer additional coverage', function () {
         {name: 'r2', path: '$', template: noop}
       ],
       // Minimal joining transformer to satisfy context construction
+      // @ts-expect-error Testing
       joiningTransformer: (function () {
-        /** @type {any} */ let sink;
+        let sink;
         return {
-          /** @param {any} x */
           append (x) {
             // Assign locally to avoid empty method lint while not
             // polluting the object type

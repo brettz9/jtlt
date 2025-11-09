@@ -30,7 +30,6 @@ describe('JSONJoiningTransformer element/attribute/text (Jamilih JSON)', () => {
     // Text nodes are represented as ['!', text]
     expect(el).to.deep.include.members([['!', 'hi']]);
     // nested child
-    /** @type {any} */
     const child = el.slice(2).find(
       /**
        * @param {any} c
@@ -46,7 +45,6 @@ describe('JSONJoiningTransformer element/attribute/text (Jamilih JSON)', () => {
     const jt = new JSONJoiningTransformer([], {});
     // atts as function
     jt.element('div', function () {
-      // @ts-ignore - using transformer 'this' context per API design
       this.text('a');
     });
     // childNodes as function

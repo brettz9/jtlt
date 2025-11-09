@@ -10,18 +10,15 @@ import JSONPathTransformerContext from './JSONPathTransformerContext.js';
  */
 class JSONPathTransformer {
   /**
-   * @param {object} config - Configuration object
-   * @param {boolean} [config.errorOnEqualPriority] - Whether to error on
-   *   equal priority templates
-   * @param {any[]} config.templates - Array of template objects
+   * @param {import('./JSONPathTransformerContext.js').
+   *   JSONPathTransformerContextConfig} config - Configuration object
    */
   constructor (config) {
     let map = /** @type {Record<string, boolean>} */ ({});
     this._config = config;
     /** @type {any[]} */
     this.rootTemplates = [];
-    this.templates = config.templates;
-    this.templates = this.templates.map(function (template) {
+    this.templates = config.templates.map(function (template) {
       if (Array.isArray(template)) {
         // Todo: We could allow a third argument (at beginning or
         //    end?) to represent template name
@@ -60,7 +57,7 @@ class JSONPathTransformer {
    */
   transform (mode) {
     const jte = new JSONPathTransformerContext(
-      /** @type {any} */ (this._config), this.templates
+      this._config, this.templates
     );
     const len = this.rootTemplates.length;
     const templateObj = len
@@ -72,7 +69,7 @@ class JSONPathTransformer {
     const ret = templateObj.template.call(jte, undefined, {mode});
     if (typeof ret !== 'undefined') {
       // Will vary by jte._config.outputType
-      /** @type {any} */ (jte)._getJoiningTransformer().append(ret);
+      jte._getJoiningTransformer().append(ret);
     }
     const result = jte.getOutput();
     return result;
@@ -94,12 +91,13 @@ class JSONPathTransformer {
   static DefaultTemplateRules = {
     transformRoot: {
       /**
+       * @this {JSONPathTransformerContext}
        * @param {any} value - Value
        * @param {{mode: string}} cfg - Configuration
        * @returns {void}
        */
       template (value, cfg) {
-        /** @type {any} */ (this).applyTemplates(null, cfg.mode);
+        this.applyTemplates(null, cfg.mode);
       }
     },
     transformPropertyNames: {
@@ -117,30 +115,33 @@ class JSONPathTransformer {
     },
     transformObjects: {
       /**
+       * @this {JSONPathTransformerContext}
        * @param {any} value - Value
        * @param {{mode: string}} cfg - Configuration
        * @returns {void}
        */
       template (value, cfg) {
-        /** @type {any} */ (this).applyTemplates(null, cfg.mode);
+        this.applyTemplates(null, cfg.mode);
       }
     },
     transformArrays: {
       /**
+       * @this {JSONPathTransformerContext}
        * @param {any} value - Value
        * @param {{mode: string}} cfg - Configuration
        * @returns {void}
        */
       template (value, cfg) {
-        /** @type {any} */ (this).applyTemplates(null, cfg.mode);
+        this.applyTemplates(null, cfg.mode);
       }
     },
     transformScalars: {
       /**
-       * @returns {any}
+       * @this {JSONPathTransformerContext}
+       * @returns {JSONPathTransformerContext}
        */
       template () {
-        return /** @type {any} */ (this).valueOf({select: '.'});
+        return this.valueOf({select: '.'});
       }
     },
     transformFunctions: {

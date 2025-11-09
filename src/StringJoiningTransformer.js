@@ -2,6 +2,21 @@ import {jml} from 'jamilih';
 import * as JHTML from 'jhtml';
 import AbstractJoiningTransformer from './AbstractJoiningTransformer.js';
 
+/**
+ * @typedef {{
+ *   encoding?: string,
+ *   indent?: boolean,
+ *   omitXmlDeclaration?: boolean,
+ *   doctypePublic?: string,
+ *   doctypeSystem?: string,
+ *   cdataSectionElements?: string[]
+ *   mediaType?: string,
+ *   version?: string,
+ *   standalone?: boolean,
+ *   method?: "xml"|"html"|"text"
+ * }} OutputConfig
+ */
+
 const camelCase = /[a-z][A-Z]/gv;
 
 /**
@@ -402,6 +417,20 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
   }
 
   /**
+   * @param {OutputConfig} cfg
+   * @returns {StringJoiningTransformer}
+   */
+  output (cfg) {
+    // We wait until first element is set in `element()` to add
+    //   XML declaration and DOCTYPE as latter depends on root element
+    this._outputConfig = cfg;
+
+    // Use for file extension if making downloadable?
+    this.mediaType = cfg.mediaType;
+    return this;
+  }
+
+  /**
    * @param {string|Element} elName - Element name or element object
    * @param {ElementAttributes} [atts] - Element attributes
    * @param {any[]} [childNodes] - Child nodes
@@ -409,6 +438,42 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
    * @returns {StringJoiningTransformer}
    */
   element (elName, atts, childNodes, cb) {
+    if (!this.root) {
+      this.root = elName;
+
+      // todo: indent, cdataSectionElements
+      const {
+        omitXmlDeclaration, doctypePublic, doctypeSystem, method
+      } = this._outputConfig ?? {};
+
+      let xmlDeclaration = '';
+      if (!omitXmlDeclaration && (
+        method === 'xml' || omitXmlDeclaration === false)
+      ) {
+        const {version, encoding, standalone} = this._outputConfig ?? {};
+        xmlDeclaration = `<?xml${
+          version ? ` version="${version}"` : ''
+        }${
+          encoding ? ` encoding="${encoding}"` : ''
+        }${
+          standalone ? ` standalone="${standalone ? 'yes' : 'no'}"` : ''
+        }?>\n`;
+      }
+
+      let doctype = '';
+      if (doctypePublic !== undefined || doctypeSystem !== undefined) {
+        doctype = `<!DOCTYPE ${elName}${
+          doctypePublic
+            ? ` PUBLIC "${doctypePublic}" "${doctypeSystem}"`
+            : doctypeSystem
+              ? ` SYSTEM "${doctypeSystem}"`
+              : ''
+        }>\n`;
+      }
+
+      this._str = xmlDeclaration + doctype + this._str;
+    }
+
     // Emits an HTML/XML element using Jamilih under the hood, or allows a
     // callback to build attributes/children incrementally. Attribute values
     // are escaped unless cfg.preEscapedAttributes is true. When a callback is

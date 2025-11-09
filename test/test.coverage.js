@@ -10,8 +10,7 @@ describe('Coverage: uncovered functionality', () => {
       outputType: 'string',
       templates: [{
         path: '$.x',
-        template (/** @type {any} */ val) {
-          /** @type {any} */
+        template (val) {
           const jt = this._config.joiningTransformer;
           jt.config('testProp', 'testVal', function () {
             // Config is temporarily set
@@ -19,12 +18,12 @@ describe('Coverage: uncovered functionality', () => {
           return val;
         }
       }],
-      success (/** @type {any} */ result) {
+      success (result) {
         try {
           expect(result).to.equal('test');
           done();
         } catch (err) {
-          done(/** @type {any} */ (err));
+          done(err);
         }
       }
     });
@@ -58,7 +57,7 @@ describe('Coverage: uncovered functionality', () => {
         path: '$',
         template () {
           this.variable('myVar', '$.x');
-          expect(/** @type {any} */ (this).vars.myVar).to.equal('stored');
+          expect(this.vars.myVar).to.equal('stored');
           done();
         }
       }],
@@ -99,8 +98,8 @@ describe('Coverage: uncovered functionality', () => {
         template () {
           this.propertySet('set1', {a: 1});
           this.propertySet('set2', {b: 2}, ['set1']);
-          expect(/** @type {any} */ (this).propertySets.set2.a).to.equal(1);
-          expect(/** @type {any} */ (this).propertySets.set2.b).to.equal(2);
+          expect(this.propertySets.set2.a).to.equal(1);
+          expect(this.propertySets.set2.b).to.equal(2);
           done();
         }
       }],
@@ -120,7 +119,7 @@ describe('Coverage: uncovered functionality', () => {
         template () {
           this.key('itemKey', '$.items[*]', 'id');
           const found = this.getKey('itemKey', 2);
-          expect(/** @type {any} */ (found).name).to.equal('B');
+          expect(found.name).to.equal('B');
           done();
         }
       }],
@@ -145,17 +144,17 @@ describe('Coverage: uncovered functionality', () => {
         {
           name: 'named',
           path: '$.x',
-          template (/** @type {any} */ param) {
+          template (param) {
             return `param:${param}`;
           }
         }
       ],
-      success (/** @type {any} */ result) {
+      success (result) {
         try {
           expect(result).to.include('param:val');
           done();
         } catch (err) {
-          done(/** @type {any} */ (err));
+          done(err);
         }
       }
     });
@@ -186,20 +185,20 @@ describe('Coverage: uncovered functionality', () => {
       templates: [{
         path: '$',
         template () {
-          /** @type {any} */ const jt = this._config.joiningTransformer;
+          const jt = this._config.joiningTransformer;
           jt.number(42);
           jt.boolean(true);
           jt.null();
         }
       }],
-      success (/** @type {any} */ result) {
+      success (result) {
         try {
           expect(result).to.include('42');
           expect(result).to.include('true');
           expect(result).to.include('null');
           done();
         } catch (err) {
-          done(/** @type {any} */ (err));
+          done(err);
         }
       }
     });
@@ -214,7 +213,7 @@ describe('Coverage: uncovered functionality', () => {
       templates: [{
         path: '$',
         template () {
-          /** @type {any} */ const jt = this._config.joiningTransformer;
+          const jt = this._config.joiningTransformer;
           jt.nonfiniteNumber(Number.POSITIVE_INFINITY);
           jt.function(function testFn () {
             return 1;
@@ -222,14 +221,14 @@ describe('Coverage: uncovered functionality', () => {
           jt.undefined();
         }
       }],
-      success (/** @type {any} */ result) {
+      success (result) {
         try {
           expect(result).to.include('Infinity');
           expect(result).to.include('function');
           expect(result).to.include('undefined');
           done();
         } catch (err) {
-          done(/** @type {any} */ (err));
+          done(err);
         }
       }
     });
@@ -244,7 +243,7 @@ describe('Coverage: uncovered functionality', () => {
         templates: [{
           path: '$',
           template () {
-            /** @type {any} */ const jt = this._config.joiningTransformer;
+            const jt = this._config.joiningTransformer;
             jt.nonfiniteNumber(Number.NaN);
           }
         }],
@@ -261,16 +260,16 @@ describe('Coverage: uncovered functionality', () => {
       templates: [{
         path: '$',
         template () {
-          /** @type {any} */ const jt = this._config.joiningTransformer;
+          const jt = this._config.joiningTransformer;
           jt.rawAppend('raw');
         }
       }],
-      success (/** @type {any} */ result) {
+      success (result) {
         try {
           expect(result).to.equal('raw');
           done();
         } catch (err) {
-          done(/** @type {any} */ (err));
+          done(err);
         }
       }
     });
@@ -284,20 +283,20 @@ describe('Coverage: uncovered functionality', () => {
       templates: [{
         path: '$',
         template () {
-          /** @type {any} */
-          // @ts-expect-error accessing private _cfg for test environment
-          const doc = this._config.joiningTransformer._cfg.document;
+          const doc = /** @type {Document} */ (
+            this._config.joiningTransformer._cfg.document
+          );
           const el = doc.createElement('span');
           el.setAttribute('class', 'test');
           return el;
         }
       }],
-      success (/** @type {any} */ frag) {
+      success (frag) {
         try {
           expect(frag.querySelector('span').className).to.equal('test');
           done();
         } catch (err) {
-          done(/** @type {any} */ (err));
+          done(err);
         }
       }
     });
@@ -311,20 +310,20 @@ describe('Coverage: uncovered functionality', () => {
       templates: [{
         path: '$',
         template () {
-          /** @type {any} */ const jt = this._config.joiningTransformer;
+          const jt = this._config.joiningTransformer;
           jt.string('text');
           jt.number(123);
           jt.boolean(false);
           jt.null();
         }
       }],
-      success (/** @type {any} */ frag) {
+      success (frag) {
         try {
           expect(frag.textContent).to.include('text');
           expect(frag.textContent).to.include('123');
           done();
         } catch (err) {
-          done(/** @type {any} */ (err));
+          done(err);
         }
       }
     });
@@ -338,13 +337,13 @@ describe('Coverage: uncovered functionality', () => {
       templates: [{
         path: '$',
         template () {
-          /** @type {any} */ const jt = this._config.joiningTransformer;
+          const jt = this._config.joiningTransformer;
           jt.number(456);
           jt.boolean(true);
           jt.null();
         }
       }],
-      success (/** @type {any} */ result) {
+      success (result) {
         try {
           expect(result).to.be.an('array');
           expect(result).to.include(456);
@@ -352,7 +351,7 @@ describe('Coverage: uncovered functionality', () => {
           expect(result).to.include(null);
           done();
         } catch (err) {
-          done(/** @type {any} */ (err));
+          done(err);
         }
       }
     });
@@ -371,12 +370,12 @@ describe('Coverage: uncovered functionality', () => {
           return 'wildcard';
         }}
       ],
-      success (/** @type {any} */ result) {
+      success (result) {
         try {
           expect(result).to.equal('specific');
           done();
         } catch (err) {
-          done(/** @type {any} */ (err));
+          done(err);
         }
       }
     });
@@ -391,16 +390,16 @@ describe('Coverage: uncovered functionality', () => {
         {path: '$', template () {
           this.applyTemplates({select: '$.x', mode: 'special'});
         }},
-        {path: '$.x', mode: 'special', template (/** @type {any} */ v) {
+        {path: '$.x', mode: 'special', template (v) {
           return `mode:${v}`;
         }}
       ],
-      success (/** @type {any} */ result) {
+      success (result) {
         try {
           expect(result).to.equal('mode:test');
           done();
         } catch (err) {
-          done(/** @type {any} */ (err));
+          done(err);
         }
       }
     });
@@ -417,12 +416,12 @@ describe('Coverage: uncovered functionality', () => {
           this.applyTemplates('$~');
         }
       }],
-      success (/** @type {any} */ result) {
+      success (result) {
         try {
           expect(result).to.include('prop');
           done();
         } catch (err) {
-          done(/** @type {any} */ (err));
+          done(err);
         }
       }
     });
@@ -441,12 +440,12 @@ describe('Coverage: uncovered functionality', () => {
           this.applyTemplates('$.fn');
         }
       }],
-      success (/** @type {any} */ result) {
+      success (result) {
         try {
           expect(result).to.equal('result');
           done();
         } catch (err) {
-          done(/** @type {any} */ (err));
+          done(err);
         }
       }
     });
@@ -459,15 +458,15 @@ describe('Coverage: uncovered functionality', () => {
       autostart: false,
       templates: [{path: '$', template () {
         this.applyTemplates('$.x');
-      }}, {path: '$.x', template (/** @type {any} */ v) {
+      }}, {path: '$.x', template (v) {
         return v;
       }}],
-      success (/** @type {any} */ result) {
+      success (result) {
         try {
           expect(result).to.equal('test');
           done();
         } catch (err) {
-          done(/** @type {any} */ (err));
+          done(err);
         }
       }
     });
@@ -481,16 +480,16 @@ describe('Coverage: uncovered functionality', () => {
       outputType: 'string',
       templates: [{
         path: '$.store.book[0].author',
-        template (/** @type {any} */ author) {
+        template (author) {
           return author;
         }
       }],
-      success (/** @type {any} */ result) {
+      success (result) {
         try {
           expect(result).to.include('Nigel Rees');
           done();
         } catch (err) {
-          done(/** @type {any} */ (err));
+          done(err);
         }
       }
     });
@@ -516,13 +515,13 @@ describe('More coverage for missing branches', () => {
           });
         }
       }],
-      success (/** @type {any} */ result) {
+      success (result) {
         try {
           expect(result).to.include('"a"');
           expect(result).to.include('"b"');
           done();
         } catch (err) {
-          done(/** @type {any} */ (err));
+          done(err);
         }
       }
     });
@@ -538,7 +537,7 @@ describe('More coverage for missing branches', () => {
         templates: [{
           path: '$',
           template () {
-            /** @type {any} */ const jt = this._config.joiningTransformer;
+            const jt = this._config.joiningTransformer;
             jt.propValue('x', 1);
           }
         }],
@@ -558,13 +557,13 @@ describe('More coverage for missing branches', () => {
           this.array([1, 2, 3]);
         }
       }],
-      success (/** @type {any} */ result) {
+      success (result) {
         try {
           expect(result).to.include('1');
           expect(result).to.include('2');
           done();
         } catch (err) {
-          done(/** @type {any} */ (err));
+          done(err);
         }
       }
     });
@@ -581,12 +580,12 @@ describe('More coverage for missing branches', () => {
           this.valueOf('$.x');
         }
       }],
-      success (/** @type {any} */ result) {
+      success (result) {
         try {
           expect(result).to.equal('value');
           done();
         } catch (err) {
-          done(/** @type {any} */ (err));
+          done(err);
         }
       }
     });
@@ -604,16 +603,16 @@ describe('More coverage for missing branches', () => {
             withParam: [{value: 'direct'}]
           });
         }},
-        {name: 'test', path: '$', template (/** @type {any} */ v) {
+        {name: 'test', path: '$', template (v) {
           return v;
         }}
       ],
-      success (/** @type {any} */ result) {
+      success (result) {
         try {
           expect(result).to.equal('direct');
           done();
         } catch (err) {
-          done(/** @type {any} */ (err));
+          done(err);
         }
       }
     });

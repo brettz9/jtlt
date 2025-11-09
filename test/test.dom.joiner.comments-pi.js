@@ -44,7 +44,7 @@ describe('DOMJoiningTransformer comment() and processingInstruction()', () => {
 
   it('throws on comment() when _dom is an unsupported Text node', () => {
     const {doc, joiner} = makeJoiner();
-    // @ts-ignore override internal _dom for negative test
+    // @ts-expect-error override internal _dom for negative test
     joiner._dom = doc.createTextNode('x');
     expect(() => joiner.comment('bad')).to.throw(
       'You may only set a comment on a document, fragment, or element'
@@ -80,7 +80,7 @@ describe('DOMJoiningTransformer comment() and processingInstruction()', () => {
 
   it('throws on processingInstruction() when _dom is a Text node', () => {
     const {doc, joiner} = makeJoiner();
-    // @ts-ignore override internal _dom for negative test
+    // @ts-expect-error override internal _dom for negative test
     joiner._dom = doc.createTextNode('x');
     expect(() => joiner.processingInstruction('xml-stylesheet', 'a')).to.throw(
       'You may only set a processing instruction on a document, ' +

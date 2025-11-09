@@ -22,7 +22,7 @@ describe('JSONPath choose() method', () => {
           });
         }
       }],
-      success (/** @type {any} */ out) {
+      success (out) {
         return out;
       }
     });
@@ -44,7 +44,7 @@ describe('JSONPath choose() method', () => {
           });
         }
       }],
-      success (/** @type {any} */ out) {
+      success (out) {
         return out;
       }
     });
@@ -66,7 +66,7 @@ describe('JSONPath choose() method', () => {
           });
         }
       }],
-      success (/** @type {any} */ out) {
+      success (out) {
         return out;
       }
     });
@@ -93,7 +93,7 @@ describe('JSONPath choose() method', () => {
           });
         }
       }],
-      success (/** @type {any} */ out) {
+      success (out) {
         return out;
       }
     });
@@ -120,7 +120,7 @@ describe('JSONPath choose() method', () => {
           });
         }
       }],
-      success (/** @type {any} */ out) {
+      success (out) {
         return out;
       }
     });
@@ -147,7 +147,7 @@ describe('JSONPath choose() method', () => {
           });
         }
       }],
-      success (/** @type {any} */ out) {
+      success (out) {
         return out;
       }
     });
@@ -174,7 +174,7 @@ describe('JSONPath choose() method', () => {
           this.string('ok');
         }
       }],
-      success (/** @type {any} */ out) {
+      success (out) {
         return out;
       }
     });
