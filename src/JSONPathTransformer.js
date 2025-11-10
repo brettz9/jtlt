@@ -23,7 +23,9 @@ class JSONPathTransformer {
       if (Array.isArray(template)) {
         // Todo: We could allow a third argument (at beginning or
         //    end?) to represent template name
-        return {path: template[0], template: template[1]};
+        return /** @type {import('./index.js').JSONPathTemplateObject<T>} */ (
+          {path: template[0], template: template[1]}
+        );
       }
       return template;
     });
@@ -31,7 +33,7 @@ class JSONPathTransformer {
       if (template.name && map[template.name]) {
         throw new Error('Templates must all have different names.');
       }
-      map[template.name] = true;
+      map[String(template.name)] = true;
       if (template.path === '$') {
         // eslint-disable-next-line unicorn/prefer-spread -- Refactor
         this.rootTemplates = this.rootTemplates.concat(templates.splice(i, 1));
@@ -53,7 +55,7 @@ class JSONPathTransformer {
   }
 
   /**
-   * @param {string} mode - Transformation mode
+   * @param {string} [mode] - Transformation mode
    * @returns {any} The transformation result
    */
   transform (mode) {
@@ -94,7 +96,7 @@ class JSONPathTransformer {
       /**
        * @this {JSONPathTransformerContext}
        * @param {any} value - Value
-       * @param {{mode: string}} cfg - Configuration
+       * @param {{mode?: string}} cfg - Configuration
        * @returns {void}
        */
       template (value, cfg) {
@@ -118,7 +120,7 @@ class JSONPathTransformer {
       /**
        * @this {JSONPathTransformerContext}
        * @param {any} value - Value
-       * @param {{mode: string}} cfg - Configuration
+       * @param {{mode?: string}} cfg - Configuration
        * @returns {void}
        */
       template (value, cfg) {
@@ -129,7 +131,7 @@ class JSONPathTransformer {
       /**
        * @this {JSONPathTransformerContext}
        * @param {any} value - Value
-       * @param {{mode: string}} cfg - Configuration
+       * @param {{mode?: string}} cfg - Configuration
        * @returns {void}
        */
       template (value, cfg) {

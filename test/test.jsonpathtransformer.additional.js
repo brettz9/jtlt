@@ -3,8 +3,8 @@ import JTLT, {JSONPathTransformer} from '../src/index.js';
 
 // Helper to run a JTLT transform with minimal config
 /**
- * @param {any} data
- * @param {any[]} templates
+ * @param {unknown} data
+ * @param {import('../src/index.js').XPathTemplateArray} templates
  * @returns {string}
  */
 function runStringTransform (data, templates) {
@@ -40,7 +40,7 @@ describe('JSONPathTransformer additional coverage', function () {
       function noop () {
         return undefined;
       }
-      // @ts-expect-error Testing
+      // @ts-expect-error Only supplying needed arguments
       return new JSONPathTransformer({
         templates: [
           {name: 'dup', path: '$.a', template: noop},
@@ -103,14 +103,12 @@ describe('JSONPathTransformer additional coverage', function () {
 
   it('property-names (~) default rule emits concatenated keys', function () {
     const data = {obj: {a: 1, b: 2, c: 3}};
-    const templates = [
-      ['$', /**
-             * @this {import('../src/JSONPathTransformerContext.js').default}
-             * @returns {void}
-             */ function () {
+    const templates =
+      /** @type {import('../src/index.js').XPathTemplateArray} */ ([
+        ['$', function () {
           this.applyTemplates('$.obj~');
         }]
-    ];
+      ]);
     const out = runStringTransform(data, templates);
     // Order of Object.keys is insertion order for string keys in modern engines
     expect(out).to.equal('abc');
@@ -118,53 +116,46 @@ describe('JSONPathTransformer additional coverage', function () {
 
   it('default function rule returns function result', function () {
     const data = {fn: () => 'OK'};
-    const templates = [
-      ['$', /**
-             * @this {import('../src/JSONPathTransformerContext.js').default}
-             * @returns {void}
-             */ function () {
+    const templates =
+      /** @type {import('../src/index.js').XPathTemplateArray} */
+      ([
+        ['$', function () {
           this.applyTemplates('$.fn');
         }]
-    ];
+      ]);
     const out = runStringTransform(data, templates);
     expect(out).to.equal('OK');
   });
 
   it('property-names on non-object returns empty string', function () {
     const data = 'justAString';
-    const templates = [
-      ['$', /**
-             * @this {import('../src/JSONPathTransformerContext.js').default}
-             * @returns {void}
-             */ function () {
+    const templates =
+    /** @type {import('../src/index.js').XPathTemplateArray} */
+      ([
+        ['$', function () {
           this.applyTemplates('$~');
         }]
-    ];
+      ]);
     const out = runStringTransform(data, templates);
     expect(out).to.equal('');
   });
 
   it('set() modifies parent object', function () {
     const data = {items: [{value: 10}, {value: 20}]};
-    const templates = [
-      ['$', /**
-             * @this {import('../src/JSONPathTransformerContext.js').default}
-             * @returns {void}
-             */ function () {
+    const templates =
+    /** @type {import('../src/index.js').XPathTemplateArray} */
+      ([
+        ['$', function () {
           this.applyTemplates('$.items[*]');
           // After templates run, check if items were modified
           this.plainText(JSON.stringify(data.items));
         }],
-      ['$.items[*]',
-        /**
-         * @this {import('../src/JSONPathTransformerContext.js').default}
-         * @param {any} item
-         * @returns {void}
-         */ function (item) {
-          // Use set() to modify the value in parent array
-          this.set({value: item.value * 2, modified: true});
-        }]
-    ];
+        ['$.items[*]',
+          function (item) {
+            // Use set() to modify the value in parent array
+            this.set({value: item.value * 2, modified: true});
+          }]
+      ]);
     const out = runStringTransform(data, templates);
     // Check that the data was modified by set()
     expect(out).to.include('"modified":true');

@@ -1,6 +1,14 @@
 import XPathTransformerContext from './XPathTransformerContext.js';
 
 /**
+ * @typedef {object} XPathTransformerConfig
+ * @property {boolean} [errorOnEqualPriority] Throw on equal priority
+ * @property {import('./index.js').
+ *   XPathTemplateArray} templates Template objects
+ * @property {number} [xpathVersion] XPath version (1|2)
+ */
+
+/**
  * Applies named XPath-driven templates to XML/HTML DOM data.
  *
  * Finds templates whose `path` XPath matches the current node (plus optional
@@ -9,17 +17,17 @@ import XPathTransformerContext from './XPathTransformerContext.js';
  */
 class XPathTransformer {
   /**
-   * @param {object} config Configuration
-   * @param {boolean} [config.errorOnEqualPriority] Throw on equal priority
-   * @param {import('./index.js').
-   *   XPathTemplateObject[]} config.templates Template objects
-   * @param {number} [config.xpathVersion] XPath version (1|2)
+   * @param {XPathTransformerConfig &
+   *   import('./XPathTransformerContext.js').
+   *   XPathTransformerContextConfig} config Configuration
    */
   constructor (config) {
     let map = /** @type {Record<string, boolean>} */ ({});
     this._config = config;
     /** @type {any[]} */
     this.rootTemplates = [];
+
+    /** @type {import('./index.js').XPathTemplateObject[]} */
     this.templates = config.templates.map(function (template) {
       if (Array.isArray(template)) {
         return {path: template[0], template: template[1]};
@@ -58,7 +66,7 @@ class XPathTransformer {
   }
 
   /**
-   * @param {string} mode Transformation mode
+   * @param {string} [mode] Transformation mode
    * @returns {any} Result of transformation
    */
   transform (mode) {

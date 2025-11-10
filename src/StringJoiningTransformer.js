@@ -80,6 +80,7 @@ function _makeDatasetAttribute (n0) {
  *   name mapping rules differ, etc.).
  * - cfg.preEscapedAttributes: skip escaping attribute values.
  * - cfg.JHTMLForJSON / cfg.mode: affect how object()/array() serialize.
+ * @extends {AbstractJoiningTransformer<"string">}
  */
 class StringJoiningTransformer extends AbstractJoiningTransformer {
   /**

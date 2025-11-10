@@ -21,20 +21,20 @@ describe('XPathTransformerContext scalar return types (v1)', () => {
   it('handles BOOLEAN_TYPE result from XPath evaluation', () => {
     const doc = makeDoc('<root><item>test</item></root>');
     const joiner = new StringJoiningTransformer('');
-    const templates = [
-      {
-        path: '/',
-        /**
-         * @this {any}
-         */
-        template () {
-          // boolean() XPath function returns BOOLEAN_TYPE
-          const bool = this.get('boolean(//item)');
-          this.string(bool ? 'yes' : 'no');
+    const templates =
+      /**
+       * @type {import('../src/index.js').XPathTemplateArray}
+       */ ([
+        {
+          path: '/',
+          template () {
+            // boolean() XPath function returns BOOLEAN_TYPE
+            const bool = this.get('boolean(//item)');
+            this.string(bool ? 'yes' : 'no');
+          }
         }
-      }
-    ];
-    /** @type {any} */
+      ]);
+
     const cfg = {
       data: doc,
       templates,
@@ -49,21 +49,21 @@ describe('XPathTransformerContext scalar return types (v1)', () => {
   it('handles default case for unsupported XPathResult types', () => {
     const doc = makeDoc('<root><item>test</item></root>');
     const joiner = new StringJoiningTransformer('');
-    const templates = [
-      {
-        path: '/',
-        /**
-         * @this {any}
-         */
-        template () {
-          // Get result that may fall through to default
-          const result = this.get('.');
-          // Should return context node
-          expect(result).to.equal(doc);
+    const templates =
+      /**
+       * @type {import('../src/index.js').XPathTemplateArray}
+       */ ([
+        {
+          path: '/',
+          template () {
+            // Get result that may fall through to default
+            const result = this.get('.');
+            // Should return context node
+            expect(result).to.equal(doc);
+          }
         }
-      }
-    ];
-    /** @type {any} */
+      ]);
+
     const cfg = {
       data: doc,
       templates,
@@ -77,39 +77,33 @@ describe('XPathTransformerContext scalar return types (v1)', () => {
   it('handles invalid XPath expression gracefully', () => {
     const doc = makeDoc('<root><item>test</item></root>');
     const joiner = new StringJoiningTransformer('');
-    const templates = [
-      {
-        // Invalid XPath that will throw during evaluation
-        path: '//@invalid[[[syntax',
-        /**
-         * @this {any}
-         */
-        template () {
-          this.string('matched');
+    const templates =
+      /**
+       * @type {import('../src/index.js').XPathTemplateArray}
+       */
+      ([
+        {
+          // Invalid XPath that will throw during evaluation
+          path: '//@invalid[[[syntax',
+          template () {
+            this.string('matched');
+          }
+        },
+        {
+          path: '/',
+          template () {
+            // Should fall through to default behavior when path match fails
+            this.applyTemplates('//item');
+          }
+        },
+        {
+          path: '//item',
+          template (node) {
+            this.string(node.textContent);
+          }
         }
-      },
-      {
-        path: '/',
-        /**
-         * @this {any}
-         */
-        template () {
-          // Should fall through to default behavior when path match fails
-          this.applyTemplates('//item');
-        }
-      },
-      {
-        path: '//item',
-        /**
-         * @this {any}
-         * @param {any} node
-         */
-        template (node) {
-          this.string(node.textContent);
-        }
-      }
-    ];
-    /** @type {any} */
+      ]);
+
     const cfg = {
       data: doc,
       templates,
@@ -133,26 +127,20 @@ describe('XPathTransformerContext scalar return types (v1)', () => {
       logged = msg;
     };
     try {
-      const templates = [
-        {
-          path: '/',
-          /**
-           * @this {any}
-           */
-          template () {
-            // Call message method
-            /** @type {any} */ this.message({test: 'data'});
-          }
-        }
-      ];
-      /** @type {any} */
-      const cfg = {
+      const engine = new XPathTransformer({
         data: doc,
-        templates,
+        templates: [
+          {
+            path: '/',
+            template () {
+              // Call message method
+              this.message({test: 'data'});
+            }
+          }
+        ],
         joiningTransformer: joiner,
         xpathVersion: 1
-      };
-      const engine = new XPathTransformer(cfg);
+      });
       engine.transform('');
       expect(logged).to.deep.equal({test: 'data'});
     } finally {
@@ -164,19 +152,19 @@ describe('XPathTransformerContext scalar return types (v1)', () => {
   it('uses default transformRoot rule', () => {
     const doc = makeDoc('<root><item>x</item></root>');
     const joiner = new StringJoiningTransformer('');
-    const templates = [
-      {
-        path: '//item',
-        /**
-         * @this {any}
-         * @param {any} node
-         */
-        template (node) {
-          this.string(node.textContent);
+    const templates =
+      /**
+       * @type {import('../src/index.js').XPathTemplateArray}
+       */
+      ([
+        {
+          path: '//item',
+          template (node) {
+            this.string(node.textContent);
+          }
         }
-      }
-    ];
-    /** @type {any} */
+      ]);
+
     const cfg = {
       data: doc,
       templates,
@@ -192,19 +180,20 @@ describe('XPathTransformerContext scalar return types (v1)', () => {
   it('uses default transformTextNodes rule', () => {
     const doc = makeDoc('<root>plain text</root>');
     const joiner = new StringJoiningTransformer('');
-    const templates = [
-      {
-        path: '/',
-        /**
-         * @this {any}
-         */
-        template () {
-          // Apply templates to text nodes
-          this.applyTemplates('//text()');
+    const templates =
+      /**
+       * @type {import('../src/index.js').XPathTemplateArray}
+       */
+      ([
+        {
+          path: '/',
+          template () {
+            // Apply templates to text nodes
+            this.applyTemplates('//text()');
+          }
         }
-      }
-    ];
-    /** @type {any} */
+      ]);
+
     const cfg = {
       data: doc,
       templates,
@@ -220,21 +209,22 @@ describe('XPathTransformerContext scalar return types (v1)', () => {
   it('uses set() to modify context node', () => {
     const doc = makeDoc('<root><item>test</item></root>');
     const joiner = new StringJoiningTransformer('');
-    const templates = [
-      {
-        path: '/',
-        /**
-         * @this {any}
-         */
-        template () {
-          // Call set to change context
-          const item = this.get('//item', true)[0];
-          this.set(item);
-          this.string(this._contextNode.textContent);
+    const templates =
+      /**
+       * @type {import('../src/index.js').XPathTemplateArray}
+       */
+      ([
+        {
+          path: '/',
+          template () {
+            // Call set to change context
+            const item = this.get('//item', true)[0];
+            this.set(item);
+            this.string(this._contextNode.textContent);
+          }
         }
-      }
-    ];
-    /** @type {any} */
+      ]);
+
     const cfg = {
       data: doc,
       templates,
@@ -249,29 +239,26 @@ describe('XPathTransformerContext scalar return types (v1)', () => {
   it('handles templates without priority or resolver', () => {
     const doc = makeDoc('<root><item>a</item></root>');
     const joiner = new StringJoiningTransformer('');
-    const templates = [
-      {
-        path: '/',
-        /**
-         * @this {any}
-         */
-        template () {
-          this.applyTemplates('//item');
+    const templates =
+      /**
+       * @type {import('../src/index.js').XPathTemplateArray}
+       */
+      ([
+        {
+          path: '/',
+          template () {
+            this.applyTemplates('//item');
+          }
+        },
+        {
+          // No priority property, no specificityPriorityResolver
+          path: '//item',
+          template (node) {
+            this.string(node.textContent);
+          }
         }
-      },
-      {
-        // No priority property, no specificityPriorityResolver
-        path: '//item',
-        /**
-         * @this {any}
-         * @param {any} node
-         */
-        template (node) {
-          this.string(node.textContent);
-        }
-      }
-    ];
-    /** @type {any} */
+      ]);
+
     const cfg = {
       data: doc,
       templates,
@@ -288,37 +275,31 @@ describe('XPathTransformerContext scalar return types (v1)', () => {
     const doc = makeDoc('<root><item>test</item></root>');
     const joiner = new StringJoiningTransformer('');
     let resolverCalled = false;
-    const templates = [
-      {
-        path: '/',
-        /**
-         * @this {any}
-         */
-        template () {
-          this.applyTemplates('//item');
+    const templates =
+      /**
+       * @type {import('../src/index.js').XPathTemplateArray}
+       */
+      ([
+        {
+          path: '/',
+          template () {
+            this.applyTemplates('//item');
+          }
+        },
+        {
+          path: '//item',
+          template (node) {
+            this.string(node.textContent);
+          }
+        },
+        {
+          path: '//*',
+          template () {
+            this.string('wildcard');
+          }
         }
-      },
-      {
-        path: '//item',
-        /**
-         * @this {any}
-         * @param {any} node
-         */
-        template (node) {
-          this.string(node.textContent);
-        }
-      },
-      {
-        path: '//*',
-        /**
-         * @this {any}
-         */
-        template () {
-          this.string('wildcard');
-        }
-      }
-    ];
-    /** @type {any} */
+      ]);
+
     const cfg = {
       data: doc,
       templates,
@@ -343,38 +324,33 @@ describe('XPathTransformerContext scalar return types (v1)', () => {
   it('throws on equal priority templates when configured', () => {
     const doc = makeDoc('<root><item>test</item></root>');
     const joiner = new StringJoiningTransformer('');
-    const templates = [
-      {
-        path: '/',
-        /**
-         * @this {any}
-         */
-        template () {
-          this.applyTemplates('//item');
+    const templates =
+      /**
+       * @type {import('../src/index.js').XPathTemplateArray}
+       */
+      ([
+        {
+          path: '/',
+          template () {
+            this.applyTemplates('//item');
+          }
+        },
+        {
+          path: '//item',
+          priority: 5,
+          template () {
+            this.string('first');
+          }
+        },
+        {
+          path: '//*',
+          priority: 5,
+          template () {
+            this.string('second');
+          }
         }
-      },
-      {
-        path: '//item',
-        priority: 5,
-        /**
-         * @this {any}
-         */
-        template () {
-          this.string('first');
-        }
-      },
-      {
-        path: '//*',
-        priority: 5,
-        /**
-         * @this {any}
-         */
-        template () {
-          this.string('second');
-        }
-      }
-    ];
-    /** @type {any} */
+      ]);
+
     const cfg = {
       data: doc,
       templates,
@@ -389,31 +365,26 @@ describe('XPathTransformerContext scalar return types (v1)', () => {
   it('wraps non-array result in xpath2 (v2)', () => {
     const doc = makeDoc('<root><item>test</item></root>');
     const joiner = new StringJoiningTransformer('');
-    const templates = [
-      {
-        path: '/',
-        /**
-         * @this {any}
-         */
-        template () {
-          // Using v2, get a scalar result that needs wrapping
-          const result = /** @type {any} */ (this)._evalXPath(
-            '1+2', true // numeric scalar -> should be wrapped into array
-          );
-          // Should wrap non-array result
-          expect(Array.isArray(result)).to.be.true;
-          expect(result[0]).to.equal(3);
-        }
-      }
-    ];
-    /** @type {any} */
-    const cfg = {
+
+    const engine = new XPathTransformer({
       data: doc,
-      templates,
+      templates: [
+        {
+          path: '/',
+          template () {
+            // Using v2, get a scalar result that needs wrapping
+            const result = this._evalXPath(
+              '1+2', true // numeric scalar -> should be wrapped into array
+            );
+            // Should wrap non-array result
+            expect(Array.isArray(result)).to.be.true;
+            expect(result[0]).to.equal(3);
+          }
+        }
+      ],
       joiningTransformer: joiner,
       xpathVersion: 2
-    };
-    const engine = new XPathTransformer(cfg);
+    });
     engine.transform('');
   });
 });

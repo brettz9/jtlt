@@ -111,26 +111,20 @@ describe('XPathTransformerContext init and sorting', () => {
   it('initializes then defaults select to * on subsequent calls', () => {
     const {document} = buildDom();
     const joiner = new StringJoiningTransformer('');
-    const templates = [
-      {
-        path: '//item',
-        priority: 1,
-        /**
-         * @this {any}
-         * @param {any} node
-         */
-        template (node) {
-          this.text(node.textContent);
-        }
-      }
-    ];
     const ctx = new XPathTransformerContext({
       data: document,
       joiningTransformer: joiner,
       xpathVersion: 2
-    }, templates);
+    }, [
+      {
+        path: '//item',
+        priority: 1,
+        template (node) {
+          this.text(node.textContent);
+        }
+      }
+    ]);
     ctx.applyTemplates('//item'); // explicit
-    // @ts-expect-error Deliberately call with no args to hit default '*'
     ctx.applyTemplates();
     const out = ctx.getOutput();
     expect(out).to.include('text').and.to.include('more');
@@ -139,11 +133,14 @@ describe('XPathTransformerContext init and sorting', () => {
   it('prefers higher numeric priority', () => {
     const {document} = buildDom();
     const joiner = new StringJoiningTransformer('');
-    const templates = [
+    const ctx = new XPathTransformerContext({
+      data: document,
+      joiningTransformer: joiner,
+      xpathVersion: 2
+    }, [
       {
         path: '//item',
         priority: 1,
-        /** @this {any} */
         template () {
           this.appendOutput('low');
         }
@@ -151,17 +148,11 @@ describe('XPathTransformerContext init and sorting', () => {
       {
         path: '//item',
         priority: 2,
-        /** @this {any} */
         template () {
           this.appendOutput('high');
         }
       }
-    ];
-    const ctx = new XPathTransformerContext({
-      data: document,
-      joiningTransformer: joiner,
-      xpathVersion: 2
-    }, templates);
+    ]);
     ctx.applyTemplates('//item');
     const out = ctx.getOutput();
     // Highest priority template appends ('high' twice for two items)
@@ -172,11 +163,16 @@ describe('XPathTransformerContext init and sorting', () => {
   it('throws on equal priority when configured', () => {
     const {document} = buildDom();
     const joiner = new StringJoiningTransformer('');
-    const templates = [
+
+    const ctx = new XPathTransformerContext({
+      data: document,
+      joiningTransformer: joiner,
+      xpathVersion: 2,
+      errorOnEqualPriority: true
+    }, [
       {
         path: '//item',
         priority: 1,
-        /** @this {any} */
         template () {
           this.appendOutput('one');
         }
@@ -184,18 +180,11 @@ describe('XPathTransformerContext init and sorting', () => {
       {
         path: '//item',
         priority: 1,
-        /** @this {any} */
         template () {
           this.appendOutput('two');
         }
       }
-    ];
-    const ctx = new XPathTransformerContext({
-      data: document,
-      joiningTransformer: joiner,
-      xpathVersion: 2,
-      errorOnEqualPriority: true
-    }, templates);
+    ]);
     expect(() => ctx.applyTemplates('//item')).to.throw('Equal priority');
   });
 });
@@ -251,9 +240,6 @@ describe('XPathTransformer return append path', () => {
     const templates = [
       {
         path: '/',
-        /**
-         * @this {any}
-         */
         template () {
           // Return a value instead of emitting; engine should append it
           return 'X';
@@ -267,7 +253,7 @@ describe('XPathTransformer return append path', () => {
     }, templates);
     // Use the engine wrapper to invoke root behavior
     // Use already imported engine class
-    /** @type {any} */
+
     const engineCfg = {
       data: document,
       templates,

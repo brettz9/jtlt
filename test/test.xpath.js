@@ -24,38 +24,37 @@ describe('XPathTransformer basics', () => {
   it('renders simple elements using templates', () => {
     const {document} = buildDom();
     const joiner = new StringJoiningTransformer('');
-    const templates = [
-      {
-        name: 'root',
-        path: '/',
-        /** @this {any} */
-        template () {
-          // Render all items
-          this.applyTemplates('//item');
+    const templates =
+      /**
+       * @type {import('../src/index.js').XPathTemplateArray}
+       */
+      ([
+        {
+          name: 'root',
+          path: '/',
+          template () {
+            // Render all items
+            this.applyTemplates('//item');
+          }
+        },
+        {
+          name: 'item',
+          path: '//item',
+          template (node) {
+            // Lowercase tagName in jsdom HTML; use provided name to avoid case
+            this.element('item', {}, [], () => {
+              this.text(node.textContent);
+            });
+          }
         }
-      },
-      {
-        name: 'item',
-        path: '//item',
-        /**
-         * @this {any}
-         * @param {any} node
-         */
-        template (node) {
-          // Lowercase tagName in jsdom HTML; use provided name to avoid case
-          this.element('item', {}, [], () => {
-            this.text(node.textContent);
-          });
-        }
-      }
-    ];
+      ]);
 
-    const engine = new XPathTransformer(/** @type {any} */ ({
+    const engine = new XPathTransformer({
       data: document,
       templates,
       joiningTransformer: joiner,
       xpathVersion: 2 // ensure 2.0 mode also works
-    }));
+    });
 
     const out = engine.transform('');
     expect(out).to.be.a('string');
@@ -71,12 +70,12 @@ describe('XPathTransformer basics', () => {
       {name: 'root2', path: '/', template () { /* no-op */ }}
     ];
 
-    const engine = new XPathTransformer(/** @type {any} */ ({
+    const engine = new XPathTransformer({
       data: document,
       templates,
       joiningTransformer: joiner,
       errorOnEqualPriority: true
-    }));
+    });
 
     expect(() => engine.transform('')).to.throw('equal priority');
   });
@@ -130,34 +129,33 @@ describe('XPathTransformer basics (version 1)', () => {
   it('renders items via native XPathEvaluator', () => {
     const {document} = buildDom();
     const joiner = new StringJoiningTransformer('');
-    const templates = [
-      {
-        name: 'root',
-        path: '/',
-        /** @this {any} */
-        template () {
-          this.applyTemplates('//item');
+    const templates =
+      /**
+       * @type {import('../src/index.js').XPathTemplateArray}
+       */
+      ([
+        {
+          name: 'root',
+          path: '/',
+          template () {
+            this.applyTemplates('//item');
+          }
+        },
+        {
+          name: 'item',
+          path: '//item',
+          template (node) {
+            this.element('item', {}, [], () => this.text(node.textContent));
+          }
         }
-      },
-      {
-        name: 'item',
-        path: '//item',
-        /**
-         * @this {any}
-         * @param {any} node
-         */
-        template (node) {
-          this.element('item', {}, [], () => this.text(node.textContent));
-        }
-      }
-    ];
+      ]);
 
-    const engine = new XPathTransformer(/** @type {any} */ ({
+    const engine = new XPathTransformer({
       data: document,
       templates,
       joiningTransformer: joiner,
       xpathVersion: 1
-    }));
+    });
 
     const out = engine.transform('');
     expect(out).to.include('<item>text</item>');

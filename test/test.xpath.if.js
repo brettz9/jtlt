@@ -63,7 +63,7 @@ describe('XPath if() method', () => {
       templates: [{
         path: '/',
         template () {
-          // @ts-expect-error missing callback
+          // @ts-expect-error Deliberately missing callback
           this.if('//li[@class="x"]');
         }
       }],

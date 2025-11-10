@@ -15,6 +15,20 @@ import XSLTStyleJSONPathResolver from './XSLTStyleJSONPathResolver.js';
 import AbstractJoiningTransformer from './AbstractJoiningTransformer.js';
 
 /**
+ * @typedef {object} TransformerContextJoiningTransformer
+ * @property {(item: any) => void} append Append
+ *   output
+ * @property {() => any} get Get output
+ * @property {(str: string,
+ *   cb?: (this: any) => void
+ * ) => void} string Emit string
+ * @property {(...args: any[]) => void} object Emit
+ *   object
+ * @property {(...args: any[]) => void} array Emit
+ *   array
+ */
+
+/**
  * A template declaration whose `template` executes with `this` bound
  * to the engine-specific context type `TCtx`.
  * @template TCtx
@@ -23,10 +37,7 @@ import AbstractJoiningTransformer from './AbstractJoiningTransformer.js';
  * @property {string} [name]
  * @property {string} [mode]
  * @property {number} [priority]
- * @property {(this: TCtx,
- *   value?: any,
- *   cfg?: {mode:string}
- * ) => any} template
+ * @property {TemplateFunction<TCtx>} template
  */
 
 /**
@@ -34,7 +45,7 @@ import AbstractJoiningTransformer from './AbstractJoiningTransformer.js';
  * @template TCtx
  * @typedef {(this: TCtx,
  *   value?: any,
- *   cfg?: {mode:string}
+ *   cfg?: {mode?: string}
  * ) => any} TemplateFunction
  */
 
@@ -49,15 +60,25 @@ import AbstractJoiningTransformer from './AbstractJoiningTransformer.js';
  *   import('./XPathTransformerContext.js').default
  * >} XPathTemplateObject
  */
+/**
+ * @typedef {(XPathTemplateObject | [string, TemplateFunction<
+ *   import('./XPathTransformerContext.js').default
+ * >])[]} XPathTemplateArray
+ */
+/**
+ * @template T
+ * @typedef {JSONPathTemplateObject<T> | [string, TemplateFunction<
+ *   import('./JSONPathTransformerContext.js').default
+ * >]} JSONPathTemplateArray
+ */
 
 /**
  * Options common to both engines.
  * @typedef {object} BaseJTLTOptions
  * @property {(result: any) => void} success A callback supplied
- *   with a single
- * argument that is the result of this instance's transform() method. When
- * used in TypeScript, this can be made generic as
- * `success<T>(result: T): void`.
+ *   with a single argument that is the result of this instance's
+ *   transform() method. When used in TypeScript, this can be made
+ *   generic as `success<T>(result: T): void`.
  * @property {unknown} [data] A JSON object or DOM document (XPath)
  * @property {string} [ajaxData] URL of a JSON file to retrieve for
  * evaluation
@@ -77,7 +98,11 @@ import AbstractJoiningTransformer from './AbstractJoiningTransformer.js';
  * processing templates.
  * @property {(path: string) => 0 | 0.5 | -0.5} [specificityPriorityResolver]
  * Callback for getting the priority by specificity
- * @property {AbstractJoiningTransformer} [joiningTransformer]
+ * @property {TransformerContextJoiningTransformer & (
+ *     AbstractJoiningTransformer<"string">|
+ *     AbstractJoiningTransformer<"dom">|
+ *     AbstractJoiningTransformer<"json">
+ * )} [joiningTransformer]
  * A concrete joining transformer instance (or custom subclass) responsible
  * for accumulating output. When omitted, one is created automatically based
  * on `outputType`.
@@ -91,9 +116,7 @@ import AbstractJoiningTransformer from './AbstractJoiningTransformer.js';
  * JSONPath engine options with context-aware template typing.
  * @template [T = "json"]
  * @typedef {BaseJTLTOptions & {
- *   templates?: JSONPathTemplateObject<T>[] | TemplateFunction<
- *     import('./JSONPathTransformerContext.js').default
- *   >,
+ *   templates?: JSONPathTemplateArray<T>[],
  *   template?: JSONPathTemplateObject<T> | TemplateFunction<
  *     import('./JSONPathTransformerContext.js').default
  *   >,
@@ -109,9 +132,7 @@ import AbstractJoiningTransformer from './AbstractJoiningTransformer.js';
 /**
  * XPath engine options with context-aware template typing.
  * @typedef {BaseJTLTOptions & {
- *   templates?: XPathTemplateObject[] | TemplateFunction<
- *     import('./XPathTransformerContext.js').default
- *   >,
+ *   templates: XPathTemplateArray,
  *   template?: XPathTemplateObject | TemplateFunction<
  *     import('./XPathTransformerContext.js').default
  *   >,
@@ -119,7 +140,7 @@ import AbstractJoiningTransformer from './AbstractJoiningTransformer.js';
  *     import('./XPathTransformerContext.js').default
  *   >,
  *   forQuery?: unknown[],
- *   engineType: 'xpath',
+ *   engineType?: 'xpath',
  *   xpathVersion?: 1|2,
  *   outputType?: 'string'|'dom'|'json'
  * }} XPathJTLTOptions
@@ -258,6 +279,7 @@ class JTLT {
       joiningConfig.unwrapSingleResult = true;
     }
 
+    // @ts-expect-error Ok
     return new JT(initial, joiningConfig);
   }
 
@@ -292,7 +314,7 @@ class JTLT {
          * @returns {void}
          */
       function () {
-        this.forEach([].slice.call(cfg.forQuery));
+        this.forEach(...[].slice.call(cfg.forQuery));
       }
       : cfg.query || (
         typeof cfg.templates === 'function'
@@ -316,11 +338,11 @@ class JTLT {
        */
       function (configParam) {
         if (configParam.engineType === 'xpath') {
-          const xt = new XPathTransformer(/** @type {any} */ (configParam));
-          return xt.transform(/** @type {string} */ (configParam.mode));
+          const xt = new XPathTransformer(configParam);
+          return xt.transform(configParam.mode);
         }
         const jpt = new JSONPathTransformer(/** @type {any} */ (configParam));
-        return jpt.transform(/** @type {string} */ (configParam.mode));
+        return jpt.transform(configParam.mode);
       };
     // Todo: Let's also, unlike XSLT and the following, give options for
     //   higher priority to absolute fixed paths over recursive descent
@@ -336,7 +358,7 @@ class JTLT {
   }
 
   /**
-   * @param {string} mode The mode of the transformation
+   * @param {string} [mode] The mode of the transformation
    * @returns {any} Result of transformation
    * @todo Allow for a success callback in case the jsonpath code is modified
    *     to work asynchronously (as with queries to access remote JSON

@@ -2,6 +2,17 @@ import xpath2 from 'xpath2.js'; // Runtime JS import; ambient types declared
 // xpathVersion: 1 => browser/native XPathEvaluator API; 2 => xpath2.js
 
 /**
+ * @typedef {object} XPathTransformerContextConfig
+ * @property {Document|Element|any} [data] - XML/DOM root to transform
+ * @property {number} [xpathVersion] - 1 or 2 (default 1)
+ * @property {import('./index.js').
+ *   TransformerContextJoiningTransformer} [joiningTransformer]
+ *   Joiner
+ * @property {boolean} [errorOnEqualPriority]
+ * @property {(path: string) => number} [specificityPriorityResolver]
+ */
+
+/**
  * Execution context for XPath-driven template application.
  *
  * Similar to JSONPathTransformerContext but uses XPath expressions on a
@@ -16,23 +27,9 @@ import xpath2 from 'xpath2.js'; // Runtime JS import; ambient types declared
  */
 class XPathTransformerContext {
   /**
-   * @param {object} config - Configuration object
-   * @param {Document|Element|any} config.data - XML/DOM root to transform
-   * @param {number} [config.xpathVersion] - 1 or 2 (default 1)
-   * @param {object} config.joiningTransformer Joiner
-   * @param {(item:any)=>void} config.joiningTransformer.append Append
-   *   output
-   * @param {()=>any} config.joiningTransformer.get Get output
-   * @param {(str:string,
-   *   cb?: (this: any)=>void
-   * )=>void} config.joiningTransformer.string Emit string
-   * @param {(...args:any[])=>void} config.joiningTransformer.object Emit
-   *   object
-   * @param {(...args:any[])=>void} config.joiningTransformer.array Emit
-   *   array
-   * @param {boolean} [config.errorOnEqualPriority]
-   * @param {(path:string)=>number} [config.specificityPriorityResolver]
-   * @param {any[]} templates - Template objects
+   * @param {XPathTransformerContextConfig} config
+   * @param {import('./index.js').XPathTemplateObject[]} templates - Template
+   *   objects
    */
   constructor (config, templates) {
     this._config = config;
@@ -177,7 +174,7 @@ class XPathTransformerContext {
 
   /**
    * Apply templates to nodes matched by an XPath expression.
-   * @param {string} select - XPath expression (default '.')
+   * @param {string} [select] - XPath expression (default '.')
    * @param {string} [mode]
    * @returns {XPathTransformerContext}
    */
@@ -240,7 +237,9 @@ class XPathTransformerContext {
           }
           return aPr > bPr ? -1 : 1;
         });
-        templateObj = pathMatchedTemplates.shift();
+        templateObj = /** @type {import('./index.js').XPathTemplateObject} */ (
+          pathMatchedTemplates.shift()
+        );
       }
       this._contextNode = node;
       const ret = templateObj.template.call(this, node, {mode});
@@ -606,7 +605,7 @@ class XPathTransformerContext {
     transformElements: {
       /**
        * @param {any} node Element node
-       * @param {{mode:string}} cfg Config
+       * @param {{mode?:string}} cfg Config
        * @returns {void}
        */
       template (node, cfg) {

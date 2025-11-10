@@ -54,6 +54,7 @@ function _makeDatasetAttribute (n0) {
  * append() will push to arrays or shallow-merge into objects; string/number/
  * boolean/null add primitives accordingly. It does not perform HTML escaping
  * or string serialization; it builds real JS values.
+ * @extends {AbstractJoiningTransformer<"json">}
  */
 class JSONJoiningTransformer extends AbstractJoiningTransformer {
   /**

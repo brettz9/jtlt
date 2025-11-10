@@ -13,7 +13,7 @@ describe('XPathTransformerContext function coverage', () => {
       } = new JSDOM('<root id="r"><child id="c">text</child></root>');
       const doc = window.document;
       // Stub joiner capturing all calls
-      const joiner = /** @type {any} */ ({
+      const joiner = {
         /** @type {any[]} */ _out: [],
         append (/** @type {any} */ v) {
           this._out.push(v);
@@ -56,7 +56,7 @@ describe('XPathTransformerContext function coverage', () => {
         text (/** @type {any} */ txt) {
           this._out.push({text: txt});
         }
-      });
+      };
       // Minimal templates so applyTemplates can run if called
       const templates = [
         {path: '.', template () { /* root template minimal for coverage */ }},

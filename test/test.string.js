@@ -4,44 +4,56 @@ import JTLT from '../src/index.js';
 /**
  * @param {(err?: Error) => void} done - Test done callback
  * @param {string} expected - Expected result
- * @param {any[]} templates - Array of template objects
+ * @param {import('../src/index.js').XPathTemplateArray} templates - Array
+ *   of template objects
  * @param {object} [replace] - Properties to replace in config
  * @returns {void}
  */
 function runTest (done, expected, templates, replace) {
-  const config = {
-    autostart: true,
-    ajaxData: import.meta.dirname + '/data/jsonpath-sample.json',
-    outputType: /** @type {'string'} */ ('string'), // string is default
-    templates: [
-      { // We could instead try a root template which applied on the author path
-        name: 'scalars',
-        path: '$..*@scalar()',
-        /**
-         * @returns {void}
-         */
-        template () {
-          //
+  const config =
+    /**
+     * @type {import('../src/index.js').JSONPathJTLTOptions<"string">}
+     */ ({
+      autostart: true,
+      ajaxData: import.meta.dirname + '/data/jsonpath-sample.json',
+      outputType: /** @type {'string'} */ ('string'), // string is default
+      templates: [
+        {
+          // We could instead try a root template which applied on
+          //   the author path
+          name: 'scalars',
+          path: '$..*@scalar()',
+          /**
+           * @returns {void}
+           */
+          template () {
+            //
+          }
+        }
+      ],
+      success (result) {
+        try {
+          expect(result).to.equal(expected);
+          done();
+        } catch (err) {
+          done(/** @type {Error} */ (err));
         }
       }
-    ],
-    /**
-     * @param {any} result - Result
-     * @returns {void}
-     */
-    success (result) {
-      try {
-        expect(result).to.equal(expected);
-        done();
-      } catch (err) {
-        done(/** @type {Error} */ (err));
-      }
-    }
-  };
+    });
   if (replace) {
-    config.templates[0] = templates.shift();
+    // @ts-expect-error Ok
+    config.templates[0] =
+    /**
+     * @type {(
+     *   import('../src/index.js').XPathTemplateObject |
+     *   [string, import('../src/index.js').TemplateFunction<
+     *     import('../src/XPathTransformerContext.js').default
+     *   >]
+     * )}
+     */ (templates.shift());
   }
   templates.forEach((template) => {
+    // @ts-expect-error Ok
     config.templates.push(template);
   });
   try {
@@ -61,10 +73,6 @@ describe('jtlt', () => {
     runTest(done, expected, [
       [
         '$.store.book[*].author',
-        /**
-         * @param {any} author - Author
-         * @returns {string}
-         */
         function (author) {
           return `<b>${author}</b>`;
         }
@@ -99,10 +107,6 @@ describe('jtlt', () => {
     runTest(done, expected, [{
       name: 'author', // For use with calling templates
       path: '$.store.book[*].author',
-      /**
-       * @param {any} author - Author
-       * @returns {void}
-       */
       template (author) {
         this.string(`<b>${author}</b>`);
       }
@@ -114,10 +118,6 @@ describe('jtlt', () => {
     runTest(done, expected, [{
       name: 'author', // For use with calling templates
       path: '$.store.book[*].author',
-      /**
-       * @param {any} author - Author
-       * @returns {void}
-       */
       template (author) {
         this.plainText(`<i>${author}</i>`);
       }
@@ -130,10 +130,6 @@ describe('jtlt', () => {
     runTest(done, expected, [{
       name: 'author', // For use with calling templates
       path: '$.store.book[*].author',
-      /**
-       * @param {any} author - Author
-       * @returns {string}
-       */
       template (author) {
         return `<b>${author}</b>`;
       }
@@ -148,24 +144,14 @@ describe('jtlt', () => {
       runTest(done, expected, [
         [
           '$',
-          /**
-           * @param {any} value - Value
-           * @param {{mode: string}} cfg - Config
-           * @this {import('../src/JSONPathTransformerContext.js').default}
-           * @returns {void}
-           */
           function (value, cfg) {
             this.applyTemplates(
-              '$.store.book[*].author', cfg.mode
+              '$.store.book[*].author', cfg?.mode
             );
           }
         ],
         [
           '$.store.book[*].author',
-          /**
-           * @param {any} author - Author
-           * @returns {string}
-           */
           function (author) {
             return `<b>${author}</b>`;
           }
@@ -179,20 +165,12 @@ describe('jtlt', () => {
     runTest(done, expected, [{
       name: 'author', // For use with calling templates
       path: '$.store.book[*].author',
-      /**
-       * @param {any} author - Author
-       * @returns {string}
-       */
       template (author) {
         return `<b>${author}</b>`;
       }
     }, {
       name: 'price', // For use with calling templates
       path: '$.store.book[*].price',
-      /**
-       * @param {any} price - Price
-       * @returns {string}
-       */
       template (price) {
         return `<u>${price}</u>`;
       }
@@ -215,20 +193,12 @@ describe('jtlt', () => {
     }, {
       name: 'author', // For use with calling templates
       path: '$.store.book[*].author',
-      /**
-       * @param {any} author - Author
-       * @returns {string}
-       */
       template (author) {
         return `<b>${author}</b>`;
       }
     }, {
       name: 'price', // For use with calling templates
       path: '$.store.book[*].price',
-      /**
-       * @param {any} price - Price
-       * @returns {string}
-       */
       template (price) {
         return `<u>${price}</u>`;
       }

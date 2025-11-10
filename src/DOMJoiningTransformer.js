@@ -14,6 +14,7 @@ import AbstractJoiningTransformer from './AbstractJoiningTransformer.js';
  * It expects templates to build DOM nodes explicitly (e.g., via element(),
  * attribute(), and text()), though string/number/boolean will append text
  * nodes for convenience.
+ * @extends {AbstractJoiningTransformer<"dom">}
  */
 class DOMJoiningTransformer extends AbstractJoiningTransformer {
   /**
@@ -24,7 +25,7 @@ class DOMJoiningTransformer extends AbstractJoiningTransformer {
   constructor (o, cfg) {
     super(cfg); // Include this in any subclass of AbstractJoiningTransformer
     this._dom = o ||
-    cfg.document?.createDocumentFragment();
+    cfg.document.createDocumentFragment();
   }
 
   /**
@@ -204,7 +205,7 @@ class DOMJoiningTransformer extends AbstractJoiningTransformer {
     const el = elName && typeof elName === 'object'
       ? elName
       : /** @type {Element} */ (
-        this._cfg.document?.createElement(elName)
+        this._cfg.document.createElement(elName)
       );
     const elementName = el.localName;
 
@@ -227,7 +228,7 @@ class DOMJoiningTransformer extends AbstractJoiningTransformer {
         omitXmlDeclaration, doctypePublic, doctypeSystem, method
       } = this._outputConfig ?? {};
 
-      const dtd = this._cfg.document?.implementation.createDocumentType(
+      const dtd = this._cfg.document.implementation.createDocumentType(
         elementName, // Qualified name of the root element
         doctypePublic ?? '', // Public ID (optional)
         doctypeSystem ?? '' // System ID (optional)
@@ -242,7 +243,7 @@ class DOMJoiningTransformer extends AbstractJoiningTransformer {
       }
 
       const doc = /** @type {XMLDocument} */ (
-        this._cfg.document?.implementation.createDocument(
+        this._cfg.document.implementation.createDocument(
           xmlns ?? null, // Namespace URI (null for no namespace)
           elementName, // Qualified name of the root element
           dtd // The DocumentType object

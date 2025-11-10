@@ -43,21 +43,20 @@ function makeXPathCtx () {
   const joiner = new DOMJoiningTransformer(
     doc.createDocumentFragment(), {document: doc}
   );
-  /** @type {{path: string, template: (this: any)=> void}} */
-  const tpl = {
-    path: '/',
-    template () {
-      // Emit comment and PI at document root (no element wrapper needed).
-      this.comment('xc');
-      this.processingInstruction('xpi', 'xdata');
-    }
-  };
-  const engine = new XPathTransformer(/** @type {any} */ ({
+
+  const engine = new XPathTransformer({
     data: doc,
-    templates: [tpl],
+    templates: [{
+      path: '/',
+      template () {
+        // Emit comment and PI at document root (no element wrapper needed).
+        this.comment('xc');
+        this.processingInstruction('xpi', 'xdata');
+      }
+    }],
     joiningTransformer: joiner,
     xpathVersion: 1
-  }));
+  });
   const out = engine.transform('');
   return {out, doc};
 }

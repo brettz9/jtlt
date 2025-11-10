@@ -14,7 +14,9 @@
  *   XPathTransformerContext
  */
 /**
- * @typedef {import('./AbstractJoiningTransformer.js').default}
+ * @typedef {import('./AbstractJoiningTransformer.js').default<"string">|
+ *   import('./AbstractJoiningTransformer.js').default<"json">|
+ *   import('./AbstractJoiningTransformer.js').default<"dom">}
  *   AbstractJoiningTransformer
  */
 /**
@@ -34,7 +36,7 @@
  * Generic template callable bound to a context type.
  * @template TCtx
  * @typedef {(this: TCtx, value?: unknown,
- *   cfg?: {mode: string}
+ *   cfg?: {mode?: string}
  * ) => unknown} TemplateFunction
  */
 

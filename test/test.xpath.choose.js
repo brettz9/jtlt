@@ -74,12 +74,12 @@ describe('XPath choose() method', () => {
         path: '/',
         template () {
           // whenCb non-function: no output for truthy condition
-          // @ts-expect-error non-function whenCb
+          // @ts-expect-error Deliberate non-function whenCb
           this.choose('boolean(1)', 'not-fn', null);
           // otherwiseCb non-function: no output for falsy condition
           this.choose('boolean(0)', () => {
             this.string('bad');
-          // @ts-expect-error non-function otherwiseCb
+          // @ts-expect-error Deliberate non-function otherwiseCb
           }, 'not-fn');
           // ensure transform still proceeds without errors
           this.string('ok');

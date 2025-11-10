@@ -31,22 +31,24 @@ describe('XPathTransformerContext branch coverage', () => {
   it('applyTemplates first call falls back to dot when select missing', () => {
     const doc = makeDoc('<root><n>t</n></root>');
     const joiner = new StringJoiningTransformer('');
-    const templates = [
-      {
-        path: '//*',
-        /** @this {any} */
-        template () {
-          this.string('x');
+    const templates =
+      /**
+       * @type {import('../src/index.js').XPathTemplateObject[]}
+       */
+      ([
+        {
+          path: '//*',
+          template () {
+            this.string('x');
+          }
         }
-      }
-    ];
+      ]);
     const ctx = new XPathTransformerContext({
       data: doc,
       joiningTransformer: joiner,
       xpathVersion: 2
     }, templates);
     // First call without select triggers select = select || '.' path
-    // @ts-expect-error Deliberately call without args to exercise fallback
     ctx.applyTemplates();
     const out = ctx.getOutput();
     expect(out).to.include('x');
@@ -55,23 +57,25 @@ describe('XPathTransformerContext branch coverage', () => {
   it('filters templates by mode when provided', () => {
     const doc = makeDoc('<root><n>t</n></root>');
     const joiner = new StringJoiningTransformer('');
-    const templates = [
-      {
-        path: '//*',
-        mode: 'm1',
-        /** @this {any} */
-        template () {
-          this.string('m1');
+    const templates =
+      /**
+       * @type {import('../src/index.js').XPathTemplateObject[]}
+       */
+      ([
+        {
+          path: '//*',
+          mode: 'm1',
+          template () {
+            this.string('m1');
+          }
+        },
+        {
+          path: '//*',
+          template () {
+            this.string('base');
+          }
         }
-      },
-      {
-        path: '//*',
-        /** @this {any} */
-        template () {
-          this.string('base');
-        }
-      }
-    ];
+      ]);
     const ctx = new XPathTransformerContext({
       data: doc,
       joiningTransformer: joiner,
@@ -86,22 +90,24 @@ describe('XPathTransformerContext branch coverage', () => {
   it('sorts without resolver (falls back to 0 for both aPr/bPr)', () => {
     const doc = makeDoc('<root><child>a</child></root>');
     const joiner = new StringJoiningTransformer('');
-    const templates = [
-      {
-        path: '//*',
-        /** @this {any} */
-        template () {
-          this.appendOutput('A');
+    const templates =
+      /**
+       * @type {import('../src/index.js').XPathTemplateObject[]}
+       */
+      ([
+        {
+          path: '//*',
+          template () {
+            this.appendOutput('A');
+          }
+        },
+        {
+          path: '//child',
+          template () {
+            this.appendOutput('B');
+          }
         }
-      },
-      {
-        path: '//child',
-        /** @this {any} */
-        template () {
-          this.appendOutput('B');
-        }
-      }
-    ];
+      ]);
     const ctx = new XPathTransformerContext({
       data: doc,
       joiningTransformer: joiner,

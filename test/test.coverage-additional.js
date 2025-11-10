@@ -1112,13 +1112,15 @@ describe('index.js - additional configuration branches', function () {
     new JTLT({
       data,
       outputType: 'string',
-      forQuery: '$.items[*]',
+      forQuery: ['$.items[*]', function (arg) {
+        this.string(arg.x);
+      }],
       success (result) {
         out = result; return result;
       }
     }).transform();
     // forQuery should trigger forEach on selected items
-    assert.isString(out);
+    assert.equal(out, '12');
   });
 
   it('should use query function configuration', function () {

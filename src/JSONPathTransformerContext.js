@@ -33,7 +33,7 @@ import JSONPathTransformer from './JSONPathTransformer.js';
  *   JSONPath
  * @property {(path: string) => number} [specificityPriorityResolver]
  *   Priority resolver function
- * @property {any[]} templates
+ * @property {import('./index.js').JSONPathTemplateObject<T>[]} templates
  */
 
 /**
@@ -150,7 +150,9 @@ class JSONPathTransformerContext {
    *            locale, localeOptions }
    * - array: multiple key objects/strings in priority order.
    *
-   * @param {string|object|null} [select] - JSONPath selector or options object
+   * @param {string|null|
+   *   {mode?: string, select?: string}
+   * } [select] - JSONPath selector or options object
    * @param {string} [mode] - Mode to apply
    * @param {SortSpec} [sort] - Sort spec
    * @returns {this}
@@ -162,10 +164,8 @@ class JSONPathTransformerContext {
     // eslint-disable-next-line unicorn/no-this-assignment -- Temporary
     const that = this;
     if (select && typeof select === 'object') {
-      /** @type {{mode?: string, select?: string}} */
-      const selectObj = /** @type {any} */ (select);
-      mode = selectObj.mode ?? mode;
-      select = selectObj.select ?? select;
+      mode = select.mode ?? mode;
+      select = select.select ?? select;
     }
     if (!this._initialized) {
       select = select || '$';
@@ -395,7 +395,9 @@ class JSONPathTransformerContext {
   }
 
   /**
-   * @param {string|object} name - Template name or options object
+   * @param {string|
+   *   {name?: string, withParam?: any[]}} name - Template name or
+   *   options object
    * @param {any[]} [withParams] - Parameters to pass to template
    * @returns {this}
    */
@@ -404,10 +406,8 @@ class JSONPathTransformerContext {
     // eslint-disable-next-line unicorn/no-this-assignment -- Temporary
     const that = this;
     if (name && typeof name === 'object') {
-      /** @type {{name?: string, withParam?: any[]}} */
-      const nameObj = /** @type {any} */ (name);
-      withParams = nameObj.withParam || withParams;
-      name = nameObj.name ?? name;
+      withParams = name.withParam || withParams;
+      name = name.name ?? name;
     }
     withParams = withParams || [];
     const paramValues = withParams.map(function (withParam) {
@@ -435,7 +435,7 @@ class JSONPathTransformerContext {
    * @param {string} select - JSONPath selector
    * @param {(this: JSONPathTransformerContext<T>,
    *   value:any
-   * )=>void} cb - Callback function
+   * ) => void} cb - Callback function
    * @param {SortSpec} [sort] - Sort spec
    * @returns {this}
    */

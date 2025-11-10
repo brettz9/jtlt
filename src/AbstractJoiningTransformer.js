@@ -3,14 +3,15 @@
 //    string transformer but adding as text node in a DOM transformer)
 
 /**
- * @typedef {object} BaseTransformerConfig
- * @property {boolean} [JHTMLForJSON] - Use JHTML for JSON
- * @property {'JavaScript'|'JSON'} [mode] - Mode
+ * @typedef {{
+ *   JHTMLForJSON?: boolean,
+ *   mode?: "JSON"|"JavaScript"
+ * }} BaseTransformerConfig
  */
 
 /**
  * @typedef {BaseTransformerConfig & {
- *   document?: Document
+ *   document: Document
  * }} DOMJoiningTransformerConfig
  */
 /**
@@ -25,9 +26,10 @@
  * }} StringJoiningTransformerConfig
  */
 /**
- * @typedef {StringJoiningTransformerConfig &
- *    DOMJoiningTransformerConfig &
- *    JSONJoiningTransformerConfig
+ * @template T
+ * @typedef {T extends "string" ? StringJoiningTransformerConfig :
+ *   T extends "dom" ? DOMJoiningTransformerConfig :
+ *   T extends "json" ? JSONJoiningTransformerConfig : never
  * } JoiningTransformerConfig
  */
 
@@ -45,18 +47,19 @@
  *   based on the current state.
  * - get(): returns the accumulated result.
  * - config(): temporarily tweak a config flag for the duration of a callback.
+ * @template T
  */
 class AbstractJoiningTransformer {
   /**
-   * @param {JoiningTransformerConfig} [cfg] - Configuration object
+   * @param {JoiningTransformerConfig<T>} [cfg] - Configuration object
    */
   constructor (cfg) {
     // Todo: Might set some reasonable defaults across all classes
-    this._cfg = cfg ?? {};
+    this._cfg = cfg ?? /** @type {JoiningTransformerConfig<T>} */ ({});
   }
 
   /**
-   * @param {JoiningTransformerConfig} cfg - Configuration object
+   * @param {JoiningTransformerConfig<T>} cfg - Configuration object
    * @returns {void}
    */
   setConfig (cfg) {
@@ -82,7 +85,7 @@ class AbstractJoiningTransformer {
   /**
    * @param {string} prop - Configuration property name
    * @param {any} val - Configuration property value
-   * @param {(this: AbstractJoiningTransformer) => void} [cb]
+   * @param {(this: AbstractJoiningTransformer<T>) => void} [cb]
    *   Optional callback invoked with this instance
    * @returns {void}
    */

@@ -17,25 +17,17 @@ describe('XPathTransformer additional coverage', () => {
   it('maps array shorthand templates', () => {
     const doc = makeDoc('<root><item>a</item><item>b</item></root>');
     const joiner = new StringJoiningTransformer('');
-    /**
-     * @param {Element} n
-     * @returns {void}
-     */
-    function itemTpl (n) {
-      // @ts-expect-error test context
-      this.element('x', {}, [], () => this.text(n.textContent));
-    }
-    const templates = [
-      ['//item', itemTpl]
-    ];
-    /** @type {any} */
-    const cfg1 = {
+
+    const engine = new XPathTransformer({
       data: doc,
-      templates,
+      templates: [
+        ['//item', function itemTpl (n) {
+          this.element('x', {}, [], () => this.text(n.textContent));
+        }]
+      ],
       joiningTransformer: joiner,
       xpathVersion: 1
-    };
-    const engine = new XPathTransformer(cfg1);
+    });
     const out = engine.transform('');
     // Default root rule triggers traversal then item template emits <x> nodes
     expect(out).to.include('<x>a</x>').and.to.include('<x>b</x>');
@@ -44,31 +36,27 @@ describe('XPathTransformer additional coverage', () => {
   it('uses last of multiple root templates when not erroring', () => {
     const doc = makeDoc('<root/>');
     const joiner = new StringJoiningTransformer('');
-    const templates = [
-      {
-        path: '/',
-        /** @this {any} */
-        template () {
-          this.string('first');
-        }
-      },
-      {
-        path: '/',
-        /** @this {any} */
-        template () {
-          this.string('second');
-        }
-      }
-    ];
-    /** @type {any} */
-    const cfg2 = {
+
+    const engine = new XPathTransformer({
       data: doc,
-      templates,
+      templates: [
+        {
+          path: '/',
+          template () {
+            this.string('first');
+          }
+        },
+        {
+          path: '/',
+          template () {
+            this.string('second');
+          }
+        }
+      ],
       joiningTransformer: joiner,
       errorOnEqualPriority: false,
       xpathVersion: 1
-    };
-    const engine = new XPathTransformer(cfg2);
+    });
     const out = engine.transform('');
     expect(out).to.equal('second');
   });
@@ -76,24 +64,20 @@ describe('XPathTransformer additional coverage', () => {
   it('falls back to default root rule when no root template present', () => {
     const doc = makeDoc('<root><item>a</item></root>');
     const joiner = new StringJoiningTransformer('');
-    const templates = [
-      {
-        path: '//item',
-        /** @param {Element} n */
-        template (n) {
-          // @ts-expect-error test context
-          this.string(n.textContent);
-        }
-      }
-    ];
-    /** @type {any} */
-    const cfg3 = {
+
+    const engine = new XPathTransformer({
       data: doc,
-      templates,
+      templates: [
+        {
+          path: '//item',
+          template (n) {
+            this.string(n.textContent);
+          }
+        }
+      ],
       joiningTransformer: joiner,
       xpathVersion: 1
-    };
-    const engine = new XPathTransformer(cfg3);
+    });
     const out = engine.transform('');
     // We only assert that some output is produced by the default rule path
     expect(out).to.be.a('string');
@@ -102,26 +86,22 @@ describe('XPathTransformer additional coverage', () => {
   it('splits root vs non-root templates in constructor', () => {
     const doc = makeDoc('<root><item>a</item></root>');
     const joiner = new StringJoiningTransformer('');
-    /** @type {any} */
-    const cfg = {
+    const engine = new XPathTransformer({
       data: doc,
       templates: [
         {
           path: '/',
-          /** @this {any} */
           template () {
             this.string('R');
           }
         },
         ['//item', /** @returns {void} */ function () {
-          // @ts-expect-error test context
           this.string('I');
         }]
       ],
       joiningTransformer: joiner,
       xpathVersion: 1
-    };
-    const engine = new XPathTransformer(cfg);
+    });
     const out = engine.transform('');
     // Root template should be separated and used; non-root ignored at root
     expect(out).to.equal('R');
@@ -132,7 +112,6 @@ describe('XPathTransformer additional coverage', () => {
     const joiner = new StringJoiningTransformer('');
 
     // First engine: mix of root (/) and non-root paths to hit both filters
-    /** @type {any} */
     const cfg1 = {
       data: doc,
       templates: [
@@ -164,7 +143,6 @@ describe('XPathTransformer additional coverage', () => {
 
     // Second engine: only non-root to ensure filter returns empty for root
     const joiner2 = new StringJoiningTransformer('');
-    /** @type {any} */
     const cfg2 = {
       data: doc,
       templates: [
@@ -190,23 +168,17 @@ describe('XPathTransformer additional coverage', () => {
 
     // Verify functional behavior with the first engine
     const joiner3 = new StringJoiningTransformer('');
-    /** @type {any} */
-    const cfg3 = {
+    const engine3 = new XPathTransformer({
       data: doc,
       templates: [
         {
           path: '/',
-          /** @this {any} */
           template () {
             this.applyTemplates('//item', '');
           }
         },
         {
           path: '//item',
-          /**
-           * @param {Element} n
-           * @this {any}
-           */
           template (n) {
             this.string(n.textContent);
           }
@@ -214,8 +186,7 @@ describe('XPathTransformer additional coverage', () => {
       ],
       joiningTransformer: joiner3,
       xpathVersion: 1
-    };
-    const engine3 = new XPathTransformer(cfg3);
+    });
     const out = engine3.transform('');
     expect(out).to.equal('xy');
   });
@@ -223,7 +194,6 @@ describe('XPathTransformer additional coverage', () => {
   it('throws on duplicate template names', () => {
     const doc = makeDoc('<root/>');
     const joiner = new StringJoiningTransformer('');
-    /** @type {any} */
     const cfg = {
       data: doc,
       templates: [
