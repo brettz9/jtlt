@@ -6,8 +6,7 @@ import xpath2 from 'xpath2.js'; // Runtime JS import; ambient types declared
  * @property {Document|Element|any} [data] - XML/DOM root to transform
  * @property {number} [xpathVersion] - 1 or 2 (default 1)
  * @property {import('./index.js').
- *   TransformerContextJoiningTransformer} [joiningTransformer]
- *   Joiner
+ *   JoiningTransformer} joiningTransformer Joiner
  * @property {boolean} [errorOnEqualPriority]
  * @property {(path: string) => number} [specificityPriorityResolver]
  */
@@ -314,7 +313,7 @@ class XPathTransformerContext {
   /**
    * Append string.
    * @param {string} str String to append
-   * @param {(this: XPathTransformerContext)=>void} [cb] Callback
+   * @param {(this: XPathTransformerContext) => void} [cb] Callback
    * @returns {XPathTransformerContext}
    */
   string (str, cb) {

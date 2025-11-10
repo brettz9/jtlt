@@ -3,7 +3,7 @@ import JTLT, {JSONPathTransformer} from '../src/index.js';
 
 // Helper to run a JTLT transform with minimal config
 /**
- * @param {unknown} data
+ * @param {null|boolean|number|string|object} data
  * @param {import('../src/index.js').XPathTemplateArray} templates
  * @returns {string}
  */

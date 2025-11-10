@@ -12,21 +12,6 @@ import JSONPathTransformer from './JSONPathTransformer.js';
 import XPathTransformer from './XPathTransformer.js';
 import StringJoiningTransformer from './StringJoiningTransformer.js';
 import XSLTStyleJSONPathResolver from './XSLTStyleJSONPathResolver.js';
-import AbstractJoiningTransformer from './AbstractJoiningTransformer.js';
-
-/**
- * @typedef {object} TransformerContextJoiningTransformer
- * @property {(item: any) => void} append Append
- *   output
- * @property {() => any} get Get output
- * @property {(str: string,
- *   cb?: (this: any) => void
- * ) => void} string Emit string
- * @property {(...args: any[]) => void} object Emit
- *   object
- * @property {(...args: any[]) => void} array Emit
- *   array
- */
 
 /**
  * A template declaration whose `template` executes with `this` bound
@@ -73,13 +58,22 @@ import AbstractJoiningTransformer from './AbstractJoiningTransformer.js';
  */
 
 /**
+ * @typedef {(
+ *   StringJoiningTransformer|
+ *   DOMJoiningTransformer|
+ *   JSONJoiningTransformer
+ * )} JoiningTransformer
+ */
+
+/**
  * Options common to both engines.
  * @typedef {object} BaseJTLTOptions
  * @property {(result: any) => void} success A callback supplied
  *   with a single argument that is the result of this instance's
  *   transform() method. When used in TypeScript, this can be made
  *   generic as `success<T>(result: T): void`.
- * @property {unknown} [data] A JSON object or DOM document (XPath)
+ * @property {null|boolean|number|string|object} [data] A JSON
+ *   object or DOM document (XPath)
  * @property {string} [ajaxData] URL of a JSON file to retrieve for
  * evaluation
  * @property {boolean} [errorOnEqualPriority] Whether or not to
@@ -92,23 +86,21 @@ import AbstractJoiningTransformer from './AbstractJoiningTransformer.js';
  * @property {boolean} [unwrapSingleResult] For JSON output, whether to
  * unwrap single-element root arrays to return just the element
  * @property {string} [mode] The mode in which to begin the transform.
- * @property {(opts: JTLTOptions) => unknown} [engine] Will be based the
+ * @property {(opts: JTLTOptions &
+ *   Required<Pick<JTLTOptions, "joiningTransformer">>
+ * ) => unknown} [engine] Will be based the
  * same config as passed to this instance. Defaults to a transforming
  * function based on JSONPath and with its own set of priorities for
  * processing templates.
  * @property {(path: string) => 0 | 0.5 | -0.5} [specificityPriorityResolver]
  * Callback for getting the priority by specificity
- * @property {TransformerContextJoiningTransformer & (
- *     AbstractJoiningTransformer<"string">|
- *     AbstractJoiningTransformer<"dom">|
- *     AbstractJoiningTransformer<"json">
- * )} [joiningTransformer]
+ * @property {JoiningTransformer} [joiningTransformer]
  * A concrete joining transformer instance (or custom subclass) responsible
  * for accumulating output. When omitted, one is created automatically based
  * on `outputType`.
  * @property {Record<string, unknown>} [joiningConfig] Config for the joining
  *   transformer
- * @property {unknown} [parent] Parent object for context
+ * @property {object} [parent] Parent object for context
  * @property {string} [parentProperty] Parent property name for context
  */
 
@@ -333,7 +325,8 @@ class JTLT {
     this.config.errorOnEqualPriority = cfg.errorOnEqualPriority || false;
     this.config.engine = this.config.engine ||
       /**
-       * @param {JTLTOptions} configParam
+       * @param {JTLTOptions &
+       *   Required<Pick<JTLTOptions, "joiningTransformer">>} configParam
        * @returns {any}
        */
       function (configParam) {
@@ -341,7 +334,39 @@ class JTLT {
           const xt = new XPathTransformer(configParam);
           return xt.transform(configParam.mode);
         }
-        const jpt = new JSONPathTransformer(/** @type {any} */ (configParam));
+
+        // Type assertion is safe here because _createJoiningTransformer
+        // ensures the joiningTransformer type matches outputType
+        const outputType = configParam.outputType || 'json';
+
+        // Branch based on outputType to help TypeScript narrow the type
+        if (outputType === 'string') {
+          const jpt = new JSONPathTransformer(
+            /**
+             * @type {import('./JSONPathTransformerContext.js').
+             *   JSONPathTransformerContextConfig<"string">}
+             */
+            (configParam)
+          );
+          return jpt.transform(configParam.mode);
+        }
+        if (outputType === 'dom') {
+          const jpt = new JSONPathTransformer(
+            /**
+             * @type {import('./JSONPathTransformerContext.js').
+             *   JSONPathTransformerContextConfig<"dom">}
+             */
+            (configParam)
+          );
+          return jpt.transform(configParam.mode);
+        }
+        const jpt = new JSONPathTransformer(
+          /**
+           * @type {import('./JSONPathTransformerContext.js').
+           *   JSONPathTransformerContextConfig<"json">}
+           */
+          (configParam)
+        );
         return jpt.transform(configParam.mode);
       };
     // Todo: Let's also, unlike XSLT and the following, give options for
@@ -359,7 +384,7 @@ class JTLT {
 
   /**
    * @param {string} [mode] The mode of the transformation
-   * @returns {any} Result of transformation
+   * @returns {void} Result of transformation
    * @todo Allow for a success callback in case the jsonpath code is modified
    *     to work asynchronously (as with queries to access remote JSON
    *     stores)

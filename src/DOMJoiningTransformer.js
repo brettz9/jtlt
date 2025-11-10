@@ -56,9 +56,9 @@ class DOMJoiningTransformer extends AbstractJoiningTransformer {
    * @param {any} val - Property value
    * @returns {void}
    */
-  // eslint-disable-next-line class-methods-use-this -- Incomplete?
   propValue (prop, val) {
-    //
+    // @ts-expect-error Ok
+    this._dom[prop] = val;
   }
 
   /**

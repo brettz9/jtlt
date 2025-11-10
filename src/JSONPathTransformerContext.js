@@ -20,7 +20,7 @@ import JSONPathTransformer from './JSONPathTransformer.js';
 /**
  * @template [T = "json"]
  * @typedef {object} JSONPathTransformerContextConfig
- * @property {object} data - Data to transform
+ * @property {null|boolean|number|string|object} data - Data to transform
  * @property {object} [parent] - Parent object
  * @property {string} [parentProperty] - Parent property name
  * @property {boolean} [errorOnEqualPriority] - Whether to error on
