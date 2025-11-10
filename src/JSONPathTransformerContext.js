@@ -672,7 +672,7 @@ class JSONPathTransformerContext {
    * @returns {this}
    */
   string (str, cb) {
-    (this._getJoiningTransformer)().string(str, cb);
+    /** @type {any} */ (this._getJoiningTransformer()).string(str, cb);
     return this;
   }
 
@@ -719,7 +719,7 @@ class JSONPathTransformerContext {
    * @returns {this}
    */
   object (...args) {
-    this._getJoiningTransformer().object(...args);
+    /** @type {any} */ (this._getJoiningTransformer()).object(...args);
     return this;
   }
 
@@ -730,7 +730,7 @@ class JSONPathTransformerContext {
    * @returns {this}
    */
   array (...args) {
-    this._getJoiningTransformer().array(...args);
+    /** @type {any} */ (this._getJoiningTransformer()).array(...args);
     return this;
   }
 
@@ -755,7 +755,7 @@ class JSONPathTransformerContext {
    * @returns {this}
    */
   element (name, atts, children, cb) {
-    this._getJoiningTransformer().element(
+    /** @type {any} */ (this._getJoiningTransformer()).element(
       name, atts, children, cb
     );
     return this;
@@ -769,7 +769,7 @@ class JSONPathTransformerContext {
    * @returns {this}
    */
   attribute (name, val) {
-    this._getJoiningTransformer().attribute(
+    /** @type {any} */ (this._getJoiningTransformer()).attribute(
       name, val
     );
     return this;
