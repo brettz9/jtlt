@@ -39,8 +39,9 @@ import AbstractJoiningTransformer from './AbstractJoiningTransformer.js';
  */
 
 /**
+ * @template [T = "json"]
  * @typedef {TemplateObject<
- *   import('./JSONPathTransformerContext.js').default
+ *   import('./JSONPathTransformerContext.js').default<T>
  * >} JSONPathTemplateObject
  */
 /**
@@ -70,7 +71,6 @@ import AbstractJoiningTransformer from './AbstractJoiningTransformer.js';
  * @property {boolean} [unwrapSingleResult] For JSON output, whether to
  * unwrap single-element root arrays to return just the element
  * @property {string} [mode] The mode in which to begin the transform.
- * @property {'string'|'dom'|'json'} [outputType] Output type
  * @property {(opts: JTLTOptions) => unknown} [engine] Will be based the
  * same config as passed to this instance. Defaults to a transforming
  * function based on JSONPath and with its own set of priorities for
@@ -89,11 +89,12 @@ import AbstractJoiningTransformer from './AbstractJoiningTransformer.js';
 
 /**
  * JSONPath engine options with context-aware template typing.
+ * @template [T = "json"]
  * @typedef {BaseJTLTOptions & {
- *   templates?: JSONPathTemplateObject[] | TemplateFunction<
+ *   templates?: JSONPathTemplateObject<T>[] | TemplateFunction<
  *     import('./JSONPathTransformerContext.js').default
  *   >,
- *   template?: JSONPathTemplateObject | TemplateFunction<
+ *   template?: JSONPathTemplateObject<T> | TemplateFunction<
  *     import('./JSONPathTransformerContext.js').default
  *   >,
  *   query?: TemplateFunction<
@@ -101,6 +102,7 @@ import AbstractJoiningTransformer from './AbstractJoiningTransformer.js';
  *   >,
  *   forQuery?: unknown[],
  *   engineType?: 'jsonpath',
+ *   outputType?: T
  * }} JSONPathJTLTOptions
  */
 
@@ -119,10 +121,16 @@ import AbstractJoiningTransformer from './AbstractJoiningTransformer.js';
  *   forQuery?: unknown[],
  *   engineType: 'xpath',
  *   xpathVersion?: 1|2,
+ *   outputType?: 'string'|'dom'|'json'
  * }} XPathJTLTOptions
  */
 
-/** @typedef {JSONPathJTLTOptions | XPathJTLTOptions} JTLTOptions */
+/**
+ * @typedef {JSONPathJTLTOptions |
+ *   JSONPathJTLTOptions<"string"> |
+ *   JSONPathJTLTOptions<"dom"> |
+ *   XPathJTLTOptions} JTLTOptions
+ */
 
 const {window} = new JSDOM();
 const {document} = window;
@@ -143,6 +151,14 @@ class JTLT {
    * either a valid config.ajaxData or config.data parameter.
    * @overload
    * @param {JSONPathJTLTOptions} config Options for JSONPath engine
+   */
+  /**
+   * @overload
+   * @param {JSONPathJTLTOptions<"string">} config Options for JSONPath engine
+   */
+  /**
+   * @overload
+   * @param {JSONPathJTLTOptions<"dom">} config Options for JSONPath engine
    */
   /**
    * @overload

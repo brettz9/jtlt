@@ -7,11 +7,12 @@ import JSONPathTransformerContext from './JSONPathTransformerContext.js';
  * optional `mode`), sorts by priority, and invokes the winning template.
  * If no template matches, built-in default rules emulate XSLT-like behavior
  * for objects, arrays, scalars, etc.
+ * @template T
  */
 class JSONPathTransformer {
   /**
    * @param {import('./JSONPathTransformerContext.js').
-   *   JSONPathTransformerContextConfig} config - Configuration object
+   *   JSONPathTransformerContextConfig<T>} config - Configuration object
    */
   constructor (config) {
     let map = /** @type {Record<string, boolean>} */ ({});

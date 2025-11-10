@@ -17,6 +17,12 @@ import AbstractJoiningTransformer from './AbstractJoiningTransformer.js';
  * }} OutputConfig
  */
 
+/**
+ * @callback SimpleCallback
+ * @this {StringJoiningTransformer}
+ * @returns {void}
+ */
+
 const camelCase = /[a-z][A-Z]/gv;
 
 /**
@@ -556,7 +562,8 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
 
   /**
    * @param {string} name - Attribute name
-   * @param {string|Record<string, unknown>} val - Attribute value
+   * @param {string|Record<string, unknown>|
+   *   string[][]} val - Attribute value
    * @param {boolean} [avoidAttEscape] - Whether to avoid escaping the
    *   attribute value
    * @returns {StringJoiningTransformer}

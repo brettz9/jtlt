@@ -67,6 +67,9 @@ describe('JSONPathTransformer additional coverage', function () {
       joiningTransformer: (function () {
         let sink;
         return {
+          /**
+           * @param {any} x
+           */
           append (x) {
             // Assign locally to avoid empty method lint while not
             // polluting the object type

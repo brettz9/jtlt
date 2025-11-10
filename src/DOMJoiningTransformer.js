@@ -2,6 +2,12 @@ import * as JHTML from 'jhtml';
 import AbstractJoiningTransformer from './AbstractJoiningTransformer.js';
 
 /**
+ * @callback SimpleCallback
+ * @this {DOMJoiningTransformer}
+ * @returns {void}
+ */
+
+/**
  * Joining transformer that accumulates into a DOM tree.
  *
  * This transformer appends strings and nodes to a DocumentFragment/Element.
@@ -91,7 +97,7 @@ class DOMJoiningTransformer extends AbstractJoiningTransformer {
 
   /**
    * @param {string} str - String value
-   * @param {(this: DOMJoiningTransformer) => void} cb - Callback
+   * @param {(this: DOMJoiningTransformer) => void} [cb] - Callback
    *   function (unused)
    * @returns {DOMJoiningTransformer}
    */

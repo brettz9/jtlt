@@ -23,8 +23,11 @@ function _makeDatasetAttribute (n0) {
  * @returns {void}
  */
 /**
+ * @template [T = "json"]
  * @callback SimpleCallback
- * @this {JSONJoiningTransformer}
+ * @this {T extends "json" ? JSONJoiningTransformer :
+ *   T extends "string" ? import('./StringJoiningTransformer.js').default
+ *   : import('./DOMJoiningTransformer.js').default}
  * @returns {void}
  */
 

@@ -506,7 +506,7 @@ describe('More coverage for missing branches', () => {
       templates: [{
         path: '$',
         template () {
-          /** @type {any} */ const jt = this._config.joiningTransformer;
+          const jt = this._config.joiningTransformer;
           jt.object({}, function () {
             jt.propValue('a', 1);
             jt.propOnly('b', function () {
