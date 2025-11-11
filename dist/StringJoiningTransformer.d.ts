@@ -1,4 +1,33 @@
 export default StringJoiningTransformer;
+export type OutputConfig = {
+    encoding?: string;
+    indent?: boolean;
+    omitXmlDeclaration?: boolean;
+    doctypePublic?: string;
+    doctypeSystem?: string;
+    cdataSectionElements?: string[];
+    mediaType?: string;
+    version?: string;
+    standalone?: boolean;
+    method?: "xml" | "html" | "text";
+};
+export type SimpleCallback = (this: StringJoiningTransformer) => void;
+/**
+ * Attributes object for element() allowing standard string attributes
+ * plus special helpers: dataset (object) and $a (ordered attribute array).
+ */
+export type ElementAttributes = Record<string, unknown> & {
+    dataset?: Record<string, string>;
+    $a?: Array<[string, string]>;
+};
+/**
+ * Attributes object for element() allowing standard string attributes
+ * plus special helpers: dataset (object) and $a (ordered attribute array).
+ * @typedef {Record<string, unknown> & {
+ *   dataset?: Record<string, string>,
+ *   $a?: Array<[string, string]>
+ * }} ElementAttributes
+ */
 /**
  *
  */
@@ -28,8 +57,9 @@ export default StringJoiningTransformer;
  *   name mapping rules differ, etc.).
  * - cfg.preEscapedAttributes: skip escaping attribute values.
  * - cfg.JHTMLForJSON / cfg.mode: affect how object()/array() serialize.
+ * @extends {AbstractJoiningTransformer<"string">}
  */
-declare class StringJoiningTransformer extends AbstractJoiningTransformer {
+declare class StringJoiningTransformer extends AbstractJoiningTransformer<"string"> {
     /**
      * @param {string} s - Initial string
      * @param {{
@@ -135,13 +165,12 @@ declare class StringJoiningTransformer extends AbstractJoiningTransformer {
      */
     function(func: ((...args: any[]) => any) | Element): StringJoiningTransformer;
     /**
-     * Attributes object for element() allowing standard string attributes
-     * plus special helpers: dataset (object) and $a (ordered attribute array).
-     * @typedef {Record<string, string> & {
-     *   dataset?: Record<string, string>,
-     *   $a?: Array<[string, string]>
-     * }} ElementAttributes
+     * @param {OutputConfig} cfg
+     * @returns {StringJoiningTransformer}
      */
+    output(cfg: OutputConfig): StringJoiningTransformer;
+    _outputConfig: OutputConfig | undefined;
+    mediaType: string | undefined;
     /**
      * @param {string|Element} elName - Element name or element object
      * @param {ElementAttributes} [atts] - Element attributes
@@ -149,24 +178,34 @@ declare class StringJoiningTransformer extends AbstractJoiningTransformer {
      * @param {(this: StringJoiningTransformer) => void} [cb] - Callback function
      * @returns {StringJoiningTransformer}
      */
-    element(elName: string | Element, atts?: Record<string, string> & {
-        dataset?: Record<string, string>;
-        $a?: Array<[string, string]>;
-    }, childNodes?: any[], cb?: (this: StringJoiningTransformer) => void): StringJoiningTransformer;
+    element(elName: string | Element, atts?: ElementAttributes, childNodes?: any[], cb?: (this: StringJoiningTransformer) => void): StringJoiningTransformer;
+    root: string | Element | undefined;
     _openTagState: any;
     /**
      * @param {string} name - Attribute name
-     * @param {string|Record<string, unknown>} val - Attribute value
+     * @param {string|Record<string, unknown>|
+     *   string[][]} val - Attribute value
      * @param {boolean} [avoidAttEscape] - Whether to avoid escaping the
      *   attribute value
      * @returns {StringJoiningTransformer}
      */
-    attribute(name: string, val: string | Record<string, unknown>, avoidAttEscape?: boolean): StringJoiningTransformer;
+    attribute(name: string, val: string | Record<string, unknown> | string[][], avoidAttEscape?: boolean): StringJoiningTransformer;
     /**
      * @param {string} txt - Text content to escape and append
      * @returns {StringJoiningTransformer}
      */
     text(txt: string): StringJoiningTransformer;
+    /**
+     * @param {string} text
+     * @returns {StringJoiningTransformer}}
+     */
+    comment(text: string): StringJoiningTransformer;
+    /**
+     * @param {string} target
+     * @param {string} data
+     * @returns {StringJoiningTransformer}}
+     */
+    processingInstruction(target: string, data: string): StringJoiningTransformer;
     /**
      * Unlike text(), does not escape for HTML; unlike string(), does not perform
      *   JSON stringification; unlike append(), does not do other checks (but

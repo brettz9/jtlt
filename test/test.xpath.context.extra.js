@@ -26,7 +26,7 @@ describe('XPathTransformerContext additional coverage', () => {
     }, []);
     // Use ANY_TYPE by calling without asNodes; jsdom returns iterator type
     // which gets converted to an array via iterateNext()
-    const res = ctx._evalXPath('//*');
+    const res = /** @type {Node[]} */ (ctx._evalXPath('//*'));
     // Should return array of nodes from iterator
     expect(Array.isArray(res)).to.equal(true);
     expect(res.length).to.be.greaterThan(0);
@@ -41,7 +41,7 @@ describe('XPathTransformerContext additional coverage', () => {
       joiningTransformer: joiner,
       xpathVersion: 2
     }, []);
-    const scalarWrapped = ctx._evalXPath('1+2', true);
+    const scalarWrapped = /** @type {Node[]} */ (ctx._evalXPath('1+2', true));
     expect(Array.isArray(scalarWrapped)).to.be.true;
     expect(scalarWrapped[0]).to.equal(3);
   });

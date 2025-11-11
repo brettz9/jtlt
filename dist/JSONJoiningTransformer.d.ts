@@ -1,7 +1,19 @@
 export default JSONJoiningTransformer;
 export type ObjectCallback = (this: JSONJoiningTransformer, obj: Record<string, unknown>) => void;
 export type ArrayCallback = (this: JSONJoiningTransformer, arr: any[]) => void;
-export type SimpleCallback = (this: JSONJoiningTransformer) => void;
+export type SimpleCallback<T = "json"> = (this: T extends "json" ? JSONJoiningTransformer : T extends "string" ? import("./StringJoiningTransformer.js").default : import("./DOMJoiningTransformer.js").default) => void;
+/**
+ * Attributes object for element() allowing standard string attributes
+ * plus special helpers: dataset (object) and $a (ordered attribute array).
+ */
+export type ElementAttributes = Record<string, unknown> & {
+    dataset?: Record<string, string>;
+    $a?: Array<[string, string]>;
+};
+export type ElementInfo = {
+    attsObj: Record<string, unknown>;
+    jmlChildren: unknown[];
+};
 /**
  * @callback ObjectCallback
  * @this {JSONJoiningTransformer}
@@ -15,9 +27,26 @@ export type SimpleCallback = (this: JSONJoiningTransformer) => void;
  * @returns {void}
  */
 /**
+ * @template [T = "json"]
  * @callback SimpleCallback
- * @this {JSONJoiningTransformer}
+ * @this {T extends "json" ? JSONJoiningTransformer :
+ *   T extends "string" ? import('./StringJoiningTransformer.js').default
+ *   : import('./DOMJoiningTransformer.js').default}
  * @returns {void}
+ */
+/**
+ * Attributes object for element() allowing standard string attributes
+ * plus special helpers: dataset (object) and $a (ordered attribute array).
+ * @typedef {Record<string, unknown> & {
+ *   dataset?: Record<string, string>,
+ *   $a?: Array<[string, string]>
+ * }} ElementAttributes
+ */
+/**
+ * @typedef {{
+ *   attsObj: Record<string, unknown>,
+ *   jmlChildren: unknown[]
+ * }} ElementInfo
  */
 /**
  * JSON-based joining transformer for building JSON/JavaScript objects.
@@ -26,30 +55,25 @@ export type SimpleCallback = (this: JSONJoiningTransformer) => void;
  * append() will push to arrays or shallow-merge into objects; string/number/
  * boolean/null add primitives accordingly. It does not perform HTML escaping
  * or string serialization; it builds real JS values.
+ * @extends {AbstractJoiningTransformer<"json">}
  */
-declare class JSONJoiningTransformer extends AbstractJoiningTransformer {
+declare class JSONJoiningTransformer extends AbstractJoiningTransformer<"json"> {
     /**
      * @param {any[]|Record<string, unknown>} [o] - Initial object or array
-     * @param {{
-     *   unwrapSingleResult?: boolean,
-     *   mode?: "JavaScript"|"JSON"
-     * }} [cfg] - Configuration object
+     * @param {import('./AbstractJoiningTransformer.js').
+     *   JSONJoiningTransformerConfig} [cfg] - Configuration object
      */
-    constructor(o?: any[] | Record<string, unknown>, cfg?: {
-        unwrapSingleResult?: boolean;
-        mode?: "JavaScript" | "JSON";
-    });
+    constructor(o?: any[] | Record<string, unknown>, cfg?: import("./AbstractJoiningTransformer.js").JSONJoiningTransformerConfig);
     /** @type {any[]|Record<string, unknown>} */
     _obj: any[] | Record<string, unknown>;
     /** @type {boolean | undefined} */
     _objPropState: boolean | undefined;
     /** @type {boolean | undefined} */
     _arrItemState: boolean | undefined;
-    /** @type {{attsObj: Record<string, unknown>, jmlChildren: unknown[]}[]} */
-    _elementStack: {
-        attsObj: Record<string, unknown>;
-        jmlChildren: unknown[];
-    }[];
+    /** @type {ElementInfo[]} */
+    _elementStack: ElementInfo[];
+    /** @type {Record<string, unknown>} */
+    propertySets: Record<string, unknown>;
     /**
      * Directly appends an item to the internal array without checks.
      * @param {any} item - Item to append
@@ -135,13 +159,12 @@ declare class JSONJoiningTransformer extends AbstractJoiningTransformer {
      */
     function(func: (...args: any[]) => any): JSONJoiningTransformer;
     /**
-     * Attributes object for element() allowing standard string attributes
-     * plus special helpers: dataset (object) and $a (ordered attribute array).
-     * @typedef {Record<string, string> & {
-     *   dataset?: Record<string, string>,
-     *   $a?: Array<[string, string]>
-     * }} ElementAttributes
+     * @param {import('./StringJoiningTransformer.js').OutputConfig} cfg
+     * @returns {JSONJoiningTransformer}
      */
+    output(cfg: import("./StringJoiningTransformer.js").OutputConfig): JSONJoiningTransformer;
+    _outputConfig: import("./StringJoiningTransformer.js").OutputConfig | undefined;
+    mediaType: string | undefined;
     /**
      * Build a Jamilih-style element JSON array and append to current container.
      * Result form: ['tag', {attr: 'val'}, child1, child2, ...]
@@ -154,10 +177,24 @@ declare class JSONJoiningTransformer extends AbstractJoiningTransformer {
      * @param {SimpleCallback} [cb] Builder callback.
      * @returns {JSONJoiningTransformer}
      */
-    element(elName: string | Element, atts?: (Record<string, string> & {
-        dataset?: Record<string, string>;
-        $a?: Array<[string, string]>;
-    }) | any[] | SimpleCallback, childNodes?: any[] | SimpleCallback, cb?: SimpleCallback): JSONJoiningTransformer;
+    element(elName: string | Element, atts?: ElementAttributes | any[] | SimpleCallback, childNodes?: any[] | SimpleCallback, cb?: SimpleCallback): JSONJoiningTransformer;
+    root: string | Element | undefined;
+    _doc: {
+        $document: {
+            childNodes: (any[] | {
+                $DOCTYPE: {
+                    name: string;
+                    publicId: string | null;
+                    systemId: string | null;
+                };
+            })[];
+            xmlDeclaration?: {
+                version: string | undefined;
+                encoding: string | undefined;
+                standalone: boolean | undefined;
+            } | undefined;
+        };
+    } | undefined;
     /**
      * Adds/updates an attribute for the most recently open element built via
      * a callback-driven element(). When not in an element callback context,
@@ -168,6 +205,23 @@ declare class JSONJoiningTransformer extends AbstractJoiningTransformer {
      * @returns {JSONJoiningTransformer}
      */
     attribute(name: string, val: string | Record<string, unknown> | unknown[]): JSONJoiningTransformer;
+    /**
+     * Adds a comment node (string) as a child within the current
+     *   element() callback context. Outside of an element callback,
+     *   simply appends the comment to the current array/object like string().
+     * @param {string} txt - Comment content
+     * @returns {JSONJoiningTransformer}
+     */
+    comment(txt: string): JSONJoiningTransformer;
+    /**
+     * Adds a comment node (string) as a child within the current
+     *   element() callback context. Outside of an element callback,
+     *   simply appends the comment to the current array/object like string().
+     * @param {string} target - processing instruction content
+     * @param {string} data - processing instruction content
+     * @returns {JSONJoiningTransformer}
+     */
+    processingInstruction(target: string, data: string): JSONJoiningTransformer;
     /**
      * Adds a text node (string) as a child within the current element() callback
      * context. Outside of an element callback, simply appends the text to the
@@ -183,8 +237,9 @@ declare class JSONJoiningTransformer extends AbstractJoiningTransformer {
      */
     plainText(str: string): JSONJoiningTransformer;
     /**
-     * Helper method to use property sets (to be implemented).
-     * @param {Record<string, unknown>} obj - Object to apply property set to
+     * Helper method to use property sets.
+     * @param {Record<string, unknown>} obj - Object to which to apply
+     *   property set
      * @param {string} psName - Property set name
      * @returns {Record<string, unknown>}
      */

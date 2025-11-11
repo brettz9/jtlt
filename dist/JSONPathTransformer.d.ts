@@ -6,8 +6,9 @@ export default JSONPathTransformer;
  * optional `mode`), sorts by priority, and invokes the winning template.
  * If no template matches, built-in default rules emulate XSLT-like behavior
  * for objects, arrays, scalars, etc.
+ * @template T
  */
-declare class JSONPathTransformer {
+declare class JSONPathTransformer<T> {
     /**
      * @param {string} select - JSONPath selector
      * @returns {string} Absolute JSONPath
@@ -16,12 +17,14 @@ declare class JSONPathTransformer {
     static DefaultTemplateRules: {
         transformRoot: {
             /**
+             * @template U
+             * @this {JSONPathTransformerContext<U>}
              * @param {any} value - Value
-             * @param {{mode: string}} cfg - Configuration
+             * @param {{mode?: string}} cfg - Configuration
              * @returns {void}
              */
-            template(value: any, cfg: {
-                mode: string;
+            template<U>(this: JSONPathTransformerContext<U>, value: any, cfg: {
+                mode?: string;
             }): void;
         };
         transformPropertyNames: {
@@ -33,29 +36,32 @@ declare class JSONPathTransformer {
         };
         transformObjects: {
             /**
+             * @this {JSONPathTransformerContext}
              * @param {any} value - Value
-             * @param {{mode: string}} cfg - Configuration
+             * @param {{mode?: string}} cfg - Configuration
              * @returns {void}
              */
-            template(value: any, cfg: {
-                mode: string;
+            template(this: JSONPathTransformerContext<"json">, value: any, cfg: {
+                mode?: string;
             }): void;
         };
         transformArrays: {
             /**
+             * @this {JSONPathTransformerContext}
              * @param {any} value - Value
-             * @param {{mode: string}} cfg - Configuration
+             * @param {{mode?: string}} cfg - Configuration
              * @returns {void}
              */
-            template(value: any, cfg: {
-                mode: string;
+            template(this: JSONPathTransformerContext<"json">, value: any, cfg: {
+                mode?: string;
             }): void;
         };
         transformScalars: {
             /**
-             * @returns {any}
+             * @this {JSONPathTransformerContext}
+             * @returns {JSONPathTransformerContext}
              */
-            template(): any;
+            template(this: JSONPathTransformerContext<"json">): JSONPathTransformerContext;
         };
         transformFunctions: {
             /**
@@ -66,30 +72,23 @@ declare class JSONPathTransformer {
         };
     };
     /**
-     * @param {object} config - Configuration object
-     * @param {boolean} [config.errorOnEqualPriority] - Whether to error on
-     *   equal priority templates
-     * @param {any[]} config.templates - Array of template objects
+     * @param {import('./JSONPathTransformerContext.js').
+     *   JSONPathTransformerContextConfig<T>} config - Configuration object
      */
-    constructor(config: {
-        errorOnEqualPriority?: boolean | undefined;
-        templates: any[];
-    });
-    _config: {
-        errorOnEqualPriority?: boolean | undefined;
-        templates: any[];
-    };
-    /** @type {any[]} */
-    rootTemplates: any[];
-    templates: any[];
+    constructor(config: import("./JSONPathTransformerContext.js").JSONPathTransformerContextConfig<T>);
+    _config: import("./JSONPathTransformerContext.js").JSONPathTransformerContextConfig<T>;
+    /** @type {import('./index.js').JSONPathTemplateObject<T>[]} */
+    rootTemplates: import("./index.js").JSONPathTemplateObject<T>[];
+    templates: import("./index.js").JSONPathTemplateObject<T>[];
     /**
      * @returns {void}
      */
     _triggerEqualPriorityError(): void;
     /**
-     * @param {string} mode - Transformation mode
+     * @param {string} [mode] - Transformation mode
      * @returns {any} The transformation result
      */
-    transform(mode: string): any;
+    transform(mode?: string): any;
 }
+import JSONPathTransformerContext from './JSONPathTransformerContext.js';
 //# sourceMappingURL=JSONPathTransformer.d.ts.map

@@ -13,7 +13,9 @@
  *   XPathTransformerContext
  */
 /**
- * @typedef {import('./AbstractJoiningTransformer.js').default}
+ * @typedef {import('./AbstractJoiningTransformer.js').default<"string">|
+ *   import('./AbstractJoiningTransformer.js').default<"json">|
+ *   import('./AbstractJoiningTransformer.js').default<"dom">}
  *   AbstractJoiningTransformer
  */
 /**
@@ -31,9 +33,9 @@
 /**
  * Generic template callable bound to a context type.
  * @template TCtx
- * @typedef {(this: TCtx, value?: any,
- *   cfg?: {mode: string}
- * ) => any} TemplateFunction
+ * @typedef {(this: TCtx, value?: unknown,
+ *   cfg?: {mode?: string}
+ * ) => unknown} TemplateFunction
  */
 /**
  * Template object with metadata and bound template function.
@@ -67,8 +69,9 @@
 /**
  * Options common to both engines.
  * @typedef {object} BaseJTLTOptions
- * @property {(result: any) => void} success Callback receiving transform result
- * @property {any} [data] JSON object or DOM Document/Element
+ * @property {(result: unknown) => void} success Callback receiving transform
+ *   result
+ * @property {unknown} [data] JSON object or DOM Document/Element
  * @property {string} [ajaxData] URL for JSON retrieval
  * @property {boolean} [errorOnEqualPriority]
  * @property {boolean} [autostart]
@@ -76,13 +79,13 @@
  * @property {boolean} [unwrapSingleResult]
  * @property {string} [mode]
  * @property {'string'|'dom'|'json'} [outputType]
- * @property {(opts: JTLTOptions) => any} [engine]
+ * @property {(opts: JTLTOptions) => unknown} [engine]
  * @property {(path: string) => 0|0.5|-0.5} [specificityPriorityResolver]
  * @property {AbstractJoiningTransformer} [joiningTransformer]
  * @property {Record<string, unknown>} [joiningConfig]
- * @property {any} [parent]
+ * @property {unknown} [parent]
  * @property {string} [parentProperty]
- * @property {any[]} [forQuery]
+ * @property {unknown[]} [forQuery]
  */
 /**
  * JSONPath engine options.
@@ -108,19 +111,26 @@
  * }} XPathJTLTOptions
  */
 /** @typedef {JSONPathJTLTOptions | XPathJTLTOptions} JTLTOptions */
+/**
+ * Internal options extension adding private runtime state flags.
+ * Not part of the public API surface but used for narrowing casts.
+ * @typedef {JTLTOptions & {
+ *   _customJoiningTransformer?: boolean
+ * }} InternalJTLTOptions
+ */
 export const typesModuleMarker: true;
 export type JSONPathTransformerContext = import("./JSONPathTransformerContext.js").default;
 export type XPathTransformerContext = import("./XPathTransformerContext.js").default;
-export type AbstractJoiningTransformer = import("./AbstractJoiningTransformer.js").default;
+export type AbstractJoiningTransformer = import("./AbstractJoiningTransformer.js").default<"string"> | import("./AbstractJoiningTransformer.js").default<"json"> | import("./AbstractJoiningTransformer.js").default<"dom">;
 export type DOMJoiningTransformer = import("./DOMJoiningTransformer.js").default;
 export type JSONJoiningTransformer = import("./JSONJoiningTransformer.js").default;
 export type StringJoiningTransformer = import("./StringJoiningTransformer.js").default;
 /**
  * Generic template callable bound to a context type.
  */
-export type TemplateFunction<TCtx> = (this: TCtx, value?: any, cfg?: {
-    mode: string;
-}) => any;
+export type TemplateFunction<TCtx> = (this: TCtx, value?: unknown, cfg?: {
+    mode?: string;
+}) => unknown;
 /**
  * Template object with metadata and bound template function.
  */
@@ -138,13 +148,14 @@ export type XPathTemplateObject = TemplateObject<XPathTransformerContext>;
  */
 export type BaseJTLTOptions = {
     /**
-     * Callback receiving transform result
+     * Callback receiving transform
+     * result
      */
-    success: (result: any) => void;
+    success: (result: unknown) => void;
     /**
      * JSON object or DOM Document/Element
      */
-    data?: any;
+    data?: unknown;
     /**
      * URL for JSON retrieval
      */
@@ -155,13 +166,13 @@ export type BaseJTLTOptions = {
     unwrapSingleResult?: boolean | undefined;
     mode?: string | undefined;
     outputType?: "string" | "dom" | "json" | undefined;
-    engine?: ((opts: JTLTOptions) => any) | undefined;
+    engine?: ((opts: JTLTOptions) => unknown) | undefined;
     specificityPriorityResolver?: ((path: string) => 0 | 0.5 | -0.5) | undefined;
-    joiningTransformer?: import("./AbstractJoiningTransformer.js").default | undefined;
+    joiningTransformer?: AbstractJoiningTransformer | undefined;
     joiningConfig?: Record<string, unknown> | undefined;
-    parent?: any;
+    parent?: unknown;
     parentProperty?: string | undefined;
-    forQuery?: any[] | undefined;
+    forQuery?: unknown[] | undefined;
 };
 /**
  * JSONPath engine options.
@@ -183,4 +194,11 @@ export type XPathJTLTOptions = BaseJTLTOptions & {
     xpathVersion?: 1 | 2;
 };
 export type JTLTOptions = JSONPathJTLTOptions | XPathJTLTOptions;
+/**
+ * Internal options extension adding private runtime state flags.
+ * Not part of the public API surface but used for narrowing casts.
+ */
+export type InternalJTLTOptions = JTLTOptions & {
+    _customJoiningTransformer?: boolean;
+};
 //# sourceMappingURL=types.d.ts.map

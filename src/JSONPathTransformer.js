@@ -17,7 +17,7 @@ class JSONPathTransformer {
   constructor (config) {
     let map = /** @type {Record<string, boolean>} */ ({});
     this._config = config;
-    /** @type {any[]} */
+    /** @type {import('./index.js').JSONPathTemplateObject<T>[]} */
     this.rootTemplates = [];
     this.templates = config.templates.map(function (template) {
       if (Array.isArray(template)) {
@@ -69,7 +69,9 @@ class JSONPathTransformer {
     if (len > 1) {
       this._triggerEqualPriorityError();
     }
-    const ret = templateObj.template.call(jte, undefined, {mode});
+    const ret = /** @type {import('./index.js').JSONPathTemplateObject<T>} */ (
+      templateObj
+    ).template.call(jte, undefined, {mode});
     if (typeof ret !== 'undefined') {
       // Will vary by jte._config.outputType
       jte._getJoiningTransformer().append(ret);
@@ -91,10 +93,12 @@ class JSONPathTransformer {
   }
 
   // To-do: Express as JSONPath expressions?
+
   static DefaultTemplateRules = {
     transformRoot: {
       /**
-       * @this {JSONPathTransformerContext}
+       * @template U
+       * @this {JSONPathTransformerContext<U>}
        * @param {any} value - Value
        * @param {{mode?: string}} cfg - Configuration
        * @returns {void}

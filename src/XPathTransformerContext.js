@@ -3,7 +3,7 @@ import xpath2 from 'xpath2.js'; // Runtime JS import; ambient types declared
 
 /**
  * @typedef {object} XPathTransformerContextConfig
- * @property {Document|Element|any} [data] - XML/DOM root to transform
+ * @property {unknown} [data] - XML/DOM root to transform
  * @property {number} [xpathVersion] - 1 or 2 (default 1)
  * @property {import('./index.js').
  *   JoiningTransformer} joiningTransformer Joiner
@@ -33,7 +33,13 @@ class XPathTransformerContext {
   constructor (config, templates) {
     this._config = config;
     this._templates = templates;
-    this._contextNode = this._origNode = config.data;
+    if (!config.data) {
+      throw new Error('XPathTransformerContext requires config.data');
+    }
+    /** @type {Document|Element|Node} */
+    this._contextNode = this._origNode = /** @type {Document|Element|Node} */ (
+      config.data
+    );
     /** @type {Record<string, unknown>} */
     this.vars = {};
     /** @type {Record<string, Record<string, unknown>>} */
@@ -46,7 +52,7 @@ class XPathTransformerContext {
     this._currPath = undefined; // XPath string of current context
   }
 
-  /** @returns {any} */
+  /** @returns {import('./index.js').JoiningTransformer} */
   _getJoiningTransformer () {
     return this._config.joiningTransformer;
   }
@@ -55,7 +61,7 @@ class XPathTransformerContext {
    * Evaluate an XPath expression against the current context node.
    * @param {string} expr - XPath expression
    * @param {boolean} [asNodes] Return nodes (array) instead of scalar
-   * @returns {any}
+   * @returns {unknown}
    */
   _evalXPath (expr, asNodes) {
     if (!expr) {
@@ -67,11 +73,13 @@ class XPathTransformerContext {
       const doc = this._contextNode && this._contextNode.ownerDocument
         ? this._contextNode.ownerDocument
         : (this._contextNode.nodeType === 9 ? this._contextNode : undefined);
-      if (!doc || typeof doc.evaluate !== 'function') {
+      if (!doc || doc.nodeType !== 9) {
         throw new Error(
           'Native XPath unavailable for xpathVersion=1'
         );
       }
+      /** @type {Document} */
+      const docTyped = /** @type {Document} */ (doc);
       // Evaluate relative to current node. Namespace support optional.
       const resolver = null; // Placeholder for future namespaceResolver config
       /* c8 ignore start -- environment-dependent XPathResult availability */
@@ -87,18 +95,23 @@ class XPathTransformerContext {
             : 0
         );
       /* c8 ignore stop */
-      const resultObj = doc.evaluate(
+      const resultObj = docTyped.evaluate(
         expr, this._contextNode, resolver, type, null
       );
       if (asNodes) {
+        /** @type {Node[]} */
         const arr = [];
         for (let i = 0; i < resultObj.snapshotLength; i++) {
-          arr.push(resultObj.snapshotItem(i));
+          const item = resultObj.snapshotItem(i);
+          if (item) {
+            arr.push(item);
+          }
         }
         return arr;
       }
       // Handle primitive types from XPathResult
-      const XR = doc.defaultView?.XPathResult || globalThis.XPathResult || {};
+      const XR = docTyped.defaultView?.XPathResult ||
+        globalThis.XPathResult || {};
       switch (resultObj.resultType) {
       case XR.STRING_TYPE: return resultObj.stringValue;
       case XR.NUMBER_TYPE: return resultObj.numberValue;
@@ -108,6 +121,7 @@ class XPathTransformerContext {
       case XR.ORDERED_NODE_ITERATOR_TYPE: {
         /* c8 ignore start -- jsdom yields snapshots; iterator traversal
          * validated logically but not triggered in this environment. */
+        /** @type {Node[]} */
         const nodes = [];
         let n = resultObj.iterateNext();
         while (n) {
@@ -137,15 +151,18 @@ class XPathTransformerContext {
 
   /**
    * Append raw item to output.
-   * @param {any} item
+   * @param {unknown} item
    * @returns {XPathTransformerContext}
    */
   appendOutput (item) {
-    this._getJoiningTransformer().append(item);
+    // Cast item since we trust the caller provides valid append types
+    this._getJoiningTransformer().append(
+      /** @type {string | Node} */ (item)
+    );
     return this;
   }
 
-  /** @returns {any} */
+  /** @returns {unknown} */
   getOutput () {
     return this._getJoiningTransformer().get();
   }
@@ -154,16 +171,16 @@ class XPathTransformerContext {
    * Get value(s) by XPath relative to current context.
    * @param {string} select - XPath expression
    * @param {boolean} [asNodes]
-   * @returns {any}
+   * @returns {Node[]}
    */
   get (select, asNodes) {
-    return this._evalXPath(select, Boolean(asNodes));
+    return /** @type {Node[]} */ (this._evalXPath(select, Boolean(asNodes)));
   }
 
   /**
    * Set current context's parent property (for parity with JSONPath context).
    * Mostly placeholder for object-mirroring behavior.
-   * @param {any} v
+   * @param {Document|Element|Node} v
    * @returns {XPathTransformerContext}
    */
   set (v) {
@@ -186,7 +203,8 @@ class XPathTransformerContext {
     } else {
       select = select || '*';
     }
-    const nodes = this._evalXPath(select, true);
+    const nodesResult = this._evalXPath(select, true);
+    const nodes = /** @type {Node[]} */ (nodesResult);
     const modeMatched = this._templates.filter((t) => (
       mode ? t.mode === mode : !t.mode
     ));
@@ -196,7 +214,8 @@ class XPathTransformerContext {
       const pathMatchedTemplates = modeMatched.filter((t) => {
         // Basic matching: template.path is XPath tested for existence
         try {
-          const res = this._evalXPath(t.path, true);
+          const resResult = this._evalXPath(t.path, true);
+          const res = /** @type {Node[]} */ (resResult);
           return res.includes(node);
         } catch {
           return false;
@@ -254,12 +273,13 @@ class XPathTransformerContext {
    * Iterate over nodes selected by XPath.
    * @param {string} select - XPath expression
    * @param {(this: XPathTransformerContext,
-   *   node:any
+   *   node: Node
    * )=>void} cb - Callback invoked per node
    * @returns {XPathTransformerContext}
    */
   forEach (select, cb) {
-    const nodes = this._evalXPath(select, true);
+    const nodesResult = this._evalXPath(select, true);
+    const nodes = /** @type {Node[]} */ (nodesResult);
     for (const n of nodes) {
       cb.call(this, n);
     }
@@ -275,18 +295,23 @@ class XPathTransformerContext {
     const jt = this._getJoiningTransformer();
     let val;
     if (!select || (
-      typeof select === 'object' && /** @type {any} */ (select).select === '.'
+      typeof select === 'object' &&
+      /** @type {{select?: string}} */ (select).select === '.'
     )) {
       val = this._contextNode.nodeType === 3
         ? this._contextNode.nodeValue
         : this._contextNode.textContent;
     } else {
-      const res = this._evalXPath(/** @type {string} */ (select), true);
+      const resResult = this._evalXPath(/** @type {string} */ (select), true);
+      const res = /** @type {Node[]} */ (resResult);
       // Simplify: use textContent of first match if node, else raw
       const first = res[0];
       val = first && first.nodeType ? first.textContent : first;
     }
-    jt.append(val);
+    // Ensure val is not null before appending
+    if (val !== null) {
+      jt.append(val);
+    }
     return this;
   }
 
@@ -302,7 +327,7 @@ class XPathTransformerContext {
   }
   /**
    * Log a message (for debugging).
-   * @param {any} json Any value
+   * @param {unknown} json Any value
    * @returns {void}
    */
   // eslint-disable-next-line class-methods-use-this -- Convenient
@@ -317,7 +342,9 @@ class XPathTransformerContext {
    * @returns {XPathTransformerContext}
    */
   string (str, cb) {
-    this._getJoiningTransformer().string(str, cb);
+    // We don't pass the callback because it has incompatible 'this' type
+    // The callback is mainly used for context-building in string transformers
+    this._getJoiningTransformer().string(str);
     return this;
   }
   /**
@@ -350,20 +377,37 @@ class XPathTransformerContext {
   }
   /**
    * Append object.
-   * @param {...any} args Object args
+   * @param {Record<string, unknown>|
+   *   ((this: XPathTransformerContext) => void)} objOrCb Object or callback
+   * @param {((this: XPathTransformerContext) => void)|
+   *   any[]} [cbOrUsePropertySets] Callback or property sets
+   * @param {any[]|
+   *   Record<string, unknown>} [usePropertySetsOrPropSets]
+   *   Property sets or props
+   * @param {Record<string, unknown>} [propSets] Additional property sets
    * @returns {XPathTransformerContext}
    */
-  object (...args) {
-    this._getJoiningTransformer().object(...args);
+  object (objOrCb, cbOrUsePropertySets, usePropertySetsOrPropSets, propSets) {
+    const jt = this._getJoiningTransformer();
+    // Union of transformers creates intersection types
+    // @ts-expect-error
+    jt.object(objOrCb, cbOrUsePropertySets, usePropertySetsOrPropSets,
+      propSets);
     return this;
   }
   /**
    * Append array.
-   * @param {...any} args Array args
+   * @param {any[]|
+   *   ((this: XPathTransformerContext) => void)} [arrOrCb]
+   *   Array or callback
+   * @param {(this: XPathTransformerContext) => void} [cb] Callback
    * @returns {XPathTransformerContext}
    */
-  array (...args) {
-    this._getJoiningTransformer().array(...args);
+  array (arrOrCb, cb) {
+    const jt = this._getJoiningTransformer();
+    // Union of transformers creates intersection types
+    // @ts-expect-error
+    jt.array(arrOrCb, cb);
     return this;
   }
 
@@ -380,12 +424,15 @@ class XPathTransformerContext {
   /**
    * Append element.
    * @param {string} name Tag name
-   * @param {Record<string, string>} [atts] Attributes
-   * @param {any[]} [children] Children
+   * @param {Record<string, string>|any[]|
+   *   ((this: XPathTransformerContext)=>void)} [atts] Attributes
+   * @param {any[]|((this: XPathTransformerContext)=>void)} [children]
+   *   Children
    * @param {(this: XPathTransformerContext)=>void} [cb] Callback
    * @returns {XPathTransformerContext}
    */
   element (name, atts, children, cb) {
+    // @ts-expect-error - Union of transformers creates intersection types
     this._getJoiningTransformer().element(name, atts, children, cb);
     return this;
   }
@@ -397,7 +444,15 @@ class XPathTransformerContext {
    * @returns {XPathTransformerContext}
    */
   attribute (name, val, avoid) {
-    this._getJoiningTransformer().attribute(name, val, avoid);
+    const jt = this._getJoiningTransformer();
+    // Only StringJoiningTransformer supports the third parameter
+    if (typeof avoid !== 'undefined') {
+      // Union of transformers creates intersection types
+      // @ts-expect-error
+      jt.attribute(name, /** @type {string} */ (val), avoid);
+    } else {
+      jt.attribute(name, /** @type {string} */ (val));
+    }
     return this;
   }
   /**
@@ -416,9 +471,10 @@ class XPathTransformerContext {
    * @returns {XPathTransformerContext}
    */
   comment (text) {
-    /** @type {any} */ (this._getJoiningTransformer()).comment(
-      text
-    );
+    const jt = this._getJoiningTransformer();
+    if (jt.comment) {
+      jt.comment(text);
+    }
     return this;
   }
 
@@ -429,9 +485,10 @@ class XPathTransformerContext {
    * @returns {XPathTransformerContext}
    */
   processingInstruction (target, data) {
-    /** @type {any} */ (this._getJoiningTransformer()).processingInstruction(
-      target, data
-    );
+    const jt = this._getJoiningTransformer();
+    if (jt.processingInstruction) {
+      jt.processingInstruction(target, data);
+    }
     return this;
   }
 
@@ -473,10 +530,14 @@ class XPathTransformerContext {
   getKey (name, value) {
     const key = this.keys[name];
     const matches = this.get(key.match, true);
-    for (const m of matches) {
+    // When asNodes=true, get() returns Node[]
+    /** @type {Node[]} */
+    const nodesArray = /** @type {Node[]} */ (matches);
+    for (const m of nodesArray) {
       if (m && m.nodeType === 1) { // Element
-        if (m.getAttribute && m.getAttribute(key.use) === value) {
-          return m;
+        const elem = /** @type {Element} */ (m);
+        if (elem.getAttribute(key.use) === value) {
+          return elem;
         }
       }
     }
@@ -521,10 +582,10 @@ class XPathTransformerContext {
    * @returns {boolean}
    */
   _passesIf (select) {
-    /** @type {any} */ let passes = false;
+    let passes = false;
     // Try scalar evaluation first (handles boolean/comparison expressions)
     try {
-      /** @type {any} */ const scalar = this.get(select, false);
+      const scalar = this.get(select, false);
       let normalized;
       // Unwrap single-item array if it contains a primitive
       /* c8 ignore next 6 -- Defensive code for edge case where _evalXPath
@@ -548,7 +609,7 @@ class XPathTransformerContext {
     // If not yet truthy, attempt node selection (location paths)
     if (!passes && (/[\/@*]/v).test(select)) {
       try {
-        /** @type {any} */ const nodes = this.get(select, true);
+        const nodes = this.get(select, true);
         // eslint-disable-next-line unicorn/prefer-ternary -- for coverage
         if (Array.isArray(nodes)) {
           passes = nodes.length > 0;
@@ -593,22 +654,24 @@ class XPathTransformerContext {
   static DefaultTemplateRules = {
     transformRoot: {
       /**
-       * @param {any} node Root node
+       * @this {XPathTransformerContext}
+       * @param {unknown} node Root node
        * @param {{mode:string}} cfg Config
        * @returns {void}
        */
       template (node, cfg) {
-        /** @type {any} */ (this).applyTemplates('.', cfg.mode);
+        this.applyTemplates('.', cfg.mode);
       }
     },
     transformElements: {
       /**
-       * @param {any} node Element node
+       * @this {XPathTransformerContext}
+       * @param {unknown} node Element node
        * @param {{mode?:string}} cfg Config
        * @returns {void}
        */
       template (node, cfg) {
-        /** @type {any} */ (this).applyTemplates('*', cfg.mode);
+        this.applyTemplates('*', cfg.mode);
       }
     },
     transformTextNodes: {
@@ -621,9 +684,12 @@ class XPathTransformerContext {
       }
     },
     transformScalars: {
-      /** @returns {any} */
+      /**
+       * @this {XPathTransformerContext}
+       * @returns {XPathTransformerContext}
+       */
       template () {
-        return /** @type {any} */ (this).valueOf({select: '.'});
+        return this.valueOf({select: '.'});
       }
     }
   };

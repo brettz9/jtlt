@@ -1648,7 +1648,6 @@ describe('JSONPathTransformerContext - Branch Coverage', function () {
       path: '$',
       template () {
         // Call with object that has only name but no withParam (to trigger || fallback on line 348)
-        // And to trigger name ?? default on line 349, use undefined name
         this.callTemplate({name: 'helper', withParam: undefined});
       }
     }, {

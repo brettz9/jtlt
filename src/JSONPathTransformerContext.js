@@ -5,12 +5,12 @@ import JSONPathTransformer from './JSONPathTransformer.js';
  * Sort spec types used by applyTemplates() and forEach().
  * @typedef {{
  *   select?: string,
- *   order?: 'ascending'|'descending',
+ *   order?: 'ascending' | 'descending',
  *   type?: 'text'|'number',
  *   locale?: string,
  *   localeOptions?: unknown
  * }} SortObject
- * @typedef {(a:unknown, b:unknown,
+ * @typedef {(a: unknown, b: unknown,
  *   ctx: JSONPathTransformerContext
  * ) => number} SortComparator
  * @typedef {string | SortObject | SortComparator |
@@ -48,7 +48,8 @@ import JSONPathTransformer from './JSONPathTransformer.js';
 class JSONPathTransformerContext {
   /**
    * @param {JSONPathTransformerContextConfig<T>} config
-   * @param {any[]} templates - Array of template objects
+   * @param {import('./index.js').JSONPathTemplateObject<T>[]} templates - Array
+   *   of template objects
    */
   constructor (config, templates) {
     this._config = config;
@@ -93,7 +94,7 @@ class JSONPathTransformerContext {
   }
 
   /**
-   * @param {any} item - Item to append to output
+   * @param {string | Node} item - Item to append to output
    * @returns {this}
    */
   appendOutput (item) {
@@ -101,7 +102,6 @@ class JSONPathTransformerContext {
     return this;
   }
 
-  /* c8 ignore next 4 -- JSDoc block incorrectly counted as coverable by c8 */
   /**
    * Gets the current output.
    * @returns {any} The output from the joining transformer
@@ -181,7 +181,7 @@ class JSONPathTransformerContext {
     const jsonPathExpr = propertyNamesMode ? select.slice(0, -1) : select;
     // Todo: Use results here?
     /* const results = */ this._getJoiningTransformer();
-    const modeMatchedTemplates = this._templates.filter(function (templateObj) {
+    const modeMatchedTemplates = this._templates.filter((templateObj) => {
       return ((mode && mode === templateObj.mode) ||
         (!mode && !templateObj.mode));
     });
@@ -189,7 +189,7 @@ class JSONPathTransformerContext {
     // Collect matches first (to allow sorting), then process
     /**
      * @type {{
-     *   value:any, parent:any, parentProperty?:string, path:string
+     *   value: any, parent: any, parentProperty?: string, path: string
      * }[]}
      */
     const matches = /** @type {any} */ (jsonpath)({
@@ -258,7 +258,7 @@ class JSONPathTransformerContext {
     }
     /**
      * @param {any} sortSpec
-     * @returns {((a:{value:any}, b:{value:any})=>number)|null}
+     * @returns {((a: {value: any}, b: {value: any}) => number) | null}
      */
     function buildComparator (sortSpec) {
       if (!sortSpec) {
@@ -367,16 +367,22 @@ class JSONPathTransformerContext {
           return (aPriority > bPriority) ? -1 : 1;
         });
 
-        templateObj = pathMatchedTemplates.shift();
+        templateObj =
+          /** @type {import('./index.js').JSONPathTemplateObject<T>} */ (
+            pathMatchedTemplates.shift()
+          );
       }
 
       that._contextObj = value;
       that._parent = parent;
       that._parentProperty = (parentProperty ?? that._parentProperty);
 
-      const ret = templateObj.template.call(
-        that, value, {mode, parent, parentProperty}
-      );
+      const ret =
+        /** @type {import('./index.js').JSONPathTemplateObject<T>} */ (
+          templateObj
+        ).template.call(
+          that, value, {mode, parent, parentProperty}
+        );
       if (typeof ret !== 'undefined') {
         that._getJoiningTransformer().append(ret);
       }
@@ -396,25 +402,23 @@ class JSONPathTransformerContext {
 
   /**
    * @param {string|
-   *   {name?: string, withParam?: any[]}} name - Template name or
+   *   {name: string, withParam?: any[]}} name - Template name or
    *   options object
    * @param {any[]} [withParams] - Parameters to pass to template
    * @returns {this}
    */
   callTemplate (name, withParams) {
     // Invokes a named template, optionally passing values via withParam.
-    // eslint-disable-next-line unicorn/no-this-assignment -- Temporary
-    const that = this;
     if (name && typeof name === 'object') {
       withParams = name.withParam || withParams;
-      name = name.name ?? name;
+      ({name} = name);
     }
     withParams = withParams || [];
-    const paramValues = withParams.map(function (withParam) {
-      return withParam.value || that.get(withParam.select, false);
+    const paramValues = withParams.map((withParam) => {
+      return withParam.value || this.get(withParam.select, false);
     });
     const results = this._getJoiningTransformer();
-    const templateObj = this._templates.find(function (template) {
+    const templateObj = this._templates.find((template) => {
       return template.name === name;
     });
     if (!templateObj) {
@@ -423,7 +427,7 @@ class JSONPathTransformerContext {
       );
     }
 
-    const result = templateObj.template.apply(this, paramValues);
+    const result = templateObj.template.call(this, paramValues);
     /** @type {any} */ (results).append(result);
     return this;
   }
@@ -434,7 +438,7 @@ class JSONPathTransformerContext {
    * Sort parameter forms are the same as applyTemplates().
    * @param {string} select - JSONPath selector
    * @param {(this: JSONPathTransformerContext<T>,
-   *   value:any
+   *   value: any
    * ) => void} cb - Callback function
    * @param {SortSpec} [sort] - Sort spec
    * @returns {this}
@@ -442,7 +446,7 @@ class JSONPathTransformerContext {
   forEach (select, cb, sort) {
     // eslint-disable-next-line unicorn/no-this-assignment -- Temporary
     const that = this;
-    /** @type {{value:any}[]} */
+    /** @type {{value: any}[]} */
     const matches = /** @type {any} */ (jsonpath)({
       path: select,
       json: this._contextObj,
@@ -507,7 +511,7 @@ class JSONPathTransformerContext {
     }
     /**
      * @param {any} sortSpec
-     * @returns {((a:{value:any}, b:{value:any})=>number)|null}
+     * @returns {((a: {value: any}, b: {value: any}) => number) | null}
      */
     function feBuildComparator (sortSpec) {
       if (!sortSpec) {
@@ -596,11 +600,9 @@ class JSONPathTransformerContext {
          * vary across environments; behavior covered by tests. */
         // structuredClone failed (e.g., Symbols); if any functions present
         // on own enumerable string-keyed properties, preserve via shallow.
-        /** @type {boolean} */ let hasFunc = false;
         for (const k of Object.keys(val)) {
           const v = /** @type {any} */ (val)[k];
           if (typeof v === 'function') {
-            hasFunc = true;
             break;
           }
         }
@@ -655,7 +657,7 @@ class JSONPathTransformerContext {
   }
 
   /**
-   * @param {any} json - JSON data to log
+   * @param {unknown} json - JSON data to log
    * @returns {void}
    */
   // eslint-disable-next-line class-methods-use-this -- Convenient

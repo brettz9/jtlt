@@ -4,7 +4,7 @@ import JTLT, {JSONPathTransformer} from '../src/index.js';
 // Helper to run a JTLT transform with minimal config
 /**
  * @param {null|boolean|number|string|object} data
- * @param {import('../src/index.js').XPathTemplateArray} templates
+ * @param {import('../src/index.js').JSONPathTemplateArray<any>[]} templates
  * @returns {string}
  */
 function runStringTransform (data, templates) {
@@ -84,8 +84,8 @@ describe('JSONPathTransformer additional coverage', function () {
     // Force multiple root templates to trigger the engine's
     // own equal-priority check at root level
     jpt.rootTemplates = [
-      {template: noop},
-      {template: noop}
+      {path: '', template: noop},
+      {path: '', template: noop}
     ];
     const thrower = () => jpt.transform('');
     expect(thrower).to.throw('templates of equal priority');
@@ -104,7 +104,9 @@ describe('JSONPathTransformer additional coverage', function () {
   it('property-names (~) default rule emits concatenated keys', function () {
     const data = {obj: {a: 1, b: 2, c: 3}};
     const templates =
-      /** @type {import('../src/index.js').XPathTemplateArray} */ ([
+      /**
+       * @type {import('../src/index.js').JSONPathTemplateArray<"string">[]}
+       */ ([
         ['$', function () {
           this.applyTemplates('$.obj~');
         }]
@@ -117,7 +119,7 @@ describe('JSONPathTransformer additional coverage', function () {
   it('default function rule returns function result', function () {
     const data = {fn: () => 'OK'};
     const templates =
-      /** @type {import('../src/index.js').XPathTemplateArray} */
+      /** @type {import('../src/index.js').JSONPathTemplateArray<"string">[]} */
       ([
         ['$', function () {
           this.applyTemplates('$.fn');
@@ -130,7 +132,7 @@ describe('JSONPathTransformer additional coverage', function () {
   it('property-names on non-object returns empty string', function () {
     const data = 'justAString';
     const templates =
-    /** @type {import('../src/index.js').XPathTemplateArray} */
+    /** @type {import('../src/index.js').JSONPathTemplateArray<"string">[]} */
       ([
         ['$', function () {
           this.applyTemplates('$~');
@@ -143,7 +145,7 @@ describe('JSONPathTransformer additional coverage', function () {
   it('set() modifies parent object', function () {
     const data = {items: [{value: 10}, {value: 20}]};
     const templates =
-    /** @type {import('../src/index.js').XPathTemplateArray} */
+    /** @type {import('../src/index.js').JSONPathTemplateArray<"string">[]} */
       ([
         ['$', function () {
           this.applyTemplates('$.items[*]');

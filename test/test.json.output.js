@@ -24,7 +24,10 @@ describe('JSONJoiningTransformer output', () => {
         try {
           expect(result).to.be.an('array');
           expect(result).to.have.length(4);
-          expect(result[0]).to.equal('Nigel Rees');
+          expect(
+            result && typeof result === 'object' &&
+            '0' in result && result[0]
+          ).to.equal('Nigel Rees');
           done();
         } catch (err) {
           done(err);
@@ -54,8 +57,14 @@ describe('JSONJoiningTransformer output', () => {
       success (result) {
         try {
           expect(result).to.be.an('object');
-          expect(result.author).to.equal('Nigel Rees');
-          expect(result.price).to.equal(8.95);
+          expect(
+            result && typeof result === 'object' &&
+            'author' in result && result.author
+          ).to.equal('Nigel Rees');
+          expect(
+            result && typeof result === 'object' &&
+            'price' in result && result.price
+          ).to.equal(8.95);
           done();
         } catch (err) {
           done(err);

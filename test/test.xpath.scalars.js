@@ -220,7 +220,7 @@ describe('XPathTransformerContext scalar return types (v1)', () => {
             // Call set to change context
             const item = this.get('//item', true)[0];
             this.set(item);
-            this.string(this._contextNode.textContent);
+            this.string(/** @type {string} */ (this._contextNode.textContent));
           }
         }
       ]);
@@ -373,9 +373,9 @@ describe('XPathTransformerContext scalar return types (v1)', () => {
           path: '/',
           template () {
             // Using v2, get a scalar result that needs wrapping
-            const result = this._evalXPath(
+            const result = /** @type {Node[]} */ (this._evalXPath(
               '1+2', true // numeric scalar -> should be wrapped into array
-            );
+            ));
             // Should wrap non-array result
             expect(Array.isArray(result)).to.be.true;
             expect(result[0]).to.equal(3);

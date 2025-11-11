@@ -85,12 +85,8 @@ function _makeDatasetAttribute (n0) {
 class StringJoiningTransformer extends AbstractJoiningTransformer {
   /**
    * @param {string} s - Initial string
-   * @param {{
-   *   mode?: "JavaScript"|"JSON",
-   *   JHTMLForJSON?: boolean,
-   *   xmlElements?: boolean,
-   *   preEscapedAttributes?: boolean
-   * }} [cfg] - Configuration object
+   * @param {import('./AbstractJoiningTransformer.js').
+   *   StringJoiningTransformerConfig} [cfg] - Configuration object
    */
   constructor (s, cfg) {
     super(cfg); // Include this in any subclass of AbstractJoiningTransformer

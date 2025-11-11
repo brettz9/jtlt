@@ -1,4 +1,25 @@
 export default XPathTransformer;
+export type XPathTransformerConfig = {
+    /**
+     * Throw on equal priority
+     */
+    errorOnEqualPriority?: boolean | undefined;
+    /**
+     * Template objects
+     */
+    templates: import("./index.js").XPathTemplateArray;
+    /**
+     * XPath version (1|2)
+     */
+    xpathVersion?: number | undefined;
+};
+/**
+ * @typedef {object} XPathTransformerConfig
+ * @property {boolean} [errorOnEqualPriority] Throw on equal priority
+ * @property {import('./index.js').
+ *   XPathTemplateArray} templates Template objects
+ * @property {number} [xpathVersion] XPath version (1|2)
+ */
 /**
  * Applies named XPath-driven templates to XML/HTML DOM data.
  *
@@ -20,32 +41,24 @@ declare class XPathTransformer {
         };
     };
     /**
-     * @param {object} config Configuration
-     * @param {boolean} [config.errorOnEqualPriority] Throw on equal priority
-     * @param {any[]} config.templates Template objects
-     * @param {number} [config.xpathVersion] XPath version (1|2)
+     * @param {XPathTransformerConfig &
+     *   import('./XPathTransformerContext.js').
+     *   XPathTransformerContextConfig} config Configuration
      */
-    constructor(config: {
-        errorOnEqualPriority?: boolean | undefined;
-        templates: any[];
-        xpathVersion?: number | undefined;
-    });
-    _config: {
-        errorOnEqualPriority?: boolean | undefined;
-        templates: any[];
-        xpathVersion?: number | undefined;
-    };
+    constructor(config: XPathTransformerConfig & import("./XPathTransformerContext.js").XPathTransformerContextConfig);
+    _config: XPathTransformerConfig & import("./XPathTransformerContext.js").XPathTransformerContextConfig;
     /** @type {any[]} */
     rootTemplates: any[];
-    templates: any[];
+    /** @type {import('./index.js').XPathTemplateObject[]} */
+    templates: import("./index.js").XPathTemplateObject[];
     /**
      * @returns {void}
      */
     _triggerEqualPriorityError(): void;
     /**
-     * @param {string} mode Transformation mode
+     * @param {string} [mode] Transformation mode
      * @returns {any} Result of transformation
      */
-    transform(mode: string): any;
+    transform(mode?: string): any;
 }
 //# sourceMappingURL=XPathTransformer.d.ts.map

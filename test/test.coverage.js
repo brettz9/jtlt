@@ -145,7 +145,7 @@ describe('Coverage: uncovered functionality', () => {
           name: 'named',
           path: '$.x',
           template (param) {
-            return `param:${param}`;
+            return `param:${param[0]}`;
           }
         }
       ],
@@ -293,7 +293,7 @@ describe('Coverage: uncovered functionality', () => {
       }],
       success (frag) {
         try {
-          expect(frag.querySelector('span').className).to.equal('test');
+          expect(frag.querySelector('span')?.className).to.equal('test');
           done();
         } catch (err) {
           done(err);
@@ -604,7 +604,7 @@ describe('More coverage for missing branches', () => {
           });
         }},
         {name: 'test', path: '$', template (v) {
-          return v;
+          return v[0];
         }}
       ],
       success (result) {

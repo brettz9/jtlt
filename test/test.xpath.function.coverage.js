@@ -77,7 +77,7 @@ describe('XPathTransformerContext function coverage', () => {
       expect(ctx.plainText('plain')).to.equal(ctx);
       expect(ctx.propValue('p', 'v')).to.equal(ctx);
       expect(ctx.object({x: 1})).to.equal(ctx);
-      expect(ctx.array(1, 2, 3)).to.equal(ctx);
+      expect(ctx.array([1, 2, 3])).to.equal(ctx);
       expect(ctx.element('div', {class: 'c'}, ['child'])).to.equal(ctx);
       expect(ctx.attribute('data-x', 'y', true)).to.equal(ctx);
       expect(ctx.text('txt')).to.equal(ctx);
@@ -99,7 +99,7 @@ describe('XPathTransformerContext function coverage', () => {
       expect(ctx.propertySets.derived).to.deep.equal({b: 2, a: 1});
 
       // valueOf for context node textContent and with select object form
-      ctx._contextNode = doc.querySelector('child');
+      ctx._contextNode = /** @type {Element} */ (doc.querySelector('child'));
       expect(ctx.valueOf()).to.equal(ctx);
       expect(joiner._out.at(-1)).to.equal('text');
       expect(ctx.valueOf({select: '.'})).to.equal(ctx);
@@ -107,14 +107,14 @@ describe('XPathTransformerContext function coverage', () => {
       // forEach over nodes
       /** @type {string[]} */ const collected = [];
       expect(
-        ctx.forEach('//child', function (/** @type {Element} */ node) {
+        ctx.forEach('//child', function (node) {
           collected.push(node.nodeName);
         })
       ).to.equal(ctx);
       expect(collected).to.deep.equal(['CHILD']);
 
       // set() new context
-      const newNode = doc.querySelector('root');
+      const newNode = /** @type {Element} */ (doc.querySelector('root'));
       expect(ctx.set(newNode)).to.equal(ctx);
       expect(ctx._contextNode).to.equal(newNode);
     }

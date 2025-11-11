@@ -1,3 +1,30 @@
+/**
+ * Create and run a JTLT instance with the appropriate engine typing.
+ *
+ * Overloads help TypeScript select the correct constructor signature.
+ * @overload
+ * @param {JSONPathJTLTOptions} cfg
+ * @returns {Promise<any>}
+ */
+export function jtlt(cfg: JSONPathJTLTOptions): Promise<any>;
+/**
+ * @overload
+ * @param {JSONPathJTLTOptions<"string">} cfg
+ * @returns {Promise<any>}
+ */
+export function jtlt(cfg: JSONPathJTLTOptions<"string">): Promise<any>;
+/**
+ * @overload
+ * @param {JSONPathJTLTOptions<"dom">} cfg
+ * @returns {Promise<any>}
+ */
+export function jtlt(cfg: JSONPathJTLTOptions<"dom">): Promise<any>;
+/**
+ * @overload
+ * @param {XPathJTLTOptions} cfg
+ * @returns {Promise<any>}
+ */
+export function jtlt(cfg: XPathJTLTOptions): Promise<any>;
 export { default as AbstractJoiningTransformer } from "./AbstractJoiningTransformer.js";
 export { default as StringJoiningTransformer } from "./StringJoiningTransformer.js";
 export { default as DOMJoiningTransformer } from "./DOMJoiningTransformer.js";
@@ -17,33 +44,35 @@ export type TemplateObject<TCtx> = {
     name?: string | undefined;
     mode?: string | undefined;
     priority?: number | undefined;
-    template: (this: TCtx, value?: any, cfg?: {
-        mode: string;
-    }) => any;
+    template: TemplateFunction<TCtx>;
 };
 /**
  * A callable template function with an engine-specific `this`.
  */
 export type TemplateFunction<TCtx> = (this: TCtx, value?: any, cfg?: {
-    mode: string;
+    mode?: string;
 }) => any;
-export type JSONPathTemplateObject = TemplateObject<import("./JSONPathTransformerContext.js").default>;
+export type JSONPathTemplateObject<T = "json"> = TemplateObject<import("./JSONPathTransformerContext.js").default<T>>;
 export type XPathTemplateObject = TemplateObject<import("./XPathTransformerContext.js").default>;
+export type XPathTemplateArray = (XPathTemplateObject | [string, TemplateFunction<import("./XPathTransformerContext.js").default>])[];
+export type JSONPathTemplateArray<T> = JSONPathTemplateObject<T> | [string, TemplateFunction<import("./JSONPathTransformerContext.js").default>];
+export type JoiningTransformer = (StringJoiningTransformer | DOMJoiningTransformer | JSONJoiningTransformer);
 /**
  * Options common to both engines.
  */
 export type BaseJTLTOptions = {
     /**
-     * A callback supplied with a single
-     * argument that is the result of this instance's transform() method. When
-     * used in TypeScript, this can be made generic as
-     * `success<T>(result: T): void`.
+     * A callback supplied
+     * with a single argument that is the result of this instance's
+     * transform() method. When used in TypeScript, this can be made
+     * generic as `success<T>(result: T): void`.
      */
     success: (result: any) => void;
     /**
-     * A JSON object or DOM document (XPath)
+     * A JSON
+     * object or DOM document (XPath)
      */
-    data?: any;
+    data?: string | number | boolean | object | null | undefined;
     /**
      * URL of a JSON file to retrieve for
      * evaluation
@@ -75,16 +104,12 @@ export type BaseJTLTOptions = {
      */
     mode?: string | undefined;
     /**
-     * Output type
-     */
-    outputType?: "string" | "dom" | "json" | undefined;
-    /**
      * Will be based the
      * same config as passed to this instance. Defaults to a transforming
      * function based on JSONPath and with its own set of priorities for
      * processing templates.
      */
-    engine?: ((opts: JTLTOptions) => any) | undefined;
+    engine?: ((opts: JTLTOptions & Required<Pick<JTLTOptions, "joiningTransformer">>) => unknown) | undefined;
     /**
      * Callback for getting the priority by specificity
      */
@@ -94,16 +119,16 @@ export type BaseJTLTOptions = {
      * for accumulating output. When omitted, one is created automatically based
      * on `outputType`.
      */
-    joiningTransformer?: AbstractJoiningTransformer | undefined;
+    joiningTransformer?: JoiningTransformer | undefined;
     /**
-     * Config to pass on to the joining
+     * Config for the joining
      * transformer
      */
-    joiningConfig?: object | undefined;
+    joiningConfig?: Record<string, unknown> | undefined;
     /**
      * Parent object for context
      */
-    parent?: any;
+    parent?: object | undefined;
     /**
      * Parent property name for context
      */
@@ -112,25 +137,27 @@ export type BaseJTLTOptions = {
 /**
  * JSONPath engine options with context-aware template typing.
  */
-export type JSONPathJTLTOptions = BaseJTLTOptions & {
-    templates?: JSONPathTemplateObject[] | TemplateFunction<import("./JSONPathTransformerContext.js").default>;
-    template?: JSONPathTemplateObject | TemplateFunction<import("./JSONPathTransformerContext.js").default>;
+export type JSONPathJTLTOptions<T = "json"> = BaseJTLTOptions & {
+    templates?: JSONPathTemplateArray<T>[];
+    template?: JSONPathTemplateObject<T> | TemplateFunction<import("./JSONPathTransformerContext.js").default>;
     query?: TemplateFunction<import("./JSONPathTransformerContext.js").default>;
-    forQuery?: any[];
+    forQuery?: unknown[];
     engineType?: "jsonpath";
+    outputType?: T;
 };
 /**
  * XPath engine options with context-aware template typing.
  */
 export type XPathJTLTOptions = BaseJTLTOptions & {
-    templates?: XPathTemplateObject[] | TemplateFunction<import("./XPathTransformerContext.js").default>;
+    templates?: XPathTemplateArray;
     template?: XPathTemplateObject | TemplateFunction<import("./XPathTransformerContext.js").default>;
     query?: TemplateFunction<import("./XPathTransformerContext.js").default>;
-    forQuery?: any[];
+    forQuery?: unknown[];
     engineType: "xpath";
     xpathVersion?: 1 | 2;
+    outputType?: "string" | "dom" | "json";
 };
-export type JTLTOptions = JSONPathJTLTOptions | XPathJTLTOptions;
+export type JTLTOptions = JSONPathJTLTOptions | JSONPathJTLTOptions<"string"> | JSONPathJTLTOptions<"dom"> | XPathJTLTOptions;
 /**
  * High-level façade for running a JTLT transform.
  *
@@ -151,6 +178,16 @@ declare class JTLT {
     constructor(config: JSONPathJTLTOptions);
     /**
      * @overload
+     * @param {JSONPathJTLTOptions<"string">} config Options for JSONPath engine
+     */
+    constructor(config: JSONPathJTLTOptions<"string">);
+    /**
+     * @overload
+     * @param {JSONPathJTLTOptions<"dom">} config Options for JSONPath engine
+     */
+    constructor(config: JSONPathJTLTOptions<"dom">);
+    /**
+     * @overload
      * @param {XPathJTLTOptions} config Options for XPath engine
      */
     constructor(config: XPathJTLTOptions);
@@ -162,26 +199,25 @@ declare class JTLT {
      */
     _createJoiningTransformer(): DOMJoiningTransformer | JSONJoiningTransformer | StringJoiningTransformer;
     /**
-     * @param {string} mode
+     * @param {string|undefined} mode
      * @returns {void}
      */
-    _autoStart(mode: string): void;
+    _autoStart(mode: string | undefined): void;
     /**
      * @param {JTLTOptions} config
      * @returns {JTLT}
      */
     setDefaults(config: JTLTOptions): JTLT;
     /**
-     * @param {string} mode The mode of the transformation
-     * @returns {any} Result of transformation
+     * @param {string} [mode] The mode of the transformation
+     * @returns {void} Result of transformation
      * @todo Allow for a success callback in case the jsonpath code is modified
      *     to work asynchronously (as with queries to access remote JSON
      *     stores)
      */
-    transform(mode: string): any;
+    transform(mode?: string): void;
 }
-import AbstractJoiningTransformer from './AbstractJoiningTransformer.js';
+import StringJoiningTransformer from './StringJoiningTransformer.js';
 import DOMJoiningTransformer from './DOMJoiningTransformer.js';
 import JSONJoiningTransformer from './JSONJoiningTransformer.js';
-import StringJoiningTransformer from './StringJoiningTransformer.js';
 //# sourceMappingURL=index.d.ts.map

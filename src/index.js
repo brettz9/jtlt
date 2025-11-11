@@ -1,10 +1,5 @@
 import {getJSON} from 'simple-get-json';
-// import JHTML from 'jhtml';
-// import jsonpath from 'jsonpath-plus';
-// import {jml} from 'jamilih';
 import {JSDOM} from 'jsdom';
-
-// import Stringifier from 'jhtml/SAJJ/SAJJ.Stringifier.js';
 
 import DOMJoiningTransformer from './DOMJoiningTransformer.js';
 import JSONJoiningTransformer from './JSONJoiningTransformer.js';
@@ -67,8 +62,12 @@ import XSLTStyleJSONPathResolver from './XSLTStyleJSONPathResolver.js';
 
 /**
  * Options common to both engines.
+ * @template T
  * @typedef {object} BaseJTLTOptions
- * @property {(result: any) => void} success A callback supplied
+ * @property {(
+ *   result: T extends "json" ? unknown : T extends "string" ? string :
+ *   DocumentFragment|Element
+ * ) => void} success A callback supplied
  *   with a single argument that is the result of this instance's
  *   transform() method. When used in TypeScript, this can be made
  *   generic as `success<T>(result: T): void`.
@@ -99,7 +98,9 @@ import XSLTStyleJSONPathResolver from './XSLTStyleJSONPathResolver.js';
  * for accumulating output. When omitted, one is created automatically based
  * on `outputType`.
  * @property {Record<string, unknown>} [joiningConfig] Config for the joining
- *   transformer
+ *   transformer. Can be a direct config object matching the transformer type,
+ *   or an object with nested configs for different types (e.g.,
+ *   {string: {...}, json: {...}, dom: {...}})
  * @property {object} [parent] Parent object for context
  * @property {string} [parentProperty] Parent property name for context
  */
@@ -107,7 +108,7 @@ import XSLTStyleJSONPathResolver from './XSLTStyleJSONPathResolver.js';
 /**
  * JSONPath engine options with context-aware template typing.
  * @template [T = "json"]
- * @typedef {BaseJTLTOptions & {
+ * @typedef {BaseJTLTOptions<T> & {
  *   templates?: JSONPathTemplateArray<T>[],
  *   template?: JSONPathTemplateObject<T> | TemplateFunction<
  *     import('./JSONPathTransformerContext.js').default
@@ -115,7 +116,9 @@ import XSLTStyleJSONPathResolver from './XSLTStyleJSONPathResolver.js';
  *   query?: TemplateFunction<
  *     import('./JSONPathTransformerContext.js').default
  *   >,
- *   forQuery?: unknown[],
+ *   forQuery?: [string, TemplateFunction<
+ *     import('./XPathTransformerContext.js').default
+ *   >],
  *   engineType?: 'jsonpath',
  *   outputType?: T
  * }} JSONPathJTLTOptions
@@ -123,16 +126,19 @@ import XSLTStyleJSONPathResolver from './XSLTStyleJSONPathResolver.js';
 
 /**
  * XPath engine options with context-aware template typing.
- * @typedef {BaseJTLTOptions & {
- *   templates: XPathTemplateArray,
+ * @template T
+ * @typedef {BaseJTLTOptions<T> & {
+ *   templates?: XPathTemplateArray,
  *   template?: XPathTemplateObject | TemplateFunction<
  *     import('./XPathTransformerContext.js').default
  *   >,
  *   query?: TemplateFunction<
  *     import('./XPathTransformerContext.js').default
  *   >,
- *   forQuery?: unknown[],
- *   engineType?: 'xpath',
+ *   forQuery?: [string, TemplateFunction<
+ *     import('./JSONPathTransformerContext.js').default
+ *   >],
+ *   engineType: 'xpath',
  *   xpathVersion?: 1|2,
  *   outputType?: 'string'|'dom'|'json'
  * }} XPathJTLTOptions
@@ -142,7 +148,9 @@ import XSLTStyleJSONPathResolver from './XSLTStyleJSONPathResolver.js';
  * @typedef {JSONPathJTLTOptions |
  *   JSONPathJTLTOptions<"string"> |
  *   JSONPathJTLTOptions<"dom"> |
- *   XPathJTLTOptions} JTLTOptions
+ *   XPathJTLTOptions<"json">|
+ *   XPathJTLTOptions<"string">|
+ *   XPathJTLTOptions<"dom">} JTLTOptions
  */
 
 const {window} = new JSDOM();
@@ -175,7 +183,15 @@ class JTLT {
    */
   /**
    * @overload
-   * @param {XPathJTLTOptions} config Options for XPath engine
+   * @param {XPathJTLTOptions<"json">} config Options for XPath engine
+   */
+  /**
+   * @overload
+   * @param {XPathJTLTOptions<"string">} config Options for XPath engine
+   */
+  /**
+   * @overload
+   * @param {XPathJTLTOptions<"dom">} config Options for XPath engine
    */
   /**
    * @param {JTLTOptions} config Options
@@ -216,26 +232,6 @@ class JTLT {
    *   StringJoiningTransformer}
    */
   _createJoiningTransformer () {
-    /**
-     * @type {typeof DOMJoiningTransformer|typeof JSONJoiningTransformer|
-     *   typeof StringJoiningTransformer}
-     */
-    let JT;
-    switch (this.config.outputType) {
-    case 'dom':
-      JT = DOMJoiningTransformer;
-      break;
-    case 'json':
-      JT = JSONJoiningTransformer;
-      break;
-    case 'string': default:
-      JT = StringJoiningTransformer;
-      break;
-    }
-
-    /** @type {any} */
-    let initial;
-
     // Derive a document to use for joiners when running XPath engine
     /** @type {Document|undefined} */
     let docForJoiner;
@@ -252,27 +248,48 @@ class JTLT {
         }
       }
     }
-    if (JT === StringJoiningTransformer) {
-      initial = '';
-    } else if (JT === DOMJoiningTransformer) {
-      initial = (docForJoiner || document).createDocumentFragment();
-    } else {
-      initial = [];
+
+    // Build config, supporting both direct config or nested structure
+    const baseConfig = this.config.joiningConfig || {};
+
+    switch (this.config.outputType) {
+    case 'dom': {
+      /**
+       * @type {import('./AbstractJoiningTransformer.js').
+       *   DOMJoiningTransformerConfig}
+       */
+      const domConfig = /** @type {typeof domConfig} */ ({
+        ...baseConfig,
+        document: docForJoiner || document
+      });
+      const initial = (docForJoiner || document).createDocumentFragment();
+      return new DOMJoiningTransformer(initial, domConfig);
     }
-
-    // Build config for joining transformer
-    const joiningConfig = this.config.joiningConfig || {
-      string: {}, json: {}, dom: {}, jamilih: {},
-      document: docForJoiner || document
-    };
-
-    // Pass unwrapSingleResult to JSON joiner if configured
-    if (JT === JSONJoiningTransformer && this.config.unwrapSingleResult) {
-      joiningConfig.unwrapSingleResult = true;
+    case 'json': {
+      /**
+       * @type {import('./AbstractJoiningTransformer.js').
+       *   JSONJoiningTransformerConfig}
+       */
+      const jsonConfig = /** @type {typeof jsonConfig} */ ({
+        ...baseConfig
+      });
+      // Pass unwrapSingleResult to JSON joiner if configured
+      if (this.config.unwrapSingleResult) {
+        jsonConfig.unwrapSingleResult = true;
+      }
+      return new JSONJoiningTransformer([], jsonConfig);
     }
-
-    // @ts-expect-error Ok
-    return new JT(initial, joiningConfig);
+    case 'string': default: {
+      /**
+       * @type {import('./AbstractJoiningTransformer.js').
+       *   StringJoiningTransformerConfig}
+       */
+      const stringConfig = /** @type {typeof stringConfig} */ ({
+        ...baseConfig
+      });
+      return new StringJoiningTransformer('', stringConfig);
+    }
+    }
   }
 
   /**
@@ -302,11 +319,23 @@ class JTLT {
     const query = cfg.forQuery
       // eslint-disable-next-line @stylistic/operator-linebreak -- TS
       ? /**
-         * @this {any}
+         * @this {import('./JSONPathTransformerContext.js').default |
+         *   import('./XPathTransformerContext.js').default}
          * @returns {void}
          */
       function () {
-        this.forEach(...[].slice.call(cfg.forQuery));
+        const [path, fn] =
+          /**
+           * @type {[string, TemplateFunction<
+           *   import('./JSONPathTransformerContext.js').default |
+           *   import('./XPathTransformerContext.js').default
+           * >]}
+           */ (
+            cfg.forQuery
+          );
+        // eslint-disable-next-line @stylistic/max-len -- Long
+        // eslint-disable-next-line unicorn/no-array-method-this-argument -- Not array
+        this.forEach(path, fn);
       }
       : cfg.query || (
         typeof cfg.templates === 'function'
@@ -331,7 +360,14 @@ class JTLT {
        */
       function (configParam) {
         if (configParam.engineType === 'xpath') {
-          const xt = new XPathTransformer(configParam);
+          const xt = new XPathTransformer(
+            /**
+             * @type {import('./XPathTransformer.js').XPathTransformerConfig &
+             *   import('./XPathTransformerContext.js').
+             *   XPathTransformerContextConfig}
+             */
+            (configParam)
+          );
           return xt.transform(configParam.mode);
         }
 
@@ -417,6 +453,126 @@ class JTLT {
     );
     return ret;
   }
+}
+
+/**
+ * Create and run a JTLT instance with the appropriate engine typing.
+ *
+ * Overloads help TypeScript select the correct constructor signature.
+ * @overload
+ * @param {Omit<JSONPathJTLTOptions, "success">} cfg
+ * @returns {Promise<any>}
+ */
+/**
+ * @overload
+ * @param {Omit<JSONPathJTLTOptions<"string">, "success">} cfg
+ * @returns {Promise<any>}
+ */
+/**
+ * @overload
+ * @param {Omit<JSONPathJTLTOptions<"dom">, "success">} cfg
+ * @returns {Promise<any>}
+ */
+/**
+ * @overload
+ * @param {Omit<XPathJTLTOptions<"json">, "success">} cfg
+ * @returns {Promise<any>}
+ */
+/**
+ * @overload
+ * @param {Omit<XPathJTLTOptions<"dom">, "success">} cfg
+ * @returns {Promise<any>}
+ */
+/**
+ * @overload
+ * @param {Omit<XPathJTLTOptions<"string">, "success">} cfg
+ * @returns {Promise<any>}
+ */
+/**
+ * @param {Omit<JTLTOptions, "success">} cfg Options
+ * @returns {Promise<any>}
+ */
+export function jtlt (cfg) {
+  // eslint-disable-next-line promise/avoid-new -- Own API
+  return new Promise((resolve) => {
+    // Narrow the constructor overload based on engineType
+    if (cfg && cfg.engineType === 'xpath') {
+      const outputType = cfg.outputType || 'string';
+
+      if (outputType === 'json') {
+        // eslint-disable-next-line no-new -- API
+        new JTLT(
+          /** @type {XPathJTLTOptions<"json">} */ ({
+            ...cfg,
+            outputType: 'json',
+            success (val) {
+              resolve(val);
+            }
+          })
+        );
+      } else if (outputType === 'dom') {
+        // eslint-disable-next-line no-new -- API
+        new JTLT(
+          /** @type {XPathJTLTOptions<"dom">} */ ({
+            ...cfg,
+            outputType: 'dom',
+            success (val) {
+              resolve(val);
+            }
+          })
+        );
+      } else {
+        // eslint-disable-next-line no-new -- API
+        new JTLT(
+          /** @type {XPathJTLTOptions<"string">} */ ({
+            ...cfg,
+            outputType: 'string',
+            success (val) {
+              resolve(val);
+            }
+          })
+        );
+      }
+      return;
+    }
+
+    const outputType = cfg.outputType || 'json';
+
+    if (outputType === 'string') {
+      // eslint-disable-next-line no-new -- API
+      new JTLT(
+        /** @type {JSONPathJTLTOptions<"string">} */ ({
+          ...cfg,
+          outputType: 'string',
+          success (val) {
+            resolve(val);
+          }
+        })
+      );
+    } else if (outputType === 'dom') {
+      // eslint-disable-next-line no-new -- API
+      new JTLT(
+        /** @type {JSONPathJTLTOptions<"dom">} */ ({
+          ...cfg,
+          outputType: 'dom',
+          success (val) {
+            resolve(val);
+          }
+        })
+      );
+    } else {
+      // eslint-disable-next-line no-new -- API
+      new JTLT(
+        /** @type {JSONPathJTLTOptions<"json">} */ ({
+          ...cfg,
+          outputType: 'json',
+          success (val) {
+            resolve(val);
+          }
+        })
+      );
+    }
+  });
 }
 
 export {
