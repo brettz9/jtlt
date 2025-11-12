@@ -1,5 +1,5 @@
 import {expect} from 'chai';
-import JTLT from '../src/index.js';
+import JTLT from '../src/index-node.js';
 
 /**
  * @param {(err?: Error) => void} done - Test done callback

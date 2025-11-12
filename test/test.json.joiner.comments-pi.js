@@ -1,5 +1,5 @@
 import {expect} from 'chai';
-import {JSONJoiningTransformer} from '../src/index.js';
+import {JSONJoiningTransformer} from '../src/index-node.js';
 
 describe('JSONJoiningTransformer comment() and processingInstruction()', () => {
   it('emits markers inside element callback and no-ops outside', () => {

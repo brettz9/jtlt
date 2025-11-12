@@ -781,6 +781,17 @@ class JSONPathTransformerContext {
   }
 
   /**
+   * Append text content. Mirrors the joining transformer API so templates can
+   * call `this.text()`.
+   * @param {string} txt - Text content
+   * @returns {this}
+   */
+  text (txt) {
+    this._getJoiningTransformer().text(txt);
+    return this;
+  }
+
+  /**
    * Add a comment to the most recently opened element. Mirrors the joining
    * transformer API so templates can call `this.comment()`.
    * @param {string} text - Comment text
@@ -805,17 +816,6 @@ class JSONPathTransformerContext {
     this._getJoiningTransformer().processingInstruction(
       target, data
     );
-    return this;
-  }
-
-  /**
-   * Append text content. Mirrors the joining transformer API so templates can
-   * call `this.text()`.
-   * @param {string} txt - Text content
-   * @returns {this}
-   */
-  text (txt) {
-    this._getJoiningTransformer().text(txt);
     return this;
   }
 

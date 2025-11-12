@@ -1,7 +1,7 @@
 import {JSDOM} from 'jsdom';
 import {expect} from 'chai';
 import XPathTransformerContext from '../src/XPathTransformerContext.js';
-import JTLT from '../src/index.js';
+import JTLT from '../src/index-node.js';
 
 describe('XPathTransformerContext function coverage', () => {
   it(

@@ -1,6 +1,7 @@
 import {expect} from 'chai';
-import JTLT from '../src/index.js';
-import JSONPathTransformerContext from '../src/JSONPathTransformerContext.js';
+import JTLT from '../src/index-node.js';
+// eslint-disable-next-line @stylistic/max-len -- Long
+// import JSONPathTransformerContext from '../src/JSONPathTransformerContext.js';
 
 // Basic test ensuring that template/query functions receive the correct `this`
 // context instance matching the engine type when executed.

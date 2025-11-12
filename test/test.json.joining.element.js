@@ -1,6 +1,6 @@
 import {expect} from 'chai';
 import {JSDOM} from 'jsdom';
-import {JSONJoiningTransformer} from '../src/index.js';
+import {JSONJoiningTransformer} from '../src/index-node.js';
 
 describe('JSONJoiningTransformer element/attribute/text (Jamilih JSON)', () => {
   it('builds element with dataset, $a, text, nested element', () => {

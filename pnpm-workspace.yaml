@@ -1,3 +1,4 @@
 onlyBuiltDependencies:
   - ejs
+  - is-hidden-file
   - unrs-resolver

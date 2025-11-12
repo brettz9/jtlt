@@ -1,5 +1,4 @@
 import {getJSON} from 'simple-get-json';
-import {JSDOM} from 'jsdom';
 
 import DOMJoiningTransformer from './DOMJoiningTransformer.js';
 import JSONJoiningTransformer from './JSONJoiningTransformer.js';
@@ -7,6 +6,15 @@ import JSONPathTransformer from './JSONPathTransformer.js';
 import XPathTransformer from './XPathTransformer.js';
 import StringJoiningTransformer from './StringJoiningTransformer.js';
 import XSLTStyleJSONPathResolver from './XSLTStyleJSONPathResolver.js';
+
+/** @type {import('jsdom').DOMWindow | typeof globalThis} */
+let _win;
+/**
+ * @param {import('jsdom').DOMWindow | typeof globalThis} win
+ */
+export const setWindow = (win) => {
+  _win = win;
+};
 
 /**
  * Internal options extension adding private runtime state flags.
@@ -175,9 +183,6 @@ import XSLTStyleJSONPathResolver from './XSLTStyleJSONPathResolver.js';
  *   XPathJTLTOptions<"dom">} JTLTOptions
  */
 
-const {window} = new JSDOM();
-const {document} = window;
-
 /**
  * High-level façade for running a JTLT transform.
  *
@@ -282,9 +287,9 @@ class JTLT {
        */
       const domConfig = /** @type {typeof domConfig} */ ({
         ...baseConfig,
-        document: docForJoiner || document
+        document: docForJoiner || _win.document
       });
-      const initial = (docForJoiner || document).createDocumentFragment();
+      const initial = (docForJoiner || _win.document).createDocumentFragment();
       return new DOMJoiningTransformer(initial, domConfig);
     }
     case 'json': {

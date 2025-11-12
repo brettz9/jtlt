@@ -1,5 +1,5 @@
 import {expect} from 'chai';
-import JTLT from '../src/index.js';
+import JTLT from '../src/index-node.js';
 
 // Cover StringJoiningTransformer comment() and processingInstruction() methods
 // (currently the only uncovered lines: 578-580, 588-590).

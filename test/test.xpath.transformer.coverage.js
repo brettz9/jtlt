@@ -1,7 +1,7 @@
 import {expect} from 'chai';
 import {JSDOM} from 'jsdom';
 import XPathTransformer from '../src/XPathTransformer.js';
-import {StringJoiningTransformer} from '../src/index.js';
+import {StringJoiningTransformer} from '../src/index-node.js';
 
 /**
  * @param {string} xml

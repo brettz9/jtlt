@@ -2,18 +2,21 @@ import {expect} from 'chai';
 import {JSDOM} from 'jsdom';
 import JSONPathTransformer from '../src/JSONPathTransformer.js';
 import XPathTransformer from '../src/XPathTransformer.js';
-import {JSONJoiningTransformer, DOMJoiningTransformer} from '../src/index.js';
+import {JSONJoiningTransformer, DOMJoiningTransformer} from
+  '../src/index-node.js';
 
 /**
  * Build a JSONPath transformer, run its root template, and return output.
  * Exercises JSONPathTransformerContext forwarding of comment() and
  * processingInstruction() calls to the JSONJoiningTransformer.
- * @returns {{out: any[]}} Object containing JSON joiner output
+ * @returns {{out: unknown}} Object containing JSON joiner output
  */
 function makeJSONCtx () {
   const joiner = new JSONJoiningTransformer([], {});
   // Cast config to any; constructor JSDoc doesn't list joiningTransformer.
-  const engine = new JSONPathTransformer({
+  const engine = new (/** @type {typeof JSONPathTransformer<"json">} */ (
+    JSONPathTransformer
+  ))({
     data: {a: 1},
     templates: [{
       path: '$',
@@ -44,7 +47,9 @@ function makeXPathCtx () {
     doc.createDocumentFragment(), {document: doc}
   );
 
-  const engine = new XPathTransformer({
+  const engine = new (/** @type {typeof XPathTransformer<"dom">} */ (
+    XPathTransformer
+  ))({
     data: doc,
     templates: [{
       path: '/',
@@ -57,13 +62,16 @@ function makeXPathCtx () {
     joiningTransformer: joiner,
     xpathVersion: 1
   });
-  const out = engine.transform('');
+  const out = /** @type {DocumentFragment} */ (engine.transform(''));
   return {out, doc};
 }
 
 describe('Context forwarding: comment() + processingInstruction()', () => {
   it('JSONPathTransformerContext -> JSONJoiningTransformer', () => {
-    const {out} = makeJSONCtx();
+    // eslint-disable-next-line prefer-destructuring -- TS
+    const out = /** @type {import('jamilih').JamilihArray} */ (
+      makeJSONCtx().out
+    );
     const root = out[0];
     expect(root).to.deep.include.members([
       ['!', 'jc'], // comment marker

@@ -69,7 +69,7 @@ class XPathTransformer {
 
   /**
    * @param {string} [mode] Transformation mode
-   * @returns {any} Result of transformation
+   * @returns {import('./index.js').ResultType<T>} Result of transformation
    */
   transform (mode) {
     const xte = new XPathTransformerContext(
@@ -86,7 +86,9 @@ class XPathTransformer {
     if (typeof ret !== 'undefined') {
       /** @type {any} */ (xte)._getJoiningTransformer().append(ret);
     }
-    return xte.getOutput();
+    return /** @type {import('./index.js').ResultType<T>} */ (
+      xte.getOutput()
+    );
   }
 
   static DefaultTemplateRules = {

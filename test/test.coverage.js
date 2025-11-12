@@ -1,5 +1,5 @@
 import {expect} from 'chai';
-import JTLT from '../src/index.js';
+import JTLT from '../src/index-node.js';
 
 describe('Coverage: uncovered functionality', () => {
   it('calls config() method on joiner', (done) => {

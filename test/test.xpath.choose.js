@@ -1,6 +1,6 @@
 /* XPathTransformerContext choose() tests */
 import {expect} from 'chai';
-import JTLT from '../src/index.js';
+import JTLT from '../src/index-node.js';
 import {JSDOM} from 'jsdom';
 
 const {window} = new JSDOM(

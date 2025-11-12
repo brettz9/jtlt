@@ -1,5 +1,5 @@
 import {expect} from 'chai';
-import JTLT, {JSONPathTransformer} from '../src/index.js';
+import JTLT, {JSONPathTransformer} from '../src/index-node.js';
 
 // Helper to run a JTLT transform with minimal config
 /**

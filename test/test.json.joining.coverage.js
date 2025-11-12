@@ -1,5 +1,5 @@
 import {expect} from 'chai';
-import {JSONJoiningTransformer} from '../src/index.js';
+import {JSONJoiningTransformer} from '../src/index-node.js';
 
 describe('JSONJoiningTransformer coverage additions', () => {
   it('element() with childNodes array and no atts/cb', () => {

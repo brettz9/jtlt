@@ -1,5 +1,5 @@
 import {expect} from 'chai';
-import JTLT from '../src/index.js';
+import JTLT from '../src/index-node.js';
 
 describe('StringJoiningTransformer helpers', () => {
   it('text() escapes and closes open tag', function textEscapes (done) {

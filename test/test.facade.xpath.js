@@ -1,6 +1,6 @@
 import {expect} from 'chai';
 import {JSDOM} from 'jsdom';
-import JTLT from '../src/index.js';
+import JTLT from '../src/index-node.js';
 
 /**
  * Build XML Document for testing.

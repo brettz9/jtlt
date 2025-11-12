@@ -5,7 +5,9 @@ import {assert} from 'chai';
 import XSLTStyleJSONPathResolver from '../src/XSLTStyleJSONPathResolver.js';
 import {JSDOM} from 'jsdom';
 import {toJHTMLDOM} from 'jhtml';
-import JTLT, {DOMJoiningTransformer, JSONJoiningTransformer, StringJoiningTransformer} from '../src/index.js';
+import JTLT, {
+  DOMJoiningTransformer, JSONJoiningTransformer, StringJoiningTransformer
+} from '../src/index-node.js';
 
 describe('Coverage - additional edge cases', function () {
   describe('StringJoiningTransformer', function () {

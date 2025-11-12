@@ -1,5 +1,5 @@
 import {expect} from 'chai';
-import JTLT from '../src/index.js';
+import JTLT from '../src/index-node.js';
 
 describe('Template priority and equal handling', () => {
   it('prefers last template when equal priority (default)', (done) => {

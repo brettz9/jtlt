@@ -1,5 +1,5 @@
 import {expect} from 'chai';
-import JTLT, {JSONJoiningTransformer} from '../src/index.js';
+import JTLT, {JSONJoiningTransformer} from '../src/index-node.js';
 
 // Use the sample data so we don't add more fixtures
 const data = (await import(

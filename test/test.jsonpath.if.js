@@ -1,6 +1,6 @@
 /* JSONPathTransformerContext if() tests */
 import {expect} from 'chai';
-import JTLT from '../src/index.js';
+import JTLT from '../src/index-node.js';
 
 const sample = {store: {book: [
   {category: 'reference', price: 8.95},
