@@ -33,7 +33,7 @@ describe('XPathTransformerContext branch coverage', () => {
     const joiner = new StringJoiningTransformer('');
     const templates =
       /**
-       * @type {import('../src/index.js').XPathTemplateObject[]}
+       * @type {import('../src/index.js').XPathTemplateObject<"string">[]}
        */
       ([
         {
@@ -59,7 +59,7 @@ describe('XPathTransformerContext branch coverage', () => {
     const joiner = new StringJoiningTransformer('');
     const templates =
       /**
-       * @type {import('../src/index.js').XPathTemplateObject[]}
+       * @type {import('../src/index.js').XPathTemplateObject<"string">[]}
        */
       ([
         {
@@ -92,7 +92,7 @@ describe('XPathTransformerContext branch coverage', () => {
     const joiner = new StringJoiningTransformer('');
     const templates =
       /**
-       * @type {import('../src/index.js').XPathTemplateObject[]}
+       * @type {import('../src/index.js').XPathTemplateObject<"string">[]}
        */
       ([
         {

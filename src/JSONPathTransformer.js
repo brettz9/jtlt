@@ -74,7 +74,16 @@ class JSONPathTransformer {
     ).template.call(jte, undefined, {mode});
     if (typeof ret !== 'undefined') {
       // Will vary by jte._config.outputType
-      jte._getJoiningTransformer().append(ret);
+      // After the undefined check, ret is ResultType<T>
+      const joiner = jte._getJoiningTransformer();
+      if (typeof ret === 'string' ||
+          (typeof ret === 'object' && ret !== null && 'nodeType' in ret)) {
+        joiner.append(/** @type {string|Node} */ (ret));
+      } else {
+        /** @type {import('./JSONJoiningTransformer.js').default} */ (
+          joiner
+        ).append(ret);
+      }
     }
     const result = jte.getOutput();
     return result;

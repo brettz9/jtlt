@@ -23,7 +23,7 @@ describe('XPathTransformerContext scalar return types (v1)', () => {
     const joiner = new StringJoiningTransformer('');
     const templates =
       /**
-       * @type {import('../src/index.js').XPathTemplateArray}
+       * @type {import('../src/index.js').XPathTemplateArray<"string">}
        */ ([
         {
           path: '/',
@@ -51,7 +51,7 @@ describe('XPathTransformerContext scalar return types (v1)', () => {
     const joiner = new StringJoiningTransformer('');
     const templates =
       /**
-       * @type {import('../src/index.js').XPathTemplateArray}
+       * @type {import('../src/index.js').XPathTemplateArray<"string">}
        */ ([
         {
           path: '/',
@@ -79,7 +79,7 @@ describe('XPathTransformerContext scalar return types (v1)', () => {
     const joiner = new StringJoiningTransformer('');
     const templates =
       /**
-       * @type {import('../src/index.js').XPathTemplateArray}
+       * @type {import('../src/index.js').XPathTemplateArray<"string">}
        */
       ([
         {
@@ -154,7 +154,7 @@ describe('XPathTransformerContext scalar return types (v1)', () => {
     const joiner = new StringJoiningTransformer('');
     const templates =
       /**
-       * @type {import('../src/index.js').XPathTemplateArray}
+       * @type {import('../src/index.js').XPathTemplateArray<"string">}
        */
       ([
         {
@@ -182,7 +182,7 @@ describe('XPathTransformerContext scalar return types (v1)', () => {
     const joiner = new StringJoiningTransformer('');
     const templates =
       /**
-       * @type {import('../src/index.js').XPathTemplateArray}
+       * @type {import('../src/index.js').XPathTemplateArray<"string">}
        */
       ([
         {
@@ -211,7 +211,7 @@ describe('XPathTransformerContext scalar return types (v1)', () => {
     const joiner = new StringJoiningTransformer('');
     const templates =
       /**
-       * @type {import('../src/index.js').XPathTemplateArray}
+       * @type {import('../src/index.js').XPathTemplateArray<"string">}
        */
       ([
         {
@@ -241,7 +241,7 @@ describe('XPathTransformerContext scalar return types (v1)', () => {
     const joiner = new StringJoiningTransformer('');
     const templates =
       /**
-       * @type {import('../src/index.js').XPathTemplateArray}
+       * @type {import('../src/index.js').XPathTemplateArray<"string">}
        */
       ([
         {
@@ -277,7 +277,7 @@ describe('XPathTransformerContext scalar return types (v1)', () => {
     let resolverCalled = false;
     const templates =
       /**
-       * @type {import('../src/index.js').XPathTemplateArray}
+       * @type {import('../src/index.js').XPathTemplateArray<"string">}
        */
       ([
         {
@@ -326,7 +326,7 @@ describe('XPathTransformerContext scalar return types (v1)', () => {
     const joiner = new StringJoiningTransformer('');
     const templates =
       /**
-       * @type {import('../src/index.js').XPathTemplateArray}
+       * @type {import('../src/index.js').XPathTemplateArray<"string">}
        */
       ([
         {

@@ -32,9 +32,6 @@ describe('Facade XPath engineType integration', () => {
         },
         {
           path: '//item',
-          /**
-           * @param {Element} n
-           */
           template (n) {
             this.element('li', {}, [], () => this.text(n.textContent));
           }
@@ -66,9 +63,6 @@ describe('Facade XPath engineType integration', () => {
         },
         {
           path: '//item',
-          /**
-           * @param {Element} n
-           */
           template (n) {
             this.element('li', {}, [], () => this.text(n.textContent));
           }

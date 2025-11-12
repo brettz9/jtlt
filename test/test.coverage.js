@@ -15,7 +15,7 @@ describe('Coverage: uncovered functionality', () => {
           jt.config('testProp', 'testVal', function () {
             // Config is temporarily set
           });
-          return val;
+          return /** @type {string} */ (val);
         }
       }],
       success (result) {
@@ -36,7 +36,7 @@ describe('Coverage: uncovered functionality', () => {
       new JTLT({
         data: {},
         outputType: 'string',
-        joiningConfig: {string: {requireSameChildren: true}},
+        joiningConfig: {requireSameChildren: true},
         templates: [{
           path: '$',
           template () {
@@ -45,7 +45,9 @@ describe('Coverage: uncovered functionality', () => {
         }],
         success () { /* not reached */ }
       });
-    }).to.throw(/Cannot embed/v);
+    }).to.throw(
+      'Cannot embed object children for a string joining transformer.'
+    );
   });
 
   it('handles variable() in context', (done) => {
@@ -143,9 +145,9 @@ describe('Coverage: uncovered functionality', () => {
         }},
         {
           name: 'named',
-          path: '$.x',
+          path: '$.x', // Todo: Remove need for `path` in named templates
           template (param) {
-            return `param:${param[0]}`;
+            return `param:${/** @type {[string]} */ (param)[0]}`;
           }
         }
       ],
@@ -459,7 +461,7 @@ describe('Coverage: uncovered functionality', () => {
       templates: [{path: '$', template () {
         this.applyTemplates('$.x');
       }}, {path: '$.x', template (v) {
-        return v;
+        return /** @type {string} */ (v);
       }}],
       success (result) {
         try {
@@ -481,7 +483,7 @@ describe('Coverage: uncovered functionality', () => {
       templates: [{
         path: '$.store.book[0].author',
         template (author) {
-          return author;
+          return /** @type {string} */ (author);
         }
       }],
       success (result) {
@@ -604,7 +606,7 @@ describe('More coverage for missing branches', () => {
           });
         }},
         {name: 'test', path: '$', template (v) {
-          return v[0];
+          return /** @type {[string]} */ (v)[0];
         }}
       ],
       success (result) {

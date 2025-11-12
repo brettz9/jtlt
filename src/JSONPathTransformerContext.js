@@ -384,7 +384,10 @@ class JSONPathTransformerContext {
           that, value, {mode, parent, parentProperty}
         );
       if (typeof ret !== 'undefined') {
-        that._getJoiningTransformer().append(ret);
+        // After the undefined check, ret is ResultType<T>
+        that._getJoiningTransformer().append(
+          /** @type {string|Node|*} */ (ret)
+        );
       }
 
       that._contextObj = value;

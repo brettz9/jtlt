@@ -17,7 +17,7 @@ describe('JSONJoiningTransformer element/attribute/text (Jamilih JSON)', () => {
         jt.element('span', {class: 'c'}, [], () => jt.text('inner'));
       }
     );
-    const out = jt.get();
+    const out = /** @type {import('jamilih').JamilihArray[]} */ (jt.get());
     expect(out).to.be.an('array');
     // root element added as first array element
     const el = out[0];
@@ -30,14 +30,16 @@ describe('JSONJoiningTransformer element/attribute/text (Jamilih JSON)', () => {
     // Text nodes are represented as ['!', text]
     expect(el).to.deep.include.members([['!', 'hi']]);
     // nested child
-    const child = el.slice(2).find(
-      /**
-       * @param {any} c
-       * @returns {boolean}
-       */
-      (c) => Array.isArray(c) && c[0] === 'span'
+    const child = /** @type {import('jamilih').JamilihChildren} */ (
+      el.slice(2).find(
+        /**
+         * @param {any} c
+         * @returns {boolean}
+         */
+        (c) => Array.isArray(c) && c[0] === 'span'
+      )
     );
-    expect(child[1]).to.include({class: 'c'});
+    expect(child[1]).to.deep.include({class: 'c'});
     expect(child).to.deep.include.members([['!', 'inner']]);
   });
 
@@ -49,7 +51,7 @@ describe('JSONJoiningTransformer element/attribute/text (Jamilih JSON)', () => {
     });
     // childNodes as function
     jt.element('p', {}, function () { /* no children */ });
-    const out = jt.get();
+    const out = /** @type {import('jamilih').JamilihArray[]} */ (jt.get());
     expect(out[0][0]).to.equal('div');
     // Text nodes are represented as ['!', text]
     expect(out[0]).to.deep.include.members([['!', 'a']]);
@@ -66,9 +68,9 @@ describe('JSONJoiningTransformer element/attribute/text (Jamilih JSON)', () => {
     const jt = new JSONJoiningTransformer([], {});
     jt.element(el, {role: 'note'}, [], () => { /* no children */ });
 
-    const out = jt.get();
+    const out = /** @type {import('jamilih').JamilihArray[]} */ (jt.get());
     const jml = out[0];
-    expect(jml[0].toLowerCase()).to.equal('a');
+    expect(/** @type {string} */ (jml[0]).toLowerCase()).to.equal('a');
     expect(jml[1]).to.include({href: '#', 'data-x': 'y', role: 'note'});
   });
 });

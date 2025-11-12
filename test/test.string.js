@@ -4,8 +4,8 @@ import JTLT from '../src/index.js';
 /**
  * @param {(err?: Error) => void} done - Test done callback
  * @param {string} expected - Expected result
- * @param {import('../src/index.js').XPathTemplateArray} templates - Array
- *   of template objects
+ * @param {import('../src/index.js').
+ *   XPathTemplateArray<"string">} templates - Array of template objects
  * @param {object} [replace] - Properties to replace in config
  * @returns {void}
  */
@@ -16,7 +16,7 @@ function runTest (done, expected, templates, replace) {
      */ ({
       autostart: true,
       ajaxData: import.meta.dirname + '/data/jsonpath-sample.json',
-      outputType: /** @type {'string'} */ ('string'), // string is default
+      outputType: /** @type {const} */ ('string'), // string is default
       templates: [
         {
           // We could instead try a root template which applied on
@@ -45,8 +45,8 @@ function runTest (done, expected, templates, replace) {
     config.templates[0] =
     /**
      * @type {(
-     *   import('../src/index.js').XPathTemplateObject |
-     *   [string, import('../src/index.js').TemplateFunction<
+     *   import('../src/index.js').XPathTemplateObject<"string"> |
+     *   [string, import('../src/index.js').TemplateFunction<"string", "json",
      *     import('../src/XPathTransformerContext.js').default
      *   >]
      * )}

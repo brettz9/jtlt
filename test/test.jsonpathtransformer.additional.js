@@ -153,7 +153,7 @@ describe('JSONPathTransformer additional coverage', function () {
           this.plainText(JSON.stringify(data.items));
         }],
         ['$.items[*]',
-          function (item) {
+          function (/** @type {{value: number}} */ item) {
             // Use set() to modify the value in parent array
             this.set({value: item.value * 2, modified: true});
           }]

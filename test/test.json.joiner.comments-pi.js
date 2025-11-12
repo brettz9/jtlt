@@ -13,7 +13,7 @@ describe('JSONJoiningTransformer comment() and processingInstruction()', () => {
     jt.comment('outside');
     jt.processingInstruction('pi2', 'd2');
 
-    const out = jt.get();
+    const out = /** @type {import('jamilih').JamilihArray[]} */ (jt.get());
     const root = out[0];
     expect(root[0]).to.equal('root');
     // Comment and text both use ['!', text]; PI uses ['?', target, data]

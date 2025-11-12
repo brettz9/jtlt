@@ -27,8 +27,8 @@ import xpath2 from 'xpath2.js'; // Runtime JS import; ambient types declared
 class XPathTransformerContext {
   /**
    * @param {XPathTransformerContextConfig} config
-   * @param {import('./index.js').XPathTemplateObject[]} templates - Template
-   *   objects
+   * @param {import('./index.js').
+   *   XPathTemplateObject<any>[]} templates - Template objects
    */
   constructor (config, templates) {
     this._config = config;
@@ -255,9 +255,12 @@ class XPathTransformerContext {
           }
           return aPr > bPr ? -1 : 1;
         });
-        templateObj = /** @type {import('./index.js').XPathTemplateObject} */ (
-          pathMatchedTemplates.shift()
-        );
+        templateObj =
+          /**
+           * @type {import('./index.js').XPathTemplateObject<any>}
+           */ (
+            pathMatchedTemplates.shift()
+          );
       }
       this._contextNode = node;
       const ret = templateObj.template.call(this, node, {mode});

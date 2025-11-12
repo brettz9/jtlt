@@ -18,7 +18,9 @@ describe('XPathTransformer additional coverage', () => {
     const doc = makeDoc('<root><item>a</item><item>b</item></root>');
     const joiner = new StringJoiningTransformer('');
 
-    const engine = new XPathTransformer({
+    const engine = new (/** @type {typeof XPathTransformer<"string">} */ (
+      XPathTransformer
+    ))({
       data: doc,
       templates: [
         ['//item', function itemTpl (n) {
@@ -65,7 +67,9 @@ describe('XPathTransformer additional coverage', () => {
     const doc = makeDoc('<root><item>a</item></root>');
     const joiner = new StringJoiningTransformer('');
 
-    const engine = new XPathTransformer({
+    const engine = new (/** @type {typeof XPathTransformer<"string">} */ (
+      XPathTransformer
+    ))({
       data: doc,
       templates: [
         {
@@ -168,7 +172,9 @@ describe('XPathTransformer additional coverage', () => {
 
     // Verify functional behavior with the first engine
     const joiner3 = new StringJoiningTransformer('');
-    const engine3 = new XPathTransformer({
+    const engine3 = new (/** @type {typeof XPathTransformer<"string">} */ (
+      XPathTransformer
+    ))({
       data: doc,
       templates: [
         {

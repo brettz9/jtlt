@@ -1,10 +1,11 @@
 import XPathTransformerContext from './XPathTransformerContext.js';
 
 /**
+ * @template T
  * @typedef {object} XPathTransformerConfig
  * @property {boolean} [errorOnEqualPriority] Throw on equal priority
  * @property {import('./index.js').
- *   XPathTemplateArray} templates Template objects
+ *   XPathTemplateArray<T>} templates Template objects
  * @property {number} [xpathVersion] XPath version (1|2)
  */
 
@@ -14,10 +15,11 @@ import XPathTransformerContext from './XPathTransformerContext.js';
  * Finds templates whose `path` XPath matches the current node (plus optional
  * `mode`), sorts by priority, and invokes the winning template.
  * Falls back to default rules when no template matches.
+ * @template T
  */
 class XPathTransformer {
   /**
-   * @param {XPathTransformerConfig &
+   * @param {XPathTransformerConfig<T> &
    *   import('./XPathTransformerContext.js').
    *   XPathTransformerContextConfig} config Configuration
    */
@@ -27,7 +29,7 @@ class XPathTransformer {
     /** @type {any[]} */
     this.rootTemplates = [];
 
-    /** @type {import('./index.js').XPathTemplateObject[]} */
+    /** @type {import('./index.js').XPathTemplateObject<T>[]} */
     this.templates = config.templates.map(function (template) {
       if (Array.isArray(template)) {
         return {path: template[0], template: template[1]};

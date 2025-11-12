@@ -107,7 +107,7 @@ class JSONJoiningTransformer extends AbstractJoiningTransformer {
    * Gets the current object or array. If unwrapSingleResult config option is
    * enabled and the root array contains exactly one element, returns that
    * element directly (unwrapped).
-   * @returns {any[]|object|any}
+   * @returns {any[]|Record<string, unknown>|any}
    */
   get () {
     // Unwrap single-element arrays at the root level if configured

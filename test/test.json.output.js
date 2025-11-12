@@ -46,13 +46,25 @@ describe('JSONJoiningTransformer output', () => {
         {}, {unwrapSingleResult: true}
       ),
       templates: [
-        {path: '$.store.book[0]', template (book) {
-          const jt = this._config.joiningTransformer;
-          this.object(function () {
-            jt.propValue('author', book.author);
-            jt.propValue('price', book.price);
-          });
-        }}
+        {
+          path: '$.store.book[0]',
+          template (book) {
+            const bk =
+              /**
+               * @type {{
+               *   category: string,
+               *   author: string,
+               *   title: string,
+               *   price: number,
+               * }}
+               */ (book);
+            const jt = this._config.joiningTransformer;
+            this.object(function () {
+              jt.propValue('author', bk.author);
+              jt.propValue('price', bk.price);
+            });
+          }
+        }
       ],
       success (result) {
         try {

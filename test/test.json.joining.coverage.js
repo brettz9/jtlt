@@ -6,7 +6,7 @@ describe('JSONJoiningTransformer coverage additions', () => {
     const jt = new JSONJoiningTransformer([], {});
     // Call with just name and childNodes array (no atts object provided)
     jt.element('ul', ['x', ['li', {}, 'y']]);
-    const out = jt.get();
+    const out = /** @type {import('jamilih').JamilihArray[]} */ (jt.get());
     expect(out[0][0]).to.equal('ul');
     // No attribute object present (children start at index 1)
     expect(out[0][1]).to.equal('x');
@@ -19,7 +19,7 @@ describe('JSONJoiningTransformer coverage additions', () => {
     jt.attribute('$a', [['id', 'x']]);
     // Build an element afterwards to ensure prior calls didn't pollute state
     jt.element('div', {}, [], () => { /* noop */ });
-    const out = jt.get();
+    const out = /** @type {import('jamilih').JamilihArray[]} */ (jt.get());
     expect(out[0][0]).to.equal('div');
     // No attributes added since attribute() was a no-op
     expect(out[0].length).to.equal(1); // ['div'] only (no atts, no children)
@@ -29,7 +29,7 @@ describe('JSONJoiningTransformer coverage additions', () => {
     const jt = new JSONJoiningTransformer([], {});
     jt.text('ignored');
     jt.element('p', {}, [], () => jt.text('kept'));
-    const out = jt.get();
+    const out = /** @type {import('jamilih').JamilihArray[]} */ (jt.get());
     expect(out[0][0]).to.equal('p');
     // Text nodes represented as ['!', text]
     expect(out[0]).to.deep.include.members([['!', 'kept']]);
@@ -40,7 +40,7 @@ describe('JSONJoiningTransformer coverage additions', () => {
   it('element() with empty atts and no children', () => {
     const jt = new JSONJoiningTransformer([], {});
     jt.element('span');
-    const out = jt.get();
+    const out = /** @type {import('jamilih').JamilihArray[]} */ (jt.get());
     expect(out[0]).to.deep.equal(['span']);
   });
 });

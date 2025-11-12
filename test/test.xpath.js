@@ -26,7 +26,7 @@ describe('XPathTransformer basics', () => {
     const joiner = new StringJoiningTransformer('');
     const templates =
       /**
-       * @type {import('../src/index.js').XPathTemplateArray}
+       * @type {import('../src/index.js').XPathTemplateArray<"string">}
        */
       ([
         {
@@ -131,7 +131,7 @@ describe('XPathTransformer basics (version 1)', () => {
     const joiner = new StringJoiningTransformer('');
     const templates =
       /**
-       * @type {import('../src/index.js').XPathTemplateArray}
+       * @type {import('../src/index.js').XPathTemplateArray<"string">}
        */
       ([
         {

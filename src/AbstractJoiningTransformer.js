@@ -4,6 +4,7 @@
 
 /**
  * @typedef {{
+ *   requireSameChildren?: boolean,
  *   JHTMLForJSON?: boolean,
  *   mode?: "JSON"|"JavaScript"
  * }} BaseTransformerConfig
@@ -16,6 +17,7 @@
  */
 /**
  * @typedef {object} JSONJoiningTransformerConfig
+ * @property {boolean} [requireSameChildren]
  * @property {boolean} [unwrapSingleResult]
  * @property {"JSON"|"JavaScript"} [mode]
  */
@@ -72,9 +74,8 @@ class AbstractJoiningTransformer {
    * @returns {void}
    */
   _requireSameChildren (type, embedType) {
-    const cfg = /** @type {Record<string, unknown>} */ (this._cfg);
-    if (cfg[type] &&
-    (/** @type {Record<string, unknown>} */ (cfg[type])).requireSameChildren) {
+    const cfg = this._cfg;
+    if (cfg.requireSameChildren) {
       throw new Error(
         'Cannot embed ' + embedType + ' children for a ' + type +
           ' joining transformer.'
