@@ -67,6 +67,8 @@ class JSONPathTransformerContext {
     this._initialized = undefined;
     /** @type {string | undefined} */
     this._currPath = undefined;
+    /** @type {Record<string, any> | undefined} */
+    this._params = undefined;
   }
 
   /**
@@ -182,6 +184,10 @@ class JSONPathTransformerContext {
     // Todo: Use results here?
     /* const results = */ this._getJoiningTransformer();
     const modeMatchedTemplates = this._templates.filter((templateObj) => {
+      // Exclude named-only templates (those with name but no path)
+      if (templateObj.name && !templateObj.path) {
+        return false;
+      }
       return ((mode && mode === templateObj.mode) ||
         (!mode && !templateObj.mode));
     });
@@ -310,6 +316,11 @@ class JSONPathTransformerContext {
       that._currPath += path.replace(/^\$/v, '');
       const pathMatchedTemplates = modeMatchedTemplates.filter(
         function (templateObj) {
+          // At this point, we know templateObj.path exists because we filtered
+          // out named-only templates in modeMatchedTemplates
+          if (!templateObj.path) {
+            return false;
+          }
           const queryResult = /** @type {any[]} */ (
             (/** @type {any} */ (jsonpath))({
               path: JSONPathTransformer.makeJSONPathAbsolute(
@@ -350,12 +361,12 @@ class JSONPathTransformerContext {
            * trigger error, making the `: 0` branch nearly unreachable. */
           const aPriority = typeof a.priority === 'number'
             ? a.priority
-            : (that._config.specificityPriorityResolver
+            : (that._config.specificityPriorityResolver && a.path
               ? that._config.specificityPriorityResolver(a.path)
               : 0);
           const bPriority = typeof b.priority === 'number'
             ? b.priority
-            : (that._config.specificityPriorityResolver
+            : (that._config.specificityPriorityResolver && b.path
               ? that._config.specificityPriorityResolver(b.path)
               : 0);
           /* c8 ignore stop */
@@ -417,9 +428,26 @@ class JSONPathTransformerContext {
       ({name} = name);
     }
     withParams = withParams || [];
-    const paramValues = withParams.map((withParam) => {
-      return withParam.value || this.get(withParam.select, false);
+
+    // Store parameters in a temporary context for valueOf() access
+    const prevParams = this._params;
+    /** @type {Record<string, any>} */
+    const params = {};
+    this._params = params;
+
+    withParams.forEach((withParam, index) => {
+      const value = withParam.value !== undefined
+        ? withParam.value
+        : this.get(withParam.select, false);
+
+      // Store by name if provided, otherwise by index
+      if (withParam.name) {
+        params[withParam.name] = value;
+      } else {
+        params[String(index)] = value;
+      }
     });
+
     const results = this._getJoiningTransformer();
     const templateObj = this._templates.find((template) => {
       return template.name === name;
@@ -430,8 +458,14 @@ class JSONPathTransformerContext {
       );
     }
 
-    const result = templateObj.template.call(this, paramValues);
-    /** @type {any} */ (results).append(result);
+    const result = templateObj.template.call(this, this._contextObj, {});
+    if (typeof result !== 'undefined') {
+      /** @type {any} */ (results).append(result);
+    }
+
+    // Restore previous parameter context
+    this._params = prevParams;
+
     return this;
   }
 
@@ -566,10 +600,27 @@ class JSONPathTransformerContext {
     // Appends the value of the given JSONPath (or the current context when
     // `{select: '.'}` is passed) to the output via the joining transformer.
     const results = this._getJoiningTransformer();
-    const result = select && typeof select === 'object' &&
-    /** @type {{select?: string}} */ (select).select === '.'
-      ? this._contextObj
-      : this.get(/** @type {string} */ (select), false);
+    let result;
+
+    if (select && typeof select === 'object' &&
+    /** @type {{select?: string}} */ (select).select === '.') {
+      result = this._contextObj;
+    } else {
+      const selectStr = typeof select === 'object'
+        ? /** @type {{select?: string}} */ (select).select
+        : select;
+
+      // Check if this is a parameter reference (starts with $)
+      if (selectStr && selectStr.startsWith('$')) {
+        const paramName = selectStr.slice(1);
+        result = (this._params && paramName in this._params)
+          ? this._params[paramName]
+          : this.get(/** @type {string} */ (selectStr), false);
+      } else {
+        result = this.get(/** @type {string} */ (select), false);
+      }
+    }
+
     /** @type {any} */ (results).append(result);
     return this;
   }

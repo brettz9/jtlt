@@ -146,8 +146,9 @@ describe('Coverage: uncovered functionality', () => {
         {
           name: 'named',
           path: '$.x', // Todo: Remove need for `path` in named templates
-          template (param) {
-            return `param:${/** @type {[string]} */ (param)[0]}`;
+          template () {
+            this.string('param:');
+            this.valueOf({select: '$0'});
           }
         }
       ],
@@ -605,8 +606,8 @@ describe('More coverage for missing branches', () => {
             withParam: [{value: 'direct'}]
           });
         }},
-        {name: 'test', path: '$', template (v) {
-          return /** @type {[string]} */ (v)[0];
+        {name: 'test', template () {
+          this.valueOf({select: '$0'});
         }}
       ],
       success (result) {

@@ -50,6 +50,7 @@ class XPathTransformer {
       }
     });
     // Collect root templates without mutating during iteration
+    // Only filter by path if path is defined
     this.rootTemplates = this.templates.filter((t) => t.path === '/');
     this.templates = this.templates.filter((t) => t.path !== '/');
     map = /** @type {any} */ (null);

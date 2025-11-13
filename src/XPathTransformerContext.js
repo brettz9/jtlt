@@ -50,6 +50,8 @@ class XPathTransformerContext {
     this._initialized = undefined;
     /** @type {string|undefined} */
     this._currPath = undefined; // XPath string of current context
+    /** @type {Record<string, any> | undefined} */
+    this._params = undefined;
   }
 
   /** @returns {import('./index.js').JoiningTransformer} */
@@ -205,14 +207,23 @@ class XPathTransformerContext {
     }
     const nodesResult = this._evalXPath(select, true);
     const nodes = /** @type {Node[]} */ (nodesResult);
-    const modeMatched = this._templates.filter((t) => (
-      mode ? t.mode === mode : !t.mode
-    ));
+    const modeMatched = this._templates.filter((t) => {
+      // Exclude named-only templates (those with name but no path)
+      if (t.name && !t.path) {
+        return false;
+      }
+      return mode ? t.mode === mode : !t.mode;
+    });
     // Process each node
     for (const node of nodes) {
     // Path resolution simplified (could track full XPath if needed)
       const pathMatchedTemplates = modeMatched.filter((t) => {
         // Basic matching: template.path is XPath tested for existence
+        // At this point, we know t.path exists because we filtered
+        // out named-only templates in modeMatched
+        if (!t.path) {
+          return false;
+        }
         try {
           const resResult = this._evalXPath(t.path, true);
           const res = /** @type {Node[]} */ (resResult);
@@ -242,12 +253,12 @@ class XPathTransformerContext {
         pathMatchedTemplates.sort((a, b) => {
           const aPr = typeof a.priority === 'number'
             ? a.priority
-            : (this._config.specificityPriorityResolver
+            : (this._config.specificityPriorityResolver && a.path
               ? this._config.specificityPriorityResolver(a.path)
               : 0);
           const bPr = typeof b.priority === 'number'
             ? b.priority
-            : (this._config.specificityPriorityResolver
+            : (this._config.specificityPriorityResolver && b.path
               ? this._config.specificityPriorityResolver(b.path)
               : 0);
           if (aPr === bPr && this._config.errorOnEqualPriority) {
@@ -286,9 +297,26 @@ class XPathTransformerContext {
       ({name} = name);
     }
     withParams = withParams || [];
-    const paramValues = withParams.map((withParam) => {
-      return withParam.value || this.get(withParam.select, false);
+
+    // Store parameters in a temporary context for valueOf() access
+    const prevParams = this._params;
+    /** @type {Record<string, any>} */
+    const params = {};
+    this._params = params;
+
+    withParams.forEach((withParam, index) => {
+      const value = withParam.value !== undefined
+        ? withParam.value
+        : this.get(withParam.select, false);
+
+      // Store by name if provided, otherwise by index
+      if (withParam.name) {
+        params[withParam.name] = value;
+      } else {
+        params[String(index)] = value;
+      }
     });
+
     const results = this._getJoiningTransformer();
     const templateObj = this._templates.find((template) => {
       return template.name === name;
@@ -300,8 +328,14 @@ class XPathTransformerContext {
     }
 
     // @ts-expect-error Todo: Fix
-    const result = templateObj.template.call(this, paramValues);
-    /** @type {any} */ (results).append(result);
+    const result = templateObj.template.call(this, this._contextNode, {});
+    if (typeof result !== 'undefined') {
+      /** @type {any} */ (results).append(result);
+    }
+
+    // Restore previous parameter context
+    this._params = prevParams;
+
     return this;
   }
 
@@ -331,15 +365,29 @@ class XPathTransformerContext {
   valueOf (select) {
     const jt = this._getJoiningTransformer();
     let val;
-    if (!select || (
-      typeof select === 'object' &&
-      /** @type {{select?: string}} */ (select).select === '.'
-    )) {
+
+    const selectStr = typeof select === 'object'
+      ? /** @type {{select?: string}} */ (select).select
+      : select;
+
+    // Check if this is a parameter reference (starts with $)
+    if (selectStr && selectStr.startsWith('$')) {
+      const paramName = selectStr.slice(1);
+      if (this._params && paramName in this._params) {
+        val = this._params[paramName];
+      } else {
+        // Fall back to normal XPath evaluation
+        const resResult = this._evalXPath(selectStr, true);
+        const res = /** @type {Node[]} */ (resResult);
+        const first = res[0];
+        val = first && first.nodeType ? first.textContent : first;
+      }
+    } else if (!selectStr || selectStr === '.') {
       val = this._contextNode.nodeType === 3
         ? this._contextNode.nodeValue
         : this._contextNode.textContent;
     } else {
-      const resResult = this._evalXPath(/** @type {string} */ (select), true);
+      const resResult = this._evalXPath(selectStr, true);
       const res = /** @type {Node[]} */ (resResult);
       // Simplify: use textContent of first match if node, else raw
       const first = res[0];

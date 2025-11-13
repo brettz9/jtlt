@@ -34,6 +34,7 @@ class JSONPathTransformer {
         throw new Error('Templates must all have different names.');
       }
       map[String(template.name)] = true;
+      // Only check for root templates if path is defined
       if (template.path === '$') {
         // eslint-disable-next-line unicorn/prefer-spread -- Refactor
         this.rootTemplates = this.rootTemplates.concat(templates.splice(i, 1));

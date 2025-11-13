@@ -54,7 +54,7 @@ const out = new JTLT({
 ```ts
 interface TemplateObject {
   name?: string;        // Optional identifier (for callTemplate)
-  path: string;         // JSONPath or XPath expression
+  path?: string;        // JSONPath or XPath expression (required for pattern-matching)
   mode?: string;        // Optional mode segregation
   priority?: number;    // Numeric priority (higher wins); fallback uses specificity resolver
   template(nodeValue, cfg): any; // Executed with `this` bound to context
@@ -62,6 +62,8 @@ interface TemplateObject {
 ```
 
 Edge cases:
+- Either `path` or `name` (or both) must be provided
+- Templates with only `name` (no `path`) are callable only via `callTemplate`
 - For JSONPath: `path` examples: `$.items[*]`, `$['prop']`, `$..deep`.
 - For XPath: `//item`, `/root/item`, `//*[@id='x']`.
 - Root template: path `$` (JSONPath) or `/` (XPath).

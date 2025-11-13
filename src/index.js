@@ -27,15 +27,17 @@ export const setWindow = (win) => {
 /**
  * A template declaration whose `template` executes with `this` bound
  * to the engine-specific context type `TCtx`.
+ * Either `path` must be provided (for pattern matching), or `name` must be
+ * provided (for named templates callable via callTemplate), or both.
  * @template T
  * @template U
  * @template TCtx
  * @typedef {object} TemplateObject
- * @property {string} path
- * @property {string} [name]
- * @property {string} [mode]
- * @property {number} [priority]
- * @property {TemplateFunction<T, U, TCtx>} template
+ * @property {string} [path] - JSONPath or XPath selector for matching nodes
+ * @property {string} [name] - Optional name for calling via callTemplate
+ * @property {string} [mode] - Optional mode for template matching
+ * @property {number} [priority] - Priority for template selection
+ * @property {TemplateFunction<T, U, TCtx>} template - Template function
  */
 
 /**
