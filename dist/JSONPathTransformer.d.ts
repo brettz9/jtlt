@@ -86,9 +86,9 @@ declare class JSONPathTransformer<T> {
     _triggerEqualPriorityError(): void;
     /**
      * @param {string} [mode] - Transformation mode
-     * @returns {any} The transformation result
+     * @returns {import('./index.js').ResultType<T>} The transformation result
      */
-    transform(mode?: string): any;
+    transform(mode?: string): import("./index.js").ResultType<T>;
 }
 import JSONPathTransformerContext from './JSONPathTransformerContext.js';
 //# sourceMappingURL=JSONPathTransformer.d.ts.map

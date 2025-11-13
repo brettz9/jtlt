@@ -118,6 +118,8 @@ declare class JSONPathTransformerContext<T = "json"> {
     _initialized: boolean | undefined;
     /** @type {string | undefined} */
     _currPath: string | undefined;
+    /** @type {Record<string, any> | undefined} */
+    _params: Record<string, any> | undefined;
     /**
      * Triggers an error if equal priority templates are found.
      * @returns {void}
@@ -274,7 +276,7 @@ declare class JSONPathTransformerContext<T = "json"> {
      */
     array(...args: any[]): this;
     /**
-     * Append text node content.
+     * Set document-level configuration.
      * @param {import('./StringJoiningTransformer.js').OutputConfig} cfg Text
      * @returns {this}
      */
@@ -299,6 +301,13 @@ declare class JSONPathTransformerContext<T = "json"> {
      */
     attribute(name: string, val: string | Record<string, unknown>): this;
     /**
+     * Append text content. Mirrors the joining transformer API so templates can
+     * call `this.text()`.
+     * @param {string} txt - Text content
+     * @returns {this}
+     */
+    text(txt: string): this;
+    /**
      * Add a comment to the most recently opened element. Mirrors the joining
      * transformer API so templates can call `this.comment()`.
      * @param {string} text - Comment text
@@ -314,13 +323,6 @@ declare class JSONPathTransformerContext<T = "json"> {
      * @returns {this}
      */
     processingInstruction(target: string, data: string): this;
-    /**
-     * Append text content. Mirrors the joining transformer API so templates can
-     * call `this.text()`.
-     * @param {string} txt - Text content
-     * @returns {this}
-     */
-    text(txt: string): this;
     /**
      * @param {string} name - Property set name
      * @param {Record<string, unknown>} propertySetObj - Property set object

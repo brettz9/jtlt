@@ -1,6 +1,6 @@
 # jtlt CHANGES
 
-## 0.3.0 (unreleased)
+## 0.3.0
 
 - feat: `if()`
 - feat: `choose()`
@@ -12,7 +12,8 @@
 - fix: avoid appending `undefined` from `callTemplate` when template returns nothing
 - fix: parameter fallback in `valueOf` for JSONPath param access
 - fix: scalar XPath `copyOf()` prevents DOM hierarchy errors when expression returns Document
- - breaking: remove legacy `exposeDocument` in favor of `exposeDocuments` only; remove internal `this._doc`
+ - feat: add `exposeDocuments` option
+ - feat: callTemplate in XPath
  - feat: add `document()` (XSLT `xsl:document`-like) and `resultDocument()` (XSLT `xsl:result-document`-like) to all joiners
  - feat: support `output({method})` values `json` and `xhtml` across joiners
  - change: JSON joiner `$document` wrapper includes DOCTYPE only when `method` is `xml` or `xhtml`; XML declaration emitted for `xml`/`xhtml` unless `omitXmlDeclaration`

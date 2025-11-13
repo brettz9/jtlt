@@ -22,6 +22,14 @@ declare class DOMJoiningTransformer extends AbstractJoiningTransformer<"dom"> {
      */
     constructor(o: DocumentFragment | Element, cfg: import("./AbstractJoiningTransformer.js").DOMJoiningTransformerConfig);
     _dom: Element | DocumentFragment;
+    /** @type {XMLDocument[]} */
+    _docs: XMLDocument[];
+    /** @type {Array<{href: string, document: XMLDocument, format?: string}>} */
+    _resultDocuments: Array<{
+        href: string;
+        document: XMLDocument;
+        format?: string;
+    }>;
     /**
      * @param {Node} item
      * @returns {void}
@@ -33,9 +41,9 @@ declare class DOMJoiningTransformer extends AbstractJoiningTransformer<"dom"> {
      */
     append(item: string | Node): void;
     /**
-     * @returns {DocumentFragment|Element}
+     * @returns {DocumentFragment|Element|XMLDocument[]}
      */
-    get(): DocumentFragment | Element;
+    get(): DocumentFragment | Element | XMLDocument[];
     /**
      * @param {string} prop - Property name
      * @param {any} val - Property value
@@ -96,7 +104,7 @@ declare class DOMJoiningTransformer extends AbstractJoiningTransformer<"dom"> {
      * @returns {DOMJoiningTransformer}
      */
     output(cfg: import("./StringJoiningTransformer.js").OutputConfig): DOMJoiningTransformer;
-    _outputConfig: import("./StringJoiningTransformer.js").OutputConfig | undefined;
+    _outputConfig: any;
     mediaType: string | undefined;
     /**
      * @param {Element|string} elName - Element name
@@ -105,8 +113,7 @@ declare class DOMJoiningTransformer extends AbstractJoiningTransformer<"dom"> {
      * @returns {DOMJoiningTransformer}
      */
     element(elName: Element | string, atts?: Record<string, string>, cb?: (this: DOMJoiningTransformer) => void): DOMJoiningTransformer;
-    root: string | Element | undefined;
-    _doc: XMLDocument | undefined;
+    root: any;
     /**
      * @param {string} name
      * @param {string} val
@@ -134,6 +141,33 @@ declare class DOMJoiningTransformer extends AbstractJoiningTransformer<"dom"> {
      * @returns {DOMJoiningTransformer}
      */
     plainText(str: string): DOMJoiningTransformer;
+    /**
+     * Creates a new XML document and executes a callback in its context.
+     * Similar to XSLT's xsl:document, this allows templates to generate
+     * multiple output documents. The created document is pushed to this._docs
+     * and will be included in the result when exposeDocuments is true.
+     *
+     * @param {(this: DOMJoiningTransformer) => void} cb
+     *   Callback that builds the document content
+     * @param {import('./StringJoiningTransformer.js').OutputConfig} [cfg]
+     *   Output configuration for the document (encoding, doctype, etc.)
+     * @returns {DOMJoiningTransformer}
+     */
+    document(cb: (this: DOMJoiningTransformer) => void, cfg?: import("./StringJoiningTransformer.js").OutputConfig): DOMJoiningTransformer;
+    /**
+     * Creates a new result document with metadata (href, format).
+     * Similar to XSLT's xsl:result-document, this allows templates to generate
+     * multiple output documents with associated metadata like URIs. The created
+     * document is stored in this._resultDocuments with the provided href.
+     *
+     * @param {string} href - URI/path for the result document
+     * @param {(this: DOMJoiningTransformer) => void} cb
+     *   Callback that builds the document content
+     * @param {import('./StringJoiningTransformer.js').OutputConfig} [cfg]
+     *   Output configuration for the document (encoding, doctype, format, etc.)
+     * @returns {DOMJoiningTransformer}
+     */
+    resultDocument(href: string, cb: (this: DOMJoiningTransformer) => void, cfg?: import("./StringJoiningTransformer.js").OutputConfig): DOMJoiningTransformer;
 }
 import AbstractJoiningTransformer from './AbstractJoiningTransformer.js';
 //# sourceMappingURL=DOMJoiningTransformer.d.ts.map

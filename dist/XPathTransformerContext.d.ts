@@ -80,12 +80,12 @@ declare class XPathTransformerContext {
     };
     /**
      * @param {XPathTransformerContextConfig} config
-     * @param {import('./index.js').XPathTemplateObject[]} templates - Template
-     *   objects
+     * @param {import('./index.js').
+     *   XPathTemplateObject<any>[]} templates - Template objects
      */
-    constructor(config: XPathTransformerContextConfig, templates: import("./index.js").XPathTemplateObject[]);
+    constructor(config: XPathTransformerContextConfig, templates: import("./index.js").XPathTemplateObject<any>[]);
     _config: XPathTransformerContextConfig;
-    _templates: import("./index.js").XPathTemplateObject[];
+    _templates: import("./index.js").XPathTemplateObject<any>[];
     /** @type {Document|Element|Node} */
     _contextNode: Document | Element | Node;
     _origNode: Document | Element | Node;
@@ -102,6 +102,8 @@ declare class XPathTransformerContext {
     _initialized: boolean | undefined;
     /** @type {string|undefined} */
     _currPath: string | undefined;
+    /** @type {Record<string, any> | undefined} */
+    _params: Record<string, any> | undefined;
     /** @returns {import('./index.js').JoiningTransformer} */
     _getJoiningTransformer(): import("./index.js").JoiningTransformer;
     /**
@@ -141,6 +143,17 @@ declare class XPathTransformerContext {
      */
     applyTemplates(select?: string, mode?: string): XPathTransformerContext;
     /**
+     * @param {string|
+     *   {name: string, withParam?: any[]}} name - Template name or
+     *   options object
+     * @param {any[]} [withParams] - Parameters to pass to template
+     * @returns {this}
+     */
+    callTemplate(name: string | {
+        name: string;
+        withParam?: any[];
+    }, withParams?: any[]): this;
+    /**
      * Iterate over nodes selected by XPath.
      * @param {string} select - XPath expression
      * @param {(this: XPathTransformerContext,
@@ -155,6 +168,20 @@ declare class XPathTransformerContext {
      * @returns {XPathTransformerContext}
      */
     valueOf(select?: string | object): XPathTransformerContext;
+    /**
+     * Deep copy selection or current context when omitted.
+     * For DOM nodes uses cloneNode(true); for scalars copies the value.
+     * @param {string} [select] XPath expression selecting nodes (optional)
+     * @returns {XPathTransformerContext}
+     */
+    copyOf(select?: string): XPathTransformerContext;
+    /**
+     * Shallow copy current context node (cloneNode(false)); scalars copied
+     * directly. Provided for parity with JSONPath copy().
+     * @param {string[]} [_propertySets] Ignored in XPath variant (parity only)
+     * @returns {XPathTransformerContext}
+     */
+    copy(_propertySets?: string[]): XPathTransformerContext;
     /**
      * Define a variable by XPath selection (stores node array if nodes).
      * @param {string} name Variable name

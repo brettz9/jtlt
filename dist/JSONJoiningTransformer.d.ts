@@ -74,6 +74,14 @@ declare class JSONJoiningTransformer extends AbstractJoiningTransformer<"json"> 
     _elementStack: ElementInfo[];
     /** @type {Record<string, unknown>} */
     propertySets: Record<string, unknown>;
+    /** @type {any[]} */
+    _docs: any[];
+    /** @type {Array<{href: string, document: any, format?: string}>} */
+    _resultDocuments: Array<{
+        href: string;
+        document: any;
+        format?: string;
+    }>;
     /**
      * Directly appends an item to the internal array without checks.
      * @param {any} item - Item to append
@@ -90,9 +98,9 @@ declare class JSONJoiningTransformer extends AbstractJoiningTransformer<"json"> 
      * Gets the current object or array. If unwrapSingleResult config option is
      * enabled and the root array contains exactly one element, returns that
      * element directly (unwrapped).
-     * @returns {any[]|object|any}
+     * @returns {any[]|Record<string, unknown>|any}
      */
-    get(): any[] | object | any;
+    get(): any[] | Record<string, unknown> | any;
     /**
      * Sets a property value on the current object.
      * @param {string} prop - Property name
@@ -163,7 +171,7 @@ declare class JSONJoiningTransformer extends AbstractJoiningTransformer<"json"> 
      * @returns {JSONJoiningTransformer}
      */
     output(cfg: import("./StringJoiningTransformer.js").OutputConfig): JSONJoiningTransformer;
-    _outputConfig: import("./StringJoiningTransformer.js").OutputConfig | undefined;
+    _outputConfig: any;
     mediaType: string | undefined;
     /**
      * Build a Jamilih-style element JSON array and append to current container.
@@ -178,23 +186,7 @@ declare class JSONJoiningTransformer extends AbstractJoiningTransformer<"json"> 
      * @returns {JSONJoiningTransformer}
      */
     element(elName: string | Element, atts?: ElementAttributes | any[] | SimpleCallback, childNodes?: any[] | SimpleCallback, cb?: SimpleCallback): JSONJoiningTransformer;
-    root: string | Element | undefined;
-    _doc: {
-        $document: {
-            childNodes: (any[] | {
-                $DOCTYPE: {
-                    name: string;
-                    publicId: string | null;
-                    systemId: string | null;
-                };
-            })[];
-            xmlDeclaration?: {
-                version: string | undefined;
-                encoding: string | undefined;
-                standalone: boolean | undefined;
-            } | undefined;
-        };
-    } | undefined;
+    root: any;
     /**
      * Adds/updates an attribute for the most recently open element built via
      * a callback-driven element(). When not in an element callback context,
@@ -236,6 +228,33 @@ declare class JSONJoiningTransformer extends AbstractJoiningTransformer<"json"> 
      * @returns {JSONJoiningTransformer}
      */
     plainText(str: string): JSONJoiningTransformer;
+    /**
+     * Creates a new JSON document and executes a callback in its context.
+     * Similar to XSLT's xsl:document, this allows templates to generate
+     * multiple output documents. The created document is pushed to this._docs
+     * and will be included in the result when exposeDocuments is true.
+     *
+     * @param {(this: JSONJoiningTransformer) => void} cb
+     *   Callback that builds the document content
+     * @param {import('./StringJoiningTransformer.js').OutputConfig} [cfg]
+     *   Output configuration for the document (encoding, doctype, etc.)
+     * @returns {JSONJoiningTransformer}
+     */
+    document(cb: (this: JSONJoiningTransformer) => void, cfg?: import("./StringJoiningTransformer.js").OutputConfig): JSONJoiningTransformer;
+    /**
+     * Creates a new result document with metadata (href, format).
+     * Similar to XSLT's xsl:result-document, this allows templates to generate
+     * multiple output documents with associated metadata like URIs. The created
+     * document is stored in this._resultDocuments with the provided href.
+     *
+     * @param {string} href - URI/path for the result document
+     * @param {(this: JSONJoiningTransformer) => void} cb
+     *   Callback that builds the document content
+     * @param {import('./StringJoiningTransformer.js').OutputConfig} [cfg]
+     *   Output configuration for the document (encoding, doctype, format, etc.)
+     * @returns {JSONJoiningTransformer}
+     */
+    resultDocument(href: string, cb: (this: JSONJoiningTransformer) => void, cfg?: import("./StringJoiningTransformer.js").OutputConfig): JSONJoiningTransformer;
     /**
      * Helper method to use property sets.
      * @param {Record<string, unknown>} obj - Object to which to apply

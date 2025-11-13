@@ -1,5 +1,5 @@
 export default XPathTransformer;
-export type XPathTransformerConfig = {
+export type XPathTransformerConfig<T> = {
     /**
      * Throw on equal priority
      */
@@ -7,17 +7,18 @@ export type XPathTransformerConfig = {
     /**
      * Template objects
      */
-    templates: import("./index.js").XPathTemplateArray;
+    templates: import("./index.js").XPathTemplateArray<T>;
     /**
      * XPath version (1|2)
      */
     xpathVersion?: number | undefined;
 };
 /**
+ * @template T
  * @typedef {object} XPathTransformerConfig
  * @property {boolean} [errorOnEqualPriority] Throw on equal priority
  * @property {import('./index.js').
- *   XPathTemplateArray} templates Template objects
+ *   XPathTemplateArray<T>} templates Template objects
  * @property {number} [xpathVersion] XPath version (1|2)
  */
 /**
@@ -26,8 +27,9 @@ export type XPathTransformerConfig = {
  * Finds templates whose `path` XPath matches the current node (plus optional
  * `mode`), sorts by priority, and invokes the winning template.
  * Falls back to default rules when no template matches.
+ * @template T
  */
-declare class XPathTransformer {
+declare class XPathTransformer<T> {
     static DefaultTemplateRules: {
         transformRoot: {
             /**
@@ -41,24 +43,24 @@ declare class XPathTransformer {
         };
     };
     /**
-     * @param {XPathTransformerConfig &
+     * @param {XPathTransformerConfig<T> &
      *   import('./XPathTransformerContext.js').
      *   XPathTransformerContextConfig} config Configuration
      */
-    constructor(config: XPathTransformerConfig & import("./XPathTransformerContext.js").XPathTransformerContextConfig);
-    _config: XPathTransformerConfig & import("./XPathTransformerContext.js").XPathTransformerContextConfig;
+    constructor(config: XPathTransformerConfig<T> & import("./XPathTransformerContext.js").XPathTransformerContextConfig);
+    _config: XPathTransformerConfig<T> & import("./XPathTransformerContext.js").XPathTransformerContextConfig;
     /** @type {any[]} */
     rootTemplates: any[];
-    /** @type {import('./index.js').XPathTemplateObject[]} */
-    templates: import("./index.js").XPathTemplateObject[];
+    /** @type {import('./index.js').XPathTemplateObject<T>[]} */
+    templates: import("./index.js").XPathTemplateObject<T>[];
     /**
      * @returns {void}
      */
     _triggerEqualPriorityError(): void;
     /**
      * @param {string} [mode] Transformation mode
-     * @returns {any} Result of transformation
+     * @returns {import('./index.js').ResultType<T>} Result of transformation
      */
-    transform(mode?: string): any;
+    transform(mode?: string): import("./index.js").ResultType<T>;
 }
 //# sourceMappingURL=XPathTransformer.d.ts.map

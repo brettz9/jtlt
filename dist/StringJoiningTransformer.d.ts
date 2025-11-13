@@ -9,7 +9,7 @@ export type OutputConfig = {
     mediaType?: string;
     version?: string;
     standalone?: boolean;
-    method?: "xml" | "html" | "text";
+    method?: "xml" | "html" | "text" | "json" | "xhtml";
 };
 export type SimpleCallback = (this: StringJoiningTransformer) => void;
 /**
@@ -62,19 +62,10 @@ export type ElementAttributes = Record<string, unknown> & {
 declare class StringJoiningTransformer extends AbstractJoiningTransformer<"string"> {
     /**
      * @param {string} s - Initial string
-     * @param {{
-     *   mode?: "JavaScript"|"JSON",
-     *   JHTMLForJSON?: boolean,
-     *   xmlElements?: boolean,
-     *   preEscapedAttributes?: boolean
-     * }} [cfg] - Configuration object
+     * @param {import('./AbstractJoiningTransformer.js').
+     *   StringJoiningTransformerConfig} [cfg] - Configuration object
      */
-    constructor(s: string, cfg?: {
-        mode?: "JavaScript" | "JSON";
-        JHTMLForJSON?: boolean;
-        xmlElements?: boolean;
-        preEscapedAttributes?: boolean;
-    });
+    constructor(s: string, cfg?: import("./AbstractJoiningTransformer.js").StringJoiningTransformerConfig);
     _str: string;
     /** @type {any} */
     _objPropTemp: any;
@@ -92,15 +83,25 @@ declare class StringJoiningTransformer extends AbstractJoiningTransformer<"strin
     _strTemp: string | undefined;
     /** @type {Record<string, unknown>} */
     propertySets: Record<string, unknown>;
+    /** @type {string[]} */
+    _docs: string[];
+    /** @type {boolean} */
+    _insideDocument: boolean;
+    /** @type {Array<{href: string, document: string, format?: string}>} */
+    _resultDocuments: Array<{
+        href: string;
+        document: string;
+        format?: string;
+    }>;
     /**
      * @param {string|any} s - String or value to append
      * @returns {StringJoiningTransformer}
      */
     append(s: string | any): StringJoiningTransformer;
     /**
-     * @returns {string}
+     * @returns {string|string[]}
      */
-    get(): string;
+    get(): string | string[];
     /**
      * @param {string} prop - Property name
      * @param {any} val - Property value
@@ -169,7 +170,7 @@ declare class StringJoiningTransformer extends AbstractJoiningTransformer<"strin
      * @returns {StringJoiningTransformer}
      */
     output(cfg: OutputConfig): StringJoiningTransformer;
-    _outputConfig: OutputConfig | undefined;
+    _outputConfig: any;
     mediaType: string | undefined;
     /**
      * @param {string|Element} elName - Element name or element object
@@ -179,8 +180,8 @@ declare class StringJoiningTransformer extends AbstractJoiningTransformer<"strin
      * @returns {StringJoiningTransformer}
      */
     element(elName: string | Element, atts?: ElementAttributes, childNodes?: any[], cb?: (this: StringJoiningTransformer) => void): StringJoiningTransformer;
-    root: string | Element | undefined;
     _openTagState: any;
+    root: any;
     /**
      * @param {string} name - Attribute name
      * @param {string|Record<string, unknown>|
@@ -219,6 +220,33 @@ declare class StringJoiningTransformer extends AbstractJoiningTransformer<"strin
      * @returns {StringJoiningTransformer}
      */
     plainText(str: string): StringJoiningTransformer;
+    /**
+     * Creates a new string document and executes a callback in its context.
+     * Similar to XSLT's xsl:document, this allows templates to generate
+     * multiple output documents. The created document is pushed to this._docs
+     * and will be included in the result when exposeDocuments is true.
+     *
+     * @param {(this: StringJoiningTransformer) => void} cb
+     *   Callback that builds the document content
+     * @param {OutputConfig} [cfg]
+     *   Output configuration for the document (encoding, doctype, etc.)
+     * @returns {StringJoiningTransformer}
+     */
+    document(cb: (this: StringJoiningTransformer) => void, cfg?: OutputConfig): StringJoiningTransformer;
+    /**
+     * Creates a new result document with metadata (href, format).
+     * Similar to XSLT's xsl:result-document, this allows templates to generate
+     * multiple output documents with associated metadata like URIs. The created
+     * document is stored in this._resultDocuments with the provided href.
+     *
+     * @param {string} href - URI/path for the result document
+     * @param {(this: StringJoiningTransformer) => void} cb
+     *   Callback that builds the document content
+     * @param {OutputConfig} [cfg]
+     *   Output configuration for the document (encoding, doctype, format, etc.)
+     * @returns {StringJoiningTransformer}
+     */
+    resultDocument(href: string, cb: (this: StringJoiningTransformer) => void, cfg?: OutputConfig): StringJoiningTransformer;
     /**
      * Helper method to use property sets.
      * @param {Record<string, unknown>} obj - Object to apply property set to

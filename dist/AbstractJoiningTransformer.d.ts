@@ -1,41 +1,68 @@
 export default AbstractJoiningTransformer;
 export type BaseTransformerConfig = {
+    requireSameChildren?: boolean;
     JHTMLForJSON?: boolean;
     mode?: "JSON" | "JavaScript";
 };
+/**
+ * When exposeDocuments is true, get() returns an array of XMLDocument
+ * objects (one per root element) instead of a DocumentFragment.
+ */
 export type DOMJoiningTransformerConfig = BaseTransformerConfig & {
     document: Document;
+    exposeDocuments?: boolean;
 };
 export type JSONJoiningTransformerConfig = {
+    requireSameChildren?: boolean | undefined;
     unwrapSingleResult?: boolean | undefined;
+    /**
+     * - When true, get() returns an array
+     * of document wrapper objects (one per root element) instead of the raw array.
+     */
+    exposeDocuments?: boolean | undefined;
     mode?: "JSON" | "JavaScript" | undefined;
 };
+/**
+ * When exposeDocuments is true, get() returns an array of document
+ * strings (one per root element) instead of a single concatenated string.
+ */
 export type StringJoiningTransformerConfig = BaseTransformerConfig & {
     xmlElements?: boolean;
     preEscapedAttributes?: boolean;
+    exposeDocuments?: boolean;
 };
 export type JoiningTransformerConfig<T> = T extends "string" ? StringJoiningTransformerConfig : T extends "dom" ? DOMJoiningTransformerConfig : T extends "json" ? JSONJoiningTransformerConfig : never;
 /**
  * @typedef {{
+ *   requireSameChildren?: boolean,
  *   JHTMLForJSON?: boolean,
  *   mode?: "JSON"|"JavaScript"
  * }} BaseTransformerConfig
  */
 /**
  * @typedef {BaseTransformerConfig & {
- *   document: Document
+ *   document: Document,
+ *   exposeDocuments?: boolean
  * }} DOMJoiningTransformerConfig
+ * When exposeDocuments is true, get() returns an array of XMLDocument
+ * objects (one per root element) instead of a DocumentFragment.
  */
 /**
  * @typedef {object} JSONJoiningTransformerConfig
+ * @property {boolean} [requireSameChildren]
  * @property {boolean} [unwrapSingleResult]
+ * @property {boolean} [exposeDocuments] - When true, get() returns an array
+ * of document wrapper objects (one per root element) instead of the raw array.
  * @property {"JSON"|"JavaScript"} [mode]
  */
 /**
  * @typedef {BaseTransformerConfig & {
  *   xmlElements?: boolean,
- *   preEscapedAttributes?: boolean
+ *   preEscapedAttributes?: boolean,
+ *   exposeDocuments?: boolean
  * }} StringJoiningTransformerConfig
+ * When exposeDocuments is true, get() returns an array of document
+ * strings (one per root element) instead of a single concatenated string.
  */
 /**
  * @template T
