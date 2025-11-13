@@ -74,6 +74,8 @@ class JSONJoiningTransformer extends AbstractJoiningTransformer {
     this._elementStack = [];
     /** @type {Record<string, unknown>} */
     this.propertySets = {};
+    /** @type {any} */
+    this._doc = undefined; // Set when root element built
   }
 
   /**
@@ -110,6 +112,12 @@ class JSONJoiningTransformer extends AbstractJoiningTransformer {
    * @returns {any[]|Record<string, unknown>|any}
    */
   get () {
+    // If we have constructed a document (root element + doc wrapper) and either
+    // output() was called (has _outputConfig) or the user configured exposure,
+    // return the full document wrapper instead of the raw root array.
+    if (this._doc && (this._outputConfig || this._cfg.exposeDocument)) {
+      return this._doc;
+    }
     // Unwrap single-element arrays at the root level if configured
     if (this._cfg.unwrapSingleResult &&
         Array.isArray(this._obj) && this._obj.length === 1) {

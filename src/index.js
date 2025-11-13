@@ -117,6 +117,10 @@ export const setWindow = (win) => {
  * input, but reduces capabilities of JSONPath.
  * @property {boolean} [unwrapSingleResult] For JSON output, whether to
  * unwrap single-element root arrays to return just the element
+ * @property {boolean} [exposeDocument] For JSON joiner, expose the
+ * full document wrapper (with $document, xmlDeclaration, DOCTYPE) when a
+ * root element is built, instead of just the element array. For string/DOM
+ * joiners, enables document creation in their respective formats.
  * @property {string} [mode] The mode in which to begin the transform.
  * @property {(opts: JTLTOptions &
  *   Required<Pick<JTLTOptions, "joiningTransformer">>
@@ -305,6 +309,10 @@ class JTLT {
       // Pass unwrapSingleResult to JSON joiner if configured
       if (this.config.unwrapSingleResult) {
         jsonConfig.unwrapSingleResult = true;
+      }
+      // Pass exposeDocument to JSON joiner if configured
+      if (this.config.exposeDocument) {
+        jsonConfig.exposeDocument = true;
       }
       return new JSONJoiningTransformer([], jsonConfig);
     }

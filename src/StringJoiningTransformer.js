@@ -441,6 +441,13 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
    * @returns {StringJoiningTransformer}
    */
   element (elName, atts, childNodes, cb) {
+    // If a parent element's start tag is still open, close it before
+    // starting a new element to ensure valid nesting.
+    if (this._openTagState) {
+      this.append('>');
+      this._openTagState = false;
+    }
+
     if (!this.root) {
       this.root = elName;
 
@@ -503,6 +510,7 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
     //   string output
     const method = this._cfg.xmlElements ? 'toXML' : 'toHTML';
     if (!cb) {
+      // Ensure any open parent start tag was closed (handled above)
       // Note that Jamilih currently has an issue with 'selected', 'checked',
       //  'value', 'defaultValue', 'for', 'on*', 'style' (workaround: pass
       //   an empty callback as the last argument to element())

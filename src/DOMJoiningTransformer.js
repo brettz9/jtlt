@@ -202,26 +202,12 @@ class DOMJoiningTransformer extends AbstractJoiningTransformer {
     // Todo: allow separate XML DOM one with XML String and hXML conversions
     //   (HTML to XHTML is inevitably safe?)
 
-    const el = elName && typeof elName === 'object'
-      ? elName
-      : /** @type {Element} */ (
-        this._cfg.document.createElement(elName)
-      );
-    const elementName = el.localName;
-
-    for (const att in atts) {
-      if (Object.hasOwn(atts, att)) {
-        el.setAttribute(att, atts[att]);
-      }
-    }
-    this.append(el);
-
-    const oldDOM = this._dom;
-
-    this._dom = el;
-
-    if (!this.root) {
+    if (!this.root && this._outputConfig) {
       this.root = elName;
+
+      const elementName = typeof elName === 'string'
+        ? elName
+        : elName.localName;
 
       // todo: indent, cdataSectionElements
       const {
@@ -267,13 +253,52 @@ class DOMJoiningTransformer extends AbstractJoiningTransformer {
           'xml', xmlDeclarationData
         );
         doc.insertBefore(
-          xmlDecl, this._dom // this._cfg.document.firstChild
+          xmlDecl,
+          doc.firstChild
         );
       }
 
       // Todo: Expose
       this._doc = doc;
+
+      // Use the document's root element
+      const el = doc.documentElement;
+
+      // Set attributes on the document's root element
+      for (const att in atts) {
+        if (Object.hasOwn(atts, att)) {
+          el.setAttribute(att, atts[att]);
+        }
+      }
+
+      const oldDOM = this._dom;
+      this._dom = el;
+
+      if (cb) {
+        cb.call(this);
+      }
+      this._dom = oldDOM;
+
+      return this;
     }
+
+    // Non-root elements
+    const el = elName && typeof elName === 'object'
+      ? elName
+      : /** @type {Element} */ (
+        this._cfg.document.createElement(elName)
+      );
+
+    for (const att in atts) {
+      if (Object.hasOwn(atts, att)) {
+        el.setAttribute(att, atts[att]);
+      }
+    }
+    this.append(el);
+
+    const oldDOM = this._dom;
+
+    this._dom = el;
 
     if (cb) {
       cb.call(this);

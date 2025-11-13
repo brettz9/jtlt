@@ -19,6 +19,7 @@
  * @typedef {object} JSONJoiningTransformerConfig
  * @property {boolean} [requireSameChildren]
  * @property {boolean} [unwrapSingleResult]
+ * @property {boolean} [exposeDocument]
  * @property {"JSON"|"JavaScript"} [mode]
  */
 /**
