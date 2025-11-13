@@ -36,9 +36,13 @@ describe('XPathTransformerContext copy / copyOf', () => {
     ctx.copyOf(); // deep (includes child)
 
     const frag = joiner.get();
-    expect(frag.childNodes.length).to.equal(2);
-    const shallowClone = frag.childNodes[0];
-    const deepClone = frag.childNodes[1];
+    // eslint-disable-next-line prefer-destructuring -- TS
+    const childNodes = /** @type {DocumentFragment} */ (
+      frag
+    ).childNodes;
+    expect(childNodes.length).to.equal(2);
+    const shallowClone = childNodes[0];
+    const deepClone = childNodes[1];
     // Shallow clone should have no children
     expect(shallowClone.childNodes.length).to.equal(0);
     // Deep clone should retain child
@@ -64,9 +68,13 @@ describe('XPathTransformerContext copy / copyOf', () => {
 
     ctx.copyOf('//item');
     const frag = joiner.get();
-    expect(frag.childNodes.length).to.equal(2);
-    expect(frag.childNodes[0].textContent).to.equal('A');
-    expect(frag.childNodes[1].textContent).to.equal('B');
+    // eslint-disable-next-line prefer-destructuring -- TS
+    const childNodes = /** @type {DocumentFragment} */ (
+      frag
+    ).childNodes;
+    expect(childNodes.length).to.equal(2);
+    expect(childNodes[0].textContent).to.equal('A');
+    expect(childNodes[1].textContent).to.equal('B');
   });
 
   it('copyOf with scalar XPath appends scalar value', () => {
@@ -83,7 +91,11 @@ describe('XPathTransformerContext copy / copyOf', () => {
 
     ctx.copyOf('string(//item)');
     const frag = joiner.get();
+    // eslint-disable-next-line prefer-destructuring -- TS
+    const textContent = /** @type {DocumentFragment} */ (
+      frag
+    ).textContent;
     // StringJoiningTransformer would wrap differently; DOM joiner adds text
-    expect(frag.textContent).to.equal('A');
+    expect(textContent).to.equal('A');
   });
 });

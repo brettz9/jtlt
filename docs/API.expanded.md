@@ -246,12 +246,66 @@ When no user template matches:
 Common joiner methods summary:
 - `append(value)`
 - `get()`
+- `document(cb, cfg?)` — Creates a new output document. Similar to XSLT's
+  `xsl:document`, this allows templates to generate multiple output documents.
+  The callback builds the document content, and optional `cfg` provides output
+  configuration (encoding, doctype, etc.). When `exposeDocuments` is enabled,
+  each document is added to the array returned by `get()`.
 - `object(seed?, cb?, usePropertySets?, propSets?)`
 - `array(seed?, cb?)`
 - `element(name, attrs?, children?, cb?)`
 - `attribute(name, value, avoidEscape?)`
 - `text(str)` vs `string(str, cb?)` vs `plainText(str)`
 - `number()`, `boolean()`, `null()`, `undefined()` (JS mode), `nonfiniteNumber()`, `function(fn)`
+
+### document() method details
+
+The `document()` method creates a new output document in isolation:
+
+**DOM Joiner**: Creates a new XMLDocument with proper declaration and DOCTYPE
+when configured via `output()`.
+
+**JSON Joiner**: Creates a new document wrapper object with `$document` property
+containing the Jamilih representation.
+
+**String Joiner**: Creates a new document string with XML declaration and
+DOCTYPE when configured.
+
+**Signature**: `document(callback, outputConfig?)`
+
+**Example**:
+```js
+joiner.document(() => {
+  joiner.output({
+    method: 'xml',
+    version: '1.0',
+    encoding: 'utf8',
+    doctypePublic: '-//W3C//DTD XHTML 1.0//EN',
+    doctypeSystem: 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd'
+  });
+  joiner.element('html', {xmlns: 'http://www.w3.org/1999/xhtml'}, () => {
+    joiner.element('head', {}, () => {
+      joiner.element('title', {}, () => {
+        joiner.text('Document 1');
+      });
+    });
+  });
+});
+
+joiner.document(() => {
+  joiner.element('html', {}, () => {
+    joiner.element('body', {}, () => {
+      joiner.text('Document 2');
+    });
+  });
+});
+
+// When exposeDocuments is true, get() returns array of documents
+const docs = joiner.get();
+```
+
+The method preserves the current joiner state, resets it for the new document,
+executes the callback, captures the result, then restores the previous state.
 
 ## Error handling
 

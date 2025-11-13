@@ -1,6 +1,55 @@
 import {expect} from 'chai';
 import {JSDOM} from 'jsdom';
 import JTLT, {DOMJoiningTransformer} from '../src/index-node.js';
+describe('DOMJoiningTransformer', () => {
+  it('exposes array of documents when exposeDocuments is set', () => {
+    const {window} = new JSDOM('<!doctype html><html><body></body></html>');
+    const {document} = window;
+    const joiner = new DOMJoiningTransformer(
+      document.createDocumentFragment(),
+      {document, exposeDocuments: true}
+    );
+    joiner.output({
+      method: 'xml',
+      version: '1.0',
+      encoding: 'utf8',
+      standalone: true,
+      doctypePublic: '-//W3C//DTD XHTML 1.0 Strict//EN',
+      doctypeSystem: 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd'
+    });
+    joiner.element('html', {xmlns: 'http://www.w3.org/1999/xhtml'}, () => {
+      joiner.element('head', {}, () => {
+        joiner.element('title', {}, () => {
+          joiner.text('Test');
+        });
+      });
+    });
+    // Create a second document
+    joiner.root = undefined;
+    joiner.element('html', {xmlns: 'http://www.w3.org/1999/xhtml'}, () => {
+      joiner.element('body', {}, () => {
+        joiner.text('Second doc');
+      });
+    });
+    const docsRaw = joiner.get();
+    /** @type {XMLDocument[]} */
+    const docs = /** @type {XMLDocument[]} */ (
+      /** @type {unknown} */ (docsRaw)
+    );
+    expect(Array.isArray(docs)).to.be.true;
+    expect(docs.length).to.equal(2);
+    docs.forEach((doc, i) => {
+      expect(doc.nodeType).to.equal(9);
+      expect(doc.documentElement.nodeName).to.equal('html');
+    });
+    const titleNode = docs[0].documentElement.querySelector('title');
+    expect(titleNode).to.exist;
+    expect(titleNode && titleNode.textContent).to.equal('Test');
+    const bodyNode = docs[1].documentElement.querySelector('body');
+    expect(bodyNode).to.exist;
+    expect(bodyNode && bodyNode.textContent).to.equal('Second doc');
+  });
+});
 
 describe('DOMJoiningTransformer output', () => {
   it('builds a simple list', (done) => {
@@ -71,8 +120,12 @@ describe('DOMJoiningTransformer output', () => {
       });
       const result = joiner.get();
       expect(result).to.be.instanceOf(window.DocumentFragment);
-      expect(result.childNodes.length).to.equal(1);
-      const div = /** @type {Element} */ (result.childNodes[0]);
+      // eslint-disable-next-line prefer-destructuring -- TS
+      const childNodes = /** @type {DocumentFragment} */ (
+        result
+      ).childNodes;
+      expect(childNodes.length).to.equal(1);
+      const div = /** @type {Element} */ (childNodes[0]);
       expect(div.nodeName).to.equal('DIV');
       expect(div.getAttribute('class')).to.equal('test');
       expect(div.textContent).to.equal('Content');
@@ -105,7 +158,7 @@ describe('DOMJoiningTransformer output', () => {
       });
 
       // Access the created document
-      const doc = /** @type {XMLDocument} */ (joiner._doc);
+      const doc = /** @type {XMLDocument} */ (joiner._docs[0]);
       expect(doc).to.exist;
       expect(doc.nodeType).to.equal(9); // DOCUMENT_NODE
 

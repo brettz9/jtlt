@@ -23,9 +23,10 @@ class DOMJoiningTransformer extends AbstractJoiningTransformer {
    *   DOMJoiningTransformerConfig} cfg - Configuration object
    */
   constructor (o, cfg) {
-    super(cfg); // Include this in any subclass of AbstractJoiningTransformer
-    this._dom = o ||
-    cfg.document.createDocumentFragment();
+    super(cfg);
+    this._dom = o || cfg.document.createDocumentFragment();
+    /** @type {XMLDocument[]} */
+    this._docs = [];
   }
 
   /**
@@ -45,9 +46,12 @@ class DOMJoiningTransformer extends AbstractJoiningTransformer {
   }
 
   /**
-   * @returns {DocumentFragment|Element}
+   * @returns {DocumentFragment|Element|XMLDocument[]}
    */
   get () {
+    if (this._cfg.exposeDocuments) {
+      return this._docs;
+    }
     return this._dom;
   }
 
@@ -209,15 +213,14 @@ class DOMJoiningTransformer extends AbstractJoiningTransformer {
         ? elName
         : elName.localName;
 
-      // todo: indent, cdataSectionElements
       const {
         omitXmlDeclaration, doctypePublic, doctypeSystem, method
       } = this._outputConfig ?? {};
 
       const dtd = this._cfg.document.implementation.createDocumentType(
-        elementName, // Qualified name of the root element
-        doctypePublic ?? '', // Public ID (optional)
-        doctypeSystem ?? '' // System ID (optional)
+        elementName,
+        doctypePublic ?? '',
+        doctypeSystem ?? ''
       );
 
       let xmlns;
@@ -230,9 +233,9 @@ class DOMJoiningTransformer extends AbstractJoiningTransformer {
 
       const doc = /** @type {XMLDocument} */ (
         this._cfg.document.implementation.createDocument(
-          xmlns ?? null, // Namespace URI (null for no namespace)
-          elementName, // Qualified name of the root element
-          dtd // The DocumentType object
+          xmlns ?? null,
+          elementName,
+          dtd
         )
       );
 
@@ -258,13 +261,12 @@ class DOMJoiningTransformer extends AbstractJoiningTransformer {
         );
       }
 
-      // Todo: Expose
-      this._doc = doc;
+      // Push the document to _docs
+      this._docs.push(doc);
 
       // Use the document's root element
       const el = doc.documentElement;
 
-      // Set attributes on the document's root element
       for (const att in atts) {
         if (Object.hasOwn(atts, att)) {
           el.setAttribute(att, atts[att]);
@@ -371,6 +373,46 @@ class DOMJoiningTransformer extends AbstractJoiningTransformer {
    */
   plainText (str) {
     this.text(str);
+    return this;
+  }
+
+  /**
+   * Creates a new XML document and executes a callback in its context.
+   * Similar to XSLT's xsl:document, this allows templates to generate
+   * multiple output documents. The created document is pushed to this._docs
+   * and will be included in the result when exposeDocuments is true.
+   *
+   * @param {(this: DOMJoiningTransformer) => void} cb
+   *   Callback that builds the document content
+   * @param {import('./StringJoiningTransformer.js').OutputConfig} [cfg]
+   *   Output configuration for the document (encoding, doctype, etc.)
+   * @returns {DOMJoiningTransformer}
+   */
+  document (cb, cfg) {
+    // Save current state
+    /** @type {any} */
+    const oldRoot = this.root;
+    /** @type {any} */
+    const oldOutputConfig = this._outputConfig;
+    const oldDOM = this._dom;
+
+    // Reset state for new document
+    this.root = undefined;
+    /** @type {any} */
+    this._outputConfig = cfg;
+
+    // Create a new document fragment as the working context
+    const fragment = this._cfg.document.createDocumentFragment();
+    this._dom = fragment;
+
+    // Execute callback to build document content
+    cb.call(this);
+
+    // Restore previous state
+    this.root = oldRoot;
+    this._outputConfig = oldOutputConfig;
+    this._dom = oldDOM;
+
     return this;
   }
 }

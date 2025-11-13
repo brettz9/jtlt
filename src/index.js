@@ -117,10 +117,10 @@ export const setWindow = (win) => {
  * input, but reduces capabilities of JSONPath.
  * @property {boolean} [unwrapSingleResult] For JSON output, whether to
  * unwrap single-element root arrays to return just the element
- * @property {boolean} [exposeDocument] For JSON joiner, expose the
- * full document wrapper (with $document, xmlDeclaration, DOCTYPE) when a
- * root element is built, instead of just the element array. For string/DOM
- * joiners, enables document creation in their respective formats.
+ * @property {boolean} [exposeDocuments] When true, joiners return an array
+ * of complete documents: XMLDocument[] for DOM, document wrapper objects[]
+ * for JSON, and string[] for string joiners. Each array element corresponds
+ * to a root element built during transformation.
  * @property {string} [mode] The mode in which to begin the transform.
  * @property {(opts: JTLTOptions &
  *   Required<Pick<JTLTOptions, "joiningTransformer">>
@@ -295,6 +295,9 @@ class JTLT {
         ...baseConfig,
         document: docForJoiner || _win.document
       });
+      if (this.config.exposeDocuments) {
+        domConfig.exposeDocuments = true;
+      }
       const initial = (docForJoiner || _win.document).createDocumentFragment();
       return new DOMJoiningTransformer(initial, domConfig);
     }
@@ -310,9 +313,9 @@ class JTLT {
       if (this.config.unwrapSingleResult) {
         jsonConfig.unwrapSingleResult = true;
       }
-      // Pass exposeDocument to JSON joiner if configured
-      if (this.config.exposeDocument) {
-        jsonConfig.exposeDocument = true;
+      // Pass exposeDocuments to JSON joiner if configured
+      if (this.config.exposeDocuments) {
+        jsonConfig.exposeDocuments = true;
       }
       return new JSONJoiningTransformer([], jsonConfig);
     }
@@ -324,6 +327,9 @@ class JTLT {
       const stringConfig = /** @type {typeof stringConfig} */ ({
         ...baseConfig
       });
+      if (this.config.exposeDocuments) {
+        stringConfig.exposeDocuments = true;
+      }
       return new StringJoiningTransformer('', stringConfig);
     }
     }

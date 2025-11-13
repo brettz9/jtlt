@@ -12,21 +12,28 @@
 
 /**
  * @typedef {BaseTransformerConfig & {
- *   document: Document
+ *   document: Document,
+ *   exposeDocuments?: boolean
  * }} DOMJoiningTransformerConfig
+ * When exposeDocuments is true, get() returns an array of XMLDocument
+ * objects (one per root element) instead of a DocumentFragment.
  */
 /**
  * @typedef {object} JSONJoiningTransformerConfig
  * @property {boolean} [requireSameChildren]
  * @property {boolean} [unwrapSingleResult]
- * @property {boolean} [exposeDocument]
+ * @property {boolean} [exposeDocuments] - When true, get() returns an array
+ * of document wrapper objects (one per root element) instead of the raw array.
  * @property {"JSON"|"JavaScript"} [mode]
  */
 /**
  * @typedef {BaseTransformerConfig & {
  *   xmlElements?: boolean,
- *   preEscapedAttributes?: boolean
+ *   preEscapedAttributes?: boolean,
+ *   exposeDocuments?: boolean
  * }} StringJoiningTransformerConfig
+ * When exposeDocuments is true, get() returns an array of document
+ * strings (one per root element) instead of a single concatenated string.
  */
 /**
  * @template T

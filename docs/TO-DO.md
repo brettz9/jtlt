@@ -104,7 +104,7 @@
   ~~"xsl:copy",~~
   ~~"xsl:copy-of",~~
   "xsl:decimal-format",
-  "xsl:document",
+  ~~"xsl:document",~~
   ~~"xsl:element",~~
   "xsl:fallback",
   ~~"xsl:for-each",~~

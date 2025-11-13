@@ -22,8 +22,13 @@ describe('DOMJoiningTransformer comment() and processingInstruction()', () => {
     const {joiner} = makeJoiner();
     joiner.comment('hello world');
     const frag = joiner.get();
-    expect(frag.childNodes).to.have.lengthOf(1);
-    const cmt = frag.childNodes[0];
+    // eslint-disable-next-line prefer-destructuring -- TS
+    const childNodes = /** @type {DocumentFragment} */ (
+      frag
+    ).childNodes;
+
+    expect(childNodes).to.have.lengthOf(1);
+    const cmt = childNodes[0];
     expect(cmt.nodeType).to.equal(8); // Comment
     expect(cmt.nodeValue).to.equal('hello world');
   });
@@ -34,7 +39,7 @@ describe('DOMJoiningTransformer comment() and processingInstruction()', () => {
     joiner.element('div', {id: 'x'}, () => {
       joiner.comment('inside');
     });
-    const frag = joiner.get();
+    const frag = /** @type {DocumentFragment} */ (joiner.get());
     const div = /** @type {Element} */ (frag.querySelector('div'));
     expect(div).to.exist; // ensure element appended
     const cmt = div.childNodes[0];
@@ -58,7 +63,8 @@ describe('DOMJoiningTransformer comment() and processingInstruction()', () => {
       'type="text/xsl" href="test.xsl"'
     );
     const pi = /** @type {ProcessingInstruction} */ (
-      joiner.get().childNodes[0]
+      /** @type {DocumentFragment} */
+      (joiner.get()).childNodes[0]
     );
     expect(pi.nodeType).to.equal(7); // ProcessingInstruction
     expect(pi.target).to.equal('xml-stylesheet');
@@ -71,7 +77,11 @@ describe('DOMJoiningTransformer comment() and processingInstruction()', () => {
       joiner.processingInstruction('xml-stylesheet', 'a="b"');
     });
     const pi = /** @type {ProcessingInstruction} */ (
-      /** @type {Element} */ (joiner.get().querySelector('root')).childNodes[0]
+      /** @type {Element} */ (
+        /** @type {DocumentFragment} */
+        (
+          joiner.get()
+        ).querySelector('root')).childNodes[0]
     );
     expect(pi.nodeType).to.equal(7);
     expect(pi.target).to.equal('xml-stylesheet');

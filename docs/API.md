@@ -49,7 +49,36 @@ Conditional execution:
 
 StringJoiningTransformer, DOMJoiningTransformer, JSONJoiningTransformer with
 helpers: `string`, `text`, `element`, `attribute`, `object`, `array`,
-`number`, `boolean`, `plainText`, `append`, `get`.
+`number`, `boolean`, `plainText`, `append`, `get`, `document`.
+
+### document() method
+
+Similar to XSLT's `xsl:document`, the `document()` method allows templates to
+generate multiple output documents. It accepts a callback that builds the
+document content, and an optional output configuration.
+
+**Signature**: `document(callback, outputConfig?)`
+
+When `exposeDocuments` is enabled, each document created with `document()` is
+added to the array returned by `get()`.
+
+**Example**:
+```js
+joiner.document(() => {
+  joiner.output({method: 'xml', version: '1.0'});
+  joiner.element('doc1', {}, () => {
+    joiner.text('First document');
+  });
+});
+
+joiner.document(() => {
+  joiner.element('doc2', {}, () => {
+    joiner.text('Second document');
+  });
+});
+
+const docs = joiner.get(); // Returns array of 2 documents
+```
 
 ## Sorting
 

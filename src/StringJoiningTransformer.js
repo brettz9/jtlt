@@ -108,6 +108,10 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
     this._strTemp = undefined;
     /** @type {Record<string, unknown>} */
     this.propertySets = {};
+    /** @type {string[]} */
+    this._docs = [];
+    /** @type {boolean} */
+    this._insideDocument = false;
   }
 
   /**
@@ -136,9 +140,18 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
   }
 
   /**
-   * @returns {string}
+   * @returns {string|string[]}
    */
   get () {
+    if (this._cfg.exposeDocuments) {
+      // If we built a document outside of document() calls and haven't
+      // pushed it yet, push the current string
+      if (this.root && !this._insideDocument && this._str &&
+          !this._docs.includes(this._str)) {
+        this._docs.push(this._str);
+      }
+      return this._docs;
+    }
     return this._str;
   }
 
@@ -482,6 +495,7 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
       }
 
       this._str = xmlDeclaration + doctype + this._str;
+      // Document pushing is handled by document() method or get()
     }
 
     // Emits an HTML/XML element using Jamilih under the hood, or allows a
@@ -688,6 +702,60 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
     // string buffer with no escaping. Prefer string() when you want the value
     // to participate in object/array contexts.
     this._str += str;
+    return this;
+  }
+
+  /**
+   * Creates a new string document and executes a callback in its context.
+   * Similar to XSLT's xsl:document, this allows templates to generate
+   * multiple output documents. The created document is pushed to this._docs
+   * and will be included in the result when exposeDocuments is true.
+   *
+   * @param {(this: StringJoiningTransformer) => void} cb
+   *   Callback that builds the document content
+   * @param {OutputConfig} [cfg]
+   *   Output configuration for the document (encoding, doctype, etc.)
+   * @returns {StringJoiningTransformer}
+   */
+  document (cb, cfg) {
+    // If there's a current document being built (this.root is set and _str
+    // has content), save it to _docs before starting a new document
+    if (this._cfg.exposeDocuments && this.root && this._str &&
+        !this._docs.includes(this._str)) {
+      this._docs.push(this._str);
+    }
+
+    // Save current state
+    /** @type {any} */
+    const oldRoot = this.root;
+    /** @type {any} */
+    const oldOutputConfig = this._outputConfig;
+    const oldStr = this._str;
+    /** @type {any} */
+    const oldOpenTagState = this._openTagState;
+
+    // Reset state for new document
+    this.root = undefined;
+    /** @type {any} */
+    this._outputConfig = cfg;
+    this._str = '';
+    this._openTagState = false;
+    this._insideDocument = true;
+
+    // Execute callback to build document content
+    cb.call(this);
+
+    // Save the newly created document string
+    const newDoc = this._str;
+    this._docs.push(newDoc);
+
+    // Restore previous state
+    this.root = oldRoot;
+    this._outputConfig = oldOutputConfig;
+    this._str = oldStr;
+    this._openTagState = oldOpenTagState;
+    this._insideDocument = false;
+
     return this;
   }
 

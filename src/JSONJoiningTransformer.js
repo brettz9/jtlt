@@ -76,6 +76,8 @@ class JSONJoiningTransformer extends AbstractJoiningTransformer {
     this.propertySets = {};
     /** @type {any} */
     this._doc = undefined; // Set when root element built
+    /** @type {any[]} */
+    this._docs = [];
   }
 
   /**
@@ -112,12 +114,11 @@ class JSONJoiningTransformer extends AbstractJoiningTransformer {
    * @returns {any[]|Record<string, unknown>|any}
    */
   get () {
-    // If we have constructed a document (root element + doc wrapper) and either
-    // output() was called (has _outputConfig) or the user configured exposure,
-    // return the full document wrapper instead of the raw root array.
-    if (this._doc && (this._outputConfig || this._cfg.exposeDocument)) {
-      return this._doc;
+    // If exposeDocuments is set, return the array of documents
+    if (this._cfg.exposeDocuments) {
+      return this._docs;
     }
+    // Removed this._doc logic; use this._docs only
     // Unwrap single-element arrays at the root level if configured
     if (this._cfg.unwrapSingleResult &&
         Array.isArray(this._obj) && this._obj.length === 1) {
@@ -471,8 +472,10 @@ class JSONJoiningTransformer extends AbstractJoiningTransformer {
         ]
       }};
 
-      // Todo: Expose
-      this._doc = doc;
+      // Removed this._doc; use this._docs only
+      if (this._cfg.exposeDocuments) {
+        this._docs.push(doc);
+      }
     }
 
     // If inside a parent element, append as its child; otherwise append to root
@@ -587,6 +590,46 @@ class JSONJoiningTransformer extends AbstractJoiningTransformer {
    */
   plainText (str) {
     this.string(str);
+    return this;
+  }
+
+  /**
+   * Creates a new JSON document and executes a callback in its context.
+   * Similar to XSLT's xsl:document, this allows templates to generate
+   * multiple output documents. The created document is pushed to this._docs
+   * and will be included in the result when exposeDocuments is true.
+   *
+   * @param {(this: JSONJoiningTransformer) => void} cb
+   *   Callback that builds the document content
+   * @param {import('./StringJoiningTransformer.js').OutputConfig} [cfg]
+   *   Output configuration for the document (encoding, doctype, etc.)
+   * @returns {JSONJoiningTransformer}
+   */
+  document (cb, cfg) {
+    // Save current state
+    /** @type {any} */
+    const oldRoot = this.root;
+    /** @type {any} */
+    const oldOutputConfig = this._outputConfig;
+    const oldObj = this._obj;
+    const oldElementStack = this._elementStack;
+
+    // Reset state for new document
+    this.root = undefined;
+    /** @type {any} */
+    this._outputConfig = cfg;
+    this._obj = [];
+    this._elementStack = [];
+
+    // Execute callback to build document content
+    cb.call(this);
+
+    // Restore previous state
+    this.root = oldRoot;
+    this._outputConfig = oldOutputConfig;
+    this._obj = oldObj;
+    this._elementStack = oldElementStack;
+
     return this;
   }
 
