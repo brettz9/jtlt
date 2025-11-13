@@ -2,6 +2,18 @@ import {JSONPath as jsonpath} from 'jsonpath-plus';
 import JSONPathTransformer from './JSONPathTransformer.js';
 
 /**
+ * @typedef {number|string|{
+ *   value?: number|string,
+ *   count?: string,
+ *   format?: string,
+ *   groupingSeparator?: string,
+ *   groupingSize?: number,
+ *   lang?: string,
+ *   letterValue?: string
+ * }} NumberValue
+ */
+
+/**
  * Sort spec types used by applyTemplates() and forEach().
  * @typedef {{
  *   select?: string,
@@ -46,6 +58,11 @@ import JSONPathTransformer from './JSONPathTransformer.js';
  * @template [T = "json"]
  */
 class JSONPathTransformerContext {
+  /**
+   * Holds the current iteration state (for position calculations).
+   * @type {{ index?: number } | undefined}
+   */
+  iterationState;
   /**
    * @param {JSONPathTransformerContextConfig<T>} config
    * @param {import('./index.js').JSONPathTemplateObject<T>[]} templates - Array
@@ -735,14 +752,275 @@ class JSONPathTransformerContext {
   }
 
   /**
-   * Append a number to JSON output. Mirrors the joining transformer API so
-   *   templates can call `this.number()`.
-   * @param {number} num - Number value to append
+   * Append a number to JSON output with xsl:number-like formatting.
+   * @param {NumberValue} num - Number value, "position()" string, or
+   *   options object
    * @returns {this}
    */
   number (num) {
-    this._getJoiningTransformer().number(num);
+    // Handle xsl:number-like functionality
+    if (typeof num === 'object' && num !== null) {
+      const opts = num;
+      let {value} = opts;
+
+      // Handle position() and hierarchical numbering
+      if (value === 'position()' || value === undefined) {
+        const {count} = opts;
+        // @ts-expect-error: dynamic property access
+        const level = opts.level || 'single';
+
+        switch (level) {
+        case 'single': {
+          value = this.calculatePosition(count);
+          // If count is set, simulate count by returning total items
+          //   in current context
+          if (count) {
+            const arr = Array.isArray(this.get(count, true))
+              ? this.get(count, true)
+              /* c8 ignore next -- defensive: get(wrap) always returns array */
+              : [];
+            value = arr.length;
+          }
+
+          break;
+        }
+        case 'multiple': {
+          // Hierarchical numbering: get position for each ancestor up to root
+          const positions = [];
+          let state = /** @type {any} */ (this._config).iterationState;
+          while (state) {
+            // If count is set, use count for each ancestor if possible
+            if (count) {
+              const arr = Array.isArray(this.get(count, true))
+                ? this.get(count, true)
+                /* c8 ignore next -- defensive: get(wrap) returns array */
+                : [];
+              positions.unshift(arr.length);
+            } else {
+              positions.unshift(
+                state.index !== undefined
+                  ? state.index + 1
+                  /* c8 ignore next -- defensive: state always has index */
+                  : 1
+              );
+            }
+            state = state.parentState;
+          }
+          value = positions.join('.');
+
+          break;
+        }
+        case 'any': {
+          // Count all matching items up to current
+          value = this.calculatePosition(count);
+
+          break;
+        }
+        // No default
+        }
+      }
+
+      // Determine format string and locale
+      let format = opts.format || '1';
+      const locale = opts.lang || 'en';
+      const {letterValue} = opts;
+
+      // If letterValue is 'alphabetic', force alphabetic format
+      if (letterValue === 'alphabetic') {
+        format = (opts.format && (/^[aA]$/v).test(opts.format)) ? opts.format : 'a';
+      }
+
+      // Ensure value is a number or string for formatting
+      let numValue = value;
+      // If value is undefined, fallback to opts.value
+      if (typeof numValue === 'undefined') {
+        numValue = opts.value;
+      }
+      if (typeof numValue === 'string') {
+        numValue = Number(numValue);
+      }
+      if (typeof numValue !== 'number' || Number.isNaN(numValue)) {
+        numValue = 1;
+      }
+      const formatted = this._formatNumber(
+        numValue,
+        format,
+        opts.groupingSeparator,
+        opts.groupingSize,
+        locale
+      );
+
+      // Output as string if formatted, otherwise as number
+      if (format && format !== '1') {
+        this._getJoiningTransformer().plainText(formatted);
+      } else {
+        this._getJoiningTransformer().number(Number(formatted));
+      }
+    } else if (num === 'position()') {
+      // Simple position() call
+      const pos = this.calculatePosition();
+      this._getJoiningTransformer().number(pos);
+    } else {
+      // Simple number
+      this._getJoiningTransformer().number(
+        typeof num === 'string' ? Number(num) : num
+      );
+    }
     return this;
+  }
+
+  /**
+   * Calculate position in current iteration context.
+   * @param {string} [count] - JSONPath expression to match
+   * @returns {number}
+   */
+  calculatePosition (count) {
+    // If count is provided, return the length of the matched array from
+    //   the root data
+    if (count) {
+      const result = jsonpath({
+        path: count, json: this._origObj, resultType: 'value', wrap: true
+      });
+      if (Array.isArray(result)) {
+        if (result.length === 0) {
+          return 0;
+        }
+        // If the first item is an array, return its length
+        if (Array.isArray(result[0])) {
+          return result[0].length;
+        }
+        // Otherwise, return the number of matches
+        return result.length;
+      }
+      /* c8 ignore next 3 -- defensive:
+        jsonpath-plus with wrap:true always returns arrays */
+      return 0;
+    }
+    // Get current index from iteration state
+    const state = this.iterationState;
+    if (state && typeof state.index === 'number') {
+      return state.index + 1; // 1-indexed
+    }
+    return 1;
+  }
+
+  /**
+   * Format a number according to format string.
+   * @param {number} num - Number to format
+   * @param {string} format - Format string (1, a, A, i, I, 01, etc.)
+   * @param {string} [groupingSeparator] - Separator for grouping
+   * @param {number} [groupingSize] - Size of groups
+   * @param {string} [locale]
+   * @returns {string}
+   */
+  _formatNumber (num, format, groupingSeparator, groupingSize, locale = 'en') {
+    if (Number.isNaN(num)) {
+      return String(num);
+    }
+
+    let result;
+    const formatChar = format.charAt(0);
+
+    switch (formatChar) {
+    case 'i': {
+      result = this._toRoman(num).toLowerCase();
+
+      break;
+    }
+    case 'I': {
+      result = this._toRoman(num);
+
+      break;
+    }
+    case 'a': {
+      result = this._toAlphabetic(num, false);
+
+      break;
+    }
+    case 'A': {
+      result = this._toAlphabetic(num, true);
+
+      break;
+    }
+    case '0': {
+      const width = format.length;
+      result = String(num).padStart(width, '0');
+
+      break;
+    }
+    default: {
+      // Use Intl.NumberFormat for decimal formatting if grouping/locale
+      //   options are provided
+      let options = {};
+      if (groupingSeparator || groupingSize) {
+        options = {
+          useGrouping: true
+        };
+      }
+
+      try {
+        result = new Intl.NumberFormat(locale, options).format(num);
+        if (groupingSeparator) {
+          result = result.replaceAll(',', groupingSeparator);
+        }
+      } catch (e) {
+        result = String(num);
+      }
+    }
+    }
+    return result;
+  }
+
+  /**
+   * Convert number to Roman numerals.
+   * @param {number} num - Number to convert (1-3999)
+   * @returns {string}
+   * @private
+   */
+  // eslint-disable-next-line class-methods-use-this -- Avoid for now
+  _toRoman (num) {
+    if (num < 1 || num > 3999) {
+      return String(num);
+    }
+
+    const vals = [1000, 900, 500, 400, 100, 90, 50, 40, 10, 9, 5, 4, 1];
+    const syms = [
+      'M', 'CM', 'D', 'CD', 'C', 'XC', 'L', 'XL', 'X', 'IX', 'V', 'IV', 'I'
+    ];
+
+    let result = '';
+    for (const [i, val] of vals.entries()) {
+      while (num >= val) {
+        result += syms[i];
+        num -= val;
+      }
+    }
+    return result;
+  }
+
+  /**
+   * Convert number to alphabetic sequence.
+   * @param {number} num - Number to convert
+   * @param {boolean} uppercase - Use uppercase letters
+   * @returns {string}
+   * @private
+   */
+  // eslint-disable-next-line class-methods-use-this -- Avoid for now
+  _toAlphabetic (num, uppercase) {
+    if (num < 1) {
+      return String(num);
+    }
+
+    let result = '';
+    const base = uppercase ? 65 : 97; // 'A' or 'a'
+
+    while (num > 0) {
+      num--; // Make 0-indexed
+      result = String.fromCodePoint(base + (num % 26)) + result;
+      num = Math.floor(num / 26);
+    }
+
+    return result;
   }
 
   /**

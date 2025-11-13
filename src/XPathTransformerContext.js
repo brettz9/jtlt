@@ -523,13 +523,308 @@ class XPathTransformerContext {
     return this;
   }
   /**
-   * Append number.
-   * @param {number} num Number
+   * Append number with xsl:number-like formatting.
+   * @param {number|string|{
+   *   value?: number|string,
+   *   count?: string,
+   *   level?: 'single'|'multiple'|'any',
+   *   from?: string,
+   *   format?: string,
+   *   groupingSeparator?: string,
+   *   groupingSize?: number
+   * }} num - Number value, "position()" string, or options object
    * @returns {XPathTransformerContext}
    */
   number (num) {
-    this._getJoiningTransformer().number(num);
+    // Handle xsl:number-like functionality
+    if (typeof num === 'object' && num !== null) {
+      const opts = num;
+      let {value} = opts;
+
+      // Handle position() calculation
+      if (value === 'position()' || value === undefined) {
+        const {count} = opts;
+        const level = opts.level || 'single';
+        const {from} = opts;
+
+        switch (level) {
+        case 'single': {
+          value = this._calculatePosition(count, from);
+
+          break;
+        }
+        case 'multiple': {
+          // Hierarchical numbering: get position for each ancestor up to root
+          const positions = [];
+          let node = /** @type {any} */ (this._config).currentNode;
+          while (node) {
+            positions.unshift(this._calculatePosition(count, undefined));
+            node = node.parentNode;
+            if (from) {
+              const fromResult = /** @type {any} */ (
+                this._evalXPath(from, node)
+              );
+              if (fromResult && fromResult.length > 0) {
+                break;
+              }
+            }
+          }
+          value = positions.join('.');
+
+          break;
+        }
+        case 'any': {
+          value = this._calculatePositionAny(count, from);
+
+          break;
+        }
+        // No default
+        }
+      }
+
+      // Determine format string and locale
+      let format = opts.format || '1';
+      // @ts-expect-error: dynamic property access
+      const locale = opts.lang || 'en';
+      // @ts-expect-error: dynamic property access
+      const {letterValue} = opts;
+
+      // If letterValue is 'alphabetic', force alphabetic format
+      if (letterValue === 'alphabetic') {
+        format = (opts.format && (/^[aA]$/v).test(opts.format)) ? opts.format : 'a';
+      }
+
+      const numValue = typeof value === 'string' ? Number(value) : (value || 1);
+      const formatted = this._formatNumber(
+        numValue,
+        format,
+        opts.groupingSeparator,
+        opts.groupingSize,
+        locale
+      );
+      this._getJoiningTransformer().plainText(formatted);
+    } else if (num === 'position()') {
+      // Simple position() call
+      const pos = this._calculatePosition();
+      this._getJoiningTransformer().number(pos);
+    } else {
+      // Simple number
+      this._getJoiningTransformer().number(
+        typeof num === 'string' ? Number(num) : num
+      );
+    }
     return this;
+  }
+
+  /**
+   * Calculate position of current node.
+   * @param {string} [count] - XPath pattern to match
+   * @param {string} [from] - XPath pattern for ancestor
+   * @returns {number}
+   * @private
+   */
+  _calculatePosition (count, from) {
+    // eslint-disable-next-line prefer-destructuring -- TS
+    const currentNode = /** @type {any} */ (this._config).currentNode;
+    if (!currentNode) {
+      return 1;
+    }
+
+    // Get parent node
+    const parent = currentNode.parentNode;
+    if (!parent) {
+      return 1;
+    }
+
+    // If from pattern specified, find that ancestor
+    let startNode = parent;
+    if (from) {
+      const fromResult = /** @type {any} */ (
+        this._evalXPath(from, currentNode)
+      );
+      if (fromResult && fromResult.length > 0) {
+        startNode = fromResult[0];
+      }
+    }
+
+    // Count preceding siblings
+    let position = 1;
+    let sibling = currentNode.previousSibling;
+
+    while (sibling) {
+      if (count) {
+        // Check if sibling matches count pattern
+        const matches = /** @type {any} */ (this._evalXPath(count, sibling));
+        if (matches && matches.length > 0) {
+          position++;
+        }
+      } else if (sibling.nodeType === currentNode.nodeType &&
+        (!currentNode.nodeName || sibling.nodeName === currentNode.nodeName)) {
+        position++;
+      }
+      sibling = sibling.previousSibling;
+    }
+
+    return position;
+  }
+
+  /**
+   * Calculate position counting all ancestors (level=any).
+   * @param {string} [count] - XPath pattern to match
+   * @param {string} [from] - XPath pattern for ancestor
+   * @returns {number}
+   * @private
+   */
+  _calculatePositionAny (count, from) {
+    // eslint-disable-next-line prefer-destructuring -- TS
+    const currentNode = /** @type {any} */ (this._config).currentNode;
+    if (!currentNode) {
+      return 1;
+    }
+
+    // Find root or 'from' node
+    let root = currentNode.ownerDocument || currentNode;
+    if (from) {
+      const fromResult = /** @type {any} */ (
+        this._evalXPath(from, currentNode)
+      );
+      if (fromResult && fromResult.length > 0) {
+        root = fromResult[0];
+      }
+    }
+
+    // Count all matching nodes in document order up to current
+    const pattern = count || 'node()';
+    const allNodes = /** @type {any[]} */ (
+      this._evalXPath('//' + pattern, root)
+    );
+
+    for (const [i, allNode] of allNodes.entries()) {
+      if (allNode === currentNode) {
+        return i + 1;
+      }
+    }
+
+    return 1;
+  }
+
+  /**
+   * Format a number according to format string.
+   * @param {number} num - Number to format
+   * @param {string} format - Format string (1, a, A, i, I, 01, etc.)
+   * @param {string} [groupingSeparator] - Separator for grouping (e.g., ',')
+   * @param {number} [groupingSize] - Size of groups (e.g., 3 for 1,000)
+   * @param {string} [locale]
+   * @returns {string}
+   * @private
+   */
+  _formatNumber (num, format, groupingSeparator, groupingSize, locale = 'en') {
+    if (Number.isNaN(num)) {
+      return String(num);
+    }
+
+    let result;
+    const formatChar = format.charAt(0);
+
+    switch (formatChar) {
+    case 'i': {
+      result = this._toRoman(num).toLowerCase();
+
+      break;
+    }
+    case 'I': {
+      result = this._toRoman(num);
+
+      break;
+    }
+    case 'a': {
+      result = this._toAlphabetic(num, false);
+
+      break;
+    }
+    case 'A': {
+      result = this._toAlphabetic(num, true);
+
+      break;
+    }
+    case '0': {
+      const width = format.length;
+      result = String(num).padStart(width, '0');
+
+      break;
+    }
+    default: {
+      // Use Intl.NumberFormat for decimal formatting if grouping/locale
+      //   options are provided
+      let options = {};
+      if (groupingSeparator || groupingSize) {
+        options = {
+          useGrouping: true
+        };
+      }
+      try {
+        result = new Intl.NumberFormat(locale, options).format(num);
+        if (groupingSeparator) {
+          result = result.replaceAll(',', groupingSeparator);
+        }
+      } catch (e) {
+        result = String(num);
+      }
+    }
+    }
+    return result;
+  }
+
+  /**
+   * Convert number to Roman numerals.
+   * @param {number} num - Number to convert (1-3999)
+   * @returns {string}
+   * @private
+   */
+  // eslint-disable-next-line class-methods-use-this -- Avoid for now
+  _toRoman (num) {
+    if (num < 1 || num > 3999) {
+      return String(num);
+    }
+
+    const vals = [1000, 900, 500, 400, 100, 90, 50, 40, 10, 9, 5, 4, 1];
+    const syms = [
+      'M', 'CM', 'D', 'CD', 'C', 'XC', 'L', 'XL', 'X', 'IX', 'V', 'IV', 'I'
+    ];
+
+    let result = '';
+    for (const [i, val] of vals.entries()) {
+      while (num >= val) {
+        result += syms[i];
+        num -= val;
+      }
+    }
+    return result;
+  }
+
+  /**
+   * Convert number to alphabetic sequence.
+   * @param {number} num - Number to convert
+   * @param {boolean} uppercase - Use uppercase letters
+   * @returns {string}
+   * @private
+   */
+  // eslint-disable-next-line class-methods-use-this -- Avoid for now
+  _toAlphabetic (num, uppercase) {
+    if (num < 1) {
+      return String(num);
+    }
+
+    let result = '';
+    const base = uppercase ? 65 : 97; // 'A' or 'a'
+
+    while (num > 0) {
+      num--; // Make 0-indexed
+      result = String.fromCodePoint(base + (num % 26)) + result;
+      num = Math.floor(num / 26);
+    }
+
+    return result;
   }
   /**
    * Append plain text (no escaping changes).

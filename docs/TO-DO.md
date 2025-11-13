@@ -121,7 +121,7 @@
   "xsl:namespace-alias",
   "xsl:next-match",
   "xsl:non-matching-substring",
-  "xsl:number",
+  ~~"xsl:number",~~
   ~~"xsl:otherwise",~~
   ~~"xsl:output",~~
   "xsl:output-character",

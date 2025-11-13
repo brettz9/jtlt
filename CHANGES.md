@@ -1,5 +1,9 @@
 # jtlt CHANGES
 
+## 0.4.0 (unreleased)
+
+- feat: `number()` enhancements
+
 ## 0.3.0
 
 - feat: `if()`
