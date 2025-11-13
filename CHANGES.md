@@ -3,6 +3,7 @@
 ## 0.4.0 (unreleased)
 
 - feat: `number()` enhancements
+- feat: `analyzeString()`
 
 ## 0.3.0
 

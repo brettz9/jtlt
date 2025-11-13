@@ -645,6 +645,146 @@ class JSONPathTransformerContext {
   }
 
   /**
+   * Analyze a string with a regular expression, equivalent to
+   * xsl:analyze-string. Processes matching and non-matching substrings
+   * with separate callbacks.
+   * @param {string} str - The string to analyze
+   * @param {string|RegExp} regex - Regular expression to match against
+   * @param {{
+   *   matchingSubstring?: (
+   *     this: JSONPathTransformerContext<T>,
+   *     substring: string,
+   *     groups: string[],
+   *     regexGroup: (n: number) => string
+   *   ) => void,
+   *   nonMatchingSubstring?: (
+   *     this: JSONPathTransformerContext<T>,
+   *     substring: string
+   *   ) => void,
+   *   flags?: string
+   * }} options - Options object
+   * @returns {this}
+   */
+  analyzeString (str, regex, options = {}) {
+    // Ensure we have a string
+    const inputString = String(str || '');
+
+    // If empty string, do nothing
+    if (inputString.length === 0) {
+      return this;
+    }
+
+    const {
+      matchingSubstring,
+      nonMatchingSubstring,
+      flags = ''
+    } = options;
+
+    // Convert regex to RegExp if it's a string
+    let regexObj;
+    if (typeof regex === 'string') {
+      // Ensure 'g' flag is present for global matching
+      const actualFlags = flags.includes('g') ? flags : flags + 'g';
+      regexObj = new RegExp(regex, actualFlags);
+    } else {
+      regexObj = regex;
+      // Ensure global flag is set
+      if (!regexObj.global) {
+        regexObj = new RegExp(
+          regexObj.source,
+          regexObj.flags + 'g'
+        );
+      }
+    }
+
+    // Check for zero-length matches (error condition in XSLT)
+    if (regexObj.test('')) {
+      throw new Error(
+        'Regular expression matches zero-length string'
+      );
+    }
+
+    // Store captured groups for access during callback
+    /** @type {string[] | undefined} */
+    let currentCapturedGroups;
+
+    /**
+     * Get captured group by index.
+     * @param {number} groupNumber - Group index
+     * @returns {string} - Captured group or empty string
+     */
+    const getRegexGroup = (groupNumber) => {
+      if (!currentCapturedGroups ||
+          groupNumber < 0 ||
+          groupNumber >= currentCapturedGroups.length) {
+        return '';
+      }
+      return currentCapturedGroups[groupNumber] || '';
+    };
+
+    // Save previous context to restore later
+    const prevContext = this._contextObj;
+
+    let lastIndex = 0;
+    let match;
+
+    // Bind callbacks to this context
+    const boundMatchingSubstring = matchingSubstring
+      ? matchingSubstring.bind(this)
+      : undefined;
+    const boundNonMatchingSubstring = nonMatchingSubstring
+      ? nonMatchingSubstring.bind(this)
+      : undefined;
+
+    // Find all matches
+    while ((match = regexObj.exec(inputString)) !== null) {
+      // Process non-matching substring before this match
+      if (match.index > lastIndex) {
+        const nonMatchingStr = inputString.slice(lastIndex, match.index);
+        if (boundNonMatchingSubstring) {
+          this._contextObj = nonMatchingStr;
+          boundNonMatchingSubstring(nonMatchingStr);
+        }
+      }
+
+      // Process matching substring
+      if (boundMatchingSubstring) {
+        const matchingStr = match[0];
+        // Store captured groups: [full match, group1, group2, ...]
+        currentCapturedGroups = [...match];
+        this._contextObj = matchingStr;
+        boundMatchingSubstring(
+          matchingStr, currentCapturedGroups, getRegexGroup
+        );
+        currentCapturedGroups = undefined;
+      }
+
+      const {lastIndex: newLastIndex} = regexObj;
+      lastIndex = newLastIndex;
+
+      // Prevent infinite loop on zero-length matches (shouldn't happen
+      // due to earlier check, but defensive)
+      if (match.index === regexObj.lastIndex) {
+        regexObj.lastIndex++;
+      }
+    }
+
+    // Process final non-matching substring
+    if (lastIndex < inputString.length) {
+      const nonMatchingStr = inputString.slice(lastIndex);
+      if (boundNonMatchingSubstring) {
+        this._contextObj = nonMatchingStr;
+        boundNonMatchingSubstring(nonMatchingStr);
+      }
+    }
+
+    // Restore previous context
+    this._contextObj = prevContext;
+
+    return this;
+  }
+
+  /**
    * Deep copy selection or current context when omitted.
    * @param {string} [select] - JSONPath selector
    * @returns {this}

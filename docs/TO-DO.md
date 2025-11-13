@@ -92,39 +92,64 @@
 9. Consider implementing the following elements from <https://www.w3.org/TR/xslt20/>
     which are not yet implemented.
 
-  "xsl:analyze-string",
+  xsl:accept
+  xsl:accumulator
+  xsl:accumulator-rule
+  ~~"xsl:analyze-string",~~
   "xsl:apply-imports",
   ~~"xsl:apply-templates",~~
+  xsl:assert
   ~~"xsl:attribute",~~
   "xsl:attribute-set",
+  xsl:break
   ~~"xsl:call-template",~~
+  xsl:catch
   "xsl:character-map",
   ~~"xsl:choose",~~
   ~~"xsl:comment",~~
+  xsl:context-item
   ~~"xsl:copy",~~
   ~~"xsl:copy-of",~~
   "xsl:decimal-format",
   ~~"xsl:document",~~
   ~~"xsl:element",~~
+  xsl:evaluate
+  xsl:expose
   "xsl:fallback",
   ~~"xsl:for-each",~~
   "xsl:for-each-group",
+  xsl:fork
   "xsl:function",
+  xsl:global-context-item
   ~~"xsl:if",~~
   "xsl:import",
   "xsl:import-schema",
   "xsl:include",
+  xsl:iterate
   ~~"xsl:key",~~
-  "xsl:matching-substring",
+  xsl:map
+  xsl:map-entry
+  ~~"xsl:matching-substring",~~
+  xsl:merge
+  xsl:merge-action
+  xsl:merge-key
+  xsl:merge-source
   ~~"xsl:message",~~
+  xsl:mode
   "xsl:namespace",
   "xsl:namespace-alias",
+  xsl:next-iteration
   "xsl:next-match",
-  "xsl:non-matching-substring",
+  ~~"xsl:non-matching-substring",~~
   ~~"xsl:number",~~
+  xsl:on-completion
+  xsl:on-empty
+  xsl:on-non-empty
   ~~"xsl:otherwise",~~
   ~~"xsl:output",~~
   "xsl:output-character",
+  xsl:override
+  xsl:package
   "xsl:param",
   "xsl:perform-sort",
   "xsl:preserve-space",
@@ -132,13 +157,17 @@
   ~~"xsl:result-document",~~
   "xsl:sequence",
   ~~"xsl:sort",~~
+  xsl:source-document
   "xsl:strip-space",
   ~~"xsl:stylesheet",~~
   ~~"xsl:template",~~
   ~~"xsl:text",~~
   ~~"xsl:transform",~~
+  xsl:try
+  xsl:use-package
   ~~"xsl:value-of",~~
   ~~"xsl:variable",~~
   ~~"xsl:when",~~
+  xsl:where-populated
   ~~"xsl:with-param"~~
 

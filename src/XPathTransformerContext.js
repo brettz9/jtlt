@@ -1119,6 +1119,143 @@ class XPathTransformerContext {
     return this;
   }
 
+  /**
+   * Analyze a string with a regular expression, equivalent to
+   * xsl:analyze-string. Processes matching and non-matching substrings
+   * with separate callbacks.
+   * @param {string} str - The string to analyze
+   * @param {string|RegExp} regex - Regular expression to match against
+   * @param {{
+   *   matchingSubstring?: (
+   *     this: XPathTransformerContext,
+   *     substring: string,
+   *     groups: string[],
+   *     regexGroup: (n: number) => string
+   *   ) => void,
+   *   nonMatchingSubstring?: (
+   *     this: XPathTransformerContext,
+   *     substring: string
+   *   ) => void,
+   *   flags?: string
+   * }} options - Options object
+   * @returns {XPathTransformerContext}
+   */
+  analyzeString (str, regex, options = {}) {
+    // Ensure we have a string
+    const inputString = String(str || '');
+
+    // If empty string, do nothing
+    if (inputString.length === 0) {
+      return this;
+    }
+
+    const {
+      matchingSubstring,
+      nonMatchingSubstring,
+      flags = ''
+    } = options;
+
+    // Convert regex to RegExp if it's a string
+    let regexObj;
+    if (typeof regex === 'string') {
+      // Ensure 'g' flag is present for global matching
+      const actualFlags = flags.includes('g') ? flags : flags + 'g';
+      regexObj = new RegExp(regex, actualFlags);
+    } else {
+      regexObj = regex;
+      // Ensure global flag is set
+      if (!regexObj.global) {
+        regexObj = new RegExp(
+          regexObj.source,
+          regexObj.flags + 'g'
+        );
+      }
+    }
+
+    // Check for zero-length matches (error condition in XSLT)
+    if (regexObj.test('')) {
+      throw new Error(
+        'Regular expression matches zero-length string'
+      );
+    }
+
+    // Store captured groups for access during callback
+    /** @type {string[] | undefined} */
+    let currentCapturedGroups;
+
+    /**
+     * Get captured group by index.
+     * @param {number} groupNumber - Group index
+     * @returns {string} - Captured group or empty string
+     */
+    const getRegexGroup = (groupNumber) => {
+      if (!currentCapturedGroups ||
+          groupNumber < 0 ||
+          groupNumber >= currentCapturedGroups.length) {
+        return '';
+      }
+      return currentCapturedGroups[groupNumber] || '';
+    };
+
+    // Save previous context to restore later
+    const prevContext = this._contextNode;
+
+    let lastIndex = 0;
+    let match;
+
+    // Bind callbacks to this context
+    const boundMatchingSubstring = matchingSubstring
+      ? matchingSubstring.bind(this)
+      : undefined;
+    const boundNonMatchingSubstring = nonMatchingSubstring
+      ? nonMatchingSubstring.bind(this)
+      : undefined;
+
+    // Find all matches
+    while ((match = regexObj.exec(inputString)) !== null) {
+      // Process non-matching substring before this match
+      if (match.index > lastIndex) {
+        const nonMatchingStr = inputString.slice(lastIndex, match.index);
+        if (boundNonMatchingSubstring) {
+          boundNonMatchingSubstring(nonMatchingStr);
+        }
+      }
+
+      // Process matching substring
+      if (boundMatchingSubstring) {
+        const matchingStr = match[0];
+        // Store captured groups: [full match, group1, group2, ...]
+        currentCapturedGroups = [...match];
+        boundMatchingSubstring(
+          matchingStr, currentCapturedGroups, getRegexGroup
+        );
+        currentCapturedGroups = undefined;
+      }
+
+      const {lastIndex: newLastIndex} = regexObj;
+      lastIndex = newLastIndex;
+
+      // Prevent infinite loop on zero-length matches (shouldn't happen
+      // due to earlier check, but defensive)
+      if (match.index === regexObj.lastIndex) {
+        regexObj.lastIndex++;
+      }
+    }
+
+    // Process final non-matching substring
+    if (lastIndex < inputString.length) {
+      const nonMatchingStr = inputString.slice(lastIndex);
+      if (boundNonMatchingSubstring) {
+        boundNonMatchingSubstring(nonMatchingStr);
+      }
+    }
+
+    // Restore previous context
+    this._contextNode = prevContext;
+
+    return this;
+  }
+
   /* c8 ignore start -- static default rules object has spotty function
    * attribution under coverage; behavior is exercised via applyTemplates */
   static DefaultTemplateRules = {
