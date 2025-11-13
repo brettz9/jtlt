@@ -27,6 +27,8 @@ class DOMJoiningTransformer extends AbstractJoiningTransformer {
     this._dom = o || cfg.document.createDocumentFragment();
     /** @type {XMLDocument[]} */
     this._docs = [];
+    /** @type {Array<{href: string, document: XMLDocument, format?: string}>} */
+    this._resultDocuments = [];
   }
 
   /**
@@ -407,6 +409,62 @@ class DOMJoiningTransformer extends AbstractJoiningTransformer {
 
     // Execute callback to build document content
     cb.call(this);
+
+    // Restore previous state
+    this.root = oldRoot;
+    this._outputConfig = oldOutputConfig;
+    this._dom = oldDOM;
+
+    return this;
+  }
+
+  /**
+   * Creates a new result document with metadata (href, format).
+   * Similar to XSLT's xsl:result-document, this allows templates to generate
+   * multiple output documents with associated metadata like URIs. The created
+   * document is stored in this._resultDocuments with the provided href.
+   *
+   * @param {string} href - URI/path for the result document
+   * @param {(this: DOMJoiningTransformer) => void} cb
+   *   Callback that builds the document content
+   * @param {import('./StringJoiningTransformer.js').OutputConfig} [cfg]
+   *   Output configuration for the document (encoding, doctype, format, etc.)
+   * @returns {DOMJoiningTransformer}
+   */
+  resultDocument (href, cb, cfg) {
+    // Save current state
+    /** @type {any} */
+    const oldRoot = this.root;
+    /** @type {any} */
+    const oldOutputConfig = this._outputConfig;
+    const oldDOM = this._dom;
+
+    // Reset state for new document
+    this.root = undefined;
+    /** @type {any} */
+    this._outputConfig = cfg;
+
+    // Create a new document fragment as the working context
+    const fragment = this._cfg.document.createDocumentFragment();
+    this._dom = fragment;
+
+    // Execute callback to build document content
+    cb.call(this);
+
+    // Get the created document from _docs (document() will have pushed it)
+    // or extract from the current DOM state
+    const resultDoc = this._docs.length > 0
+      ? /** @type {XMLDocument} */ (this._docs.at(-1))
+      : /** @type {XMLDocument} */ (
+        this._cfg.document.implementation.createDocument(null, 'root', null)
+      );
+
+    // Store with metadata, using the output config that was set during callback
+    this._resultDocuments.push({
+      href,
+      document: resultDoc,
+      format: this._outputConfig?.method || cfg?.method
+    });
 
     // Restore previous state
     this.root = oldRoot;

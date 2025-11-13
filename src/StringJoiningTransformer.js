@@ -112,6 +112,8 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
     this._docs = [];
     /** @type {boolean} */
     this._insideDocument = false;
+    /** @type {Array<{href: string, document: string, format?: string}>} */
+    this._resultDocuments = [];
   }
 
   /**
@@ -748,6 +750,63 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
     // Save the newly created document string
     const newDoc = this._str;
     this._docs.push(newDoc);
+
+    // Restore previous state
+    this.root = oldRoot;
+    this._outputConfig = oldOutputConfig;
+    this._str = oldStr;
+    this._openTagState = oldOpenTagState;
+    this._insideDocument = false;
+
+    return this;
+  }
+
+  /**
+   * Creates a new result document with metadata (href, format).
+   * Similar to XSLT's xsl:result-document, this allows templates to generate
+   * multiple output documents with associated metadata like URIs. The created
+   * document is stored in this._resultDocuments with the provided href.
+   *
+   * @param {string} href - URI/path for the result document
+   * @param {(this: StringJoiningTransformer) => void} cb
+   *   Callback that builds the document content
+   * @param {OutputConfig} [cfg]
+   *   Output configuration for the document (encoding, doctype, format, etc.)
+   * @returns {StringJoiningTransformer}
+   */
+  resultDocument (href, cb, cfg) {
+    // If there's a current document being built, save it first
+    if (this.root && this._str && !this._docs.includes(this._str)) {
+      this._docs.push(this._str);
+    }
+
+    // Save current state
+    /** @type {any} */
+    const oldRoot = this.root;
+    /** @type {any} */
+    const oldOutputConfig = this._outputConfig;
+    const oldStr = this._str;
+    /** @type {any} */
+    const oldOpenTagState = this._openTagState;
+
+    // Reset state for new document
+    this.root = undefined;
+    /** @type {any} */
+    this._outputConfig = cfg;
+    this._str = '';
+    this._openTagState = false;
+    this._insideDocument = true;
+
+    // Execute callback to build document content
+    cb.call(this);
+
+    // Save the newly created document string with metadata
+    const resultDoc = this._str;
+    this._resultDocuments.push({
+      href,
+      document: resultDoc,
+      format: this._outputConfig?.method || cfg?.method
+    });
 
     // Restore previous state
     this.root = oldRoot;

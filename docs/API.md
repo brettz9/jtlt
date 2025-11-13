@@ -80,6 +80,43 @@ joiner.document(() => {
 const docs = joiner.get(); // Returns array of 2 documents
 ```
 
+### resultDocument() method
+
+Similar to XSLT's `xsl:result-document`, the `resultDocument()` method allows
+templates to generate multiple output documents **with metadata** (href URI,
+format). Documents are stored in `joiner._resultDocuments` array.
+
+**Signature**: `resultDocument(href, callback, outputConfig?)`
+
+Each result document is stored with:
+- `href`: The URI/path for the document (e.g., `'output/page1.html'`)
+- `document`: The generated document content
+- `format`: The output format (from `method` in config)
+
+**Example**:
+```js
+joiner.resultDocument('output/doc1.xml', () => {
+  joiner.output({method: 'xml', version: '1.0'});
+  joiner.element('doc1', {}, () => {
+    joiner.text('First document');
+  });
+});
+
+joiner.resultDocument('output/doc2.html', () => {
+  joiner.output({method: 'html'});
+  joiner.element('html', {}, () => {
+    joiner.text('Second document');
+  });
+}, {method: 'html'});
+
+// Access result documents with metadata
+joiner._resultDocuments.forEach((result) => {
+  console.log(result.href); // e.g., 'output/doc1.xml'
+  console.log(result.format); // e.g., 'xml'
+  console.log(result.document); // The document content
+});
+```
+
 ## Sorting
 
 Path string (ascending text), comparator function, object spec

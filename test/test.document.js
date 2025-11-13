@@ -34,7 +34,7 @@ describe('document() method', () => {
           method: 'xml',
           version: '1.0'
         });
-        joiner.element('doc2', {}, () => {
+        joiner.element('doc2', {attr: 'value'}, () => {
           joiner.text('Second document');
         });
       });
@@ -133,7 +133,7 @@ describe('document() method', () => {
           method: 'xml',
           doctypePublic: '-//W3C//DTD XHTML 1.0//EN'
         });
-        joiner.element('doc1', {}, () => {
+        joiner.element('doc1', {}, [], () => {
           joiner.text('First document');
         });
       });
@@ -141,7 +141,7 @@ describe('document() method', () => {
       // Create second document
       joiner.document(() => {
         joiner.output({method: 'xml'});
-        joiner.element('doc2', {attr: 'value'}, () => {
+        joiner.element('doc2', {attr: 'value'}, [], () => {
           joiner.text('Second document');
         });
       });
@@ -154,7 +154,9 @@ describe('document() method', () => {
       // Check first document structure
       expect(docs[0].$document).to.exist;
       expect(docs[0].$document.childNodes).to.be.an('array');
-      expect(docs[0].$document.childNodes.length).to.equal(2); // DOCTYPE + element
+      expect(
+        docs[0].$document.childNodes.length
+      ).to.equal(2); // DOCTYPE + element
 
       // Check second document structure
       expect(docs[1].$document).to.exist;
@@ -166,11 +168,11 @@ describe('document() method', () => {
 
       joiner.document(() => {
         joiner.output({method: 'xml'});
-        joiner.element('root', {id: 'test'}, () => {
-          joiner.element('child1', {}, () => {
+        joiner.element('root', {id: 'test'}, [], () => {
+          joiner.element('child1', {}, [], () => {
             joiner.text('Child 1');
           });
-          joiner.element('child2', {}, () => {
+          joiner.element('child2', {}, [], () => {
             joiner.text('Child 2');
           });
         });
@@ -182,7 +184,7 @@ describe('document() method', () => {
       expect(docs[0].$document).to.exist;
 
       // Extract root element from document
-      const childNodes = docs[0].$document.childNodes;
+      const {childNodes} = docs[0].$document;
       const rootElement = childNodes.find(
         (/** @type {any} */ node) => Array.isArray(node) && node[0] === 'root'
       );
@@ -199,14 +201,14 @@ describe('document() method', () => {
 
       // Create main document
       joiner.output({method: 'xml'});
-      joiner.element('mainDoc', {}, () => {
+      joiner.element('mainDoc', {}, [], () => {
         joiner.text('Main');
       });
 
       // Create nested document
       joiner.document(() => {
         joiner.output({method: 'html'});
-        joiner.element('nestedDoc', {}, () => {
+        joiner.element('nestedDoc', {}, [], () => {
           joiner.text('Nested');
         });
       });
@@ -216,15 +218,16 @@ describe('document() method', () => {
       expect(docs.length).to.equal(2);
       // Main document should be preserved
       const mainElement = docs[0].$document.childNodes.find(
-        (/** @type {any} */ node) =>
-          Array.isArray(node) && node[0] === 'mainDoc'
+        (/** @type {any} */ node) => Array.isArray(node) &&
+          node[0] === 'mainDoc'
       );
       expect(mainElement).to.exist;
 
       // Nested document should exist
       const nestedElement = docs[1].$document.childNodes.find(
-        (/** @type {any} */ node) =>
-          Array.isArray(node) && node[0] === 'nestedDoc'
+        (/** @type {any} */ node) => {
+          return Array.isArray(node) && node[0] === 'nestedDoc';
+        }
       );
       expect(nestedElement).to.exist;
     });
@@ -245,7 +248,7 @@ describe('document() method', () => {
           doctypePublic: '-//W3C//DTD XHTML 1.0//EN',
           doctypeSystem: 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd'
         });
-        joiner.element('doc1', {}, () => {
+        joiner.element('doc1', {}, [], () => {
           joiner.text('First document');
         });
       });
@@ -253,7 +256,7 @@ describe('document() method', () => {
       // Create second document
       joiner.document(() => {
         joiner.output({method: 'xml'});
-        joiner.element('doc2', {attr: 'value'}, () => {
+        joiner.element('doc2', {attr: 'value'}, [], () => {
           joiner.text('Second document');
         });
       });
@@ -285,11 +288,11 @@ describe('document() method', () => {
 
       joiner.document(() => {
         joiner.output({method: 'xml'});
-        joiner.element('root', {id: 'test'}, () => {
-          joiner.element('child1', {}, () => {
+        joiner.element('root', {id: 'test'}, [], () => {
+          joiner.element('child1', {}, [], () => {
             joiner.text('Child 1');
           });
-          joiner.element('child2', {}, () => {
+          joiner.element('child2', {}, [], () => {
             joiner.text('Child 2');
           });
         });
@@ -313,14 +316,14 @@ describe('document() method', () => {
 
       // Build main document
       joiner.output({method: 'xml'});
-      joiner.element('mainDoc', {}, () => {
+      joiner.element('mainDoc', {}, [], () => {
         joiner.text('Main');
       });
 
       // Create nested document
       joiner.document(() => {
         joiner.output({method: 'html'});
-        joiner.element('nestedDoc', {}, () => {
+        joiner.element('nestedDoc', {}, [], () => {
           joiner.text('Nested');
         });
       });
@@ -340,7 +343,7 @@ describe('document() method', () => {
       });
 
       joiner.document(() => {
-        joiner.element('simpleDoc', {}, () => {
+        joiner.element('simpleDoc', {}, [], () => {
           joiner.text('Content');
         });
       });

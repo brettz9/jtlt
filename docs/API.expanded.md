@@ -307,6 +307,80 @@ const docs = joiner.get();
 The method preserves the current joiner state, resets it for the new document,
 executes the callback, captures the result, then restores the previous state.
 
+### resultDocument() method details
+
+The `resultDocument()` method creates output documents with associated metadata,
+paralleling XSLT's `xsl:result-document` functionality. Unlike `document()`,
+which stores documents in `_docs`, `resultDocument()` stores them in
+`_resultDocuments` with metadata including href URI and output format.
+
+**DOM Joiner**: Creates XMLDocument with href and format metadata.
+
+**JSON Joiner**: Creates document wrapper object or raw JSON with metadata.
+
+**String Joiner**: Creates document string with XML/HTML markup and metadata.
+
+**Signature**: `resultDocument(href, callback, outputConfig?)`
+
+**Parameters**:
+- `href` (string): URI or path for the result document (e.g., `'output/page1.html'`)
+- `callback` (function): Builds the document content with `this` bound to joiner
+- `outputConfig` (optional): Output configuration (encoding, doctype, method, etc.)
+
+**Result document structure**:
+```ts
+{
+  href: string,        // The URI/path provided
+  document: any,       // The generated document (XMLDocument, object, or string)
+  format: string       // Output format from config.method ('xml', 'html', 'text')
+}
+```
+
+**Example use case - Multi-page site generation**:
+```js
+const pages = [
+  {title: 'Home', slug: 'index', content: 'Welcome'},
+  {title: 'About', slug: 'about', content: 'About us'},
+  {title: 'Contact', slug: 'contact', content: 'Get in touch'}
+];
+
+pages.forEach((page) => {
+  joiner.resultDocument(`output/${page.slug}.html`, () => {
+    joiner.output({
+      method: 'html',
+      doctypePublic: '-//W3C//DTD XHTML 1.0 Strict//EN',
+      doctypeSystem: 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd'
+    });
+    joiner.element('html', {xmlns: 'http://www.w3.org/1999/xhtml'}, () => {
+      joiner.element('head', {}, () => {
+        joiner.element('title', {}, () => {
+          joiner.text(page.title);
+        });
+      });
+      joiner.element('body', {}, () => {
+        joiner.element('h1', {}, () => {
+          joiner.text(page.title);
+        });
+        joiner.element('p', {}, () => {
+          joiner.text(page.content);
+        });
+      });
+    });
+  });
+});
+
+// Write each result document to its href location
+joiner._resultDocuments.forEach((result) => {
+  fs.writeFileSync(result.href, result.document);
+  console.log(`Generated: ${result.href} (${result.format})`);
+});
+```
+
+**Interoperability**: `document()` and `resultDocument()` can be used together in
+the same transformation. `document()` populates `_docs` (accessible via `get()`
+when `exposeDocuments` is true), while `resultDocument()` populates
+`_resultDocuments` with metadata.
+
 ## Error handling
 
 - Equal priority templates: either last wins (default) or error if `errorOnEqualPriority=true`.

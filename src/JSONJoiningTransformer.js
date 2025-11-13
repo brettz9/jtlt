@@ -78,6 +78,8 @@ class JSONJoiningTransformer extends AbstractJoiningTransformer {
     this._doc = undefined; // Set when root element built
     /** @type {any[]} */
     this._docs = [];
+    /** @type {Array<{href: string, document: any, format?: string}>} */
+    this._resultDocuments = [];
   }
 
   /**
@@ -623,6 +625,102 @@ class JSONJoiningTransformer extends AbstractJoiningTransformer {
 
     // Execute callback to build document content
     cb.call(this);
+
+    // Restore previous state
+    this.root = oldRoot;
+    this._outputConfig = oldOutputConfig;
+    this._obj = oldObj;
+    this._elementStack = oldElementStack;
+
+    return this;
+  }
+
+  /**
+   * Creates a new result document with metadata (href, format).
+   * Similar to XSLT's xsl:result-document, this allows templates to generate
+   * multiple output documents with associated metadata like URIs. The created
+   * document is stored in this._resultDocuments with the provided href.
+   *
+   * @param {string} href - URI/path for the result document
+   * @param {(this: JSONJoiningTransformer) => void} cb
+   *   Callback that builds the document content
+   * @param {import('./StringJoiningTransformer.js').OutputConfig} [cfg]
+   *   Output configuration for the document (encoding, doctype, format, etc.)
+   * @returns {JSONJoiningTransformer}
+   */
+  resultDocument (href, cb, cfg) {
+    // Save current state
+    /** @type {any} */
+    const oldRoot = this.root;
+    /** @type {any} */
+    const oldOutputConfig = this._outputConfig;
+    const oldObj = this._obj;
+    const oldElementStack = this._elementStack;
+
+    // Reset state for new document
+    this.root = undefined;
+    /** @type {any} */
+    this._outputConfig = cfg;
+    this._obj = [];
+    this._elementStack = [];
+
+    // Execute callback to build document content
+    cb.call(this);
+
+    // Get the created document from _docs or construct from current state
+    let resultDoc;
+    if (this._docs.length > 0) {
+      // Document was created with exposeDocuments flag
+      resultDoc = this._docs.at(-1);
+    } else if (this._outputConfig) {
+      // We have output config but document wasn't pushed to _docs
+      // Create the document wrapper manually
+      const {
+        omitXmlDeclaration, doctypePublic, doctypeSystem, method
+      } = this._outputConfig;
+
+      const elementData = Array.isArray(this._obj) && this._obj.length > 0
+        ? this._obj[0]
+        : this._obj;
+
+      const elementName = Array.isArray(elementData) ? elementData[0] : 'root';
+
+      const dtd = {$DOCTYPE: {
+        name: elementName,
+        publicId: doctypePublic ?? null,
+        systemId: doctypeSystem ?? null
+      }};
+
+      let xmlDeclaration;
+      if (!omitXmlDeclaration && (
+        method === 'xml' || omitXmlDeclaration === false)
+      ) {
+        const {version, encoding, standalone} = this._outputConfig;
+        xmlDeclaration = {
+          version,
+          encoding,
+          standalone
+        };
+      }
+
+      resultDoc = {$document: {
+        ...(xmlDeclaration ? {xmlDeclaration} : {}),
+        childNodes: [
+          dtd,
+          elementData
+        ]
+      }};
+    } else {
+      // No output config, just use the raw object/array
+      resultDoc = this._obj;
+    }
+
+    // Store with metadata, using the output config that was set during callback
+    this._resultDocuments.push({
+      href,
+      document: resultDoc,
+      format: this._outputConfig?.method || cfg?.method
+    });
 
     // Restore previous state
     this.root = oldRoot;

@@ -129,7 +129,7 @@
   "xsl:perform-sort",
   "xsl:preserve-space",
   ~~"xsl:processing-instruction",~~
-  "xsl:result-document",
+  ~~"xsl:result-document",~~
   "xsl:sequence",
   ~~"xsl:sort",~~
   "xsl:strip-space",
