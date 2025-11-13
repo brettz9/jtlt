@@ -408,6 +408,7 @@ class JTLT {
       function (configParam) {
         if (configParam.engineType === 'xpath') {
           let xt;
+          /* c8 ignore next -- Defensive: outputType set in setDefaults */
           const outputType = cfg.outputType || 'json';
           // eslint-disable-next-line sonarjs/no-all-duplicated-branches -- TS
           if (outputType === 'string') {
@@ -530,6 +531,7 @@ class JTLT {
 
     this.config.mode = mode;
     const {engine} = this.config;
+    /* c8 ignore next 3 -- Defensive: always configured by setDefaults */
     if (!engine) {
       throw new Error('Engine is not configured');
     }

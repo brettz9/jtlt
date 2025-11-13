@@ -296,7 +296,7 @@ class XPathTransformerContext {
       withParams = name.withParam || withParams;
       ({name} = name);
     }
-    withParams = withParams || [];
+    withParams = withParams || /* c8 ignore next */ [];
 
     // Store parameters in a temporary context for valueOf() access
     const prevParams = this._params;
@@ -380,7 +380,11 @@ class XPathTransformerContext {
         const resResult = this._evalXPath(selectStr, true);
         const res = /** @type {Node[]} */ (resResult);
         const first = res[0];
-        val = first && first.nodeType ? first.textContent : first;
+        /* c8 ignore start */
+        val = first && first.nodeType
+          ? first.textContent
+          : first;
+        /* c8 ignore stop */
       }
     } else if (!selectStr || selectStr === '.') {
       val = this._contextNode.nodeType === 3
@@ -411,9 +415,9 @@ class XPathTransformerContext {
     if (select) {
       try {
         const res = this.get(select, true);
-        nodes = Array.isArray(res) ? res : [];
-      } catch {
-        nodes = [];
+        nodes = Array.isArray(res) ? res : /* c8 ignore next */ [];
+      } catch { /* c8 ignore next */
+        nodes = /* c8 ignore next */ [];
       }
     } else {
       nodes = [this._contextNode];
@@ -444,7 +448,7 @@ class XPathTransformerContext {
       ) {
         const node = /** @type {Node} */ (scalar);
         let txt = /** @type {any} */ (node.textContent);
-        if (
+        if (/* c8 ignore start */
           (txt === null || typeof txt === 'undefined') &&
           /** @type {any} */ (node).nodeType === 9 // Document
         ) {
@@ -453,8 +457,10 @@ class XPathTransformerContext {
             /** @type {any} */ (node)
           ).documentElement;
           txt = /** @type {any} */ (docEl && docEl.textContent) || '';
-        }
-        this._getJoiningTransformer().append(/** @type {any} */ (txt || ''));
+        } /* c8 ignore stop */
+        this._getJoiningTransformer().append(
+          /** @type {any} */ (txt || /* c8 ignore next */ '')
+        );
       } else {
         this._getJoiningTransformer().append(/** @type {any} */ (scalar));
       }

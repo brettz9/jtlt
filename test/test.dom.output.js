@@ -52,6 +52,79 @@ describe('DOMJoiningTransformer', () => {
 });
 
 describe('DOMJoiningTransformer output', () => {
+  it('adds xml decl for html when omit=false', () => {
+    const {window} = new JSDOM('<!doctype html><html><body></body></html>');
+    const {document} = window;
+    const joiner = new DOMJoiningTransformer(
+      document.createDocumentFragment(),
+      {document}
+    );
+    joiner.output({
+      method: 'html', omitXmlDeclaration: false, version: '1.0'
+    });
+    joiner.element('div', {}, () => {
+      joiner.text('Body');
+    });
+    const doc = /** @type {XMLDocument} */ (joiner._docs[0]);
+    const pi = doc.firstChild;
+    expect(pi && pi.nodeType).to.equal(7);
+    expect(pi && pi.nodeName).to.equal('xml');
+    expect(pi && pi.nodeValue && pi.nodeValue.includes('1.0')).to.equal(true);
+  });
+
+  it('adds xml decl for xhtml by default', () => {
+    const {window} = new JSDOM('<!doctype html><html><body></body></html>');
+    const {document} = window;
+    const joiner = new DOMJoiningTransformer(
+      document.createDocumentFragment(),
+      {document}
+    );
+    joiner.output({method: 'xhtml', version: '1.1'});
+    joiner.element('html', {xmlns: 'http://www.w3.org/1999/xhtml'}, () => {
+      joiner.element('body', {}, () => {
+        joiner.text('X');
+      });
+    });
+    const doc = /** @type {XMLDocument} */ (joiner._docs[0]);
+    const pi = doc.firstChild;
+    expect(pi && pi.nodeType).to.equal(7);
+    expect(pi && pi.nodeName).to.equal('xml');
+    expect(pi && pi.nodeValue && pi.nodeValue.includes('1.1')).to.equal(true);
+  });
+
+  it('omits xml decl when omitXmlDeclaration=true (xml)', () => {
+    const {window} = new JSDOM('<!doctype html><html><body></body></html>');
+    const {document} = window;
+    const joiner = new DOMJoiningTransformer(
+      document.createDocumentFragment(),
+      {document}
+    );
+    joiner.output({method: 'xml', omitXmlDeclaration: true});
+    joiner.element('root', {}, () => {
+      joiner.text('x');
+    });
+    const doc = /** @type {XMLDocument} */ (joiner._docs[0]);
+    const first = /** @type {ChildNode|null} */ (doc.firstChild);
+    // Either element root or doctype comes first; ensure not PI
+    expect(first && first.nodeType).to.not.equal(7);
+  });
+  it('object()/array() else path appends empty strings', () => {
+    const {window} = new JSDOM('<!doctype html><html><body></body></html>');
+    const {document} = window;
+    const joiner = new DOMJoiningTransformer(
+      document.createDocumentFragment(),
+      {document}
+    );
+    // Call object() and array() to hit else branches that append ''
+    joiner.object({});
+    joiner.array([]);
+    const frag = /** @type {DocumentFragment} */ (joiner.get());
+    // Should have two text nodes (empty strings)
+    expect(frag.childNodes.length).to.equal(2);
+    expect(frag.firstChild && frag.firstChild.nodeType).to.equal(3);
+    expect(frag.lastChild && frag.lastChild.nodeType).to.equal(3);
+  });
+
   it('builds a simple list', (done) => {
     // eslint-disable-next-line no-new -- exercising API
     new JTLT({
@@ -197,6 +270,16 @@ describe('DOMJoiningTransformer output', () => {
       expect(
         doc.documentElement.getAttribute('xmlns')
       ).to.equal('http://www.w3.org/1999/xhtml');
+
+      // New: namespaced root via prefix in element name
+      // Reset for a namespaced root element
+      joiner.root = undefined;
+      joiner.element('x:root', {x: 'http://example.com/ns'}, () => {
+        joiner.text('ns');
+      });
+      const xmlDoc2 = /** @type {XMLDocument} */ (joiner._docs[1]);
+      expect(xmlDoc2.documentElement.prefix).to.equal('x');
+      expect(xmlDoc2.documentElement.namespaceURI).to.equal('http://example.com/ns');
     }
   );
 });

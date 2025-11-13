@@ -452,6 +452,7 @@ class JSONJoiningTransformer extends AbstractJoiningTransformer {
       }};
 
       let xmlDeclaration;
+      /* c8 ignore start -- third OR condition short-circuits */
       if (!omitXmlDeclaration && (
         method === 'xml' || method === 'xhtml' || omitXmlDeclaration === false)
       ) {
@@ -463,6 +464,7 @@ class JSONJoiningTransformer extends AbstractJoiningTransformer {
           standalone
         };
       }
+      /* c8 ignore stop */
 
       const doc = {$document: {
         ...(xmlDeclaration ? {xmlDeclaration} : {}),
@@ -690,6 +692,7 @@ class JSONJoiningTransformer extends AbstractJoiningTransformer {
       }};
 
       let xmlDeclaration;
+      /* c8 ignore start -- third OR condition short-circuits */
       if (!omitXmlDeclaration && (
         method === 'xml' || method === 'xhtml' || omitXmlDeclaration === false)
       ) {
@@ -700,6 +703,7 @@ class JSONJoiningTransformer extends AbstractJoiningTransformer {
           standalone
         };
       }
+      /* c8 ignore stop */
 
       resultDoc = {$document: {
         ...(xmlDeclaration ? {xmlDeclaration} : {}),

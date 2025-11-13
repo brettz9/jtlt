@@ -8,6 +8,21 @@ import {
 
 describe('resultDocument() method', () => {
   describe('DOMJoiningTransformer', () => {
+    it('creates default root when no element built in resultDocument', () => {
+      const {window} = new JSDOM('<!doctype html><html><body></body></html>');
+      const {document} = window;
+      const joiner = new DOMJoiningTransformer(
+        document.createDocumentFragment(),
+        {document}
+      );
+      joiner.resultDocument('empty.xml', () => {
+        // No output() or element() calls
+      });
+      const res = joiner._resultDocuments[0];
+      expect(res.href).to.equal('empty.xml');
+      expect(res.document.nodeType).to.equal(9);
+      expect(res.document.documentElement.nodeName).to.equal('root');
+    });
     it('creates result documents with href metadata', () => {
       const {window} = new JSDOM('<!doctype html><html><body></body></html>');
       const {document} = window;
@@ -105,6 +120,60 @@ describe('resultDocument() method', () => {
       const result = joiner._resultDocuments[0];
       expect(result.href).to.equal('output/page.xhtml');
       expect(result.format).to.equal('xhtml');
+    });
+
+    it('xhtml resultDocument includes xmlDecl and DTD details', () => {
+      const {window} = new JSDOM('<!doctype html><html><body></body></html>');
+      const {document} = window;
+      const joiner = new DOMJoiningTransformer(
+        document.createDocumentFragment(),
+        {document}
+      );
+
+      joiner.resultDocument('x.xhtml', () => {
+        joiner.output({method: 'xhtml', version: '1.1'});
+        joiner.element('html', {xmlns: 'http://www.w3.org/1999/xhtml'}, () => {
+          joiner.element('body', {}, () => {
+            joiner.text('x');
+          });
+        });
+      }, {method: 'xhtml'});
+
+      const res = joiner._resultDocuments[0];
+      expect(res.href).to.equal('x.xhtml');
+      expect(res.format).to.equal('xhtml');
+      const doc = res.document;
+      // xmlDecl should exist
+      const pi = /** @type {ChildNode|null} */ (doc.firstChild);
+      expect(pi && pi.nodeType).to.equal(7);
+      // DTD should exist for xhtml/xml; check doctype
+      expect(doc.doctype).to.exist;
+      expect(doc.doctype && doc.doctype.name).to.equal('html');
+    });
+
+    it('supports format via cfg.method without output()', () => {
+      const {window} = new JSDOM('<!doctype html><html><body></body></html>');
+      const {document} = window;
+      const joiner = new DOMJoiningTransformer(
+        document.createDocumentFragment(),
+        {document}
+      );
+
+      joiner.resultDocument('cfg-only.html', () => {
+        // No output() call in callback
+        // Build a bare element (will not be captured as root without output)
+        joiner.element('div', {}, () => {
+          joiner.text('cfg only');
+        });
+      }, {method: 'html'});
+
+      const result = joiner._resultDocuments[0];
+      expect(result.href).to.equal('cfg-only.html');
+      expect(result.format).to.equal('html');
+      // Since cfg is set before callback, element() creates a document
+      expect(result.document.nodeType).to.equal(9);
+      expect(result.document.documentElement.nodeName).to.equal('div');
+    // No explicit assertions on PI/DOCTYPE here; ensure format and root only
     });
 
     it('preserves state after resultDocument() callback', () => {
@@ -244,7 +313,15 @@ describe('resultDocument() method', () => {
       const result = joiner._resultDocuments[0];
       expect(result.href).to.equal('page.xhtml');
       expect(result.format).to.equal('xhtml');
-      expect(result.document.$document).to.exist;
+      const doc = result.document.$document;
+      expect(doc).to.exist;
+      // xmlDeclaration should be present for xhtml
+      expect(doc.xmlDeclaration).to.exist;
+      // DTD should be present as first child
+      const {childNodes} = doc;
+      const first = childNodes[0];
+      expect(first).to.have.property('$DOCTYPE');
+      expect(first.$DOCTYPE.name).to.equal('html');
     });
 
     it('preserves state after resultDocument() callback', () => {
@@ -321,6 +398,52 @@ describe('resultDocument() method', () => {
       const el = res.document[0];
       expect(Array.isArray(el)).to.equal(true);
       expect(el[0]).to.equal('simple');
+    });
+
+    it('includes xmlDeclaration when omitXmlDeclaration=false for html', () => {
+      const joiner = new JSONJoiningTransformer([]);
+      joiner.resultDocument('doc.html', () => {
+        joiner.output({
+          method: 'html', omitXmlDeclaration: false, version: '1.1'
+        });
+        joiner.element('div', {}, [], () => {
+          joiner.text('Hello');
+        });
+      }, {method: 'html'});
+      const res = joiner._resultDocuments[0];
+      expect(res.format).to.equal('html');
+      const doc = res.document;
+      expect(doc.$document).to.exist;
+      expect(doc.$document.xmlDeclaration).to.exist;
+      expect(doc.$document.xmlDeclaration.version).to.equal('1.1');
+      // No DTD for non-xml/xhtml methods
+      const {childNodes} = doc.$document;
+      expect(Array.isArray(childNodes)).to.equal(true);
+      const first = childNodes[0];
+      expect(Array.isArray(first)).to.equal(true);
+      expect(first[0]).to.equal('div');
+    });
+
+    it('xmlDecl fields with standalone in resultDocument (xhtml)', () => {
+      const joiner = new JSONJoiningTransformer([]);
+      joiner.resultDocument('doc.xhtml', () => {
+        joiner.output({
+          method: 'xhtml', version: '1.2', encoding: 'utf8', standalone: true
+        });
+        joiner.element('html', {}, [], () => {
+          joiner.text('X');
+        });
+      }, {method: 'xhtml'});
+      const res = joiner._resultDocuments[0];
+      expect(res.format).to.equal('xhtml');
+      const doc = res.document.$document;
+      expect(doc.xmlDeclaration).to.exist;
+      expect(doc.xmlDeclaration.version).to.equal('1.2');
+      expect(doc.xmlDeclaration.encoding).to.equal('utf8');
+      expect(doc.xmlDeclaration.standalone).to.equal(true);
+      // DTD present
+      const first = doc.childNodes[0];
+      expect(first).to.have.property('$DOCTYPE');
     });
 
     it('uses _docs when exposeDocuments is true during resultDocument', () => {

@@ -50,6 +50,51 @@ describe('JSONPathTransformer additional coverage', function () {
     }).to.throw('Templates must all have different names.');
   });
 
+  it(
+    'splits root templates and len>1 does not throw by default',
+    function () {
+      /** @returns {string} */
+      const t1 = function () {
+        return 'A';
+      };
+      /** @returns {string} */
+      const t2 = function () {
+        return 'B';
+      };
+      const jpt = new JSONPathTransformer(({
+        data: {x: 1},
+        templates: [
+          {name: 'r1', path: '$', template: t1},
+          {name: 'r2', path: '$', template: t2}
+        ],
+        // Minimal joining transformer
+        // @ts-expect-error testing
+        joiningTransformer: (function () {
+          let buf = '';
+          return {
+            /**
+             * @param {any} x
+             * @returns {void}
+             */
+            append (x) {
+              buf += String(x ?? '');
+            },
+            get () {
+              return buf;
+            }
+          };
+        }())
+      }));
+      // rootTemplates should be populated via constructor splice
+      expect(Array.isArray(jpt.rootTemplates)).to.equal(true);
+      expect(jpt.rootTemplates.length).to.be.greaterThan(0);
+
+      // Default is not to error on equal-priority root templates
+      const out = jpt.transform('');
+      expect(out).to.be.a('string');
+    }
+  );
+
   it('errors on equal-priority root templates when configured', function () {
     const noop = function () {
       return '';
@@ -99,6 +144,31 @@ describe('JSONPathTransformer additional coverage', function () {
     expect(abs).to.equal("$['a']");
     // Already absolute remains unchanged
     expect(JSONPathTransformer.makeJSONPathAbsolute('$.a.b')).to.equal('$.a.b');
+  });
+
+  it('maps array-form templates in constructor', function () {
+    /** @returns {string} */
+    const noop = function () {
+      return '';
+    };
+    const jpt = new JSONPathTransformer(({
+      data: {a: 1, b: 2},
+      templates: /** @type {any} */ ([
+        ['$.a', noop],
+        ['$.b', noop]
+      ]),
+      // @ts-expect-error testing
+      joiningTransformer: (function () {
+        return {
+          append () { /* no-op */ },
+          get () {
+            return '';
+          }
+        };
+      }())
+    }));
+    expect(jpt.templates[0]).to.have.property('path', '$.a');
+    expect(typeof jpt.templates[0].template).to.equal('function');
   });
 
   it('property-names (~) default rule emits concatenated keys', function () {

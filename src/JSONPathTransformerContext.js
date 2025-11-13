@@ -318,9 +318,11 @@ class JSONPathTransformerContext {
         function (templateObj) {
           // At this point, we know templateObj.path exists because we filtered
           // out named-only templates in modeMatchedTemplates
+          /* c8 ignore start -- defensive check, already filtered at line 188 */
           if (!templateObj.path) {
             return false;
           }
+          /* c8 ignore stop */
           const queryResult = /** @type {any[]} */ (
             (/** @type {any} */ (jsonpath))({
               path: JSONPathTransformer.makeJSONPathAbsolute(
@@ -791,7 +793,7 @@ class JSONPathTransformerContext {
   }
 
   /**
-   * Append text node content.
+   * Set document-level configuration.
    * @param {import('./StringJoiningTransformer.js').OutputConfig} cfg Text
    * @returns {this}
    */

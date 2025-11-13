@@ -91,4 +91,56 @@ describe('StringJoiningTransformer output', () => {
       expect(result).to.not.include('<?xml');
     }
   );
+
+  it(
+    'includes XML declaration when omitXmlDeclaration=false (html method)',
+    () => {
+      const joiner = new StringJoiningTransformer('');
+      joiner.output({
+        method: 'html', omitXmlDeclaration: false, version: '1.0'
+      });
+      joiner.element('div', {}, [], () => {
+        joiner.text('Hello');
+      });
+      const result = joiner.get();
+      expect(result).to.include('<?xml version="1.0"');
+      // No DOCTYPE since not configured
+      expect(result).to.not.include('<!DOCTYPE');
+    }
+  );
+
+  it('xhtml default adds xml declaration (no DOCTYPE)', () => {
+    const joiner = new StringJoiningTransformer('');
+    joiner.output({method: 'xhtml', version: '1.1'});
+    joiner.element('html', {}, [], () => {
+      joiner.element('body', {}, [], () => {
+        joiner.text('X');
+      });
+    });
+    const result = joiner.get();
+    expect(result).to.include('<?xml version="1.1"');
+    // No DOCTYPE unless configured
+    expect(result).to.not.include('<!DOCTYPE');
+  });
+
+  it('xml xmlDecl includes standalone yes when true', () => {
+    // standalone true
+    const jt = new StringJoiningTransformer('');
+    jt.output({method: 'xml', version: '1.0', standalone: true});
+    jt.element('root', {}, [], () => {
+      // no content needed
+    });
+    const result = jt.get();
+    expect(result).to.include('standalone="yes"');
+  });
+
+  it('xml xmlDecl omits standalone when false', () => {
+    const jt = new StringJoiningTransformer('');
+    jt.output({method: 'xml', version: '1.0', standalone: false});
+    jt.element('root', {}, [], () => {
+      // no content needed
+    });
+    const result = jt.get();
+    expect(result).to.not.include('standalone=');
+  });
 });

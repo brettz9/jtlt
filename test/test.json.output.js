@@ -142,6 +142,87 @@ describe('JSONJoiningTransformer output', () => {
   );
 
   it(
+    'includes xmlDecl when omitXmlDeclaration=false for html (element path)',
+    () => {
+      const joiner = new JSONJoiningTransformer([], {exposeDocuments: true});
+      joiner.output({
+        method: 'html', omitXmlDeclaration: false, version: '1.2'
+      });
+      joiner.element('div', {}, [], () => {
+        joiner.text('Hello');
+      });
+      const docs = joiner.get();
+      // With exposeDocuments, get() returns an array of docs
+      expect(Array.isArray(docs)).to.equal(true);
+      const doc = docs[0];
+      expect(doc).to.have.property('$document');
+      expect(doc.$document).to.have.property('xmlDeclaration');
+      expect(doc.$document.xmlDeclaration.version).to.equal('1.2');
+      // Ensure first child is the element (no DTD for html)
+      const {childNodes} = doc.$document;
+      const first = childNodes[0];
+      expect(Array.isArray(first)).to.equal(true);
+      expect(first[0]).to.equal('div');
+    }
+  );
+
+  it('includes DTD for xhtml in element path with exposeDocuments', () => {
+    const joiner = new JSONJoiningTransformer([], {exposeDocuments: true});
+    joiner.output({method: 'xhtml'});
+    joiner.element('html', {}, [], () => {
+      joiner.element('body', {}, [], () => {
+        joiner.text('X');
+      });
+    });
+    const docs = joiner.get();
+    const doc = docs[0];
+    const {childNodes} = doc.$document;
+    // First child should be DOCTYPE object
+    const first = childNodes[0];
+    expect(Array.isArray(first)).to.equal(false);
+    expect(first).to.have.property('$DOCTYPE');
+    expect(first.$DOCTYPE.name).to.equal('html');
+  });
+
+  it('includes xmlDecl and DTD for xml in element path', () => {
+    const joiner = new JSONJoiningTransformer([], {exposeDocuments: true});
+    joiner.output({method: 'xml', version: '1.0'});
+    joiner.element('root', {}, [], () => {
+      joiner.text('Z');
+    });
+    const docs = joiner.get();
+    const doc = docs[0];
+    // xmlDeclaration present
+    expect(doc.$document.xmlDeclaration).to.exist;
+    // DTD present for xml method
+    const {childNodes} = doc.$document;
+    const first = childNodes[0];
+    expect(first).to.have.property('$DOCTYPE');
+    expect(first.$DOCTYPE.name).to.equal('root');
+  });
+
+  it('resultDocument uses cfg.method when no output() is set', () => {
+    const joiner = new JSONJoiningTransformer([]);
+    joiner.resultDocument('raw.json', () => {
+      // no output() inside; build an element
+      joiner.element('root', {}, [], () => {
+        joiner.text('Y');
+      });
+    }, {method: 'json'});
+    const res = joiner._resultDocuments[0];
+    expect(res.href).to.equal('raw.json');
+    // Format falls back to cfg.method
+    expect(res.format).to.equal('json');
+    // With cfg present, a $document wrapper is created even without output()
+    expect(res.document).to.have.property('$document');
+    const {childNodes} = res.document.$document;
+    // No DTD for non-xml/xhtml methods
+    const first = childNodes[0];
+    expect(Array.isArray(first)).to.equal(true);
+    expect(first[0]).to.equal('root');
+  });
+
+  it(
     'returns plain element array when neither output() nor exposeDocument',
     (done) => {
       const joiner = new JSONJoiningTransformer([]);

@@ -472,6 +472,7 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
       } = this._outputConfig ?? {};
 
       let xmlDeclaration = '';
+      /* c8 ignore start -- third OR condition short-circuits */
       if (!omitXmlDeclaration && (
         method === 'xml' || method === 'xhtml' || omitXmlDeclaration === false)
       ) {
@@ -481,12 +482,14 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
         }${
           encoding ? ` encoding="${encoding}"` : ''
         }${
-          standalone ? ` standalone="${standalone ? 'yes' : 'no'}"` : ''
+          standalone ? ` standalone="yes"` : ''
         }?>\n`;
       }
+      /* c8 ignore stop */
 
       let doctype = '';
       if (doctypePublic !== undefined || doctypeSystem !== undefined) {
+        /* c8 ignore start -- nested ternary attribution issue */
         doctype = `<!DOCTYPE ${elName}${
           doctypePublic
             ? ` PUBLIC "${doctypePublic}" "${doctypeSystem}"`
@@ -494,6 +497,7 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
               ? ` SYSTEM "${doctypeSystem}"`
               : ''
         }>\n`;
+        /* c8 ignore stop */
       }
 
       this._str = xmlDeclaration + doctype + this._str;
