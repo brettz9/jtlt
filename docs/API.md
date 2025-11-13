@@ -91,7 +91,7 @@ format). Documents are stored in `joiner._resultDocuments` array.
 Each result document is stored with:
 - `href`: The URI/path for the document (e.g., `'output/page1.html'`)
 - `document`: The generated document content
-- `format`: The output format (from `method` in config)
+- `format`: The output format (from `method` in config). One of `xml`, `html`, `text`, `xhtml`, or `json`.
 
 **Example**:
 ```js
@@ -116,6 +116,18 @@ joiner._resultDocuments.forEach((result) => {
   console.log(result.document); // The document content
 });
 ```
+
+### Output configuration (quick reference)
+
+- `method`: `xml` | `html` | `text` | `xhtml` | `json`
+  - `xml`/`xhtml`: XML declaration unless `omitXmlDeclaration`; DOCTYPE included when `doctypePublic`/`doctypeSystem` present. For the JSON joiner, a DOCTYPE entry appears in `$document.childNodes` only for these methods.
+  - `html`: HTML output; JSON joiner wrapper omits DOCTYPE.
+  - `text`: raw text; no DOCTYPE.
+  - `json`: native JSON output; no XML declaration or DOCTYPE.
+- `omitXmlDeclaration`, `version`, `encoding`, `standalone`: control XML declaration (applicable to `xml`/`xhtml`).
+- `doctypePublic`, `doctypeSystem`: control DOCTYPE (applicable to `xml`/`xhtml`).
+
+Note: With `exposeDocuments` enabled on a joiner, `get()` returns an array of `$document` wrappers. In the JSON joiner, the root element is the last entry of `$document.childNodes`; a DOCTYPE may precede it for `xml`/`xhtml`.
 
 ## Sorting
 

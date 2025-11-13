@@ -85,6 +85,28 @@ describe('resultDocument() method', () => {
       expect(result.format).to.equal('html');
     });
 
+    it('supports xhtml output format via config', () => {
+      const {window} = new JSDOM('<!doctype html><html><body></body></html>');
+      const {document} = window;
+      const joiner = new DOMJoiningTransformer(
+        document.createDocumentFragment(),
+        {document}
+      );
+
+      joiner.resultDocument('output/page.xhtml', () => {
+        joiner.output({method: 'xhtml'});
+        joiner.element('html', {}, () => {
+          joiner.element('body', {}, () => {
+            joiner.text('XHTML content');
+          });
+        });
+      }, {method: 'xhtml'});
+
+      const result = joiner._resultDocuments[0];
+      expect(result.href).to.equal('output/page.xhtml');
+      expect(result.format).to.equal('xhtml');
+    });
+
     it('preserves state after resultDocument() callback', () => {
       const {window} = new JSDOM('<!doctype html><html><body></body></html>');
       const {document} = window;
@@ -196,15 +218,33 @@ describe('resultDocument() method', () => {
       const joiner = new JSONJoiningTransformer([]);
 
       joiner.resultDocument('data.json', () => {
-        joiner.output({method: 'text'});
+        joiner.output({method: 'json'});
         joiner.element('root', {type: 'json'}, [], () => {
           joiner.text('JSON data');
         });
-      }, {method: 'text'});
+      }, {method: 'json'});
 
       const result = joiner._resultDocuments[0];
       expect(result.href).to.equal('data.json');
-      expect(result.format).to.equal('text');
+      expect(result.format).to.equal('json');
+    });
+
+    it('supports xhtml output format', () => {
+      const joiner = new JSONJoiningTransformer([]);
+
+      joiner.resultDocument('page.xhtml', () => {
+        joiner.output({method: 'xhtml'});
+        joiner.element('html', {}, [], () => {
+          joiner.element('body', {}, [], () => {
+            joiner.text('XHTML content');
+          });
+        });
+      }, {method: 'xhtml'});
+
+      const result = joiner._resultDocuments[0];
+      expect(result.href).to.equal('page.xhtml');
+      expect(result.format).to.equal('xhtml');
+      expect(result.document.$document).to.exist;
     });
 
     it('preserves state after resultDocument() callback', () => {
@@ -262,6 +302,47 @@ describe('resultDocument() method', () => {
       expect(rootElement).to.exist;
       expect(rootElement[0]).to.equal('root');
       expect(rootElement[1]).to.deep.equal({id: 'test'});
+    });
+
+    it('handles result documents without output config', () => {
+      const joiner = new JSONJoiningTransformer([]);
+      joiner.resultDocument('simple.json', () => {
+        // No output() call here
+        joiner.element('simple', {}, [], () => {
+          joiner.text('Content');
+        });
+      });
+
+      const res = joiner._resultDocuments[0];
+      expect(res.href).to.equal('simple.json');
+      // Without output config, document is raw array/object
+      expect(Array.isArray(res.document)).to.equal(true);
+      expect(res.format).to.equal(undefined);
+      const el = res.document[0];
+      expect(Array.isArray(el)).to.equal(true);
+      expect(el[0]).to.equal('simple');
+    });
+
+    it('uses _docs when exposeDocuments is true during resultDocument', () => {
+      const joiner = new JSONJoiningTransformer([], {exposeDocuments: true});
+      joiner.resultDocument('doc.xml', () => {
+        joiner.output({method: 'xml'});
+        joiner.element('root', {a: '1'}, [], () => {
+          joiner.text('x');
+        });
+      }, {method: 'xml'});
+
+      expect(joiner._docs.length).to.be.greaterThan(0);
+      const lastDoc = joiner._docs.at(-1);
+      const res = joiner._resultDocuments[0];
+      expect(res.href).to.equal('doc.xml');
+      expect(res.format).to.equal('xml');
+      expect(res.document).to.equal(lastDoc);
+      // Root element is last child in $document.childNodes
+      const {childNodes} = res.document.$document;
+      const root = childNodes.at(-1);
+      expect(root[0]).to.equal('root');
+      expect(root[1]).to.deep.equal({a: '1'});
     });
   });
 

@@ -242,7 +242,7 @@ class DOMJoiningTransformer extends AbstractJoiningTransformer {
       );
 
       if (!omitXmlDeclaration && (
-        method === 'xml' || omitXmlDeclaration === false)
+        method === 'xml' || method === 'xhtml' || omitXmlDeclaration === false)
       ) {
         const {version, encoding, standalone} = this._outputConfig ?? {};
 

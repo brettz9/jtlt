@@ -56,6 +56,15 @@ JTLT has two layers:
     - DOMJoiningTransformer: Builds a DocumentFragment/Element tree. element()/attribute()/text() add real nodes; primitives append as text nodes.
     - JSONJoiningTransformer: Builds real JS values (objects/arrays/primitives) without serialization.
 
+### Output formats and multi-document
+
+- Output formats supported via `output({method})`: `xml`, `html`, `text`, `xhtml`, and `json`.
+  - `xml`/`xhtml` behave like XML: XML declaration (unless omitted) and optional DOCTYPE.
+  - `html` is HTML‑centric; `text` is raw text; `json` is JSON‑centric (no XML declaration/DOCTYPE).
+- Multi-document APIs:
+  - `document(cb, cfg?)`: Create additional documents; when a joiner is configured with `{exposeDocuments: true}`, `get()` returns an array of documents.
+  - `resultDocument(href, cb, cfg?)`: Create additional documents with metadata (`href`, `format`, and `document`) accessible on `joiner._resultDocuments`.
+
 ### Common joiner methods
 
 - append(value): Central sink. Based on context, concatenates to string, pushes to array, or assigns to an object property.

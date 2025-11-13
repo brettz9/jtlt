@@ -332,7 +332,7 @@ which stores documents in `_docs`, `resultDocument()` stores them in
 {
   href: string,        // The URI/path provided
   document: any,       // The generated document (XMLDocument, object, or string)
-  format: string       // Output format from config.method ('xml', 'html', 'text')
+  format: string       // Output format from config.method ('xml', 'html', 'text', 'xhtml', 'json')
 }
 ```
 
@@ -380,6 +380,23 @@ joiner._resultDocuments.forEach((result) => {
 the same transformation. `document()` populates `_docs` (accessible via `get()`
 when `exposeDocuments` is true), while `resultDocument()` populates
 `_resultDocuments` with metadata.
+
+### Output configuration and formats
+
+Joiners accept an output configuration via `output(cfg)` and within `document()`/`resultDocument()`.
+
+- `cfg.method`: one of `xml`, `html`, `text`, `xhtml`, or `json`.
+  - `xml` and `xhtml` are XML-like: an XML declaration is emitted unless `omitXmlDeclaration` is true; DOCTYPE is included when `doctypePublic` or `doctypeSystem` is provided. For the JSON joiner, DOCTYPE entries are included in `$document.childNodes` only when `method` is `xml` or `xhtml`.
+  - `html` emits HTML; the String and DOM joiners serialize accordingly. The JSON joiner does not include a DOCTYPE node in its `$document` wrapper for `html`.
+  - `text` emits raw text (no element wrappers). The JSON joiner will not add DOCTYPE; the String joiner writes plain strings.
+  - `json` indicates a JSON-centric output; for the JSON joiner, this is the natural mode and does not add XML declarations or DOCTYPE.
+- `omitXmlDeclaration`: when false (or for `xml`/`xhtml` with default), include XML declaration with optional `version`, `encoding`, `standalone`.
+- `doctypePublic`/`doctypeSystem`: when provided and `method` is `xml`/`xhtml`, include a DOCTYPE entry.
+
+Notes for JSON joiner with `exposeDocuments`:
+
+- When `exposeDocuments` is enabled in the joiner config, `get()` returns an array of `$document` wrappers. Each wrapper has a `childNodes` array where the root element is the last entry; the first entry may be a DOCTYPE object when `method` is `xml` or `xhtml`.
+- For `html`, `text`, or `json` methods, no DOCTYPE is included in the JSON wrapper by default.
 
 ## Error handling
 

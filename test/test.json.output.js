@@ -129,7 +129,9 @@ describe('JSONJoiningTransformer output', () => {
         expect(result[0]).to.be.an('object');
         expect(result[0]).to.have.property('$document');
         expect(result[0].$document).to.have.property('childNodes');
-        const rootEl = result[0].$document.childNodes[1];
+        const {childNodes} = result[0].$document;
+        // Root element is the last child (preceded optionally by DOCTYPE)
+        const rootEl = childNodes.at(-1);
         expect(rootEl[0]).to.equal('root');
         expect(rootEl[1]).to.deep.equal({id: 'test'});
         done();

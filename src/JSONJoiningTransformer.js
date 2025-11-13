@@ -74,8 +74,6 @@ class JSONJoiningTransformer extends AbstractJoiningTransformer {
     this._elementStack = [];
     /** @type {Record<string, unknown>} */
     this.propertySets = {};
-    /** @type {any} */
-    this._doc = undefined; // Set when root element built
     /** @type {any[]} */
     this._docs = [];
     /** @type {Array<{href: string, document: any, format?: string}>} */
@@ -455,7 +453,7 @@ class JSONJoiningTransformer extends AbstractJoiningTransformer {
 
       let xmlDeclaration;
       if (!omitXmlDeclaration && (
-        method === 'xml' || omitXmlDeclaration === false)
+        method === 'xml' || method === 'xhtml' || omitXmlDeclaration === false)
       ) {
         const {version, encoding, standalone} = this._outputConfig ?? {};
 
@@ -469,7 +467,7 @@ class JSONJoiningTransformer extends AbstractJoiningTransformer {
       const doc = {$document: {
         ...(xmlDeclaration ? {xmlDeclaration} : {}),
         childNodes: [
-          dtd,
+          ...(method === 'xml' || method === 'xhtml' ? [dtd] : []),
           jmlEl
         ]
       }};
@@ -693,7 +691,7 @@ class JSONJoiningTransformer extends AbstractJoiningTransformer {
 
       let xmlDeclaration;
       if (!omitXmlDeclaration && (
-        method === 'xml' || omitXmlDeclaration === false)
+        method === 'xml' || method === 'xhtml' || omitXmlDeclaration === false)
       ) {
         const {version, encoding, standalone} = this._outputConfig;
         xmlDeclaration = {
@@ -706,7 +704,7 @@ class JSONJoiningTransformer extends AbstractJoiningTransformer {
       resultDoc = {$document: {
         ...(xmlDeclaration ? {xmlDeclaration} : {}),
         childNodes: [
-          dtd,
+          ...(method === 'xml' || method === 'xhtml' ? [dtd] : []),
           elementData
         ]
       }};

@@ -49,6 +49,34 @@ describe('StringJoiningTransformer output', () => {
     expect(result).to.include('</html>');
   });
 
+  it('includes SYSTEM DOCTYPE when only systemId is set', () => {
+    const joiner = new StringJoiningTransformer('');
+    joiner.output({
+      method: 'xml',
+      doctypeSystem: 'http://example.com/sys.dtd'
+    });
+    joiner.element('root', {}, [], () => {
+      joiner.text('X');
+    });
+    const result = joiner.get();
+    expect(result).to.be.a('string');
+    expect(result).to.include('<!DOCTYPE root SYSTEM "http://example.com/sys.dtd">');
+    expect(result).to.include('<root>');
+    expect(result).to.include('X');
+  });
+
+  it('exposeDocuments pushes built string on get()', () => {
+    const joiner = new StringJoiningTransformer('', {exposeDocuments: true});
+    joiner.output({method: 'xml'});
+    joiner.element('doc', {}, [], () => {
+      joiner.text('Body');
+    });
+    const docs = joiner.get();
+    expect(Array.isArray(docs)).to.equal(true);
+    expect(docs.length).to.equal(1);
+    expect(docs[0]).to.include('<doc>Body</doc>');
+  });
+
   it(
     'builds a plain string when output() is not called',
     () => {

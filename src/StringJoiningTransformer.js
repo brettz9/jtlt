@@ -13,7 +13,7 @@ import AbstractJoiningTransformer from './AbstractJoiningTransformer.js';
  *   mediaType?: string,
  *   version?: string,
  *   standalone?: boolean,
- *   method?: "xml"|"html"|"text"
+ *   method?: "xml"|"html"|"text"|"json"|"xhtml"
  * }} OutputConfig
  */
 
@@ -473,7 +473,7 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
 
       let xmlDeclaration = '';
       if (!omitXmlDeclaration && (
-        method === 'xml' || omitXmlDeclaration === false)
+        method === 'xml' || method === 'xhtml' || omitXmlDeclaration === false)
       ) {
         const {version, encoding, standalone} = this._outputConfig ?? {};
         xmlDeclaration = `<?xml${
