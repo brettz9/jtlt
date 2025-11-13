@@ -401,19 +401,87 @@ class XPathTransformerContext {
   }
 
   /**
-   * @returns {void}
+   * Deep copy selection or current context when omitted.
+   * For DOM nodes uses cloneNode(true); for scalars copies the value.
+   * @param {string} [select] XPath expression selecting nodes (optional)
+   * @returns {XPathTransformerContext}
    */
-  // eslint-disable-next-line class-methods-use-this -- Todo
-  copyOf () {
-    // Todo
+  copyOf (select) {
+    /** @type {Node[]} */ let nodes = [];
+    if (select) {
+      try {
+        const res = this.get(select, true);
+        nodes = Array.isArray(res) ? res : [];
+      } catch {
+        nodes = [];
+      }
+    } else {
+      nodes = [this._contextNode];
+    }
+    if (nodes.length) {
+      for (const n of nodes) {
+        if (n && typeof n === 'object' && 'cloneNode' in n) {
+          let deep;
+          try {
+            deep = /** @type {Node} */ (n.cloneNode(true));
+          } catch { /* c8 ignore start */
+            deep = /** @type {Node} */ (n.cloneNode(false));
+          } /* c8 ignore stop */
+          this._getJoiningTransformer().append(/** @type {any} */ (deep));
+        } else { /* c8 ignore start */
+          this._getJoiningTransformer().append(/** @type {any} */ (n));
+        } /* c8 ignore stop */
+      }
+    } else if (select) { // Scalar path
+      const scalar = this._evalXPath(select, false);
+      // If scalar evaluation unexpectedly returns a Node/Document, use its
+      // textContent instead of attempting to append the Node itself (which
+      // can cause HierarchyRequestError for Document nodes).
+      if (
+        scalar &&
+        typeof scalar === 'object' &&
+        'nodeType' in /** @type {any} */ (scalar)
+      ) {
+        const node = /** @type {Node} */ (scalar);
+        let txt = /** @type {any} */ (node.textContent);
+        if (
+          (txt === null || typeof txt === 'undefined') &&
+          /** @type {any} */ (node).nodeType === 9 // Document
+        ) {
+          // Fallback to documentElement textContent if available
+          const docEl = /** @type {any} */ (
+            /** @type {any} */ (node)
+          ).documentElement;
+          txt = /** @type {any} */ (docEl && docEl.textContent) || '';
+        }
+        this._getJoiningTransformer().append(/** @type {any} */ (txt || ''));
+      } else {
+        this._getJoiningTransformer().append(/** @type {any} */ (scalar));
+      }
+    }
+    return this;
   }
 
   /**
-   * @returns {void}
+   * Shallow copy current context node (cloneNode(false)); scalars copied
+   * directly. Provided for parity with JSONPath copy().
+   * @param {string[]} [_propertySets] Ignored in XPath variant (parity only)
+   * @returns {XPathTransformerContext}
    */
-  // eslint-disable-next-line class-methods-use-this -- Todo
-  copy () {
-    // Todo
+  copy (_propertySets) {
+    const target = this._contextNode;
+    let clone;
+    if (target && typeof target === 'object' && 'nodeType' in target) {
+      try {
+        clone = /** @type {Node} */ (target.cloneNode(false));
+      } catch { /* c8 ignore start */
+        clone = target;
+      } /* c8 ignore stop */
+    } else { /* c8 ignore start */
+      clone = target;
+    } /* c8 ignore stop */
+    this._getJoiningTransformer().append(/** @type {any} */ (clone));
+    return this;
   }
 
   /**

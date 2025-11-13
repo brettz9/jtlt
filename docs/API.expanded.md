@@ -143,6 +143,9 @@ Methods (subset):
 - `callTemplate(name, withParam?)`
 - `key(name, match, use)` / `getKey(name, value)`
 - Joiner passthrough: `string()`, `text()`, `element()`, `object()`, `array()`, `number()`, `boolean()`, etc.
+\- Cloning helpers:
+  - `copy(propertySets?)` — Shallow clone of current context value (object/array). Nested references are preserved. Optional `propertySets` (array of registered names) merge into the top-level clone when object-like.
+  - `copyOf(select?, propertySets?)` — Deep clone (prefers `structuredClone`; falls back to JSON + manual). When `select` is provided, clones that target instead of the current value; primitives append directly. Optional `propertySets` merge when cloning objects.
 
 ### `XPathTransformerContext`
 
@@ -159,6 +162,9 @@ Parallels JSONPath context with XPath evaluation:
 - `variable(name, select)` – always stores node arrays for XPath.
 - `key(name, match, use)` – index by attribute value; `getKey` returns matching Element or context sentinel (`this`).
 - Default template rules: root traverses `.`, element traverses `*`, text nodes emit `nodeValue`, scalars emit `valueOf('.')`.
+\- Cloning helpers:
+  - `copy()` — Shallow clone of the current context node (`cloneNode(false)`) appended to the joiner.
+  - `copyOf(select?)` — Deep clone of each node matched by `select` (node-set) or the current node if omitted, using `cloneNode(true)`. If `select` yields a scalar, that scalar is appended. Document nodes in scalar fallback emit their `documentElement` text. Chainable.
 
 ## Sorting API
 

@@ -33,6 +33,12 @@ new JTLT({
 `variable(name, select)`, `key(name, match, use)`, `getKey(name, value)`.
 JSONPath variables store values; XPath variables store arrays of nodes.
 
+Cloning:
+`copy()` (shallow clone current JSON value or DOM node) and
+`copyOf(select?)` (deep clone; optional selector overrides target; scalar
+selectors append the scalar). JSONPath deep cloning uses `structuredClone`
+fallbacks; XPath uses `cloneNode(true)`.
+
 Conditional execution:
 - `if(select, cb)` — runs `cb` when the selector matches (non-empty
   result set) or coerces to a truthy scalar.

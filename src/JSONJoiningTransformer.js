@@ -442,14 +442,6 @@ class JSONJoiningTransformer extends AbstractJoiningTransformer {
         systemId: doctypeSystem ?? null // System ID (optional)
       }};
 
-      let xmlns;
-      if (elementName.includes(':')) {
-        const prefix = elementName.slice(0, elementName.indexOf(':'));
-        xmlns = atts?.[prefix];
-      } else {
-        ({xmlns} = atts ?? {});
-      }
-
       let xmlDeclaration;
       if (!omitXmlDeclaration && (
         method === 'xml' || omitXmlDeclaration === false)
