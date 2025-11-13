@@ -273,6 +273,40 @@ class XPathTransformerContext {
   }
 
   /**
+   * @param {string|
+   *   {name: string, withParam?: any[]}} name - Template name or
+   *   options object
+   * @param {any[]} [withParams] - Parameters to pass to template
+   * @returns {this}
+   */
+  callTemplate (name, withParams) {
+    // Invokes a named template, optionally passing values via withParam.
+    if (name && typeof name === 'object') {
+      withParams = name.withParam || withParams;
+      ({name} = name);
+    }
+    withParams = withParams || [];
+    const paramValues = withParams.map((withParam) => {
+      return withParam.value || this.get(withParam.select, false);
+    });
+    const results = this._getJoiningTransformer();
+    const templateObj = this._templates.find((template) => {
+      return template.name === name;
+    });
+    if (!templateObj) {
+      throw new Error(
+        'Template, ' + name + ', cannot be called as it was not found.'
+      );
+    }
+
+    // @ts-expect-error Todo: Fix
+    const result = templateObj.template.call(this, paramValues);
+    /** @type {any} */ (results).append(result);
+    return this;
+  }
+
+
+  /**
    * Iterate over nodes selected by XPath.
    * @param {string} select - XPath expression
    * @param {(this: XPathTransformerContext,
@@ -316,6 +350,22 @@ class XPathTransformerContext {
       jt.append(val);
     }
     return this;
+  }
+
+  /**
+   * @returns {void}
+   */
+  // eslint-disable-next-line class-methods-use-this -- Todo
+  copyOf () {
+    // Todo
+  }
+
+  /**
+   * @returns {void}
+   */
+  // eslint-disable-next-line class-methods-use-this -- Todo
+  copy () {
+    // Todo
   }
 
   /**
