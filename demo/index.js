@@ -1,6 +1,13 @@
 import {nbsp, jml, body} from 'jamilih';
 import {jtlt} from '../src/index-browser.js';
+import {editorFromTextArea} from './codemirror.js';
 
+/**
+ * @returns {Promise<void>}
+ */
+async function templateProcessor () {
+  await processTemplates();
+}
 /**
  * @param {string} sel
  * @returns {HTMLInputElement}
@@ -10,10 +17,12 @@ const $i = (sel) => {
 };
 /**
  * @param {string} sel
- * @returns {HTMLTextAreaElement}
+ * @returns {import('./codemirror.js').EnhancedTextArea}
  */
 const $t = (sel) => {
-  return /** @type {HTMLTextAreaElement} */ (document.querySelector(sel));
+  return /** @type {import('./codemirror.js').EnhancedTextArea} */ (
+    document.querySelector(sel)
+  );
 };
 
 /**
@@ -21,7 +30,7 @@ const $t = (sel) => {
  */
 async function processTemplates () {
   $t('#output').value = '';
-  const source = $t('#source').value;
+  const source = $t('#source').$getValue();
 
   let data;
   let isJson = false;
@@ -34,6 +43,9 @@ async function processTemplates () {
   ) {
     try {
       data = JSON.parse(source);
+      editorFromTextArea($t('#source'), {
+        json: {}
+      }, templateProcessor);
     } catch (err) {
       $t('#output').value = 'Error parsing source as either XML or JSON\n\n' +
         new XMLSerializer().serializeToString(data) + '\n\n' +
@@ -41,12 +53,16 @@ async function processTemplates () {
       return;
     }
     isJson = true;
+  } else {
+    editorFromTextArea($t('#source'), {
+      xml: {}
+    }, templateProcessor);
   }
 
   let templates;
   try {
     // eslint-disable-next-line no-eval -- Todo: input to jsep?
-    templates = eval($t('#jtltTemplates').value);
+    templates = eval($t('#jtltTemplates').$getValue());
     if (!templates || !templates.length) {
       throw new Error('Bad templates');
     }
@@ -109,8 +125,8 @@ jml('section', [
   ['select', {$on: {
     click () {
       if (/** @type {HTMLSelectElement} */ (this).value === 'xml') {
-        $t('#source').value = `<root></root>`;
-        $t('#jtltTemplates').value = $i('#forQuery').checked
+        $t('#source').$setValue(`<root></root>`);
+        $t('#jtltTemplates').$setValue($i('#forQuery').checked
           ? `['//*', function () {
   this.string('test123');
 }]`
@@ -118,15 +134,15 @@ jml('section', [
   ['//*', function () {
     this.string('test123');
   }]
-]`;
+]`);
       } else if (/** @type {HTMLSelectElement} */ (this).value === 'json') {
-        $t('#source').value = `{
+        $t('#source').$setValue(`{
   "a": 5,
   "b": {
     "c": 7
   }
-}`;
-        $t('#jtltTemplates').value = $i('#forQuery').checked
+}`);
+        $t('#jtltTemplates').$setValue($i('#forQuery').checked
           ? `['$.b', function (o) {
   this.string(o.c);
 }]`
@@ -140,9 +156,8 @@ jml('section', [
   ['$.b', function (o) {
     this.string(o.c);
   }]
-]`;
+]`);
       }
-      $t('#source').dispatchEvent(new Event('input'));
     }
   }}, [
     ['option', [
@@ -176,23 +191,20 @@ jml('section', [
   ['br'], ['br'],
   ['textarea', {
     id: 'source',
-    placeholder: 'Put XML or JSON source here...',
-    $on: {
-      async input () {
-        await processTemplates();
-      }
-    }
+    placeholder: 'Put XML or JSON source here...'
   }],
 
   ['textarea', {
     id: 'jtltTemplates',
-    placeholder: 'Put jtlt templates array here...',
-    $on: {
-      async input () {
-        await processTemplates();
-      }
-    }
+    placeholder: 'Put jtlt templates array here...'
   }],
 
   ['textarea', {id: 'output', placeholder: 'Loading...'}]
 ], body);
+
+editorFromTextArea($t('#jtltTemplates'), {
+  javascript: {typescript: true}
+}, templateProcessor);
+editorFromTextArea($t('#source'), {
+  xml: {}
+}, templateProcessor);

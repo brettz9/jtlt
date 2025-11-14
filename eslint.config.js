@@ -4,7 +4,9 @@ export default [
   {
     ignores: [
       'dist',
-      'coverage'
+      'coverage',
+      'demo/vendor',
+      'demo/codemirror.esm.js'
     ]
   },
   ...ashNazg(['sauron']),

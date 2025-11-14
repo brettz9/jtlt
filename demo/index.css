@@ -1,6 +1,6 @@
-textarea {
-  width: 300px;
-  height: 500px;
+.cm-editor {
+  margin-top: 20px;
+  margin-bottom: 20px;
 }
 select {
   min-width: 300px;

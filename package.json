@@ -25,6 +25,13 @@
     "url": "https://github.com/brettz9/jtlt.git"
   },
   "dependencies": {
+    "@codemirror/lang-javascript": "^6.2.4",
+    "@codemirror/lang-json": "^6.0.2",
+    "@codemirror/lang-xml": "^6.1.0",
+    "@codemirror/language": "^6.11.3",
+    "@codemirror/state": "^6.5.2",
+    "@lezer/highlight": "^1.2.3",
+    "codemirror": "^6.0.2",
     "fontoxpath": "^3.33.2",
     "jamilih": "0.62.1",
     "jhtml": "0.7.1",
@@ -39,6 +46,7 @@
   "devDependencies": {
     "@arethetypeswrong/cli": "^0.18.2",
     "@node-static/node-static": "^0.8.1",
+    "@rollup/plugin-node-resolve": "^16.0.3",
     "@types/chai": "^5.2.3",
     "@types/jsdom": "^27.0.0",
     "@types/mocha": "^10.0.10",
@@ -48,6 +56,7 @@
     "eslint-config-ash-nazg": "^39.8.0",
     "mocha": "^11.7.5",
     "open": "^10.2.0",
+    "rollup": "^4.53.2",
     "typescript": "^5.9.3"
   },
   "scripts": {
@@ -55,7 +64,8 @@
     "prepublishOnly": "pnpm i && pnpm build",
     "attw": "attw --pack",
     "tsc": "tsc",
-    "build": "tsc -p tsconfig-prod.json",
+    "build": "tsc -p tsconfig-prod.json && npm run rollup",
+    "rollup": "rollup -c",
     "copy-simple-get-json": "cp -r node_modules/simple-get-json/dist/index-es.js demo/vendor/simple-get-json/dist/index-es.js",
     "copy-jhtml": "cp -Rf node_modules/jhtml/src demo/vendor/jhtml",
     "copy-jamilih": "cp node_modules/jamilih/dist/jml.mjs demo/vendor/jamilih/dist/jml.mjs",

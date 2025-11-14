@@ -13,5 +13,5 @@
     "*.js", "*.d.ts", "src/**/*.js", "demo/**/*.js", "test/**/*.js",
     "typings/xpath2-js.d.ts"
   ],
-  "exclude": ["node_modules", "./dist/**/*.js"]
+  "exclude": ["node_modules", "./dist/**/*.js", "demo/codemirror.esm.js", "demo/vendor"]
 }
