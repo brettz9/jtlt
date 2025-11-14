@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>SAJJ test</title>
+</head>
+<body>
+<script type="module">
+import Stringifier from '../SAJJ.Stringifier.js';
+import {write, validateAndWrite} from './SAJJ.testing.js';
+const sf = new Stringifier(),
+  sfJS = new Stringifier({mode: 'JavaScript'});
+
+validateAndWrite(sf.walkJSONObject(null));
+validateAndWrite(sf.walkJSONObject(true));
+validateAndWrite(sf.walkJSONObject(4e5));
+validateAndWrite(sf.walkJSONObject('abc'));
+validateAndWrite(sf.walkJSONObject(['childItem', 'childWith"Dbl"Quotes']));
+
+validateAndWrite(
+  sf.walkJSONObject({a: null, b: true, c: 3, d: ['childItem', 'childWith"Dbl"Quotes'], e: {nested: true}, f: Infinity})
+);
+
+write('');
+write('Now try validating JavaScript as JSON (should get an error), but we can print it out:');
+
+validateAndWrite(
+  sfJS.walkJSONObject({a: null, b: true, c: 3, d: ['childItem', 'childWith"Dbl"Quotes'], e: {nested: true}, f: Infinity, g: undefined, h () {}})
+);
+
+</script>
+</body>
+</html>

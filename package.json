@@ -47,13 +47,19 @@
     "typescript": "^5.9.3"
   },
   "scripts": {
-    "start": "open http://localhost:8020/test/browser/ && static -p 8020",
+    "start": "open http://localhost:8021/demo/ && static -p 8021",
     "prepublishOnly": "pnpm i && pnpm build",
     "attw": "attw --pack",
     "tsc": "tsc",
     "build": "tsc -p tsconfig-prod.json",
+    "copy-simple-get-json": "cp -r node_modules/simple-get-json/dist/index-es.js demo/vendor/simple-get-json/dist/index-es.js",
+    "copy-jhtml": "cp -Rf node_modules/jhtml/src demo/vendor/jhtml",
+    "copy-jamilih": "cp node_modules/jamilih/dist/jml.mjs demo/vendor/jamilih/dist/jml.mjs",
+    "copy-jsonpath-plus" :"cp node_modules/jsonpath-plus/dist/index-browser-esm.js demo/vendor/jsonpath-plus/dist/index-browser-esm.js",
+    "copy": "npm run copy-simple-get-json && npm run copy-jhtml && npm run copy-jamilih && npm run copy-jsonpath-plus",
     "lint": "eslint .",
     "mocha": "mocha",
+    "test:browser": "open http://localhost:8020/test/browser/ && static -p 8020",
     "test": "c8 npm run mocha"
   },
   "bugs": "https://github.com/brettz9/jtlt/issues",
