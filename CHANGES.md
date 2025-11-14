@@ -4,6 +4,7 @@
 
 - feat: `number()` enhancements
 - feat: `analyzeString()`
+- feat: xpath 3.1
 
 ## 0.3.0
 

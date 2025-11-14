@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      fontoxpath:
+        specifier: ^3.33.2
+        version: 3.33.2
       jamilih:
         specifier: 0.62.1
         version: 0.62.1
@@ -20,12 +23,21 @@ importers:
       jsonpath-plus:
         specifier: 10.3.0
         version: 10.3.0
+      prsc:
+        specifier: ^4.0.0
+        version: 4.0.0
       simple-get-json:
         specifier: 10.0.0
         version: 10.0.0
+      whynot:
+        specifier: ^5.0.0
+        version: 5.0.0
       xpath2.js:
         specifier: 1.0.0-alpha-6
         version: 1.0.0-alpha-6
+      xspattern:
+        specifier: ^3.1.0
+        version: 3.1.0
     devDependencies:
       '@arethetypeswrong/cli':
         specifier: ^0.18.2
@@ -1390,6 +1402,9 @@ packages:
   flatted@3.3.3:
     resolution: {integrity: sha512-GX+ysw4PBCz0PzosHDepZGANEuFCMLrnRTiEy9McGjmkCQYwRq4A/X786G/fjM/+OjsWSU1ZrY5qyARZmO/uwg==}
 
+  fontoxpath@3.33.2:
+    resolution: {integrity: sha512-MVtx/RYKiF91uDzcWsNmhKP4suRI+VLbR8ppB9Q1h9rhC0I48TgPh0U7JFGKAxFH70aJYr3/m3zBBKfATO52hQ==}
+
   for-each@0.3.5:
     resolution: {integrity: sha512-dKx12eRCVIzqCxFGplyFKJMPvLEWgmNtUrpTiJIR5u97zEhRG8ySrtboPHZXx7daLxQVrl643cTzbab2tkQjxg==}
     engines: {node: '>= 0.4'}
@@ -2276,6 +2291,9 @@ packages:
     resolution: {integrity: sha512-uCWE2QqnGlwvvJXTwiHTPTyHE62+zORO5hpFWhAwBGDtEtTmNZZleNLJDoFsqHCL4p/CeAP2Q1uMKFUKALuRGQ==}
     engines: {node: '>=18.20'}
 
+  prsc@4.0.0:
+    resolution: {integrity: sha512-OmXQ2v76RlXNx/gqv7+oB6jyKnudJ/rsMfAIVexhbDFxXAJPoWKMxJkZU2ohlu4miCiSQCG+horf2DV4/kNc1Q==}
+
   punycode@2.3.1:
     resolution: {integrity: sha512-vYt7UD1U9Wg6138shLtLOvdAu+8DsC/ilFtEVHcH+wydcSpNE20AfSOduf6MkRFahL5FY7X1oU7nKVZFtfq8Fg==}
     engines: {node: '>=6'}
@@ -2768,6 +2786,9 @@ packages:
     engines: {node: '>= 8'}
     hasBin: true
 
+  whynot@5.0.0:
+    resolution: {integrity: sha512-cGGfDPYYqoHoMWqXVc3G+N74u1FhFhrBa+pOO906b9ktRc/JFUdwroTkfPqjKzyoCLVcKr6yy6bYIcWT7jTg2A==}
+
   widest-line@5.0.0:
     resolution: {integrity: sha512-c9bZp7b5YtRj2wOe6dlj32MK+Bx/M/d+9VB2SHM1OtsUHR0aV0tdP6DWh/iMt0kWi1t5g1Iudu6hQRNd1A4PVA==}
     engines: {node: '>=18'}
@@ -2824,6 +2845,9 @@ packages:
 
   xpath2.js@1.0.0-alpha-6:
     resolution: {integrity: sha512-qXg4Dzmpg1VKDEkGfjxFPrkZ9BOJv+PB/1LK+jJQf5EqTIx8BcBU38dTrCUeY+iIi4VGIsTV80wUa7wsyMjzYw==}
+
+  xspattern@3.1.0:
+    resolution: {integrity: sha512-rxtOX8ORJizRqswIdZ72G3thKrHd0Q+TvyUCMByc5VdjDz1nkuZKfPXM3xGdrGi0fwEy+DDJN7DqtAZ06Re4bA==}
 
   y18n@5.0.8:
     resolution: {integrity: sha512-0pfFzegeDWJHJIAmTLRP2DwHjdF5s7jo9tuztdQxAhINCdvS+3nGINqPd00AphqJR/0LhANUS6/+7SCb98YOfA==}
@@ -4385,6 +4409,11 @@ snapshots:
 
   flatted@3.3.3: {}
 
+  fontoxpath@3.33.2:
+    dependencies:
+      prsc: 4.0.0
+      xspattern: 3.1.0
+
   for-each@0.3.5:
     dependencies:
       is-callable: 1.2.7
@@ -5449,6 +5478,8 @@ snapshots:
 
   prototype-properties@5.0.0: {}
 
+  prsc@4.0.0: {}
+
   punycode@2.3.1: {}
 
   pupa@3.3.0:
@@ -6032,6 +6063,8 @@ snapshots:
     dependencies:
       isexe: 2.0.0
 
+  whynot@5.0.0: {}
+
   widest-line@5.0.0:
     dependencies:
       string-width: 7.2.0
@@ -6073,6 +6106,10 @@ snapshots:
   xmlchars@2.2.0: {}
 
   xpath2.js@1.0.0-alpha-6: {}
+
+  xspattern@3.1.0:
+    dependencies:
+      whynot: 5.0.0
 
   y18n@5.0.8: {}
 

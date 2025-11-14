@@ -61,6 +61,7 @@ async function processTemplates () {
       : await jtlt({
         data,
         engineType: 'xpath',
+        xpathVersion: 3.1,
         outputType: 'string',
         templates
       });

@@ -85,12 +85,13 @@ Responsibilities:
 - Sorts by priority (numeric or specificity resolver).
 - Invokes winning template; falls back to default rules when no match.
 
-### `XPathTransformer` (experimental)
+### `XPathTransformer`
 
 Same pattern for XML/HTML DOM data using XPath selectors.
 
 Config additions:
-- `xpathVersion`: `1` (native `XPathEvaluator`), `2` (`xpath2.js`). Default `1`.
+- `xpathVersion`: `1` (native `XPathEvaluator`), `2` (`xpath2.js`), `3.1` (`fontoxpath`).
+  Default `1`.
 
 ```js
 import {XPathTransformer, StringJoiningTransformer} from 'jtlt';
@@ -122,7 +123,8 @@ const out = engine.transform('');
 ```
 
 Limitations:
-- Version 2 (`xpath2.js`) may lack some XPath 2.0 functions; stick to basic location paths and simple predicates.
+- Versions 2 and 3 (`xpath2.js` and `fontoxpath`) may lack some XPath functions;
+  stick to basic location paths and simple predicates.
 - Namespace resolution not yet exposed (future `namespaceResolver` option).
 
 ## Contexts

@@ -25,7 +25,7 @@ new JTLT({
 - JSONPathTransformer: on JSON with JSONPath selectors; resolves
 	priority and falls back to defaults when no template matches.
 - XPathTransformer (experimental): on XML/HTML DOM. Choose
-	`engineType: 'xpath'` on JTLT and set `xpathVersion: 1 | 2`.
+	`engineType: 'xpath'` on JTLT and set `xpathVersion: 1 | 2 | 3.1`.
 
 ## Context basics
 

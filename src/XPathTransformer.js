@@ -6,7 +6,7 @@ import XPathTransformerContext from './XPathTransformerContext.js';
  * @property {boolean} [errorOnEqualPriority] Throw on equal priority
  * @property {import('./index.js').
  *   XPathTemplateArray<T>} templates Template objects
- * @property {number} [xpathVersion] XPath version (1|2)
+ * @property {number} [xpathVersion] XPath version (1|2|3.1)
  */
 
 /**

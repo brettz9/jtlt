@@ -175,7 +175,7 @@ export const setWindow = (win) => {
  *     import('./JSONPathTransformerContext.js').default
  *   >],
  *   engineType: 'xpath',
- *   xpathVersion?: 1|2,
+ *   xpathVersion?: 1|2|3.1,
  *   outputType?: T
  * }} XPathJTLTOptions
  */

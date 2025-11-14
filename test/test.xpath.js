@@ -21,7 +21,7 @@ function buildDom () {
 }
 
 describe('XPathTransformer basics', () => {
-  it('renders simple elements using templates', () => {
+  it('renders simple elements using templates (2)', () => {
     const {document} = buildDom();
     const joiner = new StringJoiningTransformer('');
     const templates =
@@ -54,6 +54,47 @@ describe('XPathTransformer basics', () => {
       templates,
       joiningTransformer: joiner,
       xpathVersion: 2 // ensure 2.0 mode also works
+    });
+
+    const out = engine.transform('');
+    expect(out).to.be.a('string');
+    expect(out).to.include('<item>text</item>');
+    expect(out).to.include('<item>more</item>');
+  });
+
+  it('renders simple elements using templates (3.1)', () => {
+    const {document} = buildDom();
+    const joiner = new StringJoiningTransformer('');
+    const templates =
+      /**
+       * @type {import('../src/index.js').XPathTemplateArray<"string">}
+       */
+      ([
+        {
+          name: 'root',
+          path: '/',
+          template () {
+            // Render all items
+            this.applyTemplates('//item');
+          }
+        },
+        {
+          name: 'item',
+          path: '//item',
+          template (node) {
+            // Lowercase tagName in jsdom HTML; use provided name to avoid case
+            this.element('item', {}, [], () => {
+              this.text(node.textContent);
+            });
+          }
+        }
+      ]);
+
+    const engine = new XPathTransformer({
+      data: document,
+      templates,
+      joiningTransformer: joiner,
+      xpathVersion: 3.1 // ensure 3.1 mode also works
     });
 
     const out = engine.transform('');

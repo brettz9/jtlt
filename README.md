@@ -46,9 +46,9 @@ JTLT has two layers:
     - JSONPathTransformerContext: The execution context passed to templates. It mirrors the joiner API (e.g., string(), object(), array()) so templates can emit results. It also provides helpers like applyTemplates(), callTemplate(), valueOf(), variable(), and forEach().
     - XPathTransformer (experimental): Applies templates to
       XML/HTML DOM by matching XPath selectors (and optional modes).
-      Supports two evaluation modes: version 1 (native
-      XPathEvaluator) and version 2 (via xpath2.js). Falls back to
-      built‑in default rules when no template matches.
+      Supports three evaluation modes: version 1 (native
+      XPathEvaluator), version 2 (via xpath2.js), and version 3 (via fontoxpath).
+      Falls back to built‑in default rules when no template matches.
     - XPathTransformerContext (experimental): Execution context for
       XPath. Offers get(), forEach(), valueOf(), variable(), key()
       and the same joiner helpers as the JSONPath context.
@@ -133,7 +133,8 @@ You can run templates against XML/HTML using XPath instead of JSONPath.
 - `data` should be a Document or Element (e.g., from `DOMParser` with
   `text/xml`).
 - `xpathVersion`: `1` uses native XPath (browser like). `2` uses
-  `xpath2.js` for XPath 2.0‑style evaluation.
+  `xpath2.js` for XPath 2.0‑style evaluation. and `3.1` uses `fontoxpath`
+  for XPath 3.1.
 - In version 2, some functions may be missing; prefer simple path
   expressions. Use version 1 for standard XPath 1.0 function support.
 

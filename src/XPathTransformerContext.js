@@ -1,10 +1,12 @@
 import xpath2 from 'xpath2.js'; // Runtime JS import; ambient types declared
-// xpathVersion: 1 => browser/native XPathEvaluator API; 2 => xpath2.js
+// eslint-disable-next-line @stylistic/max-len -- Long
+// xpathVersion: 1 => browser/native XPathEvaluator API; 2 => xpath2.js, 3 => fontoxpath
+import fontoxpath from 'fontoxpath';
 
 /**
  * @typedef {object} XPathTransformerContextConfig
  * @property {unknown} [data] - XML/DOM root to transform
- * @property {number} [xpathVersion] - 1 or 2 (default 1)
+ * @property {number} [xpathVersion] - 1, 2, 3.1 (default 1)
  * @property {import('./index.js').
  *   JoiningTransformer} joiningTransformer Joiner
  * @property {boolean} [errorOnEqualPriority]
@@ -15,13 +17,13 @@ import xpath2 from 'xpath2.js'; // Runtime JS import; ambient types declared
  * Execution context for XPath-driven template application.
  *
  * Similar to JSONPathTransformerContext but uses XPath expressions on a
- * DOM/XML-like tree. Supports XPath 1.0 (default) or 2.0 when
- * `xpathVersion: 2`.
+ * DOM/XML-like tree. Supports XPath 1.0 (default), 2.0 when
+ * `xpathVersion: 2`, or 3.1 when `xpathVersion: 3.1`.
  *
  * Expected config:
  * - data: A Document, Element, or XML-like root node.
  * - joiningTransformer: joiner with append(), string(), object(), array(), etc.
- * - xpathVersion: 1|2 (default 1)
+ * - xpathVersion: 1|2|3.1 (default 1)
  * - errorOnEqualPriority, specificityPriorityResolver (same semantics).
  */
 class XPathTransformerContext {
@@ -69,7 +71,7 @@ class XPathTransformerContext {
     if (!expr) {
       return this._contextNode;
     }
-    const version = this._config.xpathVersion === 2 ? 2 : 1;
+    const version = this._config.xpathVersion ?? 1;
     if (version === 1) {
       // Use native XPath (browser-like); rely on DOM doc if available.
       const doc = this._contextNode && this._contextNode.ownerDocument
@@ -141,8 +143,25 @@ class XPathTransformerContext {
       /* c8 ignore stop */
       }
     }
-    // Version 2: xpath2.js
-    const result = xpath2.evaluate(expr, this._contextNode);
+    if (version === 2) {
+      // Version 2: xpath2.js
+      const result = xpath2.evaluate(expr, this._contextNode);
+      if (asNodes) {
+        // eslint-disable-next-line @stylistic/max-len -- Long
+        /* c8 ignore next -- array wrap/identity branch counted in other tests */
+        return Array.isArray(result) ? result : [result];
+      }
+      /* c8 ignore next -- scalar return trivial; wrap behavior tested */
+      return result;
+    }
+
+    // eslint-disable-next-line @stylistic/max-len -- Long
+    // eslint-disable-next-line import/no-named-as-default-member -- Only as default
+    const result = fontoxpath.evaluateXPath(
+      expr, this._contextNode, undefined, undefined,
+      // Non-deprecated, predictable all results
+      14 // ReturnType.ALL_RESULTS
+    );
     if (asNodes) {
       /* c8 ignore next -- array wrap/identity branch counted in other tests */
       return Array.isArray(result) ? result : [result];

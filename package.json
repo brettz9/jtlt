@@ -25,12 +25,16 @@
     "url": "https://github.com/brettz9/jtlt.git"
   },
   "dependencies": {
+    "fontoxpath": "^3.33.2",
     "jamilih": "0.62.1",
     "jhtml": "0.7.1",
     "jsdom": "27.1.0",
     "jsonpath-plus": "10.3.0",
+    "prsc": "^4.0.0",
     "simple-get-json": "10.0.0",
-    "xpath2.js": "1.0.0-alpha-6"
+    "whynot": "^5.0.0",
+    "xpath2.js": "1.0.0-alpha-6",
+    "xspattern": "^3.1.0"
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "^0.18.2",
@@ -55,7 +59,7 @@
     "copy-simple-get-json": "cp -r node_modules/simple-get-json/dist/index-es.js demo/vendor/simple-get-json/dist/index-es.js",
     "copy-jhtml": "cp -Rf node_modules/jhtml/src demo/vendor/jhtml",
     "copy-jamilih": "cp node_modules/jamilih/dist/jml.mjs demo/vendor/jamilih/dist/jml.mjs",
-    "copy-jsonpath-plus" :"cp node_modules/jsonpath-plus/dist/index-browser-esm.js demo/vendor/jsonpath-plus/dist/index-browser-esm.js",
+    "copy-jsonpath-plus": "cp node_modules/jsonpath-plus/dist/index-browser-esm.js demo/vendor/jsonpath-plus/dist/index-browser-esm.js",
     "copy": "npm run copy-simple-get-json && npm run copy-jhtml && npm run copy-jamilih && npm run copy-jsonpath-plus",
     "lint": "eslint .",
     "mocha": "mocha",

@@ -45,4 +45,17 @@ describe('XPathTransformerContext additional coverage', () => {
     expect(Array.isArray(scalarWrapped)).to.be.true;
     expect(scalarWrapped[0]).to.equal(3);
   });
+
+  it('covers v3.1 scalar return without asNodes', () => {
+    const doc = makeDoc('<root><child>Test</child></root>');
+    const joiner = new StringJoiningTransformer('');
+    const ctx = new XPathTransformerContext({
+      data: doc.documentElement,
+      joiningTransformer: joiner,
+      xpathVersion: 3.1
+    }, []);
+    const scalarWrapped = /** @type {Node[]} */ (ctx._evalXPath('1+2', true));
+    expect(Array.isArray(scalarWrapped)).to.be.true;
+    expect(scalarWrapped[0]).to.equal(3);
+  });
 });
