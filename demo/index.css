@@ -2,6 +2,10 @@
   margin-top: 20px;
   margin-bottom: 20px;
 }
+textarea {
+  width: 700px;
+  height: 500px;
+}
 select {
   min-width: 300px;
 }
