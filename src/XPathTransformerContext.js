@@ -293,7 +293,16 @@ class XPathTransformerContext {
           );
       }
       this._contextNode = node;
+
+      // Set up parameter context for valueOf() access in templates
+      const prevTemplateParams = this._params;
+      this._params = {0: node};
+
       const ret = templateObj.template.call(this, node, {mode});
+
+      // Restore previous parameter context
+      this._params = prevTemplateParams;
+
       if (typeof ret !== 'undefined') {
         this._getJoiningTransformer().append(ret);
       }
@@ -371,7 +380,18 @@ class XPathTransformerContext {
     const nodesResult = this._evalXPath(select, true);
     const nodes = /** @type {Node[]} */ (nodesResult);
     for (const n of nodes) {
-      cb.call(this, n);
+      // Set up parameter context for valueOf() access
+      const prevParams = this._params;
+      const prevContext = this._contextNode;
+      this._params = {0: n};
+      this._contextNode = n;
+      try {
+        cb.call(this, n);
+      } finally {
+        // Restore previous parameter context
+        this._params = prevParams;
+        this._contextNode = prevContext;
+      }
     }
     return this;
   }
@@ -394,6 +414,22 @@ class XPathTransformerContext {
       const paramName = selectStr.slice(1);
       if (this._params && paramName in this._params) {
         val = this._params[paramName];
+        // If val is a Node, extract its text content
+        if (val && typeof val === 'object' && 'nodeType' in val) {
+          if (val.nodeType === 3) {
+            // Text node: use nodeValue
+            val = val.nodeValue;
+          } else if (val.nodeType === 9) {
+            // Document node: use documentElement.textContent
+            const doc = /** @type {Document} */ (val);
+            val = doc.documentElement
+              ? doc.documentElement.textContent
+              : null;
+          } else {
+            // Other nodes: use textContent
+            val = val.textContent;
+          }
+        }
       } else {
         // Fall back to normal XPath evaluation
         const resResult = this._evalXPath(selectStr, true);
@@ -406,9 +442,19 @@ class XPathTransformerContext {
         /* c8 ignore stop */
       }
     } else if (!selectStr || selectStr === '.') {
-      val = this._contextNode.nodeType === 3
-        ? this._contextNode.nodeValue
-        : this._contextNode.textContent;
+      if (this._contextNode.nodeType === 3) {
+        // Text node: use nodeValue
+        val = this._contextNode.nodeValue;
+      } else if (this._contextNode.nodeType === 9) {
+        // Document node: use documentElement.textContent
+        const doc = /** @type {Document} */ (this._contextNode);
+        val = doc.documentElement
+          ? doc.documentElement.textContent
+          : null;
+      } else {
+        // Other nodes: use textContent
+        val = this._contextNode.textContent;
+      }
     } else {
       const resResult = this._evalXPath(selectStr, true);
       const res = /** @type {Node[]} */ (resResult);

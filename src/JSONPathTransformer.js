@@ -70,6 +70,8 @@ class JSONPathTransformer {
     if (len > 1) {
       this._triggerEqualPriorityError();
     }
+    // Set up parameter context for valueOf() access in root template
+    jte._params = {0: jte._contextObj};
     const ret = /** @type {import('./index.js').JSONPathTemplateObject<T>} */ (
       templateObj
     ).template.call(jte, undefined, {mode});

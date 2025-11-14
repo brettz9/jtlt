@@ -407,12 +407,19 @@ class JSONPathTransformerContext {
       that._parent = parent;
       that._parentProperty = (parentProperty ?? that._parentProperty);
 
+      // Set up parameter context for valueOf() access in templates
+      const prevTemplateParams = that._params;
+      that._params = {0: value};
+
       const ret =
         /** @type {import('./index.js').JSONPathTemplateObject<T>} */ (
           templateObj
         ).template.call(
           that, value, {mode, parent, parentProperty}
         );
+
+      // Restore previous parameter context
+      that._params = prevTemplateParams;
       if (typeof ret !== 'undefined') {
         // After the undefined check, ret is ResultType<T>
         that._getJoiningTransformer().append(
@@ -606,7 +613,18 @@ class JSONPathTransformerContext {
     const comparator = feBuildComparator(sort);
     const list = comparator ? [...matches].toSorted(comparator) : matches;
     for (const m of list) {
-      cb.call(that, m.value);
+      // Set up parameter context for valueOf() access
+      const prevParams = that._params;
+      const prevContext = that._contextObj;
+      that._params = {0: m.value};
+      that._contextObj = m.value;
+      try {
+        cb.call(that, m.value);
+      } finally {
+        // Restore previous parameter context
+        that._params = prevParams;
+        that._contextObj = prevContext;
+      }
     }
     return this;
   }

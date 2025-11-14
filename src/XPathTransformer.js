@@ -83,6 +83,8 @@ class XPathTransformer {
     if (len > 1) {
       this._triggerEqualPriorityError();
     }
+    // Set up parameter context for valueOf() access in root template
+    xte._params = {0: xte._contextNode};
     const ret = templateObj.template.call(xte, undefined, {mode});
     if (typeof ret !== 'undefined') {
       /** @type {any} */ (xte)._getJoiningTransformer().append(ret);
