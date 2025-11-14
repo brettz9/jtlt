@@ -92,6 +92,12 @@ jml('section', [
   }
 }`;
         $t('#jtltTemplates').value = `[
+  {
+    path: '$',
+    template () {
+      this.applyTemplates('$.b');
+    }
+  },
   ['$.b', function (o) {
     this.string(o.c);
   }]
