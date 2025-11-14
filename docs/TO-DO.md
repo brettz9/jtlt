@@ -84,7 +84,9 @@
 
 7. See code for other possible to-dos
 
-8. Consider implementing the following elements from <https://www.w3.org/TR/xslt-30/>
+8. Promise-based templates
+
+9. Consider implementing the following elements from <https://www.w3.org/TR/xslt-30/>
     which are not yet implemented.
 
   xsl:accept
