@@ -416,8 +416,7 @@ Differences / current limitations:
 
 ## Differences between an exact equivalence with XSLT
 
-JTLT, having the freedom to start a new pattern from XSLT, and though
-seeking to learn from it, deviates somewhat from making an exact
+JTLT deviates somewhat from making an exact
 equivalence with XSLT (to the extent JTLT and JSONPath implement
 what could possibly be transferred to JSON-based transformations
 from XSLT):
