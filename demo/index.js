@@ -1,16 +1,6 @@
 import {jml, body} from 'jamilih';
 import {jtlt} from '../src/index-browser.js';
 
-/*
-  [{
-    path: '//*[@type="questions-answers"]/p',
-    template (p) {
-      this.valueOf('@n');
-      this.valueOf('./text()');
-    }
-  }]
-*/
-
 /**
  * @param {string} sel
  * @returns {HTMLTextAreaElement}

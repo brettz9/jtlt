@@ -40,7 +40,7 @@
     through [HTTPQuery](https://github.com/brettz9/httpquery) (and also
     supply to JSONEditor, etc.). Utilize updating by reference.
 
-8. Demo narrowing to subset of JavaScript (as with `jspe`) to make
+8. Demo narrowing to subset of JavaScript (as with `jsep`) to make
     JTLT truly "declarative" as far as freedom from scripting
 
 9. Use [fontoxpath](https://github.com/FontoXML/fontoxpath)
