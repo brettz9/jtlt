@@ -36,10 +36,14 @@ async function processTemplates () {
   let isJson = false;
   data = new DOMParser().parseFromString(source, 'text/xml');
 
-  if (data.documentElement.localName === 'parsererror' &&
+  if (
+    // Firefox
+    (data.documentElement.localName === 'parsererror' &&
     data.documentElement.namespaceURI ===
       // eslint-disable-next-line sonarjs/no-clear-text-protocols -- Namespace
-      'http://www.mozilla.org/newlayout/xml/parsererror.xml'
+      'http://www.mozilla.org/newlayout/xml/parsererror.xml') ||
+    // Chrome
+    data.querySelector('parsererror')
   ) {
     try {
       data = JSON.parse(source);
