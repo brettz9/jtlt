@@ -380,7 +380,13 @@ class JTLT {
           );
         // eslint-disable-next-line @stylistic/max-len -- Long
         // eslint-disable-next-line unicorn/no-array-method-this-argument -- Not array
-        this.forEach(path, fn);
+        this.forEach(path, (arg) => {
+          const ret = fn.call(this, arg);
+          if (typeof ret !== 'undefined') {
+            // @ts-expect-error Ok?
+            this._getJoiningTransformer().append(ret);
+          }
+        });
       }
       : cfg.query || (
         typeof cfg.templates === 'function'
