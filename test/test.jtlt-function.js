@@ -113,7 +113,6 @@ describe('jtlt function wrapper', () => {
         }]
       });
 
-      // @ts-expect-error - result type is unknown
       expect(result.textContent).to.include('test');
     });
 

@@ -176,7 +176,7 @@ export const setWindow = (win) => {
  *   >],
  *   engineType: 'xpath',
  *   xpathVersion?: 1|2,
- *   outputType?: 'string'|'dom'|'json'
+ *   outputType?: T
  * }} XPathJTLTOptions
  */
 
