@@ -1,5 +1,9 @@
 # jtlt CHANGES
 
+## ?
+
+- fix: `valueOf` and context when no arguments to `applyTemplates()`
+
 ## 0.4.0
 
 - feat: `number()` enhancements
