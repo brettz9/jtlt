@@ -1,6 +1,13 @@
-import {jml, body} from 'jamilih';
+import {nbsp, jml, body} from 'jamilih';
 import {jtlt} from '../src/index-browser.js';
 
+/**
+ * @param {string} sel
+ * @returns {HTMLInputElement}
+ */
+const $i = (sel) => {
+  return /** @type {HTMLInputElement} */ (document.querySelector(sel));
+};
 /**
  * @param {string} sel
  * @returns {HTMLTextAreaElement}
@@ -50,25 +57,49 @@ async function processTemplates () {
   }
 
   let result;
-  try {
-    result = isJson
-      ? await jtlt({
-        data,
-        engineType: 'jsonpath',
-        outputType: 'string',
-        templates
-      })
-      : await jtlt({
-        data,
-        engineType: 'xpath',
-        xpathVersion: 3.1,
-        outputType: 'string',
-        templates
-      });
-  } catch (err) {
-    $t('#output').value = 'Error executing jtlt()\n\n' +
-    /** @type {Error} */ (err).message;
-    return;
+
+  if ($i('#forQuery').checked) {
+    try {
+      result = isJson
+        ? await jtlt({
+          data,
+          engineType: 'jsonpath',
+          outputType: 'string',
+          forQuery: templates
+        })
+        : await jtlt({
+          data,
+          engineType: 'xpath',
+          xpathVersion: 3.1,
+          outputType: 'string',
+          forQuery: templates
+        });
+    } catch (err) {
+      $t('#output').value = 'Error executing jtlt()\n\n' +
+      /** @type {Error} */ (err).message;
+      return;
+    }
+  } else {
+    try {
+      result = isJson
+        ? await jtlt({
+          data,
+          engineType: 'jsonpath',
+          outputType: 'string',
+          templates
+        })
+        : await jtlt({
+          data,
+          engineType: 'xpath',
+          xpathVersion: 3.1,
+          outputType: 'string',
+          templates
+        });
+    } catch (err) {
+      $t('#output').value = 'Error executing jtlt()\n\n' +
+      /** @type {Error} */ (err).message;
+      return;
+    }
   }
 
   $t('#output').value = result;
@@ -79,7 +110,11 @@ jml('section', [
     click () {
       if (/** @type {HTMLSelectElement} */ (this).value === 'xml') {
         $t('#source').value = `<root></root>`;
-        $t('#jtltTemplates').value = `[
+        $t('#jtltTemplates').value = $i('#forQuery').checked
+          ? `['//*', function () {
+  this.string('test123');
+}]`
+          : `[
   ['//*', function () {
     this.string('test123');
   }]
@@ -91,7 +126,11 @@ jml('section', [
     "c": 7
   }
 }`;
-        $t('#jtltTemplates').value = `[
+        $t('#jtltTemplates').value = $i('#forQuery').checked
+          ? `['$.b', function (o) {
+  this.string(o.c);
+}]`
+          : `[
   {
     path: '$',
     template () {
@@ -115,6 +154,24 @@ jml('section', [
     ['option', {value: 'json'}, [
       'JSON/JSONPath example 1'
     ]]
+  ]],
+  nbsp.repeat(2),
+  ['label', [
+    ['input', {
+      id: 'forQuery', type: 'checkbox',
+      checked: Boolean(localStorage.getItem('forQuery')),
+      $on: {
+        async click (e) {
+          if (/** @type {HTMLInputElement} */ (e.target).checked) {
+            localStorage.setItem('forQuery', 'true');
+          } else {
+            localStorage.removeItem('forQuery');
+          }
+          await processTemplates();
+        }
+      }
+    }],
+    'Use `forQuery` instead of templates'
   ]],
   ['br'], ['br'],
   ['textarea', {

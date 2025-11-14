@@ -390,10 +390,13 @@ class JTLT {
             : null
       );
     this.config.templates = query
-      // eslint-disable-next-line @stylistic/max-len -- Long
-      ? /** @type {JSONPathTemplateObject<joiningTypes>[]|XPathTemplateObject<joiningTypes>[]} */ ([
-        {name: 'root', path: '$', template: query}
-      ])
+      ? this.config.engineType === 'xpath'
+        ? /** @type {XPathTemplateObject<joiningTypes>[]} */ ([
+          {name: 'root', path: '//*', template: query}
+        ])
+        : /** @type {JSONPathTemplateObject<joiningTypes>[]} */ ([
+          {name: 'root', path: '$', template: query}
+        ])
       // eslint-disable-next-line @stylistic/max-len -- Long
       : /** @type {JSONPathTemplateObject<joiningTypes>[]|XPathTemplateObject<joiningTypes>[]} */ (
         cfg.templates || [cfg.template]

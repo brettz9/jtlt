@@ -1125,6 +1125,27 @@ describe('index.js - additional configuration branches', function () {
     assert.equal(out, '12');
   });
 
+  it('should use forQuery configuration (XML)', function () {
+    const {window} = new JSDOM(
+      '<root><item class="a">1</item><item>2</item></root>'
+    );
+    const data = window.document;
+    let out = '';
+    new JTLT({
+      data,
+      outputType: 'string',
+      engineType: 'xpath',
+      forQuery: ['//item/text()', function (arg) {
+        this.string(arg.nodeValue);
+      }],
+      success (result) {
+        out = result; return result;
+      }
+    }).transform();
+    // forQuery should trigger forEach on selected items
+    assert.equal(out, '12');
+  });
+
   it('should use query function configuration', function () {
     const data = {test: 'value'};
     let out;

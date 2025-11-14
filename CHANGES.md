@@ -5,6 +5,9 @@
 - feat: `number()` enhancements
 - feat: `analyzeString()`
 - feat: xpath 3.1
+- feat: demo
+- fix: set XPath default query to `//*`
+- fix(types): outputType
 
 ## 0.3.0
 
