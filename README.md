@@ -21,11 +21,11 @@ The sample file is from <https://goessner.net/articles/JsonPath/>
 ## Installation
 
 ```shell
-npm install .
+npm install jtlt
 ```
 
 In the browser, you will also need to include the dependencies.
-See the [test file](test/test.html).
+See the [test file](./test/browser/index.html).
 
 ## Basic usage
 
@@ -95,55 +95,53 @@ Provide joiningConfig when constructing JTLT:
 - joiningConfig.xmlElements: Switch element() to XML serialization mode in the String joiner.
 - joiningConfig.preEscapedAttributes: Skip escaping attribute values in the String joiner.
 
-### XPath (experimental)
+## Quick start (JSON source)
+
+```js
+import {jtlt} from 'jtlt';
+
+const data = {title: 'Hello', items: ['a', 'b']};
+
+const templates = [
+  {path: '$', template () {
+    this.applyTemplates();
+  }},
+  {path: '$.title', template (v) {
+    this.string('<h1>', () => this.text(v));
+    this.string('</h1>');
+  }},
+  {path: '$.items[*]', template (v) {
+    this.element('li', {}, [], () => this.text(v));
+  }}
+];
+
+const out = await jtlt({data, templates, outputType: 'string'});
+
+console.log(out);
+```
+
+Notes:
+
+- Modes let you organize multiple passes or output targets.
+- You can also call templates by name via this.callTemplate('name').
+- For DOM output, use outputType: 'dom'. For JSON output, use 'json'.
+
+### Quick start (XML source with XPath)
 
 You can run templates against XML/HTML using XPath instead of JSONPath.
 
-- Construct with `new XPathTransformer({data, templates,
-  joiningTransformer, xpathVersion})`.
-- `data` should be a Document or Element (e.g., from DOMParser with
+- `data` should be a Document or Element (e.g., from `DOMParser` with
   `text/xml`).
 - `xpathVersion`: `1` uses native XPath (browser like). `2` uses
   `xpath2.js` for XPath 2.0‑style evaluation.
 - In version 2, some functions may be missing; prefer simple path
-  expressions. Use version 1 for wide XPath 1.0 function support.
+  expressions. Use version 1 for standard XPath 1.0 function support.
 
-Example (string output):
-
-```js
-import {JSDOM} from 'jsdom';
-import {StringJoiningTransformer, XPathTransformer} from 'jtlt';
-
-const {window} = new JSDOM('<!doctype><html><body></body></html>');
-const parser = new window.DOMParser();
-const doc = parser.parseFromString(
-  '<root><item>a</item><item>b</item></root>', 'text/xml'
-);
-
-const joiner = new StringJoiningTransformer('');
-const templates = [
-  {name: 'root', path: '/', template () {
-    this.applyTemplates('//item');
-  }},
-  {name: 'item', path: '//item', template (node) {
-    this.element('li', {}, [], () => this.text(node.textContent));
-  }}
-];
-
-const out = new XPathTransformer({
-  data: doc,
-  templates,
-  joiningTransformer: joiner,
-  xpathVersion: 1 // or 2
-}).transform('');
-// -> <li>a</li><li>b</li>
-```
-
-Using the JTLT facade with XPath (no manual joiner needed):
+Example (string output) using the JTLT facade with XPath:
 
 ```js
 import {JSDOM} from 'jsdom';
-import JTLT from 'jtlt';
+import {jtlt} from 'jtlt';
 
 const {window} = new JSDOM('<!doctype><html><body></body></html>');
 const parser = new window.DOMParser();
@@ -167,48 +165,16 @@ const templates = [
   }
 ];
 
-const out = new JTLT({
+const out = await jtlt({
   data: doc,
   templates,
   outputType: 'string',
   engineType: 'xpath',
   xpathVersion: 1, // or 2
   success: (res) => res
-}).transform('');
+});
 // -> <li>a</li><li>b</li>
 ```
-
-## Quick start
-
-```js
-import JTLT from 'jtlt';
-
-const data = {title: 'Hello', items: ['a', 'b']};
-
-const templates = [
-  {path: '$', template () {
-    this.applyTemplates({mode: 'html'});
-  }},
-  {mode: 'html', path: '$.title', template (v) {
-    this.string('<h1>', () => this.text(v));
-    this.string('</h1>');
-  }},
-  {mode: 'html', path: '$.items[*]', template (v) {
-    this.element('li', {}, [], () => this.text(v));
-  }}
-];
-
-const out = new JTLT({data, templates, outputType: 'string'}).
-  transform('html');
-
-console.log(out);
-```
-
-Notes:
-
-- Modes let you organize multiple passes or output targets.
-- You can also call templates by name via this.callTemplate('name').
-- For DOM output, use outputType: 'dom'. For JSON output, use 'json'.
 
 ## One-off queries with forQuery (XQuery-like)
 
