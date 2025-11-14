@@ -47,7 +47,7 @@
     "typescript": "^5.9.3"
   },
   "scripts": {
-    "start": "open http://localhost:8020/demo/ && static -p 8020",
+    "start": "open http://localhost:8020/test/browser/ && static -p 8020",
     "prepublishOnly": "pnpm i && pnpm build",
     "attw": "attw --pack",
     "tsc": "tsc",

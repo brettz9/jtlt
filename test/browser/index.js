@@ -1,7 +1,6 @@
-/* globals mocha, describe, it -- Should be ESM */
 import {expect} from 'chai';
 
-import {jtlt} from '../src/index-browser.js';
+import {jtlt} from '../../src/index-browser.js';
 
 describe('jtlt', () => {
   it('performs a string transformation', async () => {
