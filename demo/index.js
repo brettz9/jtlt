@@ -84,6 +84,42 @@ async function processTemplates () {
 }
 
 jml('section', [
+  ['select', {$on: {
+    click () {
+      if (/** @type {HTMLSelectElement} */ (this).value === 'xml') {
+        $t('#source').value = `<root></root>`;
+        $t('#jtltTemplates').value = `[
+  ['//*', function () {
+    this.string('test123');
+  }]
+]`;
+      } else if (/** @type {HTMLSelectElement} */ (this).value === 'json') {
+        $t('#source').value = `{
+  "a": 5,
+  "b": {
+    "c": 7
+  }
+}`;
+        $t('#jtltTemplates').value = `[
+  ['$.b', function (o) {
+    this.string(o.c);
+  }]
+]`;
+      }
+      $t('#source').dispatchEvent(new Event('input'));
+    }
+  }}, [
+    ['option', [
+      '(Populate...)'
+    ]],
+    ['option', {value: 'xml'}, [
+      'XML/XPath example 1'
+    ]],
+    ['option', {value: 'json'}, [
+      'JSON/JSONPath example 1'
+    ]]
+  ]],
+  ['br'], ['br'],
   ['textarea', {
     id: 'source',
     placeholder: 'Put XML or JSON source here...',
