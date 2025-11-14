@@ -5,7 +5,7 @@ export type XPathTransformerContextConfig = {
      */
     data?: unknown;
     /**
-     * - 1 or 2 (default 1)
+     * - 1, 2, 3.1 (default 1)
      */
     xpathVersion?: number | undefined;
     /**
@@ -18,7 +18,7 @@ export type XPathTransformerContextConfig = {
 /**
  * @typedef {object} XPathTransformerContextConfig
  * @property {unknown} [data] - XML/DOM root to transform
- * @property {number} [xpathVersion] - 1 or 2 (default 1)
+ * @property {number} [xpathVersion] - 1, 2, 3.1 (default 1)
  * @property {import('./index.js').
  *   JoiningTransformer} joiningTransformer Joiner
  * @property {boolean} [errorOnEqualPriority]
@@ -28,13 +28,13 @@ export type XPathTransformerContextConfig = {
  * Execution context for XPath-driven template application.
  *
  * Similar to JSONPathTransformerContext but uses XPath expressions on a
- * DOM/XML-like tree. Supports XPath 1.0 (default) or 2.0 when
- * `xpathVersion: 2`.
+ * DOM/XML-like tree. Supports XPath 1.0 (default), 2.0 when
+ * `xpathVersion: 2`, or 3.1 when `xpathVersion: 3.1`.
  *
  * Expected config:
  * - data: A Document, Element, or XML-like root node.
  * - joiningTransformer: joiner with append(), string(), object(), array(), etc.
- * - xpathVersion: 1|2 (default 1)
+ * - xpathVersion: 1|2|3.1 (default 1)
  * - errorOnEqualPriority, specificityPriorityResolver (same semantics).
  */
 declare class XPathTransformerContext {
@@ -203,11 +203,69 @@ declare class XPathTransformerContext {
      */
     string(str: string, cb?: (this: XPathTransformerContext) => void): XPathTransformerContext;
     /**
-     * Append number.
-     * @param {number} num Number
+     * Append number with xsl:number-like formatting.
+     * @param {number|string|{
+     *   value?: number|string,
+     *   count?: string,
+     *   level?: 'single'|'multiple'|'any',
+     *   from?: string,
+     *   format?: string,
+     *   groupingSeparator?: string,
+     *   groupingSize?: number
+     * }} num - Number value, "position()" string, or options object
      * @returns {XPathTransformerContext}
      */
-    number(num: number): XPathTransformerContext;
+    number(num: number | string | {
+        value?: number | string;
+        count?: string;
+        level?: "single" | "multiple" | "any";
+        from?: string;
+        format?: string;
+        groupingSeparator?: string;
+        groupingSize?: number;
+    }): XPathTransformerContext;
+    /**
+     * Calculate position of current node.
+     * @param {string} [count] - XPath pattern to match
+     * @param {string} [from] - XPath pattern for ancestor
+     * @returns {number}
+     * @private
+     */
+    private _calculatePosition;
+    /**
+     * Calculate position counting all ancestors (level=any).
+     * @param {string} [count] - XPath pattern to match
+     * @param {string} [from] - XPath pattern for ancestor
+     * @returns {number}
+     * @private
+     */
+    private _calculatePositionAny;
+    /**
+     * Format a number according to format string.
+     * @param {number} num - Number to format
+     * @param {string} format - Format string (1, a, A, i, I, 01, etc.)
+     * @param {string} [groupingSeparator] - Separator for grouping (e.g., ',')
+     * @param {number} [groupingSize] - Size of groups (e.g., 3 for 1,000)
+     * @param {string} [locale]
+     * @returns {string}
+     * @private
+     */
+    private _formatNumber;
+    /**
+     * Convert number to Roman numerals.
+     * @param {number} num - Number to convert (1-3999)
+     * @returns {string}
+     * @private
+     */
+    private _toRoman;
+    /**
+     * Convert number to alphabetic sequence.
+     * @param {number} num - Number to convert
+     * @param {boolean} uppercase - Use uppercase letters
+     * @returns {string}
+     * @private
+     */
+    private _toAlphabetic;
     /**
      * Append plain text (no escaping changes).
      * @param {string} str Text
@@ -348,5 +406,31 @@ declare class XPathTransformerContext {
      * @returns {XPathTransformerContext}
      */
     choose(select: string, whenCb: (this: XPathTransformerContext) => void, otherwiseCb?: (this: XPathTransformerContext) => void): XPathTransformerContext;
+    /**
+     * Analyze a string with a regular expression, equivalent to
+     * xsl:analyze-string. Processes matching and non-matching substrings
+     * with separate callbacks.
+     * @param {string} str - The string to analyze
+     * @param {string|RegExp} regex - Regular expression to match against
+     * @param {{
+     *   matchingSubstring?: (
+     *     this: XPathTransformerContext,
+     *     substring: string,
+     *     groups: string[],
+     *     regexGroup: (n: number) => string
+     *   ) => void,
+     *   nonMatchingSubstring?: (
+     *     this: XPathTransformerContext,
+     *     substring: string
+     *   ) => void,
+     *   flags?: string
+     * }} options - Options object
+     * @returns {XPathTransformerContext}
+     */
+    analyzeString(str: string, regex: string | RegExp, options?: {
+        matchingSubstring?: (this: XPathTransformerContext, substring: string, groups: string[], regexGroup: (n: number) => string) => void;
+        nonMatchingSubstring?: (this: XPathTransformerContext, substring: string) => void;
+        flags?: string;
+    }): XPathTransformerContext;
 }
 //# sourceMappingURL=XPathTransformerContext.d.ts.map

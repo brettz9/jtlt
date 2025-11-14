@@ -1,4 +1,13 @@
 export default JSONPathTransformerContext;
+export type NumberValue = number | string | {
+    value?: number | string;
+    count?: string;
+    format?: string;
+    groupingSeparator?: string;
+    groupingSize?: number;
+    lang?: string;
+    letterValue?: string;
+};
 /**
  * Sort spec types used by applyTemplates() and forEach().
  */
@@ -51,6 +60,17 @@ export type JSONPathTransformerContextConfig<T = "json"> = {
     templates: import("./index.js").JSONPathTemplateObject<T>[];
 };
 /**
+ * @typedef {number|string|{
+ *   value?: number|string,
+ *   count?: string,
+ *   format?: string,
+ *   groupingSeparator?: string,
+ *   groupingSize?: number,
+ *   lang?: string,
+ *   letterValue?: string
+ * }} NumberValue
+ */
+/**
  * Sort spec types used by applyTemplates() and forEach().
  * @typedef {{
  *   select?: string,
@@ -99,6 +119,13 @@ declare class JSONPathTransformerContext<T = "json"> {
      *   of template objects
      */
     constructor(config: JSONPathTransformerContextConfig<T>, templates: import("./index.js").JSONPathTemplateObject<T>[]);
+    /**
+     * Holds the current iteration state (for position calculations).
+     * @type {{ index?: number } | undefined}
+     */
+    iterationState: {
+        index?: number;
+    } | undefined;
     _config: JSONPathTransformerContextConfig<T>;
     _templates: import("./index.js").JSONPathTemplateObject<T>[];
     _contextObj: string | number | boolean | object | null;
@@ -207,6 +234,32 @@ declare class JSONPathTransformerContext<T = "json"> {
      */
     valueOf(select?: string | object): this;
     /**
+     * Analyze a string with a regular expression, equivalent to
+     * xsl:analyze-string. Processes matching and non-matching substrings
+     * with separate callbacks.
+     * @param {string} str - The string to analyze
+     * @param {string|RegExp} regex - Regular expression to match against
+     * @param {{
+     *   matchingSubstring?: (
+     *     this: JSONPathTransformerContext<T>,
+     *     substring: string,
+     *     groups: string[],
+     *     regexGroup: (n: number) => string
+     *   ) => void,
+     *   nonMatchingSubstring?: (
+     *     this: JSONPathTransformerContext<T>,
+     *     substring: string
+     *   ) => void,
+     *   flags?: string
+     * }} options - Options object
+     * @returns {this}
+     */
+    analyzeString(str: string, regex: string | RegExp, options?: {
+        matchingSubstring?: (this: JSONPathTransformerContext<T>, substring: string, groups: string[], regexGroup: (n: number) => string) => void;
+        nonMatchingSubstring?: (this: JSONPathTransformerContext<T>, substring: string) => void;
+        flags?: string;
+    }): this;
+    /**
      * Deep copy selection or current context when omitted.
      * @param {string} [select] - JSONPath selector
      * @returns {this}
@@ -238,12 +291,43 @@ declare class JSONPathTransformerContext<T = "json"> {
      */
     string(str: string, cb?: import("./JSONJoiningTransformer.js").SimpleCallback<T>): this;
     /**
-     * Append a number to JSON output. Mirrors the joining transformer API so
-     *   templates can call `this.number()`.
-     * @param {number} num - Number value to append
+     * Append a number to JSON output with xsl:number-like formatting.
+     * @param {NumberValue} num - Number value, "position()" string, or
+     *   options object
      * @returns {this}
      */
-    number(num: number): this;
+    number(num: NumberValue): this;
+    /**
+     * Calculate position in current iteration context.
+     * @param {string} [count] - JSONPath expression to match
+     * @returns {number}
+     */
+    calculatePosition(count?: string): number;
+    /**
+     * Format a number according to format string.
+     * @param {number} num - Number to format
+     * @param {string} format - Format string (1, a, A, i, I, 01, etc.)
+     * @param {string} [groupingSeparator] - Separator for grouping
+     * @param {number} [groupingSize] - Size of groups
+     * @param {string} [locale]
+     * @returns {string}
+     */
+    _formatNumber(num: number, format: string, groupingSeparator?: string, groupingSize?: number, locale?: string): string;
+    /**
+     * Convert number to Roman numerals.
+     * @param {number} num - Number to convert (1-3999)
+     * @returns {string}
+     * @private
+     */
+    private _toRoman;
+    /**
+     * Convert number to alphabetic sequence.
+     * @param {number} num - Number to convert
+     * @param {boolean} uppercase - Use uppercase letters
+     * @returns {string}
+     * @private
+     */
+    private _toAlphabetic;
     /**
      * Append plain text directly to the output without escaping or JSON
      *   stringification. Mirrors the joining transformer API so templates can

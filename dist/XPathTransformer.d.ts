@@ -9,7 +9,7 @@ export type XPathTransformerConfig<T> = {
      */
     templates: import("./index.js").XPathTemplateArray<T>;
     /**
-     * XPath version (1|2)
+     * XPath version (1|2|3.1)
      */
     xpathVersion?: number | undefined;
 };
@@ -19,7 +19,7 @@ export type XPathTransformerConfig<T> = {
  * @property {boolean} [errorOnEqualPriority] Throw on equal priority
  * @property {import('./index.js').
  *   XPathTemplateArray<T>} templates Template objects
- * @property {number} [xpathVersion] XPath version (1|2)
+ * @property {number} [xpathVersion] XPath version (1|2|3.1)
  */
 /**
  * Applies named XPath-driven templates to XML/HTML DOM data.

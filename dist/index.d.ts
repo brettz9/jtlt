@@ -200,8 +200,8 @@ export type XPathJTLTOptions<T> = BaseJTLTOptions<T> & {
     query?: TemplateFunction<T, "dom", import("./XPathTransformerContext.js").default>;
     forQuery?: [string, TemplateFunction<T, "dom", import("./JSONPathTransformerContext.js").default>];
     engineType: "xpath";
-    xpathVersion?: 1 | 2;
-    outputType?: "string" | "dom" | "json";
+    xpathVersion?: 1 | 2 | 3.1;
+    outputType?: T;
 };
 export type JTLTOptions = JSONPathJTLTOptions | JSONPathJTLTOptions<"string"> | JSONPathJTLTOptions<"dom"> | XPathJTLTOptions<"json"> | XPathJTLTOptions<"string"> | XPathJTLTOptions<"dom">;
 /**
@@ -354,8 +354,8 @@ export type JTLTOptions = JSONPathJTLTOptions | JSONPathJTLTOptions<"string"> | 
  *     import('./JSONPathTransformerContext.js').default
  *   >],
  *   engineType: 'xpath',
- *   xpathVersion?: 1|2,
- *   outputType?: 'string'|'dom'|'json'
+ *   xpathVersion?: 1|2|3.1,
+ *   outputType?: T
  * }} XPathJTLTOptions
  */
 /**

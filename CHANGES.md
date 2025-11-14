@@ -1,6 +1,6 @@
 # jtlt CHANGES
 
-## 0.4.0 (unreleased)
+## 0.4.0
 
 - feat: `number()` enhancements
 - feat: `analyzeString()`
