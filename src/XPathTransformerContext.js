@@ -1557,6 +1557,26 @@ class XPathTransformerContext {
   }
 
   /**
+   * Assert that a test condition is true, throwing an error if it fails.
+   * Equivalent to xsl:assert. Evaluates an XPath expression using the
+   * same truthiness rules as if() and choose().
+   * @param {string} test - XPath expression to test
+   * @param {string} [message] - Optional error message to include
+   * @returns {XPathTransformerContext}
+   * @throws {Error} When the test expression evaluates to false
+   */
+  assert (test, message) {
+    const passes = this._passesIf(test);
+    if (!passes) {
+      const errorMsg = message
+        ? `Assertion failed: ${message}`
+        : `Assertion failed: ${test}`;
+      throw new Error(errorMsg);
+    }
+    return this;
+  }
+
+  /**
    * Analyze a string with a regular expression, equivalent to
    * xsl:analyze-string. Processes matching and non-matching substrings
    * with separate callbacks.

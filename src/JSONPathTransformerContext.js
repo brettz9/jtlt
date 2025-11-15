@@ -1937,6 +1937,26 @@ class JSONPathTransformerContext {
     }
     return this;
   }
+
+  /**
+   * Assert that a test condition is true, throwing an error if it fails.
+   * Equivalent to xsl:assert. Evaluates a JSONPath expression using the
+   * same truthiness rules as if() and choose().
+   * @param {string} test - JSONPath expression to test
+   * @param {string} [message] - Optional error message to include
+   * @returns {this}
+   * @throws {Error} When the test expression evaluates to false
+   */
+  assert (test, message) {
+    const passes = this._passesIf(test);
+    if (!passes) {
+      const errorMsg = message
+        ? `Assertion failed: ${message}`
+        : `Assertion failed: ${test}`;
+      throw new Error(errorMsg);
+    }
+    return this;
+  }
 }
 
 export default JSONPathTransformerContext;

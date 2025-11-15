@@ -2,6 +2,7 @@
 
 ## ?
 
+- feat: `assert()`
 - fix: functional `usePropertySets` argument with DOM joining transformer
 
 ## 0.5.0

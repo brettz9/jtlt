@@ -95,7 +95,7 @@
   ~~"xsl:analyze-string",~~
   "xsl:apply-imports",
   ~~"xsl:apply-templates",~~
-  xsl:assert
+  ~~xsl:assert~~
   ~~"xsl:attribute",~~
   "xsl:attribute-set",
   xsl:break
