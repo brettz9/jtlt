@@ -1291,6 +1291,16 @@ class XPathTransformerContext {
   }
 
   /**
+   * @param {string} name
+   * @param {Record<string, string>} attributes
+   * @returns {this}
+   */
+  attributeSet (name, attributes) {
+    this._getJoiningTransformer().attributeSet(name, attributes);
+    return this;
+  }
+
+  /**
    * Append element.
    * @param {string} name Tag name
    * @param {Record<string, string>|any[]|
@@ -1298,11 +1308,13 @@ class XPathTransformerContext {
    * @param {any[]|((this: XPathTransformerContext)=>void)} [children]
    *   Children
    * @param {(this: XPathTransformerContext)=>void} [cb] Callback
+   * @param {string[]} [useAttributeSets] - Attribute set names to apply
    * @returns {XPathTransformerContext}
    */
-  element (name, atts, children, cb) {
-    // @ts-expect-error - Union of transformers creates intersection types
-    this._getJoiningTransformer().element(name, atts, children, cb);
+  element (name, atts, children, cb, useAttributeSets) {
+    /** @type {any} */ (this._getJoiningTransformer()).element(
+      name, atts, children, cb, useAttributeSets
+    );
     return this;
   }
 

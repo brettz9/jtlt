@@ -1699,6 +1699,16 @@ class JSONPathTransformerContext {
   }
 
   /**
+   * @param {string} name
+   * @param {Record<string, string>} attributes
+   * @returns {this}
+   */
+  attributeSet (name, attributes) {
+    this._getJoiningTransformer().attributeSet(name, attributes);
+    return this;
+  }
+
+  /**
    * Create an element. Mirrors the joining transformer API so templates can
    * call `this.element()`.
    * @param {string} name - Element name
@@ -1706,11 +1716,12 @@ class JSONPathTransformerContext {
    * @param {any[]} [children] - Child nodes
    * @param {import('./JSONJoiningTransformer.js').
    *   SimpleCallback<T>} [cb] - Callback function
+   * @param {string[]} [useAttributeSets] - Attribute set names to apply
    * @returns {this}
    */
-  element (name, atts, children, cb) {
+  element (name, atts, children, cb, useAttributeSets) {
     /** @type {any} */ (this._getJoiningTransformer()).element(
-      name, atts, children, cb
+      name, atts, children, cb, useAttributeSets
     );
     return this;
   }

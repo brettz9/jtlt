@@ -391,7 +391,7 @@ describe('format-number() function', function () {
 
       // Stub Intl.NumberFormat to throw an error
       const OriginalNumberFormat = Intl.NumberFormat;
-      // @ts-ignore - Intentionally stubbing for test
+      // @ts-expect-error - Intentionally stubbing for test
       Intl.NumberFormat = function () {
         throw new Error('Forced NumberFormat error');
       };
@@ -412,7 +412,6 @@ describe('format-number() function', function () {
         // Should fall back to String(num)
         expect(result).to.equal('123.45');
       } finally {
-        // @ts-ignore - Restore original
         Intl.NumberFormat = OriginalNumberFormat;
       }
     });

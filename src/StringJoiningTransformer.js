@@ -440,9 +440,10 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
    * @param {ElementAttributes} [atts] - Element attributes
    * @param {any[]} [childNodes] - Child nodes
    * @param {(this: StringJoiningTransformer) => void} [cb] - Callback function
+   * @param {string[]} [useAttributeSets] - Attribute set names to apply
    * @returns {StringJoiningTransformer}
    */
-  element (elName, atts, childNodes, cb) {
+  element (elName, atts, childNodes, cb, useAttributeSets) {
     // If a parent element's start tag is still open, close it before
     // starting a new element to ensure valid nesting.
     if (this._openTagState) {
@@ -539,6 +540,17 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
       });
       atts = Object.assign(objAtts, atts);
       elName = elObj.nodeName;
+    }
+
+    // Apply attribute sets if specified
+    if (useAttributeSets && useAttributeSets.length) {
+      const mergedAtts = {};
+      useAttributeSets.forEach((setName) => {
+        if (this._attributeSet[setName]) {
+          Object.assign(mergedAtts, this._attributeSet[setName]);
+        }
+      });
+      atts = Object.assign(mergedAtts, atts);
     }
 
     this.append('<' + elName);

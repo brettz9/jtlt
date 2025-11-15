@@ -93,7 +93,6 @@
   xsl:accumulator
   xsl:accumulator-rule
   "xsl:apply-imports",
-  "xsl:attribute-set",
   xsl:break
   xsl:catch
   xsl:context-item
@@ -136,6 +135,7 @@
   ~~"xsl:apply-templates",~~
   ~~xsl:assert~~
   ~~"xsl:attribute",~~
+  ~~"xsl:attribute-set",~~
   ~~"xsl:call-template",~~
   ~~"xsl:character-map",~~
   ~~"xsl:choose",~~

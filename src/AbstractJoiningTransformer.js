@@ -72,6 +72,8 @@ class AbstractJoiningTransformer {
     this._cfg = cfg ?? /** @type {JoiningTransformerConfig<T>} */ ({});
     /** @type {Record<string, OutputCharacters>} */
     this._characterMap = {};
+    /** @type {Record<string, Record<string, string>>} */
+    this._attributeSet = {};
   }
 
   /**
@@ -103,6 +105,15 @@ class AbstractJoiningTransformer {
    */
   characterMap (name, outputCharacters) {
     this._characterMap[name] = outputCharacters;
+  }
+
+  /**
+   * @param {string} name
+   * @param {Record<string, string>} attributes
+   * @returns {void}
+   */
+  attributeSet (name, attributes) {
+    this._attributeSet[name] = attributes;
   }
 
   /**

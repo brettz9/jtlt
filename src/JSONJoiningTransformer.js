@@ -339,9 +339,10 @@ class JSONJoiningTransformer extends AbstractJoiningTransformer {
    *   Attrs, children, or cb.
    * @param {any[]|SimpleCallback} [childNodes] Children or cb.
    * @param {SimpleCallback} [cb] Builder callback.
+   * @param {string[]} [useAttributeSets] - Attribute set names to apply
    * @returns {JSONJoiningTransformer}
    */
-  element (elName, atts, childNodes, cb) {
+  element (elName, atts, childNodes, cb, useAttributeSets) {
     this._requireSameChildren('json', 'element');
     const isRoot = !this.root;
     if (isRoot) {
@@ -378,6 +379,17 @@ class JSONJoiningTransformer extends AbstractJoiningTransformer {
     let attsObj = atts || {};
     /** @type {import('jamilih').JamilihChildren} */
     const jmlChildren = [];
+
+    // Apply attribute sets if specified
+    if (useAttributeSets && useAttributeSets.length) {
+      const mergedAtts = {};
+      useAttributeSets.forEach((setName) => {
+        if (this._attributeSet[setName]) {
+          Object.assign(mergedAtts, this._attributeSet[setName]);
+        }
+      });
+      attsObj = Object.assign(mergedAtts, attsObj);
+    }
 
     // Preprocess special attribute helpers present directly on attsObj
     if (attsObj.dataset && typeof attsObj.dataset === 'object' &&

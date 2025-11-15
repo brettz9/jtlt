@@ -254,9 +254,10 @@ class DOMJoiningTransformer extends AbstractJoiningTransformer {
    * @param {(Node|string)[]|((this: DOMJoiningTransformer) => void)
    *   } [childNodes] - Child nodes or callback
    * @param {(this: DOMJoiningTransformer) => void} [cb] - Callback
+   * @param {string[]} [useAttributeSets] - Attribute set names to apply
    * @returns {DOMJoiningTransformer}
    */
-  element (elName, atts, childNodes, cb) {
+  element (elName, atts, childNodes, cb, useAttributeSets) {
     // Handle argument overloading like other transformers
     if (Array.isArray(atts)) {
       cb = /** @type {(this: DOMJoiningTransformer) => void} */ (
@@ -341,6 +342,21 @@ class DOMJoiningTransformer extends AbstractJoiningTransformer {
       // Use the document's root element
       const el = doc.documentElement;
 
+      // Apply attribute sets if specified
+      if (useAttributeSets && useAttributeSets.length) {
+        useAttributeSets.forEach((setName) => {
+          if (this._attributeSet[setName]) {
+            for (const att in this._attributeSet[setName]) {
+              if (Object.hasOwn(this._attributeSet[setName], att)) {
+                el.setAttribute(att, this._replaceCharacterMaps(
+                  this._attributeSet[setName][att]
+                ));
+              }
+            }
+          }
+        });
+      }
+
       for (const att in atts) {
         if (Object.hasOwn(atts, att)) {
           el.setAttribute(att, this._replaceCharacterMaps(atts[att]));
@@ -375,6 +391,21 @@ class DOMJoiningTransformer extends AbstractJoiningTransformer {
       : /** @type {Element} */ (
         this._cfg.document.createElement(elName)
       );
+
+    // Apply attribute sets if specified
+    if (useAttributeSets && useAttributeSets.length) {
+      useAttributeSets.forEach((setName) => {
+        if (this._attributeSet[setName]) {
+          for (const att in this._attributeSet[setName]) {
+            if (Object.hasOwn(this._attributeSet[setName], att)) {
+              el.setAttribute(att, this._replaceCharacterMaps(
+                this._attributeSet[setName][att]
+              ));
+            }
+          }
+        }
+      });
+    }
 
     for (const att in atts) {
       if (Object.hasOwn(atts, att)) {
