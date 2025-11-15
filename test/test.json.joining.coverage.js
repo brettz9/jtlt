@@ -9,7 +9,7 @@ describe('JSONJoiningTransformer coverage additions', () => {
     const out = /** @type {import('jamilih').JamilihArray[]} */ (jt.get());
     expect(out[0][0]).to.equal('ul');
     // No attribute object present (children start at index 1)
-    expect(out[0][1]).to.equal('x');
+    expect(out[0][1]).to.deep.equal(['x', ['li', {}, 'y']]);
   });
 
   it('attribute() no-op outside callback (dataset/$a)', () => {
@@ -22,7 +22,9 @@ describe('JSONJoiningTransformer coverage additions', () => {
     const out = /** @type {import('jamilih').JamilihArray[]} */ (jt.get());
     expect(out[0][0]).to.equal('div');
     // No attributes added since attribute() was a no-op
-    expect(out[0].length).to.equal(1); // ['div'] only (no atts, no children)
+    expect(out[0]).to.deep.equal(
+      ['div', []]
+    ); // ['div'] only (no atts, no children)
   });
 
   it('text() no-op outside callback', () => {
@@ -32,7 +34,7 @@ describe('JSONJoiningTransformer coverage additions', () => {
     const out = /** @type {import('jamilih').JamilihArray[]} */ (jt.get());
     expect(out[0][0]).to.equal('p');
     // Text nodes represented as ['!', text]
-    expect(out[0]).to.deep.include.members([['!', 'kept']]);
+    expect(out[0][1]).to.deep.include.members(['kept']);
     // Ensure the outside text did not append a raw string root element
     expect(out.length).to.equal(1);
   });
@@ -41,6 +43,6 @@ describe('JSONJoiningTransformer coverage additions', () => {
     const jt = new JSONJoiningTransformer([], {});
     jt.element('span');
     const out = /** @type {import('jamilih').JamilihArray[]} */ (jt.get());
-    expect(out[0]).to.deep.equal(['span']);
+    expect(out[0]).to.deep.equal(['span', []]);
   });
 });

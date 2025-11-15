@@ -3,6 +3,10 @@
 //    string transformer but adding as text node in a DOM transformer)
 
 /**
+ * @typedef {{character: string, string: string}[]} OutputCharacters
+ */
+
+/**
  * @typedef {{
  *   requireSameChildren?: boolean,
  *   JHTMLForJSON?: boolean,
@@ -66,6 +70,8 @@ class AbstractJoiningTransformer {
   constructor (cfg) {
     // Todo: Might set some reasonable defaults across all classes
     this._cfg = cfg ?? /** @type {JoiningTransformerConfig<T>} */ ({});
+    /** @type {Record<string, OutputCharacters>} */
+    this._characterMap = {};
   }
 
   /**
@@ -74,6 +80,42 @@ class AbstractJoiningTransformer {
    */
   setConfig (cfg) {
     this._cfg = cfg;
+  }
+
+  /**
+   * @param {import('./StringJoiningTransformer.js').OutputConfig} cfg
+   * @returns {this}
+   */
+  output (cfg) {
+    // We wait until first element is set in `element()` to add
+    //   XML declaration and DOCTYPE as latter depends on root element
+    this._outputConfig = cfg;
+
+    // Use for file extension if making downloadable?
+    this.mediaType = cfg.mediaType;
+    return this;
+  }
+
+  /**
+   * @param {string} name
+   * @param {OutputCharacters} outputCharacters
+   * @returns {void}
+   */
+  characterMap (name, outputCharacters) {
+    this._characterMap[name] = outputCharacters;
+  }
+
+  /**
+   * @param {string} str
+   * @returns {string}
+   */
+  _replaceCharacterMaps (str) {
+    this._outputConfig?.useCharacterMaps?.forEach((name) => {
+      this._characterMap[name].forEach(({character, string}) => {
+        str = str.replaceAll(character, string);
+      });
+    });
+    return str;
   }
 
   /**

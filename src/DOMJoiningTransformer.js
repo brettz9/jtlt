@@ -182,20 +182,6 @@ class DOMJoiningTransformer extends AbstractJoiningTransformer {
   }
 
   /**
-   * @param {import('./StringJoiningTransformer.js').OutputConfig} cfg
-   * @returns {DOMJoiningTransformer}
-   */
-  output (cfg) {
-    // We wait until first element is set in `element()` to add
-    //   XML declaration and DOCTYPE as latter depends on root element
-    this._outputConfig = cfg;
-
-    // Use for file extension if making downloadable?
-    this.mediaType = cfg.mediaType;
-    return this;
-  }
-
-  /**
    * @param {Element|string} elName - Element name
    * @param {Record<string, string>} [atts] - Attributes object
    * @param {(this: DOMJoiningTransformer) => void} [cb] - Callback function
@@ -277,7 +263,7 @@ class DOMJoiningTransformer extends AbstractJoiningTransformer {
 
       for (const att in atts) {
         if (Object.hasOwn(atts, att)) {
-          el.setAttribute(att, atts[att]);
+          el.setAttribute(att, this._replaceCharacterMaps(atts[att]));
         }
       }
 
@@ -301,7 +287,7 @@ class DOMJoiningTransformer extends AbstractJoiningTransformer {
 
     for (const att in atts) {
       if (Object.hasOwn(atts, att)) {
-        el.setAttribute(att, atts[att]);
+        el.setAttribute(att, this._replaceCharacterMaps(atts[att]));
       }
     }
     this.append(el);
@@ -328,7 +314,9 @@ class DOMJoiningTransformer extends AbstractJoiningTransformer {
         this._dom.nodeType !== 1) {
       throw new Error('You may only set an attribute on an element');
     }
-    (/** @type {Element} */ (this._dom)).setAttribute(name, val);
+    (/** @type {Element} */ (this._dom)).setAttribute(
+      name, this._replaceCharacterMaps(val)
+    );
     return this;
   }
 
@@ -337,7 +325,7 @@ class DOMJoiningTransformer extends AbstractJoiningTransformer {
    * @returns {DOMJoiningTransformer}
    */
   text (txt) {
-    this.append(txt);
+    this.append(this._replaceCharacterMaps(txt));
     return this;
   }
 

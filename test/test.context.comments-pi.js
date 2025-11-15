@@ -73,9 +73,11 @@ describe('Context forwarding: comment() + processingInstruction()', () => {
       makeJSONCtx().out
     );
     const root = out[0];
-    expect(root).to.deep.include.members([
-      ['!', 'jc'], // comment marker
-      ['?', 'jpi', 'jdata']
+    expect(root).to.deep.equal([
+      'root', [
+        ['!', 'jc'], // comment marker
+        ['?', 'jpi', 'jdata']
+      ]
     ]);
   });
 

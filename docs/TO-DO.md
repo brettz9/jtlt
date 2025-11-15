@@ -101,7 +101,7 @@
   xsl:break
   ~~"xsl:call-template",~~
   xsl:catch
-  "xsl:character-map",
+  ~~"xsl:character-map",~~
   ~~"xsl:choose",~~
   ~~"xsl:comment",~~
   xsl:context-item
@@ -144,7 +144,7 @@
   xsl:on-non-empty
   ~~"xsl:otherwise",~~
   ~~"xsl:output",~~
-  "xsl:output-character",
+  ~~"xsl:output-character",~~
   xsl:override
   xsl:package
   "xsl:param",

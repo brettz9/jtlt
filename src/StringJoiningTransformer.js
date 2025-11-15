@@ -13,7 +13,8 @@ import AbstractJoiningTransformer from './AbstractJoiningTransformer.js';
  *   mediaType?: string,
  *   version?: string,
  *   standalone?: boolean,
- *   method?: "xml"|"html"|"text"|"json"|"xhtml"
+ *   method?: "xml"|"html"|"text"|"json"|"xhtml",
+ *   useCharacterMaps?: string[]
  * }} OutputConfig
  */
 
@@ -435,20 +436,6 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
   }
 
   /**
-   * @param {OutputConfig} cfg
-   * @returns {StringJoiningTransformer}
-   */
-  output (cfg) {
-    // We wait until first element is set in `element()` to add
-    //   XML declaration and DOCTYPE as latter depends on root element
-    this._outputConfig = cfg;
-
-    // Use for file extension if making downloadable?
-    this.mediaType = cfg.mediaType;
-    return this;
-  }
-
-  /**
    * @param {string|Element} elName - Element name or element object
    * @param {ElementAttributes} [atts] - Element attributes
    * @param {any[]} [childNodes] - Child nodes
@@ -570,7 +557,9 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
     }
     if (childNodes && childNodes.length) {
       this._openTagState = false;
-      this.append(jml[method]({'#': childNodes}));
+      this.append(this._replaceCharacterMaps(
+        jml[method]({'#': childNodes})
+      ));
     }
     cb.call(this);
 
@@ -648,7 +637,7 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
     val = (this._cfg.preEscapedAttributes || avoidAttEscape)
       ? valStr
       : valStr.replaceAll('&', '&amp;').replaceAll('"', '&quot;');
-    this.append(' ' + name + '="' + val + '"');
+    this.append(' ' + name + '="' + this._replaceCharacterMaps(val) + '"');
     return this;
   }
 
@@ -663,7 +652,11 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
       this.append('>');
       this._openTagState = false;
     }
-    this.append(txt.replaceAll('&', '&amp;').replaceAll('<', '&lt;'));
+    this.append(
+      this._replaceCharacterMaps(
+        txt
+      ).replaceAll('&', '&amp;').replaceAll('<', '&lt;')
+    );
     return this;
   }
 
@@ -734,7 +727,7 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
     // Save current state
     /** @type {any} */
     const oldRoot = this.root;
-    /** @type {any} */
+    /** @type {OutputConfig|undefined} */
     const oldOutputConfig = this._outputConfig;
     const oldStr = this._str;
     /** @type {any} */
@@ -742,7 +735,7 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
 
     // Reset state for new document
     this.root = undefined;
-    /** @type {any} */
+    /** @type {OutputConfig} */
     this._outputConfig = cfg;
     this._str = '';
     this._openTagState = false;
@@ -795,7 +788,7 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
 
     // Reset state for new document
     this.root = undefined;
-    /** @type {any} */
+    /** @type {OutputConfig} */
     this._outputConfig = cfg;
     this._str = '';
     this._openTagState = false;

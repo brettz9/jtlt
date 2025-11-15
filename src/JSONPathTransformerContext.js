@@ -1239,6 +1239,17 @@ class JSONPathTransformerContext {
   }
 
   /**
+   * @param {string} name
+   * @param {import('./AbstractJoiningTransformer.js').
+   *   OutputCharacters} outputCharacters
+   * @returns {this}
+   */
+  characterMap (name, outputCharacters) {
+    this._getJoiningTransformer().characterMap(name, outputCharacters);
+    return this;
+  }
+
+  /**
    * Create an element. Mirrors the joining transformer API so templates can
    * call `this.element()`.
    * @param {string} name - Element name

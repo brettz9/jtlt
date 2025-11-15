@@ -957,6 +957,17 @@ class XPathTransformerContext {
   }
 
   /**
+   * @param {string} name
+   * @param {import('./AbstractJoiningTransformer.js').
+   *   OutputCharacters} outputCharacters
+   * @returns {this}
+   */
+  characterMap (name, outputCharacters) {
+    this._getJoiningTransformer().characterMap(name, outputCharacters);
+    return this;
+  }
+
+  /**
    * Append element.
    * @param {string} name Tag name
    * @param {Record<string, string>|any[]|

@@ -36,7 +36,7 @@ function _makeDatasetAttribute (n0) {
  * plus special helpers: dataset (object) and $a (ordered attribute array).
  * @typedef {Record<string, unknown> & {
  *   dataset?: Record<string, string>,
- *   $a?: Array<[string, string]>
+ *   $a?: [string, string][]
  * }} ElementAttributes
  */
 
@@ -330,20 +330,6 @@ class JSONJoiningTransformer extends AbstractJoiningTransformer {
   }
 
   /**
-   * @param {import('./StringJoiningTransformer.js').OutputConfig} cfg
-   * @returns {JSONJoiningTransformer}
-   */
-  output (cfg) {
-    // We wait until first element is set in `element()` to add
-    //   XML declaration and DOCTYPE as latter depends on root element
-    this._outputConfig = cfg;
-
-    // Use for file extension if making downloadable?
-    this.mediaType = cfg.mediaType;
-    return this;
-  }
-
-  /**
    * Build a Jamilih-style element JSON array and append to current container.
    * Result form: ['tag', {attr: 'val'}, child1, child2, ...]
    * Helpers: dataset -> data-*; $a -> ordered attributes.
@@ -401,23 +387,35 @@ class JSONJoiningTransformer extends AbstractJoiningTransformer {
       for (const k in ds) {
         if (Object.hasOwn(ds, k)) {
           const dashed = k.replaceAll(camelCase, _makeDatasetAttribute);
-          attsObj['data-' + dashed] = ds[k];
+          attsObj['data-' + dashed] = this._replaceCharacterMaps(ds[k]);
         }
       }
       delete attsObj.dataset;
     }
     if (Array.isArray(attsObj.$a)) {
-      (/** @type {unknown[][]} */ (attsObj.$a)).forEach((pair) => {
+      attsObj.$a.forEach((pair) => {
         if (Array.isArray(pair) && pair.length > 1) {
-          attsObj[String(pair[0])] = pair[1];
+          attsObj[String(pair[0])] = this._replaceCharacterMaps(pair[1]);
         }
       });
       delete attsObj.$a;
     }
 
+    // Apply character maps to all regular attribute values
+    for (const key in attsObj) {
+      if (Object.hasOwn(attsObj, key) && typeof attsObj[key] === 'string') {
+        attsObj[key] = this._replaceCharacterMaps(attsObj[key]);
+      }
+    }
+
     // If children provided as array, copy (may be primitives or nested JML)
     if (Array.isArray(childNodes) && childNodes.length) {
-      jmlChildren.push(...childNodes);
+      jmlChildren.push(...childNodes.map((childNode) => {
+        if (typeof childNode === 'string') {
+          return this._replaceCharacterMaps(childNode);
+        }
+        return childNode;
+      }));
     }
 
     // Callback-driven building (attribute/text/nested element mutate stack)
@@ -435,9 +433,10 @@ class JSONJoiningTransformer extends AbstractJoiningTransformer {
     /** @type {any[]} */
     const jmlEl = [elementName];
     if (Object.keys(attsObj).length) {
-      jmlEl.push(attsObj);
+      jmlEl.push(attsObj, jmlChildren);
+    } else {
+      jmlEl.push(jmlChildren);
     }
-    jmlEl.push(...jmlChildren);
 
     if (isRoot) {
       // todo: indent, cdataSectionElements
@@ -513,20 +512,22 @@ class JSONJoiningTransformer extends AbstractJoiningTransformer {
       for (const k in datasetObj) {
         if (Object.hasOwn(datasetObj, k)) {
           const dashed = k.replaceAll(camelCase, _makeDatasetAttribute);
-          attsObj['data-' + dashed] = datasetObj[k];
+          attsObj['data-' + dashed] = this._replaceCharacterMaps(
+            /** @type {string} */ (datasetObj[k])
+          );
         }
       }
       return this;
     }
     if (name === '$a' && Array.isArray(val)) {
-      (/** @type {unknown[][]} */ (val)).forEach((pair) => {
+      val.forEach((pair) => {
         if (Array.isArray(pair) && pair.length > 1) {
-          attsObj[String(pair[0])] = pair[1];
+          attsObj[String(pair[0])] = this._replaceCharacterMaps(pair[1]);
         }
       });
       return this;
     }
-    attsObj[name] = val;
+    attsObj[name] = this._replaceCharacterMaps(/** @type {string} */ (val));
     return this;
   }
 
@@ -578,7 +579,7 @@ class JSONJoiningTransformer extends AbstractJoiningTransformer {
     if (this._elementStack.length) {
       const top = /** @type {ElementInfo} */ (this._elementStack.at(-1));
       const {jmlChildren} = top;
-      jmlChildren.push(['!', txt]);
+      jmlChildren.push(this._replaceCharacterMaps(txt));
       return this;
     }
     // No-op outside element context in JSON joiner

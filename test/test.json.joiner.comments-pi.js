@@ -16,11 +16,13 @@ describe('JSONJoiningTransformer comment() and processingInstruction()', () => {
     const out = /** @type {import('jamilih').JamilihArray[]} */ (jt.get());
     const root = out[0];
     expect(root[0]).to.equal('root');
-    // Comment and text both use ['!', text]; PI uses ['?', target, data]
-    expect(root).to.deep.include.members([
-      ['!', 'c1'],
-      ['!', 't1'],
-      ['?', 'pi', 'data']
+    // Comment uses ['!', text]; PI uses ['?', target, data]
+    expect(root).to.deep.equal([
+      'root', [
+        ['!', 'c1'],
+        't1',
+        ['?', 'pi', 'data']
+      ]
     ]);
     // Ensure no-ops outside did not add extra root-level items
     expect(out).to.have.lengthOf(1);

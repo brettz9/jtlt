@@ -27,20 +27,12 @@ describe('JSONJoiningTransformer element/attribute/text (Jamilih JSON)', () => {
     expect(el[1]).to.include({'data-extra': 'e'});
     expect(el[1]).to.include({'data-bar-baz': 'Q'});
     expect(el[1]).to.include({role: 'button'});
-    // Text nodes are represented as ['!', text]
-    expect(el).to.deep.include.members([['!', 'hi']]);
+    expect(el[2]).to.deep.include.members(['hi']);
     // nested child
-    const child = /** @type {import('jamilih').JamilihChildren} */ (
-      el.slice(2).find(
-        /**
-         * @param {any} c
-         * @returns {boolean}
-         */
-        (c) => Array.isArray(c) && c[0] === 'span'
-      )
+    const child = el[2];
+    expect(child).to.deep.include.members(
+      ['hi', ['span', {class: 'c'}, ['inner']]]
     );
-    expect(child[1]).to.deep.include({class: 'c'});
-    expect(child).to.deep.include.members([['!', 'inner']]);
   });
 
   it('supports atts as function and childNodes as function signatures', () => {
@@ -53,8 +45,7 @@ describe('JSONJoiningTransformer element/attribute/text (Jamilih JSON)', () => {
     jt.element('p', {}, function () { /* no children */ });
     const out = /** @type {import('jamilih').JamilihArray[]} */ (jt.get());
     expect(out[0][0]).to.equal('div');
-    // Text nodes are represented as ['!', text]
-    expect(out[0]).to.deep.include.members([['!', 'a']]);
+    expect(out[0]).to.deep.include.members(['div', ['a']]);
     expect(out[1][0]).to.equal('p');
   });
 
