@@ -106,8 +106,6 @@
   "xsl:import-schema",
   "xsl:include",
   xsl:iterate
-  xsl:map
-  xsl:map-entry
   xsl:merge
   xsl:merge-action
   xsl:merge-key
@@ -149,6 +147,8 @@
   ~~"xsl:for-each-group",~~
   ~~"xsl:if",~~
   ~~"xsl:key",~~
+  ~~xsl:map~~
+  ~~xsl:map-entry~~
   ~~"xsl:matching-substring",~~
   ~~"xsl:message",~~
   ~~"xsl:namespace",~~

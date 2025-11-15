@@ -174,6 +174,16 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
   }
 
   /**
+   * Alias for propValue(). Set a key-value pair in the current map/object.
+   * @param {string} prop - Property name
+   * @param {any} val - Property value
+   * @returns {StringJoiningTransformer}
+   */
+  mapEntry (prop, val) {
+    return this.propValue(prop, val);
+  }
+
+  /**
    * @param {string} prop - Property name
    * @param {(this: StringJoiningTransformer) => void} cb - Callback function
    * @returns {StringJoiningTransformer}
@@ -256,6 +266,18 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
     }
     this._obj = oldObj;
     return this;
+  }
+
+  /**
+   * Alias for object(). Build an object/map.
+   * @param {Record<string, unknown>|Element} obj - Object to serialize
+   * @param {(this: StringJoiningTransformer) => void} cb - Callback function
+   * @param {any[]} [usePropertySets] - Property sets to use
+   * @param {Record<string, unknown>} [propSets] - Additional property sets
+   * @returns {StringJoiningTransformer}
+   */
+  map (obj, cb, usePropertySets, propSets) {
+    return this.object(obj, cb, usePropertySets, propSets);
   }
 
   /**

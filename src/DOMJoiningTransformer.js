@@ -70,6 +70,16 @@ class DOMJoiningTransformer extends AbstractJoiningTransformer {
   }
 
   /**
+   * Alias for propValue(). Set a key-value pair in the current map/object.
+   * @param {string} prop - Property name
+   * @param {any} val - Property value
+   * @returns {void}
+   */
+  mapEntry (prop, val) {
+    return this.propValue(prop, val);
+  }
+
+  /**
    * @param {Record<string, unknown>} obj - Object to serialize
    * @param {(this: DOMJoiningTransformer) => void} [cb] - Callback function.
    * @param {any[]} [usePropertySets] - Property sets to use
@@ -97,6 +107,18 @@ class DOMJoiningTransformer extends AbstractJoiningTransformer {
       this.append('');
     }
     return this;
+  }
+
+  /**
+   * Alias for object(). Build an object/map.
+   * @param {Record<string, unknown>} obj - Object to serialize
+   * @param {(this: DOMJoiningTransformer) => void} [cb] - Callback function.
+   * @param {any[]} [usePropertySets] - Property sets to use
+   * @param {Record<string, unknown>} [propSets] - Additional property sets
+   * @returns {DOMJoiningTransformer}
+   */
+  map (obj, cb, usePropertySets, propSets) {
+    return this.object(obj, cb, usePropertySets, propSets);
   }
 
   /**

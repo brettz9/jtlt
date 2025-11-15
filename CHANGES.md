@@ -2,6 +2,7 @@
 
 ## ?
 
+- feat: add `map` and `mapEntry` aliases to `object` and `propValue`
 - feat: `attributeSet()`
 - feat: `assert()`
 - fix: functional `usePropertySets` argument with DOM joining transformer

@@ -142,6 +142,16 @@ class JSONJoiningTransformer extends AbstractJoiningTransformer {
     (/** @type {Record<string, any>} */ (this._obj))[prop] = val;
   }
 
+  /**
+   * Alias for propValue(). Set a key-value pair in the current map/object.
+   * @param {string} prop - Property name
+   * @param {any} val - Property value
+   * @returns {void}
+   */
+  mapEntry (prop, val) {
+    return this.propValue(prop, val);
+  }
+
   /* c8 ignore next 13 -- JSDoc block incorrectly counted as coverable by c8 */
   /**
    * @param {Record<string, unknown>|ObjectCallback} [objOrCb]
@@ -205,6 +215,22 @@ class JSONJoiningTransformer extends AbstractJoiningTransformer {
     this.append(obj);
     this._objPropState = oldObjPropState;
     return this;
+  }
+
+  /**
+   * Alias for object(). Build an object/map.
+   * @param {Record<string, unknown>|ObjectCallback} [objOrCb]
+   *   Seed object or callback.
+   * @param {ObjectCallback|any[]} [cbOrUsePropertySets] Callback or sets.
+   * @param {any[]|Record<string, unknown>} [usePropertySetsOrPropSets]
+   *   Sets or prop sets.
+   * @param {Record<string, unknown>} [propSets] Key-value pairs to add.
+   * @returns {JSONJoiningTransformer}
+   */
+  map (objOrCb, cbOrUsePropertySets, usePropertySetsOrPropSets, propSets) {
+    return this.object(
+      objOrCb, cbOrUsePropertySets, usePropertySetsOrPropSets, propSets
+    );
   }
 
   /**

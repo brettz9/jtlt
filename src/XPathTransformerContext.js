@@ -1234,6 +1234,15 @@ class XPathTransformerContext {
     return this;
   }
   /**
+   * Alias for propValue(). Append a key-value pair to the current map/object.
+   * @param {string} prop Property name
+   * @param {any} val Value
+   * @returns {XPathTransformerContext}
+   */
+  mapEntry (prop, val) {
+    return this.propValue(prop, val);
+  }
+  /**
    * Append object.
    * @param {Record<string, unknown>|
    *   ((this: XPathTransformerContext) => void)} objOrCb Object or callback
@@ -1252,6 +1261,23 @@ class XPathTransformerContext {
     jt.object(objOrCb, cbOrUsePropertySets, usePropertySetsOrPropSets,
       propSets);
     return this;
+  }
+  /**
+   * Alias for object(). Append an object/map.
+   * @param {Record<string, unknown>|
+   *   ((this: XPathTransformerContext) => void)} objOrCb Object or callback
+   * @param {((this: XPathTransformerContext) => void)|
+   *   any[]} [cbOrUsePropertySets] Callback or property sets
+   * @param {any[]|
+   *   Record<string, unknown>} [usePropertySetsOrPropSets]
+   *   Property sets or props
+   * @param {Record<string, unknown>} [propSets] Additional property sets
+   * @returns {XPathTransformerContext}
+   */
+  map (objOrCb, cbOrUsePropertySets, usePropertySetsOrPropSets, propSets) {
+    return this.object(
+      objOrCb, cbOrUsePropertySets, usePropertySetsOrPropSets, propSets
+    );
   }
   /**
    * Append array.

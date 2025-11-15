@@ -1655,6 +1655,16 @@ class JSONPathTransformerContext {
   }
 
   /**
+   * Alias for propValue(). Set a key-value pair in the current map/object.
+   * @param {string} prop - Property name
+   * @param {any} val - Property value
+   * @returns {this}
+   */
+  mapEntry (prop, val) {
+    return this.propValue(prop, val);
+  }
+
+  /**
    * Build an object. Mirrors the joining transformer API. All joiners now
    * support both signatures: (obj, cb, usePropertySets, propSets) with seed
    * object or (cb, usePropertySets, propSets) without.
@@ -1664,6 +1674,15 @@ class JSONPathTransformerContext {
   object (...args) {
     /** @type {any} */ (this._getJoiningTransformer()).object(...args);
     return this;
+  }
+
+  /**
+   * Alias for object(). Build an object/map.
+   * @param {...any} args - Arguments to pass to joiner
+   * @returns {this}
+   */
+  map (...args) {
+    return this.object(...args);
   }
 
   /**
