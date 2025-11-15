@@ -30,6 +30,8 @@ declare class DOMJoiningTransformer extends AbstractJoiningTransformer<"dom"> {
         document: XMLDocument;
         format?: string;
     }>;
+    /** @type {Record<string, unknown>} */
+    propertySets: Record<string, unknown>;
     /**
      * @param {Node} item
      * @returns {void}
@@ -51,6 +53,13 @@ declare class DOMJoiningTransformer extends AbstractJoiningTransformer<"dom"> {
      */
     propValue(prop: string, val: any): void;
     /**
+     * Alias for propValue(). Set a key-value pair in the current map/object.
+     * @param {string} prop - Property name
+     * @param {any} val - Property value
+     * @returns {void}
+     */
+    mapEntry(prop: string, val: any): void;
+    /**
      * @param {Record<string, unknown>} obj - Object to serialize
      * @param {(this: DOMJoiningTransformer) => void} [cb] - Callback function.
      * @param {any[]} [usePropertySets] - Property sets to use
@@ -58,6 +67,15 @@ declare class DOMJoiningTransformer extends AbstractJoiningTransformer<"dom"> {
      * @returns {DOMJoiningTransformer}
      */
     object(obj: Record<string, unknown>, cb?: (this: DOMJoiningTransformer) => void, usePropertySets?: any[], propSets?: Record<string, unknown>): DOMJoiningTransformer;
+    /**
+     * Alias for object(). Build an object/map.
+     * @param {Record<string, unknown>} obj - Object to serialize
+     * @param {(this: DOMJoiningTransformer) => void} [cb] - Callback function.
+     * @param {any[]} [usePropertySets] - Property sets to use
+     * @param {Record<string, unknown>} [propSets] - Additional property sets
+     * @returns {DOMJoiningTransformer}
+     */
+    map(obj: Record<string, unknown>, cb?: (this: DOMJoiningTransformer) => void, usePropertySets?: any[], propSets?: Record<string, unknown>): DOMJoiningTransformer;
     /**
      * @param {any[]|Element} arr
      * @param {(this: DOMJoiningTransformer) => void} [cb] - Callback function
@@ -220,6 +238,13 @@ declare class DOMJoiningTransformer extends AbstractJoiningTransformer<"dom"> {
      * @returns {DOMJoiningTransformer}
      */
     resultDocument(href: string, cb: (this: DOMJoiningTransformer) => void, cfg?: import("./StringJoiningTransformer.js").OutputConfig): DOMJoiningTransformer;
+    /**
+     * Helper method to use property sets.
+     * @param {Record<string, unknown>} obj - Object to apply property set to
+     * @param {string} psName - Property set name
+     * @returns {Record<string, unknown>}
+     */
+    _usePropertySets(obj: Record<string, unknown>, psName: string): Record<string, unknown>;
 }
 import AbstractJoiningTransformer from './AbstractJoiningTransformer.js';
 //# sourceMappingURL=DOMJoiningTransformer.d.ts.map

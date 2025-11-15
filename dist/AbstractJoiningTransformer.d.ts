@@ -102,6 +102,8 @@ declare class AbstractJoiningTransformer<T> {
     _cfg: JoiningTransformerConfig<T>;
     /** @type {Record<string, OutputCharacters>} */
     _characterMap: Record<string, OutputCharacters>;
+    /** @type {Record<string, Record<string, string>>} */
+    _attributeSet: Record<string, Record<string, string>>;
     /**
      * @param {JoiningTransformerConfig<T>} cfg - Configuration object
      * @returns {void}
@@ -120,6 +122,12 @@ declare class AbstractJoiningTransformer<T> {
      * @returns {void}
      */
     characterMap(name: string, outputCharacters: OutputCharacters): void;
+    /**
+     * @param {string} name
+     * @param {Record<string, string>} attributes
+     * @returns {void}
+     */
+    attributeSet(name: string, attributes: Record<string, string>): void;
     /**
      * @param {string} str
      * @returns {string}

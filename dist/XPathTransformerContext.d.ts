@@ -321,6 +321,13 @@ declare class XPathTransformerContext {
      */
     propValue(prop: string, val: any): XPathTransformerContext;
     /**
+     * Alias for propValue(). Append a key-value pair to the current map/object.
+     * @param {string} prop Property name
+     * @param {any} val Value
+     * @returns {XPathTransformerContext}
+     */
+    mapEntry(prop: string, val: any): XPathTransformerContext;
+    /**
      * Append object.
      * @param {Record<string, unknown>|
      *   ((this: XPathTransformerContext) => void)} objOrCb Object or callback
@@ -333,6 +340,19 @@ declare class XPathTransformerContext {
      * @returns {XPathTransformerContext}
      */
     object(objOrCb: Record<string, unknown> | ((this: XPathTransformerContext) => void), cbOrUsePropertySets?: ((this: XPathTransformerContext) => void) | any[], usePropertySetsOrPropSets?: any[] | Record<string, unknown>, propSets?: Record<string, unknown>): XPathTransformerContext;
+    /**
+     * Alias for object(). Append an object/map.
+     * @param {Record<string, unknown>|
+     *   ((this: XPathTransformerContext) => void)} objOrCb Object or callback
+     * @param {((this: XPathTransformerContext) => void)|
+     *   any[]} [cbOrUsePropertySets] Callback or property sets
+     * @param {any[]|
+     *   Record<string, unknown>} [usePropertySetsOrPropSets]
+     *   Property sets or props
+     * @param {Record<string, unknown>} [propSets] Additional property sets
+     * @returns {XPathTransformerContext}
+     */
+    map(objOrCb: Record<string, unknown> | ((this: XPathTransformerContext) => void), cbOrUsePropertySets?: ((this: XPathTransformerContext) => void) | any[], usePropertySetsOrPropSets?: any[] | Record<string, unknown>, propSets?: Record<string, unknown>): XPathTransformerContext;
     /**
      * Append array.
      * @param {any[]|
@@ -356,6 +376,12 @@ declare class XPathTransformerContext {
      */
     characterMap(name: string, outputCharacters: import("./AbstractJoiningTransformer.js").OutputCharacters): this;
     /**
+     * @param {string} name
+     * @param {Record<string, string>} attributes
+     * @returns {this}
+     */
+    attributeSet(name: string, attributes: Record<string, string>): this;
+    /**
      * Append element.
      * @param {string} name Tag name
      * @param {Record<string, string>|any[]|
@@ -363,9 +389,10 @@ declare class XPathTransformerContext {
      * @param {any[]|((this: XPathTransformerContext)=>void)} [children]
      *   Children
      * @param {(this: XPathTransformerContext)=>void} [cb] Callback
+     * @param {string[]} [useAttributeSets] - Attribute set names to apply
      * @returns {XPathTransformerContext}
      */
-    element(name: string, atts?: Record<string, string> | any[] | ((this: XPathTransformerContext) => void), children?: any[] | ((this: XPathTransformerContext) => void), cb?: (this: XPathTransformerContext) => void): XPathTransformerContext;
+    element(name: string, atts?: Record<string, string> | any[] | ((this: XPathTransformerContext) => void), children?: any[] | ((this: XPathTransformerContext) => void), cb?: (this: XPathTransformerContext) => void, useAttributeSets?: string[]): XPathTransformerContext;
     /**
      * Adds a prefixed namespace declaration to the most recently opened
      *  element. Mirrors the joining
@@ -475,6 +502,16 @@ declare class XPathTransformerContext {
      * @returns {XPathTransformerContext}
      */
     choose(select: string, whenCb: (this: XPathTransformerContext) => void, otherwiseCb?: (this: XPathTransformerContext) => void): XPathTransformerContext;
+    /**
+     * Assert that a test condition is true, throwing an error if it fails.
+     * Equivalent to xsl:assert. Evaluates an XPath expression using the
+     * same truthiness rules as if() and choose().
+     * @param {string} test - XPath expression to test
+     * @param {string} [message] - Optional error message to include
+     * @returns {XPathTransformerContext}
+     * @throws {Error} When the test expression evaluates to false
+     */
+    assert(test: string, message?: string): XPathTransformerContext;
     /**
      * Analyze a string with a regular expression, equivalent to
      * xsl:analyze-string. Processes matching and non-matching substrings

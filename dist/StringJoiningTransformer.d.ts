@@ -110,6 +110,13 @@ declare class StringJoiningTransformer extends AbstractJoiningTransformer<"strin
      */
     propValue(prop: string, val: any): StringJoiningTransformer;
     /**
+     * Alias for propValue(). Set a key-value pair in the current map/object.
+     * @param {string} prop - Property name
+     * @param {any} val - Property value
+     * @returns {StringJoiningTransformer}
+     */
+    mapEntry(prop: string, val: any): StringJoiningTransformer;
+    /**
      * @param {string} prop - Property name
      * @param {(this: StringJoiningTransformer) => void} cb - Callback function
      * @returns {StringJoiningTransformer}
@@ -123,6 +130,15 @@ declare class StringJoiningTransformer extends AbstractJoiningTransformer<"strin
      * @returns {StringJoiningTransformer}
      */
     object(obj: Record<string, unknown> | Element, cb: (this: StringJoiningTransformer) => void, usePropertySets?: any[], propSets?: Record<string, unknown>): StringJoiningTransformer;
+    /**
+     * Alias for object(). Build an object/map.
+     * @param {Record<string, unknown>|Element} obj - Object to serialize
+     * @param {(this: StringJoiningTransformer) => void} cb - Callback function
+     * @param {any[]} [usePropertySets] - Property sets to use
+     * @param {Record<string, unknown>} [propSets] - Additional property sets
+     * @returns {StringJoiningTransformer}
+     */
+    map(obj: Record<string, unknown> | Element, cb: (this: StringJoiningTransformer) => void, usePropertySets?: any[], propSets?: Record<string, unknown>): StringJoiningTransformer;
     /**
      * @param {any[]|Element} [arr] - Array to serialize
      * @param {(this: StringJoiningTransformer) => void} [cb] - Callback function
@@ -171,9 +187,10 @@ declare class StringJoiningTransformer extends AbstractJoiningTransformer<"strin
      * @param {ElementAttributes} [atts] - Element attributes
      * @param {any[]} [childNodes] - Child nodes
      * @param {(this: StringJoiningTransformer) => void} [cb] - Callback function
+     * @param {string[]} [useAttributeSets] - Attribute set names to apply
      * @returns {StringJoiningTransformer}
      */
-    element(elName: string | Element, atts?: ElementAttributes, childNodes?: any[], cb?: (this: StringJoiningTransformer) => void): StringJoiningTransformer;
+    element(elName: string | Element, atts?: ElementAttributes, childNodes?: any[], cb?: (this: StringJoiningTransformer) => void, useAttributeSets?: string[]): StringJoiningTransformer;
     _openTagState: any;
     root: any;
     /**

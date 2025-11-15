@@ -454,6 +454,13 @@ declare class JSONPathTransformerContext<T = "json"> {
      */
     propValue(prop: string, val: any): this;
     /**
+     * Alias for propValue(). Set a key-value pair in the current map/object.
+     * @param {string} prop - Property name
+     * @param {any} val - Property value
+     * @returns {this}
+     */
+    mapEntry(prop: string, val: any): this;
+    /**
      * Build an object. Mirrors the joining transformer API. All joiners now
      * support both signatures: (obj, cb, usePropertySets, propSets) with seed
      * object or (cb, usePropertySets, propSets) without.
@@ -461,6 +468,12 @@ declare class JSONPathTransformerContext<T = "json"> {
      * @returns {this}
      */
     object(...args: any[]): this;
+    /**
+     * Alias for object(). Build an object/map.
+     * @param {...any} args - Arguments to pass to joiner
+     * @returns {this}
+     */
+    map(...args: any[]): this;
     /**
      * Build an array. Mirrors the joining transformer API. All joiners now
      * support both signatures: (arr, cb) with seed array or (cb) without.
@@ -482,6 +495,12 @@ declare class JSONPathTransformerContext<T = "json"> {
      */
     characterMap(name: string, outputCharacters: import("./AbstractJoiningTransformer.js").OutputCharacters): this;
     /**
+     * @param {string} name
+     * @param {Record<string, string>} attributes
+     * @returns {this}
+     */
+    attributeSet(name: string, attributes: Record<string, string>): this;
+    /**
      * Create an element. Mirrors the joining transformer API so templates can
      * call `this.element()`.
      * @param {string} name - Element name
@@ -489,9 +508,10 @@ declare class JSONPathTransformerContext<T = "json"> {
      * @param {any[]} [children] - Child nodes
      * @param {import('./JSONJoiningTransformer.js').
      *   SimpleCallback<T>} [cb] - Callback function
+     * @param {string[]} [useAttributeSets] - Attribute set names to apply
      * @returns {this}
      */
-    element(name: string, atts?: Record<string, string>, children?: any[], cb?: import("./JSONJoiningTransformer.js").SimpleCallback<T>): this;
+    element(name: string, atts?: Record<string, string>, children?: any[], cb?: import("./JSONJoiningTransformer.js").SimpleCallback<T>, useAttributeSets?: string[]): this;
     /**
      * Adds a prefixed namespace declaration to the most recently opened
      *  element. Mirrors the joining
@@ -604,5 +624,15 @@ declare class JSONPathTransformerContext<T = "json"> {
      * @returns {this}
      */
     choose(select: string, whenCb: (this: JSONPathTransformerContext<T>) => void, otherwiseCb?: (this: JSONPathTransformerContext<T>) => void): this;
+    /**
+     * Assert that a test condition is true, throwing an error if it fails.
+     * Equivalent to xsl:assert. Evaluates a JSONPath expression using the
+     * same truthiness rules as if() and choose().
+     * @param {string} test - JSONPath expression to test
+     * @param {string} [message] - Optional error message to include
+     * @returns {this}
+     * @throws {Error} When the test expression evaluates to false
+     */
+    assert(test: string, message?: string): this;
 }
 //# sourceMappingURL=JSONPathTransformerContext.d.ts.map

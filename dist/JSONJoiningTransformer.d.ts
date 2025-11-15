@@ -109,6 +109,13 @@ declare class JSONJoiningTransformer extends AbstractJoiningTransformer<"json"> 
      */
     propValue(prop: string, val: any): void;
     /**
+     * Alias for propValue(). Set a key-value pair in the current map/object.
+     * @param {string} prop - Property name
+     * @param {any} val - Property value
+     * @returns {void}
+     */
+    mapEntry(prop: string, val: any): void;
+    /**
      * @param {Record<string, unknown>|ObjectCallback} [objOrCb]
      *   Seed object or callback.
      * @param {ObjectCallback|any[]} [cbOrUsePropertySets] Callback or sets.
@@ -118,6 +125,17 @@ declare class JSONJoiningTransformer extends AbstractJoiningTransformer<"json"> 
      * @returns {JSONJoiningTransformer}
      */
     object(objOrCb?: Record<string, unknown> | ObjectCallback, cbOrUsePropertySets?: ObjectCallback | any[], usePropertySetsOrPropSets?: any[] | Record<string, unknown>, propSets?: Record<string, unknown>): JSONJoiningTransformer;
+    /**
+     * Alias for object(). Build an object/map.
+     * @param {Record<string, unknown>|ObjectCallback} [objOrCb]
+     *   Seed object or callback.
+     * @param {ObjectCallback|any[]} [cbOrUsePropertySets] Callback or sets.
+     * @param {any[]|Record<string, unknown>} [usePropertySetsOrPropSets]
+     *   Sets or prop sets.
+     * @param {Record<string, unknown>} [propSets] Key-value pairs to add.
+     * @returns {JSONJoiningTransformer}
+     */
+    map(objOrCb?: Record<string, unknown> | ObjectCallback, cbOrUsePropertySets?: ObjectCallback | any[], usePropertySetsOrPropSets?: any[] | Record<string, unknown>, propSets?: Record<string, unknown>): JSONJoiningTransformer;
     /**
      * Creates a new array and executes a callback in its context.
      * @param {any[]|ArrayCallback} [arrOrCb] Seed array or callback.
@@ -176,9 +194,10 @@ declare class JSONJoiningTransformer extends AbstractJoiningTransformer<"json"> 
      *   Attrs, children, or cb.
      * @param {any[]|SimpleCallback} [childNodes] Children or cb.
      * @param {SimpleCallback} [cb] Builder callback.
+     * @param {string[]} [useAttributeSets] - Attribute set names to apply
      * @returns {JSONJoiningTransformer}
      */
-    element(elName: string | Element, atts?: ElementAttributes | any[] | SimpleCallback, childNodes?: any[] | SimpleCallback, cb?: SimpleCallback): JSONJoiningTransformer;
+    element(elName: string | Element, atts?: ElementAttributes | any[] | SimpleCallback, childNodes?: any[] | SimpleCallback, cb?: SimpleCallback, useAttributeSets?: string[]): JSONJoiningTransformer;
     root: any;
     /**
      * @param {string} prefix
