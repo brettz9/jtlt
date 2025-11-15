@@ -92,79 +92,79 @@
   xsl:accept
   xsl:accumulator
   xsl:accumulator-rule
-  ~~"xsl:analyze-string",~~
   "xsl:apply-imports",
-  ~~"xsl:apply-templates",~~
-  ~~xsl:assert~~
-  ~~"xsl:attribute",~~
   "xsl:attribute-set",
   xsl:break
-  ~~"xsl:call-template",~~
   xsl:catch
-  ~~"xsl:character-map",~~
-  ~~"xsl:choose",~~
-  ~~"xsl:comment",~~
   xsl:context-item
-  ~~"xsl:copy",~~
-  ~~"xsl:copy-of",~~
-  ~~"xsl:decimal-format",~~
-  ~~"xsl:document",~~
-  ~~"xsl:element",~~
   xsl:evaluate
   xsl:expose
   "xsl:fallback",
-  ~~"xsl:for-each",~~
-  ~~"xsl:for-each-group",~~
   xsl:fork
   "xsl:function",
   xsl:global-context-item
-  ~~"xsl:if",~~
   "xsl:import",
   "xsl:import-schema",
   "xsl:include",
   xsl:iterate
-  ~~"xsl:key",~~
   xsl:map
   xsl:map-entry
-  ~~"xsl:matching-substring",~~
   xsl:merge
   xsl:merge-action
   xsl:merge-key
   xsl:merge-source
-  ~~"xsl:message",~~
   xsl:mode
-  ~~"xsl:namespace",~~
   "xsl:namespace-alias",
   xsl:next-iteration
   "xsl:next-match",
-  ~~"xsl:non-matching-substring",~~
-  ~~"xsl:number",~~
   xsl:on-completion
   xsl:on-empty
   xsl:on-non-empty
-  ~~"xsl:otherwise",~~
-  ~~"xsl:output",~~
-  ~~"xsl:output-character",~~
   xsl:override
   xsl:package
   "xsl:param",
   "xsl:perform-sort",
   "xsl:preserve-space",
-  ~~"xsl:processing-instruction",~~
-  ~~"xsl:result-document",~~
   "xsl:sequence",
-  ~~"xsl:sort",~~
   xsl:source-document
   "xsl:strip-space",
+  xsl:try
+  xsl:use-package
+  xsl:where-populated
+
+  ~~"xsl:analyze-string",~~
+  ~~"xsl:apply-templates",~~
+  ~~xsl:assert~~
+  ~~"xsl:attribute",~~
+  ~~"xsl:call-template",~~
+  ~~"xsl:character-map",~~
+  ~~"xsl:choose",~~
+  ~~"xsl:comment",~~
+  ~~"xsl:copy",~~
+  ~~"xsl:copy-of",~~
+  ~~"xsl:decimal-format",~~
+  ~~"xsl:document",~~
+  ~~"xsl:element",~~
+  ~~"xsl:for-each",~~
+  ~~"xsl:for-each-group",~~
+  ~~"xsl:if",~~
+  ~~"xsl:key",~~
+  ~~"xsl:matching-substring",~~
+  ~~"xsl:message",~~
+  ~~"xsl:namespace",~~
+  ~~"xsl:non-matching-substring",~~
+  ~~"xsl:number",~~
+  ~~"xsl:otherwise",~~
+  ~~"xsl:output",~~
+  ~~"xsl:output-character",~~
+  ~~"xsl:processing-instruction",~~
+  ~~"xsl:result-document",~~
+  ~~"xsl:sort",~~
   ~~"xsl:stylesheet",~~
   ~~"xsl:template",~~
   ~~"xsl:text",~~
   ~~"xsl:transform",~~
-  xsl:try
-  xsl:use-package
   ~~"xsl:value-of",~~
   ~~"xsl:variable",~~
   ~~"xsl:when",~~
-  xsl:where-populated
   ~~"xsl:with-param"~~
-
