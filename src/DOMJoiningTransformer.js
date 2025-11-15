@@ -29,6 +29,8 @@ class DOMJoiningTransformer extends AbstractJoiningTransformer {
     this._docs = [];
     /** @type {Array<{href: string, document: XMLDocument, format?: string}>} */
     this._resultDocuments = [];
+    /** @type {Record<string, unknown>} */
+    this.propertySets = {};
   }
 
   /**
@@ -75,9 +77,20 @@ class DOMJoiningTransformer extends AbstractJoiningTransformer {
    * @returns {DOMJoiningTransformer}
    */
   object (obj, cb, usePropertySets, propSets) {
+    // eslint-disable-next-line unicorn/no-this-assignment -- Temporary
+    const that = this;
     this._requireSameChildren('dom', 'object');
-    if (this._cfg.JHTMLForJSON) {
+
+    if (usePropertySets !== undefined) {
+      obj = usePropertySets.reduce(function (o, psName) {
+        return that._usePropertySets(o, psName);
+      }, obj);
+    }
+    if (propSets !== undefined) {
       Object.assign(obj, propSets);
+    }
+
+    if (this._cfg.JHTMLForJSON) {
       this.append(JHTML.toJHTMLDOM(/** @type {any} */ (obj)));
     } else {
       // Todo: set current position and deal with children
@@ -570,6 +583,23 @@ class DOMJoiningTransformer extends AbstractJoiningTransformer {
     this._dom = oldDOM;
 
     return this;
+  }
+
+  /**
+   * Helper method to use property sets.
+   * @param {Record<string, unknown>} obj - Object to apply property set to
+   * @param {string} psName - Property set name
+   * @returns {Record<string, unknown>}
+   */
+  _usePropertySets (obj, psName) {
+    // Merge named property set from this.propertySets into obj
+    if (this.propertySets && this.propertySets[psName]) {
+      return {
+        ...obj,
+        ...this.propertySets[psName]
+      };
+    }
+    return obj;
   }
 }
 

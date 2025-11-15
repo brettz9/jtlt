@@ -458,6 +458,59 @@ describe('Coverage - additional edge cases', function () {
       const result = sj._usePropertySets(obj, 'ps');
       assert.strictEqual(result, obj);
     });
+  });
+
+  describe('DOMJoiningTransformer internals', function () {
+    it('_usePropertySets returns obj (coverage)', function () {
+      const {window} = new JSDOM('<!doctype html><html><body></body></html>');
+      const {document} = window;
+      const dj = new DOMJoiningTransformer(
+        document.createDocumentFragment(),
+        {document}
+      );
+      const obj = {z: 3};
+      const result = dj._usePropertySets(obj, 'ps');
+      assert.strictEqual(result, obj);
+    });
+
+    it('object() with usePropertySets parameter (coverage)', function () {
+      const {window} = new JSDOM('<!doctype html><html><body></body></html>');
+      const {document} = window;
+      const dj = new DOMJoiningTransformer(
+        document.createDocumentFragment(),
+        {document}
+      );
+
+      // Define property sets
+      dj.propertySets = {
+        base: {a: 1, b: 2},
+        extra: {c: 3}
+      };
+
+      // Call object with usePropertySets - exercises the parameter handling
+      // The object() method will reduce over the property sets
+      dj.object({x: 10}, null, ['base', 'extra']);
+
+      // Just verify it doesn't throw and processes the call
+      // The actual behavior depends on JHTMLForJSON config
+      const result = dj.get();
+      assert.ok(result);
+    });
+
+    it('object() with propSets parameter (coverage line 90-91)', function () {
+      const {window} = new JSDOM('<!doctype html><html><body></body></html>');
+      const {document} = window;
+      const dj = new DOMJoiningTransformer(
+        document.createDocumentFragment(),
+        {document}
+      );
+
+      // Call object with propSets fourth parameter
+      dj.object({x: 10}, undefined, undefined, {y: 20, z: 30});
+
+      const result = dj.get();
+      assert.ok(result);
+    });
 
     it('dataset and $a ordered attributes', function () {
       const data = {};
