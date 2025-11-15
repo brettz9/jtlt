@@ -107,7 +107,7 @@
   xsl:context-item
   ~~"xsl:copy",~~
   ~~"xsl:copy-of",~~
-  "xsl:decimal-format",
+  ~~"xsl:decimal-format",~~
   ~~"xsl:document",~~
   ~~"xsl:element",~~
   xsl:evaluate

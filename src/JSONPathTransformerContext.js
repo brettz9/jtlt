@@ -2,10 +2,27 @@ import {JSONPath as jsonpath} from 'jsonpath-plus';
 import JSONPathTransformer from './JSONPathTransformer.js';
 
 /**
+ * Decimal format symbols for number formatting.
+ * @typedef {object} DecimalFormatSymbols
+ * @property {string} [decimalSeparator='.'] - Character for decimal point
+ * @property {string} [groupingSeparator=','] - Character for thousands
+ * @property {string} [percent='%'] - Character for percent
+ * @property {string} [perMille='‰'] - Character for per-mille
+ * @property {string} [zeroDigit='0'] - Character for zero
+ * @property {string} [digit='#'] - Character for digit placeholder
+ * @property {string} [patternSeparator=';'] - Character separating
+ *   positive/negative patterns
+ * @property {string} [minusSign='-'] - Character for minus sign
+ * @property {string} [infinity='Infinity'] - String for infinity
+ * @property {string} [NaN='NaN'] - String for NaN
+ */
+
+/**
  * @typedef {number|string|{
  *   value?: number|string,
  *   count?: string,
  *   format?: string,
+ *   decimalFormat?: string,
  *   groupingSeparator?: string,
  *   groupingSize?: number,
  *   lang?: string,
@@ -80,6 +97,8 @@ class JSONPathTransformerContext {
     this.propertySets = {};
     /** @type {Record<string, {match: string, use: string}>} */
     this.keys = {};
+    /** @type {Record<string, DecimalFormatSymbols>} */
+    this.decimalFormats = {};
     /** @type {boolean | undefined} */
     this._initialized = undefined;
     /** @type {string | undefined} */
@@ -647,6 +666,48 @@ class JSONPathTransformerContext {
         ? /** @type {{select?: string}} */ (select).select
         : select;
 
+      // Check for format-number() function call
+      if (selectStr && selectStr.includes('format-number(')) {
+        const match = (/format-number\((?<value>[^,\)]+)(?:,\s*["'](?<format>[^"']+)["'])?(?:,\s*["'](?<decimalFormat>[^"']*)["'])?\)/v).exec(selectStr);
+        if (match && match.groups) {
+          const {
+            value: valueExpr,
+            format: formatStr,
+            decimalFormat: decimalFormatName
+          } = match.groups;
+          // Evaluate the value expression
+          let numValue;
+          if (valueExpr.trim().startsWith('$') &&
+              !valueExpr.includes('.') && !valueExpr.includes('[')) {
+            // Parameter reference (no path components)
+            const paramName = valueExpr.trim().slice(1);
+            numValue = this._params && paramName in this._params
+              ? this._params[paramName]
+              : 0;
+          } else {
+            // Try to parse as number or evaluate as JSONPath
+            const trimmed = valueExpr.trim();
+            numValue = Number.isNaN(Number(trimmed))
+              ? this.get(trimmed, false)
+              : Number(trimmed);
+          }
+          const num = typeof numValue === 'string'
+            ? Number(numValue)
+            : numValue;
+          const format = formatStr || '1';
+          const formatted = this._formatNumber(
+            num,
+            format,
+            undefined,
+            undefined,
+            decimalFormatName || '',
+            'en'
+          );
+          /** @type {any} */ (results).append(formatted);
+          return this;
+        }
+      }
+
       // Check if this is a parameter reference (starts with $)
       if (selectStr && selectStr.startsWith('$')) {
         const paramName = selectStr.slice(1);
@@ -1005,7 +1066,8 @@ class JSONPathTransformerContext {
         format,
         opts.groupingSeparator,
         opts.groupingSize,
-        locale
+        locale,
+        opts.decimalFormat
       );
 
       // Output as string if formatted, otherwise as number
@@ -1068,13 +1130,30 @@ class JSONPathTransformerContext {
    * @param {string} format - Format string (1, a, A, i, I, 01, etc.)
    * @param {string} [groupingSeparator] - Separator for grouping
    * @param {number} [groupingSize] - Size of groups
-   * @param {string} [locale]
+   * @param {string} [decimalFormatName] - Name of decimal format to use
+   * @param {string} [locale] - Locale for formatting
    * @returns {string}
    */
-  _formatNumber (num, format, groupingSeparator, groupingSize, locale = 'en') {
+  _formatNumber (
+    num,
+    format,
+    groupingSeparator,
+    groupingSize,
+    decimalFormatName,
+    locale = 'en'
+  ) {
     if (Number.isNaN(num)) {
-      return String(num);
+      // Check for custom NaN string in decimal format
+      const fmt = decimalFormatName
+        ? this.decimalFormats[decimalFormatName]
+        : this.decimalFormats[''];
+      return fmt?.NaN || String(num);
     }
+
+    // Get decimal format if specified
+    const decimalFormat = decimalFormatName
+      ? this.decimalFormats[decimalFormatName]
+      : this.decimalFormats[''];
 
     let result;
     const formatChar = format.charAt(0);
@@ -1102,7 +1181,8 @@ class JSONPathTransformerContext {
     }
     case '0': {
       const width = format.length;
-      result = String(num).padStart(width, '0');
+      const zeroDigit = decimalFormat?.zeroDigit || '0';
+      result = String(num).padStart(width, zeroDigit);
 
       break;
     }
@@ -1118,7 +1198,25 @@ class JSONPathTransformerContext {
 
       try {
         result = new Intl.NumberFormat(locale, options).format(num);
-        if (groupingSeparator) {
+
+        // Apply decimal format symbols if specified
+        if (decimalFormat) {
+          // Use placeholders to avoid conflicts during replacement
+          const TEMP_GROUP = '\u0000GROUPSEP\u0000';
+          const TEMP_DECIMAL = '\u0000DECIMALSEP\u0000';
+
+          // Replace with temporary placeholders first
+          result = result.replaceAll(',', TEMP_GROUP);
+          result = result.replaceAll('.', TEMP_DECIMAL);
+
+          // Now replace with actual symbols
+          const effectiveGroupingSep = groupingSeparator ||
+            decimalFormat.groupingSeparator || ',';
+          const effectiveDecimalSep = decimalFormat.decimalSeparator || '.';
+
+          result = result.replaceAll(TEMP_GROUP, effectiveGroupingSep);
+          result = result.replaceAll(TEMP_DECIMAL, effectiveDecimalSep);
+        } else if (groupingSeparator) {
           result = result.replaceAll(',', groupingSeparator);
         }
       } catch (e) {
@@ -1278,6 +1376,26 @@ class JSONPathTransformerContext {
     /** @type {any} */ (this._getJoiningTransformer()).namespace(
       prefix, namespaceURI
     );
+    return this;
+  }
+
+  /**
+   * Define a decimal format with custom symbols for number formatting.
+   * Equivalent to xsl:decimal-format. If no name is provided, defines
+   * the default format.
+   * @param {string|DecimalFormatSymbols} nameOrSymbols - Format name or
+   *   symbols object if defining default
+   * @param {DecimalFormatSymbols} [symbols] - Format symbols
+   * @returns {this}
+   */
+  decimalFormat (nameOrSymbols, symbols) {
+    if (typeof nameOrSymbols === 'string') {
+      // Named format
+      this.decimalFormats[nameOrSymbols] = symbols || {};
+    } else {
+      // Default format (unnamed)
+      this.decimalFormats[''] = nameOrSymbols;
+    }
     return this;
   }
 

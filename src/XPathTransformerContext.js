@@ -48,6 +48,11 @@ class XPathTransformerContext {
     this.propertySets = {};
     /** @type {Record<string, {match: string, use: string}>} */
     this.keys = {};
+    /**
+     * @type {Record<string,
+     *   import('./JSONPathTransformerContext.js').DecimalFormatSymbols>}
+     */
+    this.decimalFormats = {};
     /** @type {boolean|undefined} */
     this._initialized = undefined;
     /** @type {string|undefined} */
@@ -409,6 +414,45 @@ class XPathTransformerContext {
       ? /** @type {{select?: string}} */ (select).select
       : select;
 
+    // Check for format-number() function call
+    if (selectStr && selectStr.includes('format-number(')) {
+      const match = (/format-number\((?<value>[^,\)]+)(?:,\s*["'](?<format>[^"']+)["'])?(?:,\s*["'](?<decimalFormat>[^"']*)["'])?\)/v).exec(selectStr);
+      if (match && match.groups) {
+        const {
+          value: valueExpr,
+          format: formatStr,
+          decimalFormat: decimalFormatName
+        } = match.groups;
+        // Evaluate the value expression
+        let numValue;
+        if (valueExpr.trim().startsWith('$')) {
+          // Parameter reference
+          const paramName = valueExpr.trim().slice(1);
+          numValue = this._params && paramName in this._params
+            ? this._params[paramName]
+            : 0;
+        } else {
+          // Try to parse as number or evaluate as XPath
+          const trimmed = valueExpr.trim();
+          numValue = Number.isNaN(Number(trimmed))
+            ? this._evalXPath(trimmed, false)
+            : Number(trimmed);
+        }
+        const num = typeof numValue === 'string' ? Number(numValue) : numValue;
+        const format = formatStr || '1';
+        const formatted = this._formatNumber(
+          num,
+          format,
+          undefined,
+          undefined,
+          decimalFormatName || '',
+          'en'
+        );
+        jt.append(formatted);
+        return this;
+      }
+    }
+
     // Check if this is a parameter reference (starts with $)
     if (selectStr && selectStr.startsWith('$')) {
       const paramName = selectStr.slice(1);
@@ -595,6 +639,7 @@ class XPathTransformerContext {
    *   level?: 'single'|'multiple'|'any',
    *   from?: string,
    *   format?: string,
+   *   decimalFormat?: string,
    *   groupingSeparator?: string,
    *   groupingSize?: number
    * }} num - Number value, "position()" string, or options object
@@ -779,14 +824,26 @@ class XPathTransformerContext {
    * @param {string} format - Format string (1, a, A, i, I, 01, etc.)
    * @param {string} [groupingSeparator] - Separator for grouping (e.g., ',')
    * @param {number} [groupingSize] - Size of groups (e.g., 3 for 1,000)
+   * @param {string} [decimalFormatName] - Named decimal format to use
    * @param {string} [locale]
    * @returns {string}
    * @private
    */
-  _formatNumber (num, format, groupingSeparator, groupingSize, locale = 'en') {
+  _formatNumber (
+    num, format, groupingSeparator, groupingSize, decimalFormatName, locale
+  ) {
     if (Number.isNaN(num)) {
       return String(num);
     }
+
+    // Get decimal format symbols if specified
+    const symbols = decimalFormatName !== undefined &&
+      decimalFormatName in this.decimalFormats
+      ? this.decimalFormats[decimalFormatName]
+      : undefined;
+
+    // Default locale
+    const loc = locale || 'en';
 
     let result;
     const formatChar = format.charAt(0);
@@ -814,7 +871,8 @@ class XPathTransformerContext {
     }
     case '0': {
       const width = format.length;
-      result = String(num).padStart(width, '0');
+      const zeroDigit = symbols?.zeroDigit || '0';
+      result = String(num).padStart(width, zeroDigit);
 
       break;
     }
@@ -828,8 +886,26 @@ class XPathTransformerContext {
         };
       }
       try {
-        result = new Intl.NumberFormat(locale, options).format(num);
-        if (groupingSeparator) {
+        result = new Intl.NumberFormat(loc, options).format(num);
+
+        // Apply decimal format symbols if specified
+        if (symbols) {
+          // Use placeholders to avoid conflicts during replacement
+          const TEMP_GROUP = '\u0000GROUPSEP\u0000';
+          const TEMP_DECIMAL = '\u0000DECIMALSEP\u0000';
+
+          // Replace with temporary placeholders first
+          result = result.replaceAll(',', TEMP_GROUP);
+          result = result.replaceAll('.', TEMP_DECIMAL);
+
+          // Now replace with actual symbols
+          const effectiveGroupingSep = groupingSeparator ||
+            symbols.groupingSeparator || ',';
+          const effectiveDecimalSep = symbols.decimalSeparator || '.';
+
+          result = result.replaceAll(TEMP_GROUP, effectiveGroupingSep);
+          result = result.replaceAll(TEMP_DECIMAL, effectiveDecimalSep);
+        } else if (groupingSeparator) {
           result = result.replaceAll(',', groupingSeparator);
         }
       } catch (e) {
@@ -995,6 +1071,28 @@ class XPathTransformerContext {
     /** @type {any} */ (this._getJoiningTransformer()).namespace(
       prefix, namespaceURI
     );
+    return this;
+  }
+
+  /**
+   * Define a decimal format with custom symbols for number formatting.
+   * Equivalent to xsl:decimal-format. If no name is provided, defines
+   * the default format.
+   * @param {string|import('./JSONPathTransformerContext.js').
+   *   DecimalFormatSymbols} nameOrSymbols - Format name or symbols object
+   *   if defining default
+   * @param {import('./JSONPathTransformerContext.js').
+   *   DecimalFormatSymbols} [symbols] - Format symbols
+   * @returns {this}
+   */
+  decimalFormat (nameOrSymbols, symbols) {
+    if (typeof nameOrSymbols === 'string') {
+      // Named format
+      this.decimalFormats[nameOrSymbols] = symbols || {};
+    } else {
+      // Default format (unnamed)
+      this.decimalFormats[''] = nameOrSymbols;
+    }
     return this;
   }
 

@@ -4,6 +4,7 @@
 
 - feat: `characterMap` and element fixes
 - feat: `namespace()`
+- feat: `decimalFormat()`
 - fix: `valueOf` and context when no arguments to `applyTemplates()`
 - fix: add childNodes argument to dom joining transformer
 
