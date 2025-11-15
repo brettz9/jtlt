@@ -1,8 +1,55 @@
 export default JSONPathTransformerContext;
+/**
+ * Decimal format symbols for number formatting.
+ */
+export type DecimalFormatSymbols = {
+    /**
+     * - Character for decimal point
+     */
+    decimalSeparator?: string | undefined;
+    /**
+     * - Character for thousands
+     */
+    groupingSeparator?: string | undefined;
+    /**
+     * - Character for percent
+     */
+    percent?: string | undefined;
+    /**
+     * - Character for per-mille
+     */
+    perMille?: string | undefined;
+    /**
+     * - Character for zero
+     */
+    zeroDigit?: string | undefined;
+    /**
+     * - Character for digit placeholder
+     */
+    digit?: string | undefined;
+    /**
+     * - Character separating
+     * positive/negative patterns
+     */
+    patternSeparator?: string | undefined;
+    /**
+     * - Character for minus sign
+     */
+    minusSign?: string | undefined;
+    /**
+     * - String for infinity
+     */
+    infinity?: string | undefined;
+    /**
+     * - String for NaN
+     */
+    NaN?: string | undefined;
+};
 export type NumberValue = number | string | {
     value?: number | string;
     count?: string;
     format?: string;
+    decimalFormat?: string;
     groupingSeparator?: string;
     groupingSize?: number;
     lang?: string;
@@ -60,10 +107,26 @@ export type JSONPathTransformerContextConfig<T = "json"> = {
     templates: import("./index.js").JSONPathTemplateObject<T>[];
 };
 /**
+ * Decimal format symbols for number formatting.
+ * @typedef {object} DecimalFormatSymbols
+ * @property {string} [decimalSeparator='.'] - Character for decimal point
+ * @property {string} [groupingSeparator=','] - Character for thousands
+ * @property {string} [percent='%'] - Character for percent
+ * @property {string} [perMille='‰'] - Character for per-mille
+ * @property {string} [zeroDigit='0'] - Character for zero
+ * @property {string} [digit='#'] - Character for digit placeholder
+ * @property {string} [patternSeparator=';'] - Character separating
+ *   positive/negative patterns
+ * @property {string} [minusSign='-'] - Character for minus sign
+ * @property {string} [infinity='Infinity'] - String for infinity
+ * @property {string} [NaN='NaN'] - String for NaN
+ */
+/**
  * @typedef {number|string|{
  *   value?: number|string,
  *   count?: string,
  *   format?: string,
+ *   decimalFormat?: string,
  *   groupingSeparator?: string,
  *   groupingSize?: number,
  *   lang?: string,
@@ -141,6 +204,8 @@ declare class JSONPathTransformerContext<T = "json"> {
         match: string;
         use: string;
     }>;
+    /** @type {Record<string, DecimalFormatSymbols>} */
+    decimalFormats: Record<string, DecimalFormatSymbols>;
     /** @type {boolean | undefined} */
     _initialized: boolean | undefined;
     /** @type {string | undefined} */
@@ -229,6 +294,49 @@ declare class JSONPathTransformerContext<T = "json"> {
      */
     forEach(select: string, cb: (this: JSONPathTransformerContext<T>, value: any) => void, sort?: SortSpec): this;
     /**
+     * Groups items and executes callback for each group.
+     * Equivalent to XSLT's xsl:for-each-group.
+     * @param {string} select - JSONPath selector for items to group
+     * @param {object} options - Grouping options
+     * @param {string} [options.groupBy] - JSONPath expression to group by value
+     * @param {string} [options.groupAdjacent] - Groups adjacent items with
+     *   same value
+     * @param {string} [options.groupStartingWith] - Starts new group when
+     *   expression matches
+     * @param {string} [options.groupEndingWith] - Ends group when expression
+     *   matches
+     * @param {any} [options.sort] - Sort specification (same as forEach)
+     * @param {(
+     *   this: JSONPathTransformerContext<T>, key: any, items: any[], ctx: any
+     * ) => void} cb - Callback receives (groupingKey, groupItems, context)
+     * @returns {this}
+     */
+    forEachGroup(select: string, options: {
+        groupBy?: string | undefined;
+        groupAdjacent?: string | undefined;
+        groupStartingWith?: string | undefined;
+        groupEndingWith?: string | undefined;
+        sort?: any;
+    }, cb: (this: JSONPathTransformerContext<T>, key: any, items: any[], ctx: any) => void): this;
+    /**
+     * Helper to build comparator for sorting.
+     * @param {any} sortSpec
+     * @param {(expr: string, ctxVal: any) => any} evalFn
+     * @returns {((a: {value: any}, b: {value: any}) => number)|null}
+     * @private
+     */
+    private _buildComparator;
+    /**
+     * Returns the current group (for use within forEachGroup callback).
+     * @returns {any[]|undefined}
+     */
+    currentGroup(): any[] | undefined;
+    /**
+     * Returns the current grouping key (for use within forEachGroup callback).
+     * @returns {any}
+     */
+    currentGroupingKey(): any;
+    /**
      * @param {string|object} [select] - JSONPath selector
      * @returns {this}
      */
@@ -309,10 +417,11 @@ declare class JSONPathTransformerContext<T = "json"> {
      * @param {string} format - Format string (1, a, A, i, I, 01, etc.)
      * @param {string} [groupingSeparator] - Separator for grouping
      * @param {number} [groupingSize] - Size of groups
-     * @param {string} [locale]
+     * @param {string} [decimalFormatName] - Name of decimal format to use
+     * @param {string} [locale] - Locale for formatting
      * @returns {string}
      */
-    _formatNumber(num: number, format: string, groupingSeparator?: string, groupingSize?: number, locale?: string): string;
+    _formatNumber(num: number, format: string, groupingSeparator?: string, groupingSize?: number, decimalFormatName?: string, locale?: string): string;
     /**
      * Convert number to Roman numerals.
      * @param {number} num - Number to convert (1-3999)
@@ -366,6 +475,13 @@ declare class JSONPathTransformerContext<T = "json"> {
      */
     output(cfg: import("./StringJoiningTransformer.js").OutputConfig): this;
     /**
+     * @param {string} name
+     * @param {import('./AbstractJoiningTransformer.js').
+     *   OutputCharacters} outputCharacters
+     * @returns {this}
+     */
+    characterMap(name: string, outputCharacters: import("./AbstractJoiningTransformer.js").OutputCharacters): this;
+    /**
      * Create an element. Mirrors the joining transformer API so templates can
      * call `this.element()`.
      * @param {string} name - Element name
@@ -376,6 +492,25 @@ declare class JSONPathTransformerContext<T = "json"> {
      * @returns {this}
      */
     element(name: string, atts?: Record<string, string>, children?: any[], cb?: import("./JSONJoiningTransformer.js").SimpleCallback<T>): this;
+    /**
+     * Adds a prefixed namespace declaration to the most recently opened
+     *  element. Mirrors the joining
+     * transformer API so templates can call `this.attribute()`.
+     * @param {string} prefix - Prefix
+     * @param {string} namespaceURI - Namespace
+     * @returns {this}
+     */
+    namespace(prefix: string, namespaceURI: string): this;
+    /**
+     * Define a decimal format with custom symbols for number formatting.
+     * Equivalent to xsl:decimal-format. If no name is provided, defines
+     * the default format.
+     * @param {string|DecimalFormatSymbols} nameOrSymbols - Format name or
+     *   symbols object if defining default
+     * @param {DecimalFormatSymbols} [symbols] - Format symbols
+     * @returns {this}
+     */
+    decimalFormat(nameOrSymbols: string | DecimalFormatSymbols, symbols?: DecimalFormatSymbols): this;
     /**
      * Add an attribute to the most recently opened element. Mirrors the joining
      * transformer API so templates can call `this.attribute()`.

@@ -1,7 +1,8 @@
 # jtlt CHANGES
 
-## ?
+## 0.5.0
 
+- feat: `forEachGroup`
 - feat: `characterMap` and element fixes
 - feat: `namespace()`
 - feat: `decimalFormat()`

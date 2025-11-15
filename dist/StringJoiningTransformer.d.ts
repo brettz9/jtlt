@@ -10,6 +10,7 @@ export type OutputConfig = {
     version?: string;
     standalone?: boolean;
     method?: "xml" | "html" | "text" | "json" | "xhtml";
+    useCharacterMaps?: string[];
 };
 export type SimpleCallback = (this: StringJoiningTransformer) => void;
 /**
@@ -166,13 +167,6 @@ declare class StringJoiningTransformer extends AbstractJoiningTransformer<"strin
      */
     function(func: ((...args: any[]) => any) | Element): StringJoiningTransformer;
     /**
-     * @param {OutputConfig} cfg
-     * @returns {StringJoiningTransformer}
-     */
-    output(cfg: OutputConfig): StringJoiningTransformer;
-    _outputConfig: any;
-    mediaType: string | undefined;
-    /**
      * @param {string|Element} elName - Element name or element object
      * @param {ElementAttributes} [atts] - Element attributes
      * @param {any[]} [childNodes] - Child nodes
@@ -182,6 +176,12 @@ declare class StringJoiningTransformer extends AbstractJoiningTransformer<"strin
     element(elName: string | Element, atts?: ElementAttributes, childNodes?: any[], cb?: (this: StringJoiningTransformer) => void): StringJoiningTransformer;
     _openTagState: any;
     root: any;
+    /**
+     * @param {string} prefix
+     * @param {string} namespaceURI
+     * @returns {StringJoiningTransformer}
+     */
+    namespace(prefix: string, namespaceURI: string): StringJoiningTransformer;
     /**
      * @param {string} name - Attribute name
      * @param {string|Record<string, unknown>|

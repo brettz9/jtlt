@@ -98,6 +98,11 @@ declare class XPathTransformerContext {
         match: string;
         use: string;
     }>;
+    /**
+     * @type {Record<string,
+     *   import('./JSONPathTransformerContext.js').DecimalFormatSymbols>}
+     */
+    decimalFormats: Record<string, import("./JSONPathTransformerContext.js").DecimalFormatSymbols>;
     /** @type {boolean|undefined} */
     _initialized: boolean | undefined;
     /** @type {string|undefined} */
@@ -163,6 +168,39 @@ declare class XPathTransformerContext {
      */
     forEach(select: string, cb: (this: XPathTransformerContext, node: Node) => void): XPathTransformerContext;
     /**
+     * Groups items and executes callback for each group.
+     * Equivalent to XSLT's xsl:for-each-group.
+     * @param {string} select - XPath selector for items to group
+     * @param {object} options - Grouping options
+     * @param {string} [options.groupBy] - XPath expression to group by value
+     * @param {string} [options.groupAdjacent] - Groups adjacent items with
+     *   same value
+     * @param {string} [options.groupStartingWith] - Starts new group when
+     *   expression matches
+     * @param {string} [options.groupEndingWith] - Ends group when expression
+     *   matches
+     * @param {(
+     *   this: XPathTransformerContext, key: any, items: Node[], ctx: any
+     * ) => void} cb - Callback receives (groupingKey, groupItems, context)
+     * @returns {this}
+     */
+    forEachGroup(select: string, options: {
+        groupBy?: string | undefined;
+        groupAdjacent?: string | undefined;
+        groupStartingWith?: string | undefined;
+        groupEndingWith?: string | undefined;
+    }, cb: (this: XPathTransformerContext, key: any, items: Node[], ctx: any) => void): this;
+    /**
+     * Returns the current group (for use within forEachGroup callback).
+     * @returns {Node[]|undefined}
+     */
+    currentGroup(): Node[] | undefined;
+    /**
+     * Returns the current grouping key (for use within forEachGroup callback).
+     * @returns {any}
+     */
+    currentGroupingKey(): any;
+    /**
      * Append the value from an XPath expression or the context node text.
      * @param {string|object} [select]
      * @returns {XPathTransformerContext}
@@ -210,6 +248,7 @@ declare class XPathTransformerContext {
      *   level?: 'single'|'multiple'|'any',
      *   from?: string,
      *   format?: string,
+     *   decimalFormat?: string,
      *   groupingSeparator?: string,
      *   groupingSize?: number
      * }} num - Number value, "position()" string, or options object
@@ -221,6 +260,7 @@ declare class XPathTransformerContext {
         level?: "single" | "multiple" | "any";
         from?: string;
         format?: string;
+        decimalFormat?: string;
         groupingSeparator?: string;
         groupingSize?: number;
     }): XPathTransformerContext;
@@ -246,6 +286,7 @@ declare class XPathTransformerContext {
      * @param {string} format - Format string (1, a, A, i, I, 01, etc.)
      * @param {string} [groupingSeparator] - Separator for grouping (e.g., ',')
      * @param {number} [groupingSize] - Size of groups (e.g., 3 for 1,000)
+     * @param {string} [decimalFormatName] - Named decimal format to use
      * @param {string} [locale]
      * @returns {string}
      * @private
@@ -308,6 +349,13 @@ declare class XPathTransformerContext {
      */
     output(cfg: import("./StringJoiningTransformer.js").OutputConfig): XPathTransformerContext;
     /**
+     * @param {string} name
+     * @param {import('./AbstractJoiningTransformer.js').
+     *   OutputCharacters} outputCharacters
+     * @returns {this}
+     */
+    characterMap(name: string, outputCharacters: import("./AbstractJoiningTransformer.js").OutputCharacters): this;
+    /**
      * Append element.
      * @param {string} name Tag name
      * @param {Record<string, string>|any[]|
@@ -318,6 +366,27 @@ declare class XPathTransformerContext {
      * @returns {XPathTransformerContext}
      */
     element(name: string, atts?: Record<string, string> | any[] | ((this: XPathTransformerContext) => void), children?: any[] | ((this: XPathTransformerContext) => void), cb?: (this: XPathTransformerContext) => void): XPathTransformerContext;
+    /**
+     * Adds a prefixed namespace declaration to the most recently opened
+     *  element. Mirrors the joining
+     * transformer API so templates can call `this.attribute()`.
+     * @param {string} prefix - Prefix
+     * @param {string} namespaceURI - Namespace
+     * @returns {this}
+     */
+    namespace(prefix: string, namespaceURI: string): this;
+    /**
+     * Define a decimal format with custom symbols for number formatting.
+     * Equivalent to xsl:decimal-format. If no name is provided, defines
+     * the default format.
+     * @param {string|import('./JSONPathTransformerContext.js').
+     *   DecimalFormatSymbols} nameOrSymbols - Format name or symbols object
+     *   if defining default
+     * @param {import('./JSONPathTransformerContext.js').
+     *   DecimalFormatSymbols} [symbols] - Format symbols
+     * @returns {this}
+     */
+    decimalFormat(nameOrSymbols: string | import("./JSONPathTransformerContext.js").DecimalFormatSymbols, symbols?: import("./JSONPathTransformerContext.js").DecimalFormatSymbols): this;
     /**
      * Append attribute.
      * @param {string} name Attribute name

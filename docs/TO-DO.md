@@ -114,7 +114,7 @@
   xsl:expose
   "xsl:fallback",
   ~~"xsl:for-each",~~
-  "xsl:for-each-group",
+  ~~"xsl:for-each-group",~~
   xsl:fork
   "xsl:function",
   xsl:global-context-item

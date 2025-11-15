@@ -1,4 +1,8 @@
 export default AbstractJoiningTransformer;
+export type OutputCharacters = {
+    character: string;
+    string: string;
+}[];
 export type BaseTransformerConfig = {
     requireSameChildren?: boolean;
     JHTMLForJSON?: boolean;
@@ -32,6 +36,9 @@ export type StringJoiningTransformerConfig = BaseTransformerConfig & {
     exposeDocuments?: boolean;
 };
 export type JoiningTransformerConfig<T> = T extends "string" ? StringJoiningTransformerConfig : T extends "dom" ? DOMJoiningTransformerConfig : T extends "json" ? JSONJoiningTransformerConfig : never;
+/**
+ * @typedef {{character: string, string: string}[]} OutputCharacters
+ */
 /**
  * @typedef {{
  *   requireSameChildren?: boolean,
@@ -93,11 +100,31 @@ declare class AbstractJoiningTransformer<T> {
      */
     constructor(cfg?: JoiningTransformerConfig<T>);
     _cfg: JoiningTransformerConfig<T>;
+    /** @type {Record<string, OutputCharacters>} */
+    _characterMap: Record<string, OutputCharacters>;
     /**
      * @param {JoiningTransformerConfig<T>} cfg - Configuration object
      * @returns {void}
      */
     setConfig(cfg: JoiningTransformerConfig<T>): void;
+    /**
+     * @param {import('./StringJoiningTransformer.js').OutputConfig} cfg
+     * @returns {this}
+     */
+    output(cfg: import("./StringJoiningTransformer.js").OutputConfig): this;
+    _outputConfig: import("./StringJoiningTransformer.js").OutputConfig | undefined;
+    mediaType: string | undefined;
+    /**
+     * @param {string} name
+     * @param {OutputCharacters} outputCharacters
+     * @returns {void}
+     */
+    characterMap(name: string, outputCharacters: OutputCharacters): void;
+    /**
+     * @param {string} str
+     * @returns {string}
+     */
+    _replaceCharacterMaps(str: string): string;
     /**
      * @param {string} type - Type name
      * @param {string} embedType - Embed type name

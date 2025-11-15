@@ -100,20 +100,72 @@ declare class DOMJoiningTransformer extends AbstractJoiningTransformer<"dom"> {
      */
     function(func: (...args: any[]) => any): DOMJoiningTransformer;
     /**
-     * @param {import('./StringJoiningTransformer.js').OutputConfig} cfg
+     * @overload
+     * @param {Element|string} elName
+     * @param {Record<string, string>} atts
+     * @param {(Node|string)[]} childNodes
+     * @param {(this: DOMJoiningTransformer) => void} cb
      * @returns {DOMJoiningTransformer}
      */
-    output(cfg: import("./StringJoiningTransformer.js").OutputConfig): DOMJoiningTransformer;
-    _outputConfig: any;
-    mediaType: string | undefined;
+    element(elName: Element | string, atts: Record<string, string>, childNodes: (Node | string)[], cb: (this: DOMJoiningTransformer) => void): DOMJoiningTransformer;
     /**
-     * @param {Element|string} elName - Element name
-     * @param {Record<string, string>} [atts] - Attributes object
-     * @param {(this: DOMJoiningTransformer) => void} [cb] - Callback function
+     * @overload
+     * @param {Element|string} elName
+     * @param {Record<string, string>} atts
+     * @param {(Node|string)[]} childNodes
      * @returns {DOMJoiningTransformer}
      */
-    element(elName: Element | string, atts?: Record<string, string>, cb?: (this: DOMJoiningTransformer) => void): DOMJoiningTransformer;
+    element(elName: Element | string, atts: Record<string, string>, childNodes: (Node | string)[]): DOMJoiningTransformer;
+    /**
+     * @overload
+     * @param {Element|string} elName
+     * @param {Record<string, string>} atts
+     * @param {(this: DOMJoiningTransformer) => void} cb
+     * @returns {DOMJoiningTransformer}
+     */
+    element(elName: Element | string, atts: Record<string, string>, cb: (this: DOMJoiningTransformer) => void): DOMJoiningTransformer;
+    /**
+     * @overload
+     * @param {Element|string} elName
+     * @param {Record<string, string>} atts
+     * @returns {DOMJoiningTransformer}
+     */
+    element(elName: Element | string, atts: Record<string, string>): DOMJoiningTransformer;
+    /**
+     * @overload
+     * @param {Element|string} elName
+     * @param {(Node|string)[]} childNodes
+     * @param {(this: DOMJoiningTransformer) => void} cb
+     * @returns {DOMJoiningTransformer}
+     */
+    element(elName: Element | string, childNodes: (Node | string)[], cb: (this: DOMJoiningTransformer) => void): DOMJoiningTransformer;
+    /**
+     * @overload
+     * @param {Element|string} elName
+     * @param {(Node|string)[]} childNodes
+     * @returns {DOMJoiningTransformer}
+     */
+    element(elName: Element | string, childNodes: (Node | string)[]): DOMJoiningTransformer;
+    /**
+     * @overload
+     * @param {Element|string} elName
+     * @param {(this: DOMJoiningTransformer) => void} cb
+     * @returns {DOMJoiningTransformer}
+     */
+    element(elName: Element | string, cb: (this: DOMJoiningTransformer) => void): DOMJoiningTransformer;
+    /**
+     * @overload
+     * @param {Element|string} elName
+     * @returns {DOMJoiningTransformer}
+     */
+    element(elName: Element | string): DOMJoiningTransformer;
     root: any;
+    /**
+     * @param {string} prefix
+     * @param {string} namespaceURI
+     * @returns {DOMJoiningTransformer}
+     */
+    namespace(prefix: string, namespaceURI: string): DOMJoiningTransformer;
     /**
      * @param {string} name
      * @param {string} val

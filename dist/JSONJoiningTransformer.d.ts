@@ -8,7 +8,7 @@ export type SimpleCallback<T = "json"> = (this: T extends "json" ? JSONJoiningTr
  */
 export type ElementAttributes = Record<string, unknown> & {
     dataset?: Record<string, string>;
-    $a?: Array<[string, string]>;
+    $a?: [string, string][];
 };
 export type ElementInfo = {
     attsObj: Record<string, unknown>;
@@ -39,7 +39,7 @@ export type ElementInfo = {
  * plus special helpers: dataset (object) and $a (ordered attribute array).
  * @typedef {Record<string, unknown> & {
  *   dataset?: Record<string, string>,
- *   $a?: Array<[string, string]>
+ *   $a?: [string, string][]
  * }} ElementAttributes
  */
 /**
@@ -167,13 +167,6 @@ declare class JSONJoiningTransformer extends AbstractJoiningTransformer<"json"> 
      */
     function(func: (...args: any[]) => any): JSONJoiningTransformer;
     /**
-     * @param {import('./StringJoiningTransformer.js').OutputConfig} cfg
-     * @returns {JSONJoiningTransformer}
-     */
-    output(cfg: import("./StringJoiningTransformer.js").OutputConfig): JSONJoiningTransformer;
-    _outputConfig: any;
-    mediaType: string | undefined;
-    /**
      * Build a Jamilih-style element JSON array and append to current container.
      * Result form: ['tag', {attr: 'val'}, child1, child2, ...]
      * Helpers: dataset -> data-*; $a -> ordered attributes.
@@ -187,6 +180,12 @@ declare class JSONJoiningTransformer extends AbstractJoiningTransformer<"json"> 
      */
     element(elName: string | Element, atts?: ElementAttributes | any[] | SimpleCallback, childNodes?: any[] | SimpleCallback, cb?: SimpleCallback): JSONJoiningTransformer;
     root: any;
+    /**
+     * @param {string} prefix
+     * @param {string} namespaceURI
+     * @returns {JSONJoiningTransformer}
+     */
+    namespace(prefix: string, namespaceURI: string): JSONJoiningTransformer;
     /**
      * Adds/updates an attribute for the most recently open element built via
      * a callback-driven element(). When not in an element callback context,

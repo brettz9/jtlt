@@ -402,6 +402,253 @@ class XPathTransformerContext {
   }
 
   /**
+   * Groups items and executes callback for each group.
+   * Equivalent to XSLT's xsl:for-each-group.
+   * @param {string} select - XPath selector for items to group
+   * @param {object} options - Grouping options
+   * @param {string} [options.groupBy] - XPath expression to group by value
+   * @param {string} [options.groupAdjacent] - Groups adjacent items with
+   *   same value
+   * @param {string} [options.groupStartingWith] - Starts new group when
+   *   expression matches
+   * @param {string} [options.groupEndingWith] - Ends group when expression
+   *   matches
+   * @param {(
+   *   this: XPathTransformerContext, key: any, items: Node[], ctx: any
+   * ) => void} cb - Callback receives (groupingKey, groupItems, context)
+   * @returns {this}
+   */
+  forEachGroup (select, options, cb) {
+    // eslint-disable-next-line unicorn/no-this-assignment -- Temporary
+    const that = this;
+    const {groupBy, groupAdjacent, groupStartingWith, groupEndingWith} =
+      options;
+
+    const nodesResult = this._evalXPath(select, true);
+    const nodes = /** @type {Node[]} */ (nodesResult);
+
+    /**
+     * @param {string} expr
+     * @param {Node} node
+     * @returns {any}
+     */
+    function evalInContext (expr, node) {
+      if (expr === '.' || expr === '@') {
+        return node.textContent;
+      }
+      // Temporarily set context to evaluate expression
+      const prevNode = that._contextNode;
+      that._contextNode = node;
+      try {
+        const result = that._evalXPath(expr, false);
+        // XPath v2/v3 always return arrays; handle NodeList/Array results
+        // by taking first item or its text content
+        const resultWithLength = /** @type {{length: number}} */ (result);
+        if (resultWithLength.length > 0) {
+          const firstItem = /** @type {any} */ (result)[0];
+          return firstItem?.textContent ?? firstItem;
+        }
+        return undefined;
+      } finally {
+        that._contextNode = prevNode;
+      }
+    }
+
+    /** @type {Map<string, Node[]>} */
+    const groups = new Map();
+
+    if (groupBy) {
+      // Group by computed value
+      for (const node of nodes) {
+        const key = evalInContext(groupBy, node);
+        // Handle undefined by converting to null for JSON serialization
+        const keyStr = JSON.stringify(key === undefined ? null : key);
+        if (!groups.has(keyStr)) {
+          groups.set(keyStr, []);
+        }
+        /** @type {Node[]} */ (groups.get(keyStr)).push(node);
+      }
+
+      for (const [keyStr, items] of groups) {
+        const key = JSON.parse(keyStr);
+        // Convert null back to undefined if that was the original value
+        const actualKey = key === null && keyStr === 'null' ? undefined : key;
+        const prevParams = this._params;
+        const prevContext = this._contextNode;
+        try {
+          this._contextNode = items[0];
+          /** @type {any} */ (this)._currentGroup = items;
+          /** @type {any} */ (this)._currentGroupingKey = actualKey;
+          cb.call(this, actualKey, items, this);
+        } finally {
+          this._params = prevParams;
+          this._contextNode = prevContext;
+          delete /** @type {any} */ (this)._currentGroup;
+          delete /** @type {any} */ (this)._currentGroupingKey;
+        }
+      }
+    } else if (groupAdjacent) {
+      // Group adjacent items with same value
+      /** @type {string|null} */
+      let currentKey = null;
+      /** @type {Node[]} */
+      let currentGroup = [];
+
+      for (const node of nodes) {
+        const key = evalInContext(groupAdjacent, node);
+        const keyStr = JSON.stringify(key);
+
+        if (currentKey === null || currentKey !== keyStr) {
+          if (currentGroup.length > 0) {
+            const prevParams = this._params;
+            const prevContext = this._contextNode;
+            try {
+              this._contextNode = currentGroup[0];
+              /** @type {any} */ (this)._currentGroup = currentGroup;
+              /** @type {any} */ (this)._currentGroupingKey =
+                JSON.parse(/** @type {string} */ (currentKey));
+              cb.call(
+                this,
+                JSON.parse(/** @type {string} */ (currentKey)),
+                currentGroup,
+                this
+              );
+            } finally {
+              this._params = prevParams;
+              this._contextNode = prevContext;
+              delete /** @type {any} */ (this)._currentGroup;
+              delete /** @type {any} */ (this)._currentGroupingKey;
+            }
+          }
+          currentKey = keyStr;
+          currentGroup = [node];
+        } else {
+          currentGroup.push(node);
+        }
+      }
+
+      // Process last group
+      if (currentGroup.length > 0) {
+        const prevParams = this._params;
+        const prevContext = this._contextNode;
+        try {
+          this._contextNode = currentGroup[0];
+          /** @type {any} */ (this)._currentGroup = currentGroup;
+          /** @type {any} */ (this)._currentGroupingKey =
+            JSON.parse(/** @type {string} */ (currentKey));
+          cb.call(
+            this,
+            JSON.parse(/** @type {string} */ (currentKey)),
+            currentGroup,
+            this
+          );
+        } finally {
+          this._params = prevParams;
+          this._contextNode = prevContext;
+          delete /** @type {any} */ (this)._currentGroup;
+          delete /** @type {any} */ (this)._currentGroupingKey;
+        }
+      }
+    } else if (groupStartingWith) {
+      // Start new group when expression matches
+      /** @type {Node[]} */
+      let currentGroup = [];
+
+      for (const node of nodes) {
+        const startMatch = evalInContext(groupStartingWith, node);
+
+        if (startMatch && currentGroup.length > 0) {
+          const prevParams = this._params;
+          const prevContext = this._contextNode;
+          try {
+            this._contextNode = currentGroup[0];
+            /** @type {any} */ (this)._currentGroup = currentGroup;
+            cb.call(this, null, currentGroup, this);
+          } finally {
+            this._params = prevParams;
+            this._contextNode = prevContext;
+            delete /** @type {any} */ (this)._currentGroup;
+          }
+          currentGroup = [];
+        }
+        currentGroup.push(node);
+      }
+
+      // Process last group
+      if (currentGroup.length > 0) {
+        const prevParams = this._params;
+        const prevContext = this._contextNode;
+        try {
+          this._contextNode = currentGroup[0];
+          /** @type {any} */ (this)._currentGroup = currentGroup;
+          cb.call(this, null, currentGroup, this);
+        } finally {
+          this._params = prevParams;
+          this._contextNode = prevContext;
+          delete /** @type {any} */ (this)._currentGroup;
+        }
+      }
+    } else if (groupEndingWith) {
+      // End group when expression matches
+      /** @type {Node[]} */
+      let currentGroup = [];
+
+      for (const node of nodes) {
+        currentGroup.push(node);
+        const endMatch = evalInContext(groupEndingWith, node);
+
+        if (endMatch) {
+          const prevParams = this._params;
+          const prevContext = this._contextNode;
+          try {
+            this._contextNode = currentGroup[0];
+            /** @type {any} */ (this)._currentGroup = currentGroup;
+            cb.call(this, null, currentGroup, this);
+          } finally {
+            this._params = prevParams;
+            this._contextNode = prevContext;
+            delete /** @type {any} */ (this)._currentGroup;
+          }
+          currentGroup = [];
+        }
+      }
+
+      // Process last group if not ended
+      if (currentGroup.length > 0) {
+        const prevParams = this._params;
+        const prevContext = this._contextNode;
+        try {
+          this._contextNode = currentGroup[0];
+          /** @type {any} */ (this)._currentGroup = currentGroup;
+          cb.call(this, null, currentGroup, this);
+        } finally {
+          this._params = prevParams;
+          this._contextNode = prevContext;
+          delete /** @type {any} */ (this)._currentGroup;
+        }
+      }
+    }
+
+    return this;
+  }
+
+  /**
+   * Returns the current group (for use within forEachGroup callback).
+   * @returns {Node[]|undefined}
+   */
+  currentGroup () {
+    return /** @type {any} */ (this)._currentGroup;
+  }
+
+  /**
+   * Returns the current grouping key (for use within forEachGroup callback).
+   * @returns {any}
+   */
+  currentGroupingKey () {
+    return /** @type {any} */ (this)._currentGroupingKey;
+  }
+
+  /**
    * Append the value from an XPath expression or the context node text.
    * @param {string|object} [select]
    * @returns {XPathTransformerContext}
