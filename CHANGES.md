@@ -1,6 +1,6 @@
 # jtlt CHANGES
 
-## ?
+## 0.6.0
 
 - feat: add `map` and `mapEntry` aliases to `object` and `propValue`
 - feat: `attributeSet()`
