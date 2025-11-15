@@ -182,17 +182,84 @@ class DOMJoiningTransformer extends AbstractJoiningTransformer {
   }
 
   /**
-   * @param {Element|string} elName - Element name
-   * @param {Record<string, string>} [atts] - Attributes object
-   * @param {(this: DOMJoiningTransformer) => void} [cb] - Callback function
+   * @overload
+   * @param {Element|string} elName
+   * @param {Record<string, string>} atts
+   * @param {(Node|string)[]} childNodes
+   * @param {(this: DOMJoiningTransformer) => void} cb
    * @returns {DOMJoiningTransformer}
    */
-  element (elName, atts, cb) {
-    // Todo: allow third argument to be array following Jamilih (also let
-    //   "atts" follow Jamilih)
-    // Todo: allow for cfg to produce Jamilih DOM output or hXML
-    // Todo: allow separate XML DOM one with XML String and hXML conversions
-    //   (HTML to XHTML is inevitably safe?)
+  /**
+   * @overload
+   * @param {Element|string} elName
+   * @param {Record<string, string>} atts
+   * @param {(Node|string)[]} childNodes
+   * @returns {DOMJoiningTransformer}
+   */
+  /**
+   * @overload
+   * @param {Element|string} elName
+   * @param {Record<string, string>} atts
+   * @param {(this: DOMJoiningTransformer) => void} cb
+   * @returns {DOMJoiningTransformer}
+   */
+  /**
+   * @overload
+   * @param {Element|string} elName
+   * @param {Record<string, string>} atts
+   * @returns {DOMJoiningTransformer}
+   */
+  /**
+   * @overload
+   * @param {Element|string} elName
+   * @param {(Node|string)[]} childNodes
+   * @param {(this: DOMJoiningTransformer) => void} cb
+   * @returns {DOMJoiningTransformer}
+   */
+  /**
+   * @overload
+   * @param {Element|string} elName
+   * @param {(Node|string)[]} childNodes
+   * @returns {DOMJoiningTransformer}
+   */
+  /**
+   * @overload
+   * @param {Element|string} elName
+   * @param {(this: DOMJoiningTransformer) => void} cb
+   * @returns {DOMJoiningTransformer}
+   */
+  /**
+   * @overload
+   * @param {Element|string} elName
+   * @returns {DOMJoiningTransformer}
+   */
+  /**
+   * @param {Element|string} elName - Element name
+   * @param {Record<string, string>|(Node|string)[
+   *   ]|((this: DOMJoiningTransformer) => void)} [atts] - Attributes,
+   *   childNodes, or callback
+   * @param {(Node|string)[]|((this: DOMJoiningTransformer) => void)
+   *   } [childNodes] - Child nodes or callback
+   * @param {(this: DOMJoiningTransformer) => void} [cb] - Callback
+   * @returns {DOMJoiningTransformer}
+   */
+  element (elName, atts, childNodes, cb) {
+    // Handle argument overloading like other transformers
+    if (Array.isArray(atts)) {
+      cb = /** @type {(this: DOMJoiningTransformer) => void} */ (
+        /** @type {unknown} */ (childNodes)
+      );
+      childNodes = atts;
+      atts = {};
+    } else if (typeof atts === 'function') {
+      cb = /** @type {(this: DOMJoiningTransformer) => void} */ (atts);
+      childNodes = [];
+      atts = {};
+    }
+    if (typeof childNodes === 'function') {
+      cb = /** @type {(this: DOMJoiningTransformer) => void} */ (childNodes);
+      childNodes = [];
+    }
 
     if (!this.root && this._outputConfig) {
       this.root = elName;
@@ -270,6 +337,17 @@ class DOMJoiningTransformer extends AbstractJoiningTransformer {
       const oldDOM = this._dom;
       this._dom = el;
 
+      // Add childNodes if provided
+      if (childNodes && childNodes.length) {
+        for (const child of childNodes) {
+          if (typeof child === 'string') {
+            el.append(this._replaceCharacterMaps(child));
+          } else {
+            el.append(child);
+          }
+        }
+      }
+
       if (cb) {
         cb.call(this);
       }
@@ -295,6 +373,17 @@ class DOMJoiningTransformer extends AbstractJoiningTransformer {
     const oldDOM = this._dom;
 
     this._dom = el;
+
+    // Add childNodes if provided
+    if (childNodes && childNodes.length) {
+      for (const child of childNodes) {
+        if (typeof child === 'string') {
+          el.append(this._replaceCharacterMaps(child));
+        } else {
+          el.append(child);
+        }
+      }
+    }
 
     if (cb) {
       cb.call(this);

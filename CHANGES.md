@@ -2,7 +2,9 @@
 
 ## ?
 
+- feat: `characterMap` and element fixes
 - fix: `valueOf` and context when no arguments to `applyTemplates()`
+- fix: add childNodes argument to dom joining transformer
 
 ## 0.4.0
 
