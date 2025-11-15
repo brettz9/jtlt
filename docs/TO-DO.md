@@ -133,7 +133,7 @@
   xsl:merge-source
   ~~"xsl:message",~~
   xsl:mode
-  "xsl:namespace",
+  ~~"xsl:namespace",~~
   "xsl:namespace-alias",
   xsl:next-iteration
   "xsl:next-match",

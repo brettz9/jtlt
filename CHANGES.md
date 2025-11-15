@@ -3,6 +3,7 @@
 ## ?
 
 - feat: `characterMap` and element fixes
+- feat: `namespace()`
 - fix: `valueOf` and context when no arguments to `applyTemplates()`
 - fix: add childNodes argument to dom joining transformer
 

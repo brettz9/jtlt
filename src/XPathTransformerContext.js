@@ -982,6 +982,22 @@ class XPathTransformerContext {
     this._getJoiningTransformer().element(name, atts, children, cb);
     return this;
   }
+
+  /**
+   * Adds a prefixed namespace declaration to the most recently opened
+   *  element. Mirrors the joining
+   * transformer API so templates can call `this.attribute()`.
+   * @param {string} prefix - Prefix
+   * @param {string} namespaceURI - Namespace
+   * @returns {this}
+   */
+  namespace (prefix, namespaceURI) {
+    /** @type {any} */ (this._getJoiningTransformer()).namespace(
+      prefix, namespaceURI
+    );
+    return this;
+  }
+
   /**
    * Append attribute.
    * @param {string} name Attribute name

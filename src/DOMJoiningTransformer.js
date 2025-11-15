@@ -394,6 +394,21 @@ class DOMJoiningTransformer extends AbstractJoiningTransformer {
   }
 
   /**
+   * @param {string} prefix
+   * @param {string} namespaceURI
+   * @returns {DOMJoiningTransformer}
+   */
+  namespace (prefix, namespaceURI) {
+    /** @type {Element} */
+    (this._dom).setAttributeNS(
+      'http://www.w3.org/2000/xmlns/',
+      'xmlns:' + prefix,
+      this._replaceCharacterMaps(namespaceURI)
+    );
+    return this;
+  }
+
+  /**
    * @param {string} name
    * @param {string} val
    * @returns {DOMJoiningTransformer}

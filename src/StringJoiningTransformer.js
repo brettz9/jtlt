@@ -575,6 +575,17 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
   }
 
   /**
+   * @param {string} prefix
+   * @param {string} namespaceURI
+   * @returns {StringJoiningTransformer}
+   */
+  namespace (prefix, namespaceURI) {
+    this.append(' xmlns:' + prefix + '="' +
+        this._replaceCharacterMaps(namespaceURI) + '"');
+    return this;
+  }
+
+  /**
    * @param {string} name - Attribute name
    * @param {string|Record<string, unknown>|
    *   string[][]} val - Attribute value

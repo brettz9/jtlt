@@ -490,6 +490,29 @@ class JSONJoiningTransformer extends AbstractJoiningTransformer {
   }
 
   /**
+   * @param {string} prefix
+   * @param {string} namespaceURI
+   * @returns {JSONJoiningTransformer}
+   */
+  namespace (prefix, namespaceURI) {
+    if (!this._elementStack.length) {
+      // No-op outside an element() callback (JSON joiner semantics)
+      return this;
+    }
+    const top = /** @type {ElementInfo} */ (this._elementStack.at(-1));
+    const {attsObj} = top;
+
+    if (!attsObj.xmlns) {
+      attsObj.xmlns = {};
+    }
+
+    /** @type {Record<string, string>} */
+    (attsObj.xmlns)[prefix] = this._replaceCharacterMaps(namespaceURI);
+
+    return this;
+  }
+
+  /**
    * Adds/updates an attribute for the most recently open element built via
    * a callback-driven element(). When not in an element callback context,
    * throws. Supports the same dataset/$a helpers as string joiner.
