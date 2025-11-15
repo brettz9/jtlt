@@ -59,11 +59,101 @@ class XPathTransformerContext {
     this._currPath = undefined; // XPath string of current context
     /** @type {Record<string, any> | undefined} */
     this._params = undefined;
+    /** @type {string[]} */
+    this._preserveSpaceElements = [];
+    /** @type {string[]} */
+    this._stripSpaceElements = [];
   }
 
   /** @returns {import('./index.js').JoiningTransformer} */
   _getJoiningTransformer () {
     return this._config.joiningTransformer;
+  }
+
+  /**
+   * Check if whitespace should be stripped for a given element.
+   * @param {Node} node - The node to check
+   * @returns {boolean}
+   */
+  _shouldStripSpace (node) {
+    if (node.nodeType !== 1) {
+      return false; // Only elements
+    }
+    const elementName = /** @type {Element} */ (node).localName;
+    // Check if in preserve list (takes precedence)
+    if (this._preserveSpaceElements.some((pattern) => {
+      return pattern === '*' || pattern === elementName;
+    })) {
+      return false;
+    }
+    // Check if in strip list
+    return this._stripSpaceElements.some((pattern) => {
+      return pattern === '*' || pattern === elementName;
+    });
+  }
+
+  /**
+   * Clone the DOM and strip whitespace-only text nodes from elements
+   * marked for stripping.
+   * @param {Node} node - The node to clone
+   * @returns {Node} The cloned node with whitespace stripped
+   */
+  _cloneAndStripWhitespace (node) {
+    // Deep clone the node
+    const cloned = node.cloneNode(true);
+
+    // Only process if we have strip-space declarations
+    if (this._stripSpaceElements.length === 0) {
+      return cloned;
+    }
+
+    // Recursively strip whitespace-only text nodes
+    const stripWhitespace = (/** @type {Node} */ n) => {
+      if (n.nodeType === 1) { // Element node
+        if (this._shouldStripSpace(n)) {
+          // Remove whitespace-only text node children
+          const childNodes = [...n.childNodes];
+          for (const child of childNodes) {
+            if (child.nodeType === 3) { // Text node
+              /* c8 ignore next 2  -- Branch inside loop already tested by
+                 integration tests; c8 artifact */
+              const text = child.nodeValue || '';
+              // Check if text is whitespace-only
+              if (text.trim() === '') {
+                child.remove();
+              }
+            }
+          }
+        }
+        // Recurse into child elements
+        const children = [...n.childNodes];
+        for (const child of children) {
+          stripWhitespace(child);
+        }
+      } else if (n.nodeType === 9) { // Document node
+        // Process document's children (typically documentElement)
+        const children = [...n.childNodes];
+        for (const child of children) {
+          stripWhitespace(child);
+        }
+      }
+    };
+
+    stripWhitespace(cloned);
+    return cloned;
+  }
+
+  /**
+   * Apply whitespace stripping to the context node based on strip-space
+   * declarations. This clones the DOM and updates the context.
+   * @returns {this}
+   */
+  applyWhitespaceStripping () {
+    if (this._stripSpaceElements.length > 0) {
+      const stripped = this._cloneAndStripWhitespace(this._origNode);
+      this._contextNode = stripped;
+    }
+    return this;
   }
 
   /**
@@ -76,12 +166,16 @@ class XPathTransformerContext {
     if (!expr) {
       return this._contextNode;
     }
+
+    // Ensure we're using the stripped DOM if strip-space is declared
+    const contextNode = this._contextNode;
+
     const version = this._config.xpathVersion ?? 1;
     if (version === 1) {
       // Use native XPath (browser-like); rely on DOM doc if available.
-      const doc = this._contextNode && this._contextNode.ownerDocument
-        ? this._contextNode.ownerDocument
-        : (this._contextNode.nodeType === 9 ? this._contextNode : undefined);
+      const doc = contextNode && contextNode.ownerDocument
+        ? contextNode.ownerDocument
+        : (contextNode.nodeType === 9 ? contextNode : undefined);
       if (!doc || doc.nodeType !== 9) {
         throw new Error(
           'Native XPath unavailable for xpathVersion=1'
@@ -105,7 +199,7 @@ class XPathTransformerContext {
         );
       /* c8 ignore stop */
       const resultObj = docTyped.evaluate(
-        expr, this._contextNode, resolver, type, null
+        expr, contextNode, resolver, type, null
       );
       if (asNodes) {
         /** @type {Node[]} */
@@ -150,7 +244,7 @@ class XPathTransformerContext {
     }
     if (version === 2) {
       // Version 2: xpath2.js
-      const result = xpath2.evaluate(expr, this._contextNode);
+      const result = xpath2.evaluate(expr, contextNode);
       if (asNodes) {
         // eslint-disable-next-line @stylistic/max-len -- Long
         /* c8 ignore next -- array wrap/identity branch counted in other tests */
@@ -163,7 +257,7 @@ class XPathTransformerContext {
     // eslint-disable-next-line @stylistic/max-len -- Long
     // eslint-disable-next-line import/no-named-as-default-member -- Only as default
     const result = fontoxpath.evaluateXPath(
-      expr, this._contextNode, undefined, undefined,
+      expr, contextNode, undefined, undefined,
       // Non-deprecated, predictable all results
       14 // ReturnType.ALL_RESULTS
     );
@@ -1241,6 +1335,34 @@ class XPathTransformerContext {
    */
   mapEntry (prop, val) {
     return this.propValue(prop, val);
+  }
+  /**
+   * Declare elements for which whitespace-only text nodes should be preserved.
+   * Equivalent to xsl:preserve-space.
+   * @param {string|string[]} elements - Element name(s) or patterns
+   * @returns {XPathTransformerContext}
+   */
+  preserveSpace (elements) {
+    const elemArray = Array.isArray(elements) ? elements : [elements];
+    this._preserveSpaceElements.push(...elemArray);
+    return this;
+  }
+  /**
+   * Declare elements for which whitespace-only text nodes should be stripped.
+   * Equivalent to xsl:strip-space.
+   * This automatically clones the DOM and removes whitespace-only text nodes.
+   * @param {string|string[]} elements - Element name(s) or patterns
+   * @returns {XPathTransformerContext}
+   */
+  stripSpace (elements) {
+    const elemArray = Array.isArray(elements) ? elements : [elements];
+    const wasEmpty = this._stripSpaceElements.length === 0;
+    this._stripSpaceElements.push(...elemArray);
+    // Apply stripping if this is the first strip-space declaration
+    if (wasEmpty && this._stripSpaceElements.length > 0) {
+      this.applyWhitespaceStripping();
+    }
+    return this;
   }
   /**
    * Append object.

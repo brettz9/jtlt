@@ -105,6 +105,10 @@ class JSONPathTransformerContext {
     this._currPath = undefined;
     /** @type {Record<string, any> | undefined} */
     this._params = undefined;
+    /** @type {string[]} */
+    this._preserveSpaceElements = [];
+    /** @type {string[]} */
+    this._stripSpaceElements = [];
   }
 
   /**
@@ -118,6 +122,24 @@ class JSONPathTransformerContext {
         'finding templates of equal priority and these have been found.'
       );
     }
+  }
+
+  /**
+   * Check if whitespace should be stripped for a given element name.
+   * @param {string} elementName - The element name to check
+   * @returns {boolean}
+   */
+  _shouldStripSpace (elementName) {
+    // Check if in preserve list (takes precedence)
+    if (this._preserveSpaceElements.some((pattern) => {
+      return pattern === '*' || pattern === elementName;
+    })) {
+      return false;
+    }
+    // Check if in strip list
+    return this._stripSpaceElements.some((pattern) => {
+      return pattern === '*' || pattern === elementName;
+    });
   }
 
   /**
@@ -1662,6 +1684,30 @@ class JSONPathTransformerContext {
    */
   mapEntry (prop, val) {
     return this.propValue(prop, val);
+  }
+
+  /**
+   * Declare elements for which whitespace-only text nodes should be preserved.
+   * Equivalent to xsl:preserve-space.
+   * @param {string|string[]} elements - Element name(s) or patterns
+   * @returns {this}
+   */
+  preserveSpace (elements) {
+    const elemArray = Array.isArray(elements) ? elements : [elements];
+    this._preserveSpaceElements.push(...elemArray);
+    return this;
+  }
+
+  /**
+   * Declare elements for which whitespace-only text nodes should be stripped.
+   * Equivalent to xsl:strip-space.
+   * @param {string|string[]} elements - Element name(s) or patterns
+   * @returns {this}
+   */
+  stripSpace (elements) {
+    const elemArray = Array.isArray(elements) ? elements : [elements];
+    this._stripSpaceElements.push(...elemArray);
+    return this;
   }
 
   /**

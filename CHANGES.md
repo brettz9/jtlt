@@ -1,5 +1,9 @@
 # jtlt CHANGES
 
+## 0.7.0
+
+- feat: `stripSpace` and `preserveSpace`
+
 ## 0.6.0
 
 - feat: add `map` and `mapEntry` aliases to `object` and `propValue`

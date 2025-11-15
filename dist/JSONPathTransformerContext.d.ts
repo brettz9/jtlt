@@ -212,11 +212,21 @@ declare class JSONPathTransformerContext<T = "json"> {
     _currPath: string | undefined;
     /** @type {Record<string, any> | undefined} */
     _params: Record<string, any> | undefined;
+    /** @type {string[]} */
+    _preserveSpaceElements: string[];
+    /** @type {string[]} */
+    _stripSpaceElements: string[];
     /**
      * Triggers an error if equal priority templates are found.
      * @returns {void}
      */
     _triggerEqualPriorityError(): void;
+    /**
+     * Check if whitespace should be stripped for a given element name.
+     * @param {string} elementName - The element name to check
+     * @returns {boolean}
+     */
+    _shouldStripSpace(elementName: string): boolean;
     /**
      * Gets the joining transformer from config.
      * @returns {T extends "json" ? import('./JSONJoiningTransformer.js').
@@ -460,6 +470,20 @@ declare class JSONPathTransformerContext<T = "json"> {
      * @returns {this}
      */
     mapEntry(prop: string, val: any): this;
+    /**
+     * Declare elements for which whitespace-only text nodes should be preserved.
+     * Equivalent to xsl:preserve-space.
+     * @param {string|string[]} elements - Element name(s) or patterns
+     * @returns {this}
+     */
+    preserveSpace(elements: string | string[]): this;
+    /**
+     * Declare elements for which whitespace-only text nodes should be stripped.
+     * Equivalent to xsl:strip-space.
+     * @param {string|string[]} elements - Element name(s) or patterns
+     * @returns {this}
+     */
+    stripSpace(elements: string | string[]): this;
     /**
      * Build an object. Mirrors the joining transformer API. All joiners now
      * support both signatures: (obj, cb, usePropertySets, propSets) with seed

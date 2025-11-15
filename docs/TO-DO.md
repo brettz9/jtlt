@@ -121,10 +121,8 @@
   xsl:package
   "xsl:param",
   "xsl:perform-sort",
-  "xsl:preserve-space",
   "xsl:sequence",
   xsl:source-document
-  "xsl:strip-space",
   xsl:try
   xsl:use-package
   xsl:where-populated
@@ -157,9 +155,11 @@
   ~~"xsl:otherwise",~~
   ~~"xsl:output",~~
   ~~"xsl:output-character",~~
+  ~~"xsl:preserve-space",~~
   ~~"xsl:processing-instruction",~~
   ~~"xsl:result-document",~~
   ~~"xsl:sort",~~
+  ~~"xsl:strip-space",~~
   ~~"xsl:stylesheet",~~
   ~~"xsl:template",~~
   ~~"xsl:text",~~

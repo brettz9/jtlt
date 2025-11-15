@@ -109,8 +109,31 @@ declare class XPathTransformerContext {
     _currPath: string | undefined;
     /** @type {Record<string, any> | undefined} */
     _params: Record<string, any> | undefined;
+    /** @type {string[]} */
+    _preserveSpaceElements: string[];
+    /** @type {string[]} */
+    _stripSpaceElements: string[];
     /** @returns {import('./index.js').JoiningTransformer} */
     _getJoiningTransformer(): import("./index.js").JoiningTransformer;
+    /**
+     * Check if whitespace should be stripped for a given element.
+     * @param {Node} node - The node to check
+     * @returns {boolean}
+     */
+    _shouldStripSpace(node: Node): boolean;
+    /**
+     * Clone the DOM and strip whitespace-only text nodes from elements
+     * marked for stripping.
+     * @param {Node} node - The node to clone
+     * @returns {Node} The cloned node with whitespace stripped
+     */
+    _cloneAndStripWhitespace(node: Node): Node;
+    /**
+     * Apply whitespace stripping to the context node based on strip-space
+     * declarations. This clones the DOM and updates the context.
+     * @returns {this}
+     */
+    applyWhitespaceStripping(): this;
     /**
      * Evaluate an XPath expression against the current context node.
      * @param {string} expr - XPath expression
@@ -327,6 +350,21 @@ declare class XPathTransformerContext {
      * @returns {XPathTransformerContext}
      */
     mapEntry(prop: string, val: any): XPathTransformerContext;
+    /**
+     * Declare elements for which whitespace-only text nodes should be preserved.
+     * Equivalent to xsl:preserve-space.
+     * @param {string|string[]} elements - Element name(s) or patterns
+     * @returns {XPathTransformerContext}
+     */
+    preserveSpace(elements: string | string[]): XPathTransformerContext;
+    /**
+     * Declare elements for which whitespace-only text nodes should be stripped.
+     * Equivalent to xsl:strip-space.
+     * This automatically clones the DOM and removes whitespace-only text nodes.
+     * @param {string|string[]} elements - Element name(s) or patterns
+     * @returns {XPathTransformerContext}
+     */
+    stripSpace(elements: string | string[]): XPathTransformerContext;
     /**
      * Append object.
      * @param {Record<string, unknown>|
