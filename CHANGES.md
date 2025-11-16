@@ -1,5 +1,9 @@
 # jtlt CHANGES
 
+## 0.7.2
+
+- fix: restore context after `applyTemplates`
+
 ## 0.7.1
 
 - fix: ensure context methods available within callbacks

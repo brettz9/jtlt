@@ -336,6 +336,9 @@ class XPathTransformerContext {
       }
       return mode ? t.mode === mode : !t.mode;
     });
+
+    const preApplyContext = this._contextNode;
+
     // Process each node
     for (const node of nodes) {
     // Path resolution simplified (could track full XPath if needed)
@@ -411,6 +414,9 @@ class XPathTransformerContext {
       }
       this._contextNode = node; // Restore (placeholder for more complex state)
     }
+
+    this._contextNode = preApplyContext;
+
     return this;
   }
 
