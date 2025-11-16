@@ -859,7 +859,8 @@ class XPathTransformerContext {
     }
     // Ensure val is not null before appending
     if (val !== null) {
-      jt.append(val);
+      // Use text() method to properly close open tags and escape HTML
+      jt.text(String(val));
     }
     return this;
   }

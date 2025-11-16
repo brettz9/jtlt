@@ -1096,7 +1096,8 @@ class JSONPathTransformerContext {
       }
     }
 
-    /** @type {any} */ (results).append(result);
+    // Use text() method to properly close open tags and escape HTML
+    /** @type {any} */ (results).text(String(result));
     return this;
   }
 

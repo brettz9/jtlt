@@ -1,5 +1,9 @@
 # jtlt CHANGES
 
+## 0.7.3
+
+- fix: `valueOf` should work like text() in auto-closing tags
+
 ## 0.7.2
 
 - fix: restore context after `applyTemplates`

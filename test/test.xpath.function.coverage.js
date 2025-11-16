@@ -101,7 +101,7 @@ describe('XPathTransformerContext function coverage', () => {
       // valueOf for context node textContent and with select object form
       ctx._contextNode = /** @type {Element} */ (doc.querySelector('child'));
       expect(ctx.valueOf()).to.equal(ctx);
-      expect(joiner._out.at(-1)).to.equal('text');
+      expect(joiner._out.at(-1)).to.deep.equal({text: 'text'});
       expect(ctx.valueOf({select: '.'})).to.equal(ctx);
 
       // forEach over nodes
