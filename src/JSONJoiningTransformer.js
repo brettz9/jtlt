@@ -66,6 +66,8 @@ class JSONJoiningTransformer extends AbstractJoiningTransformer {
     super(cfg);
     /** @type {any[]|Record<string, unknown>} */
     this._obj = o || [];
+    /** @type {any} */
+    this._context = undefined;
     /** @type {boolean | undefined} */
     this._objPropState = undefined;
     /** @type {boolean | undefined} */
@@ -87,6 +89,16 @@ class JSONJoiningTransformer extends AbstractJoiningTransformer {
    */
   rawAppend (item) {
     /** @type {any[]} */ (this._obj).push(item);
+  }
+
+  /**
+   * Set the transformer context for callback invocations.
+   * @param {any} context - The transformer context object
+   * @returns {JSONJoiningTransformer}
+   */
+  setContext (context) {
+    this._context = context;
+    return this;
   }
 
   /**
@@ -460,7 +472,7 @@ class JSONJoiningTransformer extends AbstractJoiningTransformer {
     if (cb) {
       // Push current state onto a stack
       this._elementStack.push({attsObj, jmlChildren});
-      cb.call(this);
+      cb.call(this._context || this);
       const state = /** @type {ElementInfo} */ (this._elementStack.pop());
       ({attsObj} = state);
       // Children may have been mutated by nested element()/text();
@@ -686,7 +698,7 @@ class JSONJoiningTransformer extends AbstractJoiningTransformer {
     this._elementStack = [];
 
     // Execute callback to build document content
-    cb.call(this);
+    cb.call(this._context || this);
 
     // Restore previous state
     this.root = oldRoot;
@@ -727,7 +739,7 @@ class JSONJoiningTransformer extends AbstractJoiningTransformer {
     this._elementStack = [];
 
     // Execute callback to build document content
-    cb.call(this);
+    cb.call(this._context || this);
 
     // Get the created document from _docs or construct from current state
     let resultDoc;

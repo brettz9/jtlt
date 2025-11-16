@@ -1,5 +1,9 @@
 # jtlt CHANGES
 
+## ?
+
+- fix: ensure context methods available within callbacks
+
 ## 0.7.0
 
 - feat: `stripSpace` and `preserveSpace`

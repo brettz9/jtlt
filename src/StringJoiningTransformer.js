@@ -94,6 +94,8 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
 
     this._str = s || '';
     /** @type {any} */
+    this._context = undefined;
+    /** @type {any} */
     this._objPropTemp = undefined;
     /** @type {boolean | undefined} */
     this.propOnlyState = undefined;
@@ -115,6 +117,16 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
     this._insideDocument = false;
     /** @type {Array<{href: string, document: string, format?: string}>} */
     this._resultDocuments = [];
+  }
+
+  /**
+   * Set the transformer context for callback invocations.
+   * @param {any} context - The transformer context object
+   * @returns {StringJoiningTransformer}
+   */
+  setContext (context) {
+    this._context = context;
+    return this;
   }
 
   /**
@@ -203,7 +215,7 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
     /** @type {any} */
     const oldPropTemp = this._objPropTemp;
     this._objPropTemp = prop;
-    cb.call(this);
+    cb.call(this._context || this);
     this._objPropTemp = oldPropTemp;
     if (this.propOnlyState) {
       throw new Error('propOnly() must be followed up with setting a value.');
@@ -248,7 +260,7 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
 
     if (cb) {
       this._objPropState = true;
-      cb.call(this);
+      cb.call(this._context || this);
       this._objPropState = oldObjPropState;
     }
 
@@ -305,7 +317,7 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
       const oldObjPropState = this._objPropState;
       this._objPropState = false;
       this._arrItemState = true;
-      cb.call(this);
+      cb.call(this._context || this);
       this._arrItemState = oldArrItemState;
       this._objPropState = oldObjPropState;
     }
@@ -349,7 +361,8 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
     const _oldStrTemp = this._strTemp;
     if (cb) {
       this._strTemp = '';
-      cb.call(this);
+      /* c8 ignore next -- Guard */
+      cb.call(this._context || this);
       tmpStr = this._strTemp;
       this._strTemp = _oldStrTemp;
     }
@@ -595,7 +608,7 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
         jml[method]({'#': childNodes})
       ));
     }
-    cb.call(this);
+    cb.call(this._context || this);
 
     // Todo: Depending on an this._cfg.xmlElements option, allow for
     //    XML self-closing when empty or as per the tag, HTML
@@ -787,7 +800,7 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
     this._insideDocument = true;
 
     // Execute callback to build document content
-    cb.call(this);
+    cb.call(this._context || this);
 
     // Save the newly created document string
     const newDoc = this._str;
@@ -840,7 +853,7 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
     this._insideDocument = true;
 
     // Execute callback to build document content
-    cb.call(this);
+    cb.call(this._context || this);
 
     // Save the newly created document string with metadata
     const resultDoc = this._str;

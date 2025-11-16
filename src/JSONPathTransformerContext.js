@@ -91,6 +91,10 @@ class JSONPathTransformerContext {
     this._contextObj = this._origObj = config.data;
     this._parent = config.parent || this._config;
     this._parentProperty = config.parentProperty || 'data';
+    // Set this context on the joining transformer for callback invocations
+    if (config.joiningTransformer && config.joiningTransformer.setContext) {
+      config.joiningTransformer.setContext(this);
+    }
     /** @type {Record<string, unknown>} */
     this.vars = {};
     /** @type {Record<string, Record<string, unknown>>} */
@@ -1831,12 +1835,18 @@ class JSONPathTransformerContext {
    * transformer API so templates can call `this.attribute()`.
    * @param {string} name - Attribute name
    * @param {string|Record<string, unknown>} val - Attribute value
+   * @param {boolean} [avoid] - Avoid attribute escaping
+   *   (StringJoiningTransformer only)
    * @returns {this}
    */
-  attribute (name, val) {
-    /** @type {any} */ (this._getJoiningTransformer()).attribute(
-      name, val
-    );
+  attribute (name, val, avoid) {
+    const jt = this._getJoiningTransformer();
+    // Only StringJoiningTransformer supports the third parameter
+    if (typeof avoid !== 'undefined') {
+      /** @type {any} */ (jt).attribute(name, val, avoid);
+    } else {
+      /** @type {any} */ (jt).attribute(name, val);
+    }
     return this;
   }
 

@@ -560,9 +560,11 @@ declare class JSONPathTransformerContext<T = "json"> {
      * transformer API so templates can call `this.attribute()`.
      * @param {string} name - Attribute name
      * @param {string|Record<string, unknown>} val - Attribute value
+     * @param {boolean} [avoid] - Avoid attribute escaping
+     *   (StringJoiningTransformer only)
      * @returns {this}
      */
-    attribute(name: string, val: string | Record<string, unknown>): this;
+    attribute(name: string, val: string | Record<string, unknown>, avoid?: boolean): this;
     /**
      * Append text content. Mirrors the joining transformer API so templates can
      * call `this.text()`.

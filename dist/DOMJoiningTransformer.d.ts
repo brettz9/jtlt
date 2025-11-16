@@ -22,6 +22,8 @@ declare class DOMJoiningTransformer extends AbstractJoiningTransformer<"dom"> {
      */
     constructor(o: DocumentFragment | Element, cfg: import("./AbstractJoiningTransformer.js").DOMJoiningTransformerConfig);
     _dom: Element | DocumentFragment;
+    /** @type {any} */
+    _context: any;
     /** @type {XMLDocument[]} */
     _docs: XMLDocument[];
     /** @type {Array<{href: string, document: XMLDocument, format?: string}>} */
@@ -37,6 +39,12 @@ declare class DOMJoiningTransformer extends AbstractJoiningTransformer<"dom"> {
      * @returns {void}
      */
     rawAppend(item: Node): void;
+    /**
+     * Set the transformer context for callback invocations.
+     * @param {any} context - The transformer context object
+     * @returns {DOMJoiningTransformer}
+     */
+    setContext(context: any): DOMJoiningTransformer;
     /**
      * @param {string|Node} item - Item to append
      * @returns {void}

@@ -42,6 +42,10 @@ class XPathTransformerContext {
     this._contextNode = this._origNode = /** @type {Document|Element|Node} */ (
       config.data
     );
+    // Set this context on the joining transformer for callback invocations
+    if (config.joiningTransformer && config.joiningTransformer.setContext) {
+      config.joiningTransformer.setContext(this);
+    }
     /** @type {Record<string, unknown>} */
     this.vars = {};
     /** @type {Record<string, Record<string, unknown>>} */

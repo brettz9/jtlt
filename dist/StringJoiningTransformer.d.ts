@@ -69,6 +69,8 @@ declare class StringJoiningTransformer extends AbstractJoiningTransformer<"strin
     constructor(s: string, cfg?: import("./AbstractJoiningTransformer.js").StringJoiningTransformerConfig);
     _str: string;
     /** @type {any} */
+    _context: any;
+    /** @type {any} */
     _objPropTemp: any;
     /** @type {boolean | undefined} */
     propOnlyState: boolean | undefined;
@@ -94,6 +96,12 @@ declare class StringJoiningTransformer extends AbstractJoiningTransformer<"strin
         document: string;
         format?: string;
     }>;
+    /**
+     * Set the transformer context for callback invocations.
+     * @param {any} context - The transformer context object
+     * @returns {StringJoiningTransformer}
+     */
+    setContext(context: any): StringJoiningTransformer;
     /**
      * @param {string|any} s - String or value to append
      * @returns {StringJoiningTransformer}

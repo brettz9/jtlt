@@ -25,6 +25,8 @@ class DOMJoiningTransformer extends AbstractJoiningTransformer {
   constructor (o, cfg) {
     super(cfg);
     this._dom = o || cfg.document.createDocumentFragment();
+    /** @type {any} */
+    this._context = undefined;
     /** @type {XMLDocument[]} */
     this._docs = [];
     /** @type {Array<{href: string, document: XMLDocument, format?: string}>} */
@@ -39,6 +41,16 @@ class DOMJoiningTransformer extends AbstractJoiningTransformer {
    */
   rawAppend (item) {
     this._dom.append(item);
+  }
+
+  /**
+   * Set the transformer context for callback invocations.
+   * @param {any} context - The transformer context object
+   * @returns {DOMJoiningTransformer}
+   */
+  setContext (context) {
+    this._context = context;
+    return this;
   }
 
   /**
@@ -400,7 +412,7 @@ class DOMJoiningTransformer extends AbstractJoiningTransformer {
       }
 
       if (cb) {
-        cb.call(this);
+        cb.call(this._context || this);
       }
       this._dom = oldDOM;
 
@@ -452,7 +464,7 @@ class DOMJoiningTransformer extends AbstractJoiningTransformer {
     }
 
     if (cb) {
-      cb.call(this);
+      cb.call(this._context || this);
     }
     this._dom = oldDOM;
 
@@ -572,7 +584,7 @@ class DOMJoiningTransformer extends AbstractJoiningTransformer {
     this._dom = fragment;
 
     // Execute callback to build document content
-    cb.call(this);
+    cb.call(this._context || this);
 
     // Restore previous state
     this.root = oldRoot;
@@ -613,7 +625,7 @@ class DOMJoiningTransformer extends AbstractJoiningTransformer {
     this._dom = fragment;
 
     // Execute callback to build document content
-    cb.call(this);
+    cb.call(this._context || this);
 
     // Get the created document from _docs (document() will have pushed it)
     // or extract from the current DOM state

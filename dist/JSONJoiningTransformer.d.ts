@@ -66,6 +66,8 @@ declare class JSONJoiningTransformer extends AbstractJoiningTransformer<"json"> 
     constructor(o?: any[] | Record<string, unknown>, cfg?: import("./AbstractJoiningTransformer.js").JSONJoiningTransformerConfig);
     /** @type {any[]|Record<string, unknown>} */
     _obj: any[] | Record<string, unknown>;
+    /** @type {any} */
+    _context: any;
     /** @type {boolean | undefined} */
     _objPropState: boolean | undefined;
     /** @type {boolean | undefined} */
@@ -88,6 +90,12 @@ declare class JSONJoiningTransformer extends AbstractJoiningTransformer<"json"> 
      * @returns {void}
      */
     rawAppend(item: any): void;
+    /**
+     * Set the transformer context for callback invocations.
+     * @param {any} context - The transformer context object
+     * @returns {JSONJoiningTransformer}
+     */
+    setContext(context: any): JSONJoiningTransformer;
     /**
      * Appends an item to the current object or array.
      * @param {any} item - Item to append
