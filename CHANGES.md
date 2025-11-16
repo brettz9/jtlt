@@ -1,6 +1,6 @@
 # jtlt CHANGES
 
-## ?
+## 0.7.1
 
 - fix: ensure context methods available within callbacks
 
