@@ -877,6 +877,107 @@ class XPathTransformerContext {
       ? /** @type {{select?: string}} */ (select).select
       : select;
 
+    // Check if select is a custom function call: prefix:name(...)
+    // Try to parse and invoke registered function
+    if (selectStr && (/^[^:]+:[^\(]+\(/v).test(selectStr)) {
+      try {
+        // Extract function name and arguments
+        const match = (/^(?<func>[^:]+:[^\(]+)\((?<args>.*)\)$/sv).exec(
+          selectStr.trim()
+        );
+        if (match?.groups) {
+          const funcName = match.groups.func;
+          const argsStr = match.groups.args;
+
+          // Parse arguments - supports $params, 'strings', numbers, XPath
+          const args = [];
+          if (argsStr.trim()) {
+            // Simple argument parser
+            let current = '';
+            let inString = false;
+            let stringChar = null;
+            let depth = 0;
+
+            for (let i = 0; i < argsStr.length; i++) {
+              const char = argsStr[i];
+              if (!inString) {
+                switch (char) {
+                case '"':
+                case "'":
+                  inString = true;
+                  stringChar = char;
+                  current += char;
+                  break;
+                case '(':
+                case '[':
+                  depth++;
+                  current += char;
+                  break;
+                case ')':
+                case ']':
+                  depth--;
+                  current += char;
+                  break;
+                case ',':
+                  if (depth === 0) {
+                    args.push(current.trim());
+                    current = '';
+                  } else {
+                    current += char;
+                  }
+                  break;
+                default:
+                  current += char;
+                }
+              } else {
+                current += char;
+                if (char === stringChar && argsStr[i - 1] !== '\\') {
+                  inString = false;
+                  stringChar = null;
+                }
+              }
+            }
+            if (current.trim()) {
+              args.push(current.trim());
+            }
+          }
+
+          // Evaluate each argument
+          const evaluatedArgs = args.map((arg) => {
+            // String literal
+            if ((/^["'].*["']$/v).test(arg)) {
+              return arg.slice(1, -1);
+            }
+            // Number
+            if ((/^-?\d+(?:\.\d+)?$/v).test(arg)) {
+              return Number(arg);
+            }
+            // Parameter reference
+            if (arg.startsWith('$')) {
+              const paramName = arg.slice(1);
+              return this._params && paramName in this._params
+                ? this._params[paramName]
+                : undefined;
+            }
+            // XPath expression - evaluate it
+            return this._evalXPath(arg, false);
+          });
+
+          // Invoke the function
+          const result = jt.invokeFunctionByArity(funcName, evaluatedArgs);
+
+          // Append result to output
+          jt.append(result);
+          return this;
+        }
+      /* c8 ignore start -- Error handler for malformed function calls */
+      } catch (err) {
+        // Fall through to normal XPath evaluation
+        // This allows fontoxpath registered functions to work natively
+      }
+      /* c8 ignore stop */
+    }
+
     // Check for format-number() function call
     if (selectStr && selectStr.includes('format-number(')) {
       const match = (/format-number\((?<value>[^,\)]+)(?:,\s*["'](?<format>[^"']+)["'])?(?:,\s*["'](?<decimalFormat>[^"']*)["'])?\)/v).exec(selectStr);
@@ -1622,6 +1723,75 @@ class XPathTransformerContext {
    */
   transform (cfg) {
     return this.stylesheet(cfg);
+  }
+
+  /**
+   * Register a stylesheet function (similar to xsl:function).
+   * @param {{
+   *   name: string,
+   *   params?: Array<{name: string, as?: string}>,
+   *   as?: string,
+   *   body: (...args: any[]) => any
+   * }} cfg - Function configuration
+   * @returns {this}
+   */
+  function (cfg) {
+    const {name, params = [], as: returnType, body} = cfg;
+    /** @type {any} */ (this._getJoiningTransformer()).function(cfg);
+
+    // Register with fontoxpath for native XPath 3.1 support
+    const version = this._config.xpathVersion ?? 1;
+    if (version === 3.1) {
+      try {
+        // Parse namespace from name
+        let namespaceURI, localName;
+        if (name.startsWith('Q{')) {
+          // Q{uri}name format - extract manually
+          const closeBrace = name.indexOf('}', 2);
+          if (closeBrace > 2) {
+            namespaceURI = name.slice(2, closeBrace);
+            localName = name.slice(closeBrace + 1);
+          }
+        } else if (name.includes(':')) {
+          // prefix:name format - use prefix as pseudo-namespace
+          // (caller should use proper namespace resolver in XPath)
+          const parts = name.split(':');
+          namespaceURI = `urn:${parts[0]}`;
+          localName = parts[1];
+        }
+
+        if (namespaceURI && localName) {
+          // Map XSLT type names to XPath type names for signature
+          const signature = params.map((p) => p.as || 'item()*');
+          const returnTypeStr = returnType || 'item()*';
+
+          // eslint-disable-next-line import/no-named-as-default-member -- OK
+          fontoxpath.registerCustomXPathFunction(
+            {namespaceURI, localName},
+            signature,
+            returnTypeStr,
+            (dynamicContext, ...args) => body(...args)
+          );
+        }
+      /* c8 ignore start -- Error handler for fontoxpath failures */
+      } catch (err) {
+        // Ignore fontoxpath registration errors (e.g., if duplicate)
+        // Function still available via invokeFunctionByArity
+      }
+      /* c8 ignore stop */
+    }
+
+    return this;
+  }
+
+  /**
+   * Invoke a registered stylesheet function with positional arguments.
+   * @param {string} name - Function name (with namespace)
+   * @param {any[]} args - Positional arguments
+   * @returns {any} Function return value
+   */
+  invokeFunctionByArity (name, args = []) {
+    return this._getJoiningTransformer().invokeFunctionByArity(name, args);
   }
 
   /**

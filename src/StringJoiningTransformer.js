@@ -454,11 +454,11 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
    * @param {((...args: any[]) => any)|Element} func - Function to stringify
    * @returns {StringJoiningTransformer}
    */
-  function (func) {
+  outputFunction (func) {
     // Appends function source (only in JavaScript mode).
     if (this._cfg.mode !== 'JavaScript') {
       throw new Error(
-        'function is not allowed unless added in JavaScript mode'
+        'outputFunction is not allowed unless added in JavaScript mode'
       );
     }
     if (_isElement(func)) {

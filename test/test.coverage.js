@@ -218,9 +218,11 @@ describe('Coverage: uncovered functionality', () => {
         template () {
           const jt = this._config.joiningTransformer;
           jt.nonfiniteNumber(Number.POSITIVE_INFINITY);
-          jt.function(function testFn () {
-            return 1;
-          });
+          jt.outputFunction(
+            function testFn () {
+              return 1;
+            }
+          );
           jt.undefined();
         }
       }],

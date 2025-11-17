@@ -110,6 +110,18 @@ class AbstractJoiningTransformer {
      * @type {Map<string, {prefix: string, namespaceURI: string}>}
      */
     this._pendingNamespaceMap = new Map();
+
+    /**
+     * Registered stylesheet functions (similar to xsl:function).
+     * Key format: "namespace:localName#arity".
+     * @type {Map<string, {
+     *   name: string,
+     *   params: Array<{name: string, as?: string}>,
+     *   body: (...args: any[]) => any,
+     *   returnType?: string
+     * }>}
+     */
+    this._registeredFunctions = new Map();
   }
 
   /**
@@ -178,6 +190,71 @@ class AbstractJoiningTransformer {
    */
   transform (cfg) {
     return this.stylesheet(cfg);
+  }
+
+  /**
+   * Register a stylesheet function (similar to xsl:function).
+   * Functions must have namespaced names and are invoked positionally.
+   * @param {{
+   *   name: string,
+   *   params?: Array<{name: string, as?: string}>,
+   *   as?: string,
+   *   body: (...args: any[]) => any
+   * }} cfg - Function configuration
+   * @returns {this}
+   */
+  function (cfg) {
+    const {name, params = [], as: returnType, body} = cfg;
+
+    // Validate name has namespace
+    if (!name.includes(':') && !name.startsWith('Q{')) {
+      throw new Error(
+        `Function name "${name}" must be in a namespace ` +
+        `(use prefix:name or Q{uri}name)`
+      );
+    }
+
+    // Create function key with arity
+    const arity = params.length;
+    const functionKey = `${name}#${arity}`;
+
+    // Check for duplicates
+    if (this._registeredFunctions.has(functionKey)) {
+      throw new Error(
+        `Function "${name}" with arity ${arity} is already registered`
+      );
+    }
+
+    // Store function definition
+    this._registeredFunctions.set(functionKey, {
+      name,
+      params,
+      body,
+      returnType
+    });
+
+    return this;
+  }
+
+  /**
+   * Invoke a registered stylesheet function with positional arguments.
+   * @param {string} name - Function name (with namespace)
+   * @param {any[]} args - Positional arguments
+   * @returns {any} Function return value
+   */
+  invokeFunctionByArity (name, args = []) {
+    const arity = args.length;
+    const functionKey = `${name}#${arity}`;
+
+    const functionDef = this._registeredFunctions.get(functionKey);
+    if (!functionDef) {
+      throw new Error(
+        `Function "${name}" with arity ${arity} not found`
+      );
+    }
+
+    // Invoke function body with arguments
+    return functionDef.body(...args);
   }
 
   /**

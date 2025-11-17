@@ -1,5 +1,9 @@
 # jtlt CHANGES
 
+## ?
+
+- feat: change `this.function` to `outputFunction` and add new `this.function`
+
 ## 0.10.0
 
 - feat: add `stylesheet` (and `transform` alias)

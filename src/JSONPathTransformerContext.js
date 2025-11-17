@@ -1139,6 +1139,46 @@ class JSONPathTransformerContext {
         ? /** @type {{select?: string}} */ (select).select
         : select;
 
+      // Check for custom stylesheet function calls (namespace:name(...))
+      if (selectStr && (/^[^:]+:[^\(]+\(/v).test(selectStr)) {
+        const match = (/^(?<name>[^:]+:[^\(]+)\((?<args>.*)\)$/v).exec(
+          selectStr
+        );
+        if (match && match.groups) {
+          const {name, args: argsStr} = match.groups;
+          // Parse arguments - simple comma-separated values
+          const args = argsStr
+            ? argsStr.split(',').map((arg) => {
+              const trimmed = arg.trim();
+              // Check if it's a parameter reference ($param, not $.jsonpath)
+              if (trimmed.startsWith('$') && !trimmed.startsWith('$.')) {
+                const paramName = trimmed.slice(1);
+                return this._params && paramName in this._params
+                  ? this._params[paramName]
+                  : undefined;
+              }
+              // Check if it's a string literal
+              if ((trimmed.startsWith("'") && trimmed.endsWith("'")) ||
+                  (trimmed.startsWith('"') && trimmed.endsWith('"'))) {
+                return trimmed.slice(1, -1);
+              }
+              // Try to parse as number
+              const num = Number(trimmed);
+              if (!Number.isNaN(num)) {
+                return num;
+              }
+              // Otherwise evaluate as JSONPath
+              return this.get(trimmed, false);
+            })
+            : [];
+
+          // Call the function via invokeFunctionByArity
+          result = this.invokeFunctionByArity(name, args);
+          /** @type {any} */ (results).text(String(result));
+          return this;
+        }
+      }
+
       // Check for format-number() function call
       if (selectStr && selectStr.includes('format-number(')) {
         const match = (/format-number\((?<value>[^,\)]+)(?:,\s*["'](?<format>[^"']+)["'])?(?:,\s*["'](?<decimalFormat>[^"']*)["'])?\)/v).exec(selectStr);
@@ -1925,6 +1965,31 @@ class JSONPathTransformerContext {
    */
   transform (cfg) {
     return this.stylesheet(cfg);
+  }
+
+  /**
+   * Register a stylesheet function (similar to xsl:function).
+   * @param {{
+   *   name: string,
+   *   params?: Array<{name: string, as?: string}>,
+   *   as?: string,
+   *   body: (...args: any[]) => any
+   * }} cfg - Function configuration
+   * @returns {this}
+   */
+  function (cfg) {
+    /** @type {any} */ (this._getJoiningTransformer()).function(cfg);
+    return this;
+  }
+
+  /**
+   * Invoke a registered stylesheet function with positional arguments.
+   * @param {string} name - Function name (with namespace)
+   * @param {any[]} args - Positional arguments
+   * @returns {any} Function return value
+   */
+  invokeFunctionByArity (name, args = []) {
+    return this._getJoiningTransformer().invokeFunctionByArity(name, args);
   }
 
   /**

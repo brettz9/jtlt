@@ -85,7 +85,7 @@ describe('Coverage - additional edge cases', function () {
 
     it('should handle function() in JavaScript mode', function () {
       const jt = new StringJoiningTransformer('', {mode: 'JavaScript'});
-      jt.function(function testFunc () {
+      jt.outputFunction(function testFunc () {
         return 42;
       });
       const out = jt.get();
@@ -144,7 +144,7 @@ describe('Coverage - additional edge cases', function () {
       const st = new StringJoiningTransformer('', {document, mode: 'JavaScript'});
       // Use JHTML.toJHTMLDOM to create a properly formatted JHTML element for a function
       const elem = toJHTMLDOM(function x () {}, {mode: 'JavaScript', stringifiers: {}, document});
-      st.function(elem);
+      st.outputFunction(elem);
       const out = st.get();
       assert.include(out, 'function');
     });
@@ -213,8 +213,8 @@ describe('Coverage - additional edge cases', function () {
         jt.nonfiniteNumber(Number.NaN);
       }, /Non-finite numbers are not allowed/v);
       assert.throws(() => {
-        jt.function(function x () {});
-      }, /function is not allowed/v);
+        jt.outputFunction(function x () {});
+      }, /outputFunction is not allowed/v);
     });
 
     it('undefined()/nonfiniteNumber()/function() append in JS mode', function () {
@@ -223,7 +223,7 @@ describe('Coverage - additional edge cases', function () {
       jt.element('div', {}, () => {
         jt.undefined();
         jt.nonfiniteNumber(Infinity);
-        jt.function(function y () {});
+        jt.outputFunction(function y () {});
       });
       const frag = jt.get();
       const div = frag.querySelector('div');
@@ -397,8 +397,8 @@ describe('Coverage - additional edge cases', function () {
         jt.nonfiniteNumber(Infinity);
       }, /Non-finite numbers are not allowed/v);
       assert.throws(() => {
-        jt.function(function z () {});
-      }, /function is not allowed/v);
+        jt.outputFunction(function z () {});
+      }, /outputFunction is not allowed/v);
     });
 
     it('appends undefined/nonfinite/function in JS mode', function () {
@@ -406,7 +406,7 @@ describe('Coverage - additional edge cases', function () {
       jt.array(() => {
         jt.undefined();
         jt.nonfiniteNumber(Infinity);
-        jt.function(function f () {});
+        jt.outputFunction(function f () {});
       });
       const out = jt.get();
       assert.equal(out.length, 3);
@@ -2050,11 +2050,11 @@ describe('StringJoiningTransformer - edge cases', function () {
     }, /undefined is not allowed unless added in JavaScript mode/v);
   });
 
-  it('should handle function() without cfg mode', function () {
+  it('should handle outputFunction() without cfg mode', function () {
     const jt = new StringJoiningTransformer('', {});
     assert.throws(() => {
-      jt.function(function f () {});
-    }, /function is not allowed unless added in JavaScript mode/v);
+      jt.outputFunction(function f () {});
+    }, /outputFunction is not allowed unless added in JavaScript mode/v);
   });
 
   it('should throw when propOnly not followed by value', function () {
@@ -2143,7 +2143,7 @@ describe('StringJoiningTransformer - edge cases', function () {
     // Simulate a JHTML element conversion result for a function
     const st = new StringJoiningTransformer('', {mode: 'JavaScript'});
     // Instead of a real element, use a string that would result from conversion
-    st.function('function y() {}');
+    st.outputFunction('function y() {}');
     const out = st.get();
     assert.include(out, 'function');
   });

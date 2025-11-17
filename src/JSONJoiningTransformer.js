@@ -357,10 +357,10 @@ class JSONJoiningTransformer extends AbstractJoiningTransformer {
    * @param {(...args: any[]) => any} func Function to append.
    * @returns {JSONJoiningTransformer}
    */
-  function (func) {
+  outputFunction (func) {
     if (this._cfg.mode !== 'JavaScript') {
       throw new Error(
-        'function is not allowed unless added in JavaScript mode'
+        'outputFunction is not allowed unless added in JavaScript mode'
       );
     }
     this.append(func);
