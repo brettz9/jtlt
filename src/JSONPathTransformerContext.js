@@ -408,6 +408,48 @@ class JSONPathTransformerContext {
 
       let templateObj;
       if (!pathMatchedTemplates.length) {
+        // Check mode config for no-match behavior
+        const joiner = that._getJoiningTransformer();
+        const modeConfig = joiner._modeConfig;
+        if (modeConfig) {
+          const onNoMatch = modeConfig.onNoMatch ?? 'text-only-copy';
+          if (modeConfig.warningOnNoMatch) {
+            // eslint-disable-next-line no-console -- Warning as specified
+            console.warn(
+              'Warning: No template matches. ' +
+              'Mode is configured with warningOnNoMatch=true.'
+            );
+          }
+          if (onNoMatch === 'fail') {
+            throw new Error(
+              'No template matches. Mode is configured with onNoMatch="fail".'
+            );
+          }
+          if (onNoMatch === 'deep-skip') {
+            // Skip this node and its descendants entirely
+            continue;
+          }
+          if (onNoMatch === 'shallow-copy') {
+            // Output the value as-is without processing children
+            joiner.append(value);
+            continue;
+          }
+          if (onNoMatch === 'deep-copy') {
+            // Output the value and all descendants as-is
+            joiner.append(JSON.stringify(value));
+            continue;
+          }
+          if (onNoMatch === 'text-only-copy') {
+            // Output only text content (primitives)
+            if (typeof value === 'string' || typeof value === 'number' ||
+                typeof value === 'boolean') {
+              joiner.append(String(value));
+            }
+            continue;
+          }
+          // 'apply-templates', 'shallow-skip', or other:
+          // use default template rules
+        }
         const dtr = JSONPathTransformer.DefaultTemplateRules;
         if (propertyNamesMode) {
           templateObj = dtr.transformPropertyNames;
@@ -514,7 +556,18 @@ class JSONPathTransformerContext {
       that._params = prevTemplateParams;
       if (typeof ret !== 'undefined') {
         // After the undefined check, ret is ResultType<T>
-        that._getJoiningTransformer().append(
+        const joiner = that._getJoiningTransformer();
+        // Close any open tag before appending template return value
+        /* c8 ignore start -- _openTagState only on StringJoiningTransformer,
+           defensive check for string output mode */
+        // @ts-expect-error -- _openTagState only on StringJoiningTransformer
+        if (joiner._openTagState) {
+          joiner.append('>');
+          // @ts-expect-error -- _openTagState only on StringJoiningTransformer
+          joiner._openTagState = false;
+        }
+        /* c8 ignore stop */
+        joiner.append(
           /** @type {string|Node|*} */ (ret)
         );
       }
@@ -1804,7 +1857,10 @@ class JSONPathTransformerContext {
    * Configure mode behavior (similar to xsl:mode).
    * @param {{
    *   onMultipleMatch?: "use-last"|"fail",
-   *   warningOnMultipleMatch?: boolean
+   *   warningOnMultipleMatch?: boolean,
+   *   onNoMatch?: "shallow-copy"|"deep-copy"|"fail"|"apply-templates"|
+   *     "shallow-skip"|"deep-skip"|"text-only-copy",
+   *   warningOnNoMatch?: boolean
    * }} cfg - Mode configuration
    * @returns {this}
    */

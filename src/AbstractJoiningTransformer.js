@@ -81,7 +81,10 @@ class AbstractJoiningTransformer {
     /**
      * @type {{
      *   onMultipleMatch?: "use-last"|"fail",
-     *   warningOnMultipleMatch?: boolean
+     *   warningOnMultipleMatch?: boolean,
+     *   onNoMatch?: "shallow-copy"|"deep-copy"|"fail"|"apply-templates"|
+     *     "shallow-skip"|"deep-skip"|"text-only-copy",
+     *   warningOnNoMatch?: boolean
      * }|undefined}
      */
     this._modeConfig = undefined;
@@ -113,7 +116,10 @@ class AbstractJoiningTransformer {
    * Configure mode behavior (similar to xsl:mode).
    * @param {{
    *   onMultipleMatch?: "use-last"|"fail",
-   *   warningOnMultipleMatch?: boolean
+   *   warningOnMultipleMatch?: boolean,
+   *   onNoMatch?: "shallow-copy"|"deep-copy"|"fail"|"apply-templates"|
+   *     "shallow-skip"|"deep-skip"|"text-only-copy",
+   *   warningOnNoMatch?: boolean
    * }} cfg - Mode configuration
    * @returns {this}
    */

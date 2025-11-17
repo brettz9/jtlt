@@ -359,6 +359,66 @@ class XPathTransformerContext {
       });
       let templateObj;
       if (!pathMatchedTemplates.length) { // default template rule branches
+        // Check mode config for no-match behavior
+        const joiner = this._getJoiningTransformer();
+        const modeConfig = joiner._modeConfig;
+        if (modeConfig) {
+          const onNoMatch = modeConfig.onNoMatch ?? 'text-only-copy';
+          if (modeConfig.warningOnNoMatch) {
+            // eslint-disable-next-line no-console -- Warning as specified
+            console.warn(
+              'Warning: No template matches. ' +
+              'Mode is configured with warningOnNoMatch=true.'
+            );
+          }
+          if (onNoMatch === 'fail') {
+            throw new Error(
+              'No template matches. Mode is configured with onNoMatch="fail".'
+            );
+          }
+          if (onNoMatch === 'deep-skip') {
+            // Skip this node entirely
+            continue;
+          }
+          if (onNoMatch === 'shallow-copy') {
+            // Output the node without processing children
+            if (node.nodeType === 1 && node.ownerDocument?.defaultView) {
+              const serializer =
+                new node.ownerDocument.defaultView.XMLSerializer();
+              // Clone node without children for shallow copy
+              const clone = node.cloneNode(false);
+              joiner.rawAppend(serializer.serializeToString(clone));
+            } else if (node.nodeType === 3 && node.nodeValue) { // Text
+              joiner.text(node.nodeValue);
+            }
+            continue;
+          }
+          if (onNoMatch === 'deep-copy') {
+            // Output the node and all descendants
+            if (node.nodeType === 1 && node.ownerDocument?.defaultView) {
+              const serializer =
+                new node.ownerDocument.defaultView.XMLSerializer();
+              joiner.rawAppend(serializer.serializeToString(node));
+            } else if (node.nodeType === 3 && node.nodeValue) { // Text
+              joiner.text(node.nodeValue);
+            }
+            continue;
+          }
+          if (onNoMatch === 'text-only-copy') {
+            // Output only text content
+            if (node.nodeType === 3 && node.nodeValue) { // Text node
+              joiner.text(node.nodeValue);
+            } else if (node.nodeType === 1) { // Element - get text content
+              const {textContent} = node;
+              if (textContent) {
+                joiner.text(textContent);
+              }
+            }
+            continue;
+          }
+          // 'apply-templates', 'shallow-skip', or other:
+          // use default template rules
+        }
         // Default template rules (simplified compared to JSON version)
         const DTR = XPathTransformerContext.DefaultTemplateRules;
         // Treat Document (9) like Element (1) so the default root rule
@@ -454,7 +514,15 @@ class XPathTransformerContext {
       this._params = prevTemplateParams;
 
       if (typeof ret !== 'undefined') {
-        this._getJoiningTransformer().append(ret);
+        const joiner = this._getJoiningTransformer();
+        // Close any open tag before appending template return value
+        // @ts-expect-error -- _openTagState only on StringJoiningTransformer
+        if (joiner._openTagState) {
+          joiner.append('>');
+          // @ts-expect-error -- _openTagState only on StringJoiningTransformer
+          joiner._openTagState = false;
+        }
+        joiner.append(ret);
       }
       this._contextNode = node; // Restore (placeholder for more complex state)
     }
@@ -1486,7 +1554,10 @@ class XPathTransformerContext {
    * Configure mode behavior (similar to xsl:mode).
    * @param {{
    *   onMultipleMatch?: "use-last"|"fail",
-   *   warningOnMultipleMatch?: boolean
+   *   warningOnMultipleMatch?: boolean,
+   *   onNoMatch?: "shallow-copy"|"deep-copy"|"fail"|"apply-templates"|
+   *     "shallow-skip"|"deep-skip"|"text-only-copy",
+   *   warningOnNoMatch?: boolean
    * }} cfg - Mode configuration
    * @returns {this}
    */
@@ -1966,7 +2037,7 @@ class XPathTransformerContext {
        * @returns {void}
        */
       template (node, cfg) {
-        this.applyTemplates('.', cfg.mode);
+        this.applyTemplates('node()', cfg.mode);
       }
     },
     transformElements: {
@@ -1977,7 +2048,7 @@ class XPathTransformerContext {
        * @returns {void}
        */
       template (node, cfg) {
-        this.applyTemplates('*', cfg.mode);
+        this.applyTemplates('node()', cfg.mode);
       }
     },
     transformTextNodes: {
