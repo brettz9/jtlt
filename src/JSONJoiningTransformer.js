@@ -551,6 +551,25 @@ class JSONJoiningTransformer extends AbstractJoiningTransformer {
       // No-op outside an element() callback (JSON joiner semantics)
       return this;
     }
+
+    let alias = this._getNamespaceAlias(prefix);
+
+    // Normalize empty string or undefined/null to #default
+    if (!alias) {
+      alias = '#default';
+    }
+    const normalizedPrefix = alias;
+
+    // If this prefix is excluded, buffer it instead of outputting immediately
+    if (this._excludeResultPrefixes.has(normalizedPrefix)) {
+      this._pendingNamespaceMap.set(normalizedPrefix, {
+        prefix: alias,
+        namespaceURI
+      });
+      return this;
+    }
+
+    // Not excluded, output immediately
     const top = /** @type {ElementInfo} */ (this._elementStack.at(-1));
     const {attsObj} = top;
 
@@ -558,7 +577,6 @@ class JSONJoiningTransformer extends AbstractJoiningTransformer {
       attsObj.xmlns = {};
     }
 
-    const alias = this._getNamespaceAlias(prefix);
     /** @type {Record<string, string>} */
     (attsObj.xmlns)[alias === '#default' ? '' : alias] =
       this._replaceCharacterMaps(namespaceURI);
@@ -566,6 +584,32 @@ class JSONJoiningTransformer extends AbstractJoiningTransformer {
     return this;
   }
 
+  /**
+   * @param {string} prefix
+   * @returns {void}
+   * @override
+   */
+  _flushPendingNamespace (prefix) {
+    if (!this._elementStack.length) {
+      return;
+    }
+
+    const pending = this._pendingNamespaceMap.get(prefix);
+    if (pending) {
+      const top = /** @type {ElementInfo} */ (this._elementStack.at(-1));
+      const {attsObj} = top;
+
+      if (!attsObj.xmlns) {
+        attsObj.xmlns = {};
+      }
+
+      /** @type {Record<string, string>} */
+      (attsObj.xmlns)[pending.prefix === '#default' ? '' : pending.prefix] =
+        this._replaceCharacterMaps(pending.namespaceURI);
+
+      this._pendingNamespaceMap.delete(prefix);
+    }
+  }
   /**
    * Adds/updates an attribute for the most recently open element built via
    * a callback-driven element(). When not in an element callback context,
@@ -599,11 +643,18 @@ class JSONJoiningTransformer extends AbstractJoiningTransformer {
     if (name === '$a' && Array.isArray(val)) {
       val.forEach((pair) => {
         if (Array.isArray(pair) && pair.length > 1) {
-          attsObj[String(pair[0])] = this._replaceCharacterMaps(pair[1]);
+          const attrName = String(pair[0]);
+          // Track each ordered attribute
+          this._trackAttributePrefix(attrName);
+          attsObj[attrName] = this._replaceCharacterMaps(pair[1]);
         }
       });
       return this;
     }
+
+    // Track attribute prefix usage for namespace exclusion
+    this._trackAttributePrefix(name);
+
     attsObj[this._replaceNamespaceAliasInNamespaceDeclaration(name)] =
       this._replaceCharacterMaps(/** @type {string} */ (val));
     return this;

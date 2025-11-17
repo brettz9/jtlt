@@ -479,7 +479,24 @@ class DOMJoiningTransformer extends AbstractJoiningTransformer {
    * @returns {DOMJoiningTransformer}
    */
   namespace (prefix, namespaceURI) {
-    const alias = this._getNamespaceAlias(prefix);
+    let alias = this._getNamespaceAlias(prefix);
+
+    // Normalize empty string or undefined/null to #default
+    if (!alias) {
+      alias = '#default';
+    }
+    const normalizedPrefix = alias;
+
+    // If this prefix is excluded, buffer it instead of outputting immediately
+    if (this._excludeResultPrefixes.has(normalizedPrefix)) {
+      this._pendingNamespaceMap.set(normalizedPrefix, {
+        prefix: alias,
+        namespaceURI
+      });
+      return this;
+    }
+
+    // Not excluded, output immediately
     /** @type {Element} */
     (this._dom).setAttributeNS(
       'http://www.w3.org/2000/xmlns/',
@@ -490,6 +507,23 @@ class DOMJoiningTransformer extends AbstractJoiningTransformer {
   }
 
   /**
+   * @param {string} prefix
+   * @returns {void}
+   * @override
+   */
+  _flushPendingNamespace (prefix) {
+    const pending = this._pendingNamespaceMap.get(prefix);
+    if (pending) {
+      /** @type {Element} */
+      (this._dom).setAttributeNS(
+        'http://www.w3.org/2000/xmlns/',
+        pending.prefix === '#default' ? 'xmlns' : 'xmlns:' + pending.prefix,
+        this._replaceCharacterMaps(pending.namespaceURI)
+      );
+      this._pendingNamespaceMap.delete(prefix);
+    }
+  }
+  /**
    * @param {string} name
    * @param {string} val
    * @returns {DOMJoiningTransformer}
@@ -499,6 +533,10 @@ class DOMJoiningTransformer extends AbstractJoiningTransformer {
         this._dom.nodeType !== 1) {
       throw new Error('You may only set an attribute on an element');
     }
+
+    // Track attribute prefix usage for namespace exclusion
+    this._trackAttributePrefix(name);
+
     (/** @type {Element} */ (this._dom)).setAttribute(
       this._replaceNamespaceAliasInNamespaceDeclaration(name),
       this._replaceCharacterMaps(val)

@@ -1,6 +1,10 @@
 # jtlt CHANGES
 
-## 0.9.0 (unreleased)
+## 0.10.0 (unreleased)
+
+- feat: add `stylesheet` (and `transform` alias)
+
+## 0.9.0
 
 - feat: add `match` as alias to our `path`
 - feat: `mode()` (`onMultipleMatch`, `warningOnMultipleMatch`,

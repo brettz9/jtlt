@@ -633,12 +633,45 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
    * @returns {StringJoiningTransformer}
    */
   namespace (prefix, namespaceURI) {
-    const alias = this._getNamespaceAlias(prefix);
+    let alias = this._getNamespaceAlias(prefix);
+
+    // Normalize empty string or undefined/null to #default
+    if (!alias) {
+      alias = '#default';
+    }
+    const normalizedPrefix = alias;
+
+    // If this prefix is excluded, buffer it instead of outputting immediately
+    if (this._excludeResultPrefixes.has(normalizedPrefix)) {
+      this._pendingNamespaceMap.set(normalizedPrefix, {
+        prefix: alias,
+        namespaceURI
+      });
+      return this;
+    }
+
+    // Not excluded, output immediately
     this.append(' ' + (
       alias === '#default' ? 'xmlns' : 'xmlns:' + alias
     ) + '="' +
         this._replaceCharacterMaps(namespaceURI) + '"');
     return this;
+  }
+
+  /**
+   * @param {string} prefix
+   * @returns {void}
+   * @override
+   */
+  _flushPendingNamespace (prefix) {
+    const pending = this._pendingNamespaceMap.get(prefix);
+    if (pending) {
+      this.append(' ' + (
+        pending.prefix === '#default' ? 'xmlns' : 'xmlns:' + pending.prefix
+      ) + '="' +
+          this._replaceCharacterMaps(pending.namespaceURI) + '"');
+      this._pendingNamespaceMap.delete(prefix);
+    }
   }
 
   /**
@@ -703,6 +736,10 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
     val = (this._cfg.preEscapedAttributes || avoidAttEscape)
       ? valStr
       : valStr.replaceAll('&', '&amp;').replaceAll('"', '&quot;');
+
+    // Track attribute prefix usage for namespace exclusion
+    this._trackAttributePrefix(name);
+
     this.append(
       ' ' + this._replaceNamespaceAliasInNamespaceDeclaration(name) + '="' +
       this._replaceCharacterMaps(val) + '"'

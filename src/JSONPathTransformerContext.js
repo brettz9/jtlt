@@ -1903,6 +1903,31 @@ class JSONPathTransformerContext {
   }
 
   /**
+   * Configure stylesheet behavior (similar to xsl:stylesheet).
+   * Unlike xsl:stylesheet, this is a directive method and does not contain
+   * nested content.
+   * @param {{
+   *   excludeResultPrefixes?: string[]
+   * }} cfg - Stylesheet configuration
+   * @returns {this}
+   */
+  stylesheet (cfg) {
+    this._getJoiningTransformer().stylesheet(cfg);
+    return this;
+  }
+
+  /**
+   * Alias for stylesheet() method (XSLT compatibility).
+   * @param {{
+   *   excludeResultPrefixes?: string[]
+   * }} cfg - Stylesheet configuration
+   * @returns {this}
+   */
+  transform (cfg) {
+    return this.stylesheet(cfg);
+  }
+
+  /**
    * Create an element. Mirrors the joining transformer API so templates can
    * call `this.element()`.
    * @param {string} name - Element name

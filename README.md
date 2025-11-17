@@ -421,10 +421,8 @@ equivalence with XSLT (to the extent JTLT and JSONPath implement
 what could possibly be transferred to JSON-based transformations
 from XSLT):
 
-1.  Although the option is given for throwing errors upon finding
-    templates of equal priority, the default behavior is to give
-    preference to the last template (unlike XSLT which makes it an
-    error by default).
+1. The method `this.stylesheet()` (or `this.transform()`) is used similarly to XSLT for configuration, but it does not call for including the templates within it as nested content.
+2. JTLT adds `path` as an alias for `match` on templates.
 
 ## To-dos
 

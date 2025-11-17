@@ -88,6 +88,28 @@ class AbstractJoiningTransformer {
      * }|undefined}
      */
     this._modeConfig = undefined;
+
+    /** @type {Set<string>} */
+    this._excludeResultPrefixes = new Set();
+
+    /** @type {Set<string>} */
+    this._usedNamespacePrefixes = new Set();
+
+    /**
+     * Pending namespace declarations that may be excluded.
+     * @type {Array<{
+     *   prefix: string,
+     *   namespaceURI: string,
+     *   callback: () => void
+     * }>}
+     */
+    this._pendingNamespaces = [];
+
+    /**
+     * Track which prefixes have pending namespace declarations.
+     * @type {Map<string, {prefix: string, namespaceURI: string}>}
+     */
+    this._pendingNamespaceMap = new Map();
   }
 
   /**
@@ -126,6 +148,36 @@ class AbstractJoiningTransformer {
   mode (cfg) {
     this._modeConfig = cfg;
     return this;
+  }
+
+  /**
+   * Configure stylesheet behavior (similar to xsl:stylesheet).
+   * Unlike xsl:stylesheet, this is a directive method and does not contain
+   * nested content.
+   * @param {{
+   *   excludeResultPrefixes?: string[]
+   * }} cfg - Stylesheet configuration
+   * @returns {this}
+   */
+  stylesheet (cfg) {
+    if (cfg.excludeResultPrefixes) {
+      for (const prefix of cfg.excludeResultPrefixes) {
+        // Normalize empty string to internal #default representation
+        this._excludeResultPrefixes.add(prefix === '' ? '#default' : prefix);
+      }
+    }
+    return this;
+  }
+
+  /**
+   * Alias for stylesheet() method (XSLT compatibility).
+   * @param {{
+   *   excludeResultPrefixes?: string[]
+   * }} cfg - Stylesheet configuration
+   * @returns {this}
+   */
+  transform (cfg) {
+    return this.stylesheet(cfg);
   }
 
   /**
@@ -198,6 +250,12 @@ class AbstractJoiningTransformer {
     const prefix = colonIdx === -1 ? '#default' : elemName.slice(0, colonIdx);
     const alias = this._getNamespaceAlias(prefix);
 
+    // Track that this prefix (after aliasing) is actually used
+    this._usedNamespacePrefixes.add(alias);
+
+    // If this prefix was buffered, output it now
+    this._flushPendingNamespace(alias);
+
     if (colonIdx === -1) {
       if (alias === '#default') {
         return elemName;
@@ -209,6 +267,34 @@ class AbstractJoiningTransformer {
       ? ''
       : alias + ':'
     ) + elemName.slice(colonIdx + 1);
+  }
+
+  /**
+   * Output a pending namespace declaration if it exists.
+   * This method should be overridden by subclasses.
+   * @param {string} _prefix
+   * @returns {void}
+   */
+  // eslint-disable-next-line class-methods-use-this -- Abstract
+  _flushPendingNamespace (_prefix) {
+    // Default implementation does nothing - subclasses override
+    // Using _prefix to indicate unused parameter
+  }
+
+  /**
+   * Track attribute name prefix usage.
+   * @param {string} attrName
+   * @returns {void}
+   */
+  _trackAttributePrefix (attrName) {
+    const colonIdx = attrName.indexOf(':');
+    if (colonIdx !== -1 && !attrName.startsWith('xmlns')) {
+      const prefix = attrName.slice(0, colonIdx);
+      this._usedNamespacePrefixes.add(prefix);
+
+      // If this prefix was buffered, output it now
+      this._flushPendingNamespace(prefix);
+    }
   }
 
   /**
