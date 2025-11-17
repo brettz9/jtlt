@@ -197,7 +197,7 @@ declare class JSONJoiningTransformer extends AbstractJoiningTransformer<"json"> 
      * Result form: ['tag', {attr: 'val'}, child1, child2, ...]
      * Helpers: dataset -> data-*; $a -> ordered attributes.
      * Supported signatures mirror StringJoiningTransformer.element.
-     * @param {string|Element} elName Element name or Element-like.
+     * @param {string|Element} elem Element name or Element-like.
      * @param {ElementAttributes|any[]|SimpleCallback} [atts]
      *   Attrs, children, or cb.
      * @param {any[]|SimpleCallback} [childNodes] Children or cb.
@@ -205,7 +205,7 @@ declare class JSONJoiningTransformer extends AbstractJoiningTransformer<"json"> 
      * @param {string[]} [useAttributeSets] - Attribute set names to apply
      * @returns {JSONJoiningTransformer}
      */
-    element(elName: string | Element, atts?: ElementAttributes | any[] | SimpleCallback, childNodes?: any[] | SimpleCallback, cb?: SimpleCallback, useAttributeSets?: string[]): JSONJoiningTransformer;
+    element(elem: string | Element, atts?: ElementAttributes | any[] | SimpleCallback, childNodes?: any[] | SimpleCallback, cb?: SimpleCallback, useAttributeSets?: string[]): JSONJoiningTransformer;
     root: any;
     /**
      * @param {string} prefix

@@ -104,7 +104,7 @@ export type JSONPathTransformerContextConfig<T = "json"> = {
      * Priority resolver function
      */
     specificityPriorityResolver?: ((path: string) => number) | undefined;
-    templates: import("./index.js").JSONPathTemplateObject<T>[];
+    templates?: import("./index.js").JSONPathTemplateObject<T>[] | undefined;
 };
 /**
  * Decimal format symbols for number formatting.
@@ -164,7 +164,7 @@ export type JSONPathTransformerContextConfig<T = "json"> = {
  *   JSONPath
  * @property {(path: string) => number} [specificityPriorityResolver]
  *   Priority resolver function
- * @property {import('./index.js').JSONPathTemplateObject<T>[]} templates
+ * @property {import('./index.js').JSONPathTemplateObject<T>[]} [templates]
  */
 /**
  * Execution context for JSONPath-driven template application.
@@ -525,17 +525,27 @@ declare class JSONPathTransformerContext<T = "json"> {
      */
     attributeSet(name: string, attributes: Record<string, string>): this;
     /**
+     * @param {string} stylesheetPrefix
+     * @param {string} resultPrefix
+     * @returns {this}
+     */
+    namespaceAlias(stylesheetPrefix: string, resultPrefix: string): this;
+    /**
      * Create an element. Mirrors the joining transformer API so templates can
      * call `this.element()`.
      * @param {string} name - Element name
-     * @param {Record<string, string>} [atts] - Attributes object
-     * @param {any[]} [children] - Child nodes
-     * @param {import('./JSONJoiningTransformer.js').
-     *   SimpleCallback<T>} [cb] - Callback function
+     * @param {Record<string, string>|any[]|
+     *   ((this: JSONPathTransformerContext<T>) => void)} [atts] -
+     *   Attributes object or children or callback
+     * @param {any[]|
+     *   ((this: JSONPathTransformerContext<T>) => void)} [children] -
+     *   Child nodes or callback
+     * @param {(this: JSONPathTransformerContext<T>) => void} [cb] -
+     *   Callback function
      * @param {string[]} [useAttributeSets] - Attribute set names to apply
      * @returns {this}
      */
-    element(name: string, atts?: Record<string, string>, children?: any[], cb?: import("./JSONJoiningTransformer.js").SimpleCallback<T>, useAttributeSets?: string[]): this;
+    element(name: string, atts?: Record<string, string> | any[] | ((this: JSONPathTransformerContext<T>) => void), children?: any[] | ((this: JSONPathTransformerContext<T>) => void), cb?: (this: JSONPathTransformerContext<T>) => void, useAttributeSets?: string[]): this;
     /**
      * Adds a prefixed namespace declaration to the most recently opened
      *  element. Mirrors the joining

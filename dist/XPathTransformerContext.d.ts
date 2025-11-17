@@ -420,12 +420,20 @@ declare class XPathTransformerContext {
      */
     attributeSet(name: string, attributes: Record<string, string>): this;
     /**
+     * @param {string} stylesheetPrefix
+     * @param {string} resultPrefix
+     * @returns {this}
+     */
+    namespaceAlias(stylesheetPrefix: string, resultPrefix: string): this;
+    /**
      * Append element.
      * @param {string} name Tag name
      * @param {Record<string, string>|any[]|
-     *   ((this: XPathTransformerContext)=>void)} [atts] Attributes
-     * @param {any[]|((this: XPathTransformerContext)=>void)} [children]
-     *   Children
+     *   ((this: XPathTransformerContext)=>void)} [atts] Attributes,
+     *   children, or callback
+     * @param {any[]|
+     *   ((this: XPathTransformerContext)=>void)} [children]
+     *   Children or callback
      * @param {(this: XPathTransformerContext)=>void} [cb] Callback
      * @param {string[]} [useAttributeSets] - Attribute set names to apply
      * @returns {XPathTransformerContext}

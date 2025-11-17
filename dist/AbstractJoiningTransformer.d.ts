@@ -104,6 +104,8 @@ declare class AbstractJoiningTransformer<T> {
     _characterMap: Record<string, OutputCharacters>;
     /** @type {Record<string, Record<string, string>>} */
     _attributeSet: Record<string, Record<string, string>>;
+    /** @type {Map<string, string>} */
+    _namespaceAliases: Map<string, string>;
     /**
      * @param {JoiningTransformerConfig<T>} cfg - Configuration object
      * @returns {void}
@@ -128,6 +130,27 @@ declare class AbstractJoiningTransformer<T> {
      * @returns {void}
      */
     attributeSet(name: string, attributes: Record<string, string>): void;
+    /**
+     * @param {string} stylesheetPrefix
+     * @param {string} resultPrefix
+     * @returns {void}
+     */
+    namespaceAlias(stylesheetPrefix: string, resultPrefix: string): void;
+    /**
+     * @param {string} prefix
+     * @returns {string}
+     */
+    _getNamespaceAlias(prefix: string): string;
+    /**
+     * @param {string} attName
+     * @returns {string}
+     */
+    _replaceNamespaceAliasInNamespaceDeclaration(attName: string): string;
+    /**
+     * @param {string} elemName
+     * @returns {string}
+     */
+    _replaceNamespaceAliasInElement(elemName: string): string;
     /**
      * @param {string} str
      * @returns {string}

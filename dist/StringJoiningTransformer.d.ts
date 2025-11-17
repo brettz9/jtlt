@@ -191,14 +191,14 @@ declare class StringJoiningTransformer extends AbstractJoiningTransformer<"strin
      */
     function(func: ((...args: any[]) => any) | Element): StringJoiningTransformer;
     /**
-     * @param {string|Element} elName - Element name or element object
+     * @param {string|Element} elem - Element name or element object
      * @param {ElementAttributes} [atts] - Element attributes
      * @param {any[]} [childNodes] - Child nodes
      * @param {(this: StringJoiningTransformer) => void} [cb] - Callback function
      * @param {string[]} [useAttributeSets] - Attribute set names to apply
      * @returns {StringJoiningTransformer}
      */
-    element(elName: string | Element, atts?: ElementAttributes, childNodes?: any[], cb?: (this: StringJoiningTransformer) => void, useAttributeSets?: string[]): StringJoiningTransformer;
+    element(elem: string | Element, atts?: ElementAttributes, childNodes?: any[], cb?: (this: StringJoiningTransformer) => void, useAttributeSets?: string[]): StringJoiningTransformer;
     _openTagState: any;
     root: any;
     /**
