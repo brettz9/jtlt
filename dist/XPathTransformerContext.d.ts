@@ -443,6 +443,28 @@ declare class XPathTransformerContext {
      */
     namespaceAlias(stylesheetPrefix: string, resultPrefix: string): this;
     /**
+     * Configure stylesheet behavior (similar to xsl:stylesheet).
+     * Unlike xsl:stylesheet, this is a directive method and does not contain
+     * nested content.
+     * @param {{
+     *   excludeResultPrefixes?: string[]
+     * }} cfg - Stylesheet configuration
+     * @returns {this}
+     */
+    stylesheet(cfg: {
+        excludeResultPrefixes?: string[];
+    }): this;
+    /**
+     * Alias for stylesheet() method (XSLT compatibility).
+     * @param {{
+     *   excludeResultPrefixes?: string[]
+     * }} cfg - Stylesheet configuration
+     * @returns {this}
+     */
+    transform(cfg: {
+        excludeResultPrefixes?: string[];
+    }): this;
+    /**
      * Append element.
      * @param {string} name Tag name
      * @param {Record<string, string>|any[]|

@@ -1,6 +1,6 @@
 # jtlt CHANGES
 
-## 0.10.0 (unreleased)
+## 0.10.0
 
 - feat: add `stylesheet` (and `transform` alias)
 

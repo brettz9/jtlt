@@ -121,6 +121,31 @@ declare class AbstractJoiningTransformer<T> {
         onNoMatch?: "shallow-copy" | "deep-copy" | "fail" | "apply-templates" | "shallow-skip" | "deep-skip" | "text-only-copy";
         warningOnNoMatch?: boolean;
     } | undefined;
+    /** @type {Set<string>} */
+    _excludeResultPrefixes: Set<string>;
+    /** @type {Set<string>} */
+    _usedNamespacePrefixes: Set<string>;
+    /**
+     * Pending namespace declarations that may be excluded.
+     * @type {Array<{
+     *   prefix: string,
+     *   namespaceURI: string,
+     *   callback: () => void
+     * }>}
+     */
+    _pendingNamespaces: Array<{
+        prefix: string;
+        namespaceURI: string;
+        callback: () => void;
+    }>;
+    /**
+     * Track which prefixes have pending namespace declarations.
+     * @type {Map<string, {prefix: string, namespaceURI: string}>}
+     */
+    _pendingNamespaceMap: Map<string, {
+        prefix: string;
+        namespaceURI: string;
+    }>;
     /**
      * @param {JoiningTransformerConfig<T>} cfg - Configuration object
      * @returns {void}
@@ -149,6 +174,28 @@ declare class AbstractJoiningTransformer<T> {
         warningOnMultipleMatch?: boolean;
         onNoMatch?: "shallow-copy" | "deep-copy" | "fail" | "apply-templates" | "shallow-skip" | "deep-skip" | "text-only-copy";
         warningOnNoMatch?: boolean;
+    }): this;
+    /**
+     * Configure stylesheet behavior (similar to xsl:stylesheet).
+     * Unlike xsl:stylesheet, this is a directive method and does not contain
+     * nested content.
+     * @param {{
+     *   excludeResultPrefixes?: string[]
+     * }} cfg - Stylesheet configuration
+     * @returns {this}
+     */
+    stylesheet(cfg: {
+        excludeResultPrefixes?: string[];
+    }): this;
+    /**
+     * Alias for stylesheet() method (XSLT compatibility).
+     * @param {{
+     *   excludeResultPrefixes?: string[]
+     * }} cfg - Stylesheet configuration
+     * @returns {this}
+     */
+    transform(cfg: {
+        excludeResultPrefixes?: string[];
     }): this;
     /**
      * @param {string} name
@@ -183,6 +230,19 @@ declare class AbstractJoiningTransformer<T> {
      * @returns {string}
      */
     _replaceNamespaceAliasInElement(elemName: string): string;
+    /**
+     * Output a pending namespace declaration if it exists.
+     * This method should be overridden by subclasses.
+     * @param {string} _prefix
+     * @returns {void}
+     */
+    _flushPendingNamespace(_prefix: string): void;
+    /**
+     * Track attribute name prefix usage.
+     * @param {string} attrName
+     * @returns {void}
+     */
+    _trackAttributePrefix(attrName: string): void;
     /**
      * @param {string} str
      * @returns {string}
