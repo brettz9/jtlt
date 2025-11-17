@@ -74,6 +74,9 @@ class AbstractJoiningTransformer {
     this._characterMap = {};
     /** @type {Record<string, Record<string, string>>} */
     this._attributeSet = {};
+
+    /** @type {Map<string, string>} */
+    this._namespaceAliases = new Map();
   }
 
   /**
@@ -114,6 +117,71 @@ class AbstractJoiningTransformer {
    */
   attributeSet (name, attributes) {
     this._attributeSet[name] = attributes;
+  }
+
+  /**
+   * @param {string} stylesheetPrefix
+   * @param {string} resultPrefix
+   * @returns {void}
+   */
+  namespaceAlias (stylesheetPrefix, resultPrefix) {
+    // Convert empty string to '#default' to match _getNamespaceAlias behavior
+    const key = stylesheetPrefix || '#default';
+    this._namespaceAliases.set(key, resultPrefix);
+  }
+
+  /**
+   * @param {string} prefix
+   * @returns {string}
+   */
+  _getNamespaceAlias (prefix) {
+    // eslint-disable-next-line @stylistic/max-len -- Long
+    // eslint-disable-next-line unicorn/prefer-default-parameters -- Empty string fallback
+    const lookupPrefix = prefix || '#default';
+    return this._namespaceAliases.get(lookupPrefix) ?? (
+      lookupPrefix
+    );
+  }
+
+  /**
+   * @param {string} attName
+   * @returns {string}
+   */
+  _replaceNamespaceAliasInNamespaceDeclaration (attName) {
+    if (!attName.startsWith('xmlns')) {
+      return attName;
+    }
+    const namespacedAtt = attName.startsWith('xmlns:');
+
+    const prefix = namespacedAtt ? attName.slice(0, 6) : '#default';
+    const alias = this._getNamespaceAlias(prefix);
+
+    return alias === '#default'
+      ? 'xmlns'
+      : 'xmlns:' + alias;
+  }
+
+  /**
+   * @param {string} elemName
+   * @returns {string}
+   */
+  _replaceNamespaceAliasInElement (elemName) {
+    const colonIdx = elemName.indexOf(':');
+
+    const prefix = colonIdx === -1 ? '#default' : elemName.slice(0, colonIdx);
+    const alias = this._getNamespaceAlias(prefix);
+
+    if (colonIdx === -1) {
+      if (alias === '#default') {
+        return elemName;
+      }
+      return alias + ':' + elemName;
+    }
+
+    return (alias === '#default'
+      ? ''
+      : alias + ':'
+    ) + elemName.slice(colonIdx + 1);
   }
 
   /**

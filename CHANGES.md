@@ -1,5 +1,9 @@
 # jtlt CHANGES
 
+## 0.8.0 (unreleased)
+
+- feat: `namespaceAlias` and allow #default for `namespace`
+
 ## 0.7.3
 
 - fix: `valueOf` should work like text() in auto-closing tags

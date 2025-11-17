@@ -281,7 +281,7 @@ class DOMJoiningTransformer extends AbstractJoiningTransformer {
    * @returns {DOMJoiningTransformer}
    */
   /**
-   * @param {Element|string} elName - Element name
+   * @param {Element|string} elem - Element name
    * @param {Record<string, string>|(Node|string)[
    *   ]|((this: DOMJoiningTransformer) => void)} [atts] - Attributes,
    *   childNodes, or callback
@@ -291,7 +291,7 @@ class DOMJoiningTransformer extends AbstractJoiningTransformer {
    * @param {string[]} [useAttributeSets] - Attribute set names to apply
    * @returns {DOMJoiningTransformer}
    */
-  element (elName, atts, childNodes, cb, useAttributeSets) {
+  element (elem, atts, childNodes, cb, useAttributeSets) {
     // Handle argument overloading like other transformers
     if (Array.isArray(atts)) {
       cb = /** @type {(this: DOMJoiningTransformer) => void} */ (
@@ -309,12 +309,14 @@ class DOMJoiningTransformer extends AbstractJoiningTransformer {
       childNodes = [];
     }
 
-    if (!this.root && this._outputConfig) {
-      this.root = elName;
+    const elementName = this._replaceNamespaceAliasInElement(
+      typeof elem === 'string'
+        ? elem
+        : elem.localName
+    );
 
-      const elementName = typeof elName === 'string'
-        ? elName
-        : elName.localName;
+    if (!this.root && this._outputConfig) {
+      this.root = elementName;
 
       const {
         omitXmlDeclaration, doctypePublic, doctypeSystem, method
@@ -420,10 +422,10 @@ class DOMJoiningTransformer extends AbstractJoiningTransformer {
     }
 
     // Non-root elements
-    const el = elName && typeof elName === 'object'
-      ? elName
+    const el = elem && typeof elem === 'object'
+      ? elem
       : /** @type {Element} */ (
-        this._cfg.document.createElement(elName)
+        this._cfg.document.createElement(elem)
       );
 
     // Apply attribute sets if specified
@@ -477,10 +479,11 @@ class DOMJoiningTransformer extends AbstractJoiningTransformer {
    * @returns {DOMJoiningTransformer}
    */
   namespace (prefix, namespaceURI) {
+    const alias = this._getNamespaceAlias(prefix);
     /** @type {Element} */
     (this._dom).setAttributeNS(
       'http://www.w3.org/2000/xmlns/',
-      'xmlns:' + prefix,
+      alias === '#default' ? 'xmlns' : 'xmlns:' + alias,
       this._replaceCharacterMaps(namespaceURI)
     );
     return this;
@@ -497,7 +500,8 @@ class DOMJoiningTransformer extends AbstractJoiningTransformer {
       throw new Error('You may only set an attribute on an element');
     }
     (/** @type {Element} */ (this._dom)).setAttribute(
-      name, this._replaceCharacterMaps(val)
+      this._replaceNamespaceAliasInNamespaceDeclaration(name),
+      this._replaceCharacterMaps(val)
     );
     return this;
   }

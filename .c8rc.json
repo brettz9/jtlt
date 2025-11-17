@@ -1,0 +1,26 @@
+{
+  "all": true,
+  "src": ["src"],
+  "exclude": [
+    "coverage/**",
+    "demo/**",
+    "dist/**",
+    "docs/**",
+    "test/**",
+    "typings/**",
+    "node_modules/**",
+    "**/*.config.js",
+    "rollup.config.js",
+    "eslint.config.js",
+    "src/index-browser.js"
+  ],
+  "reporter": [
+    "text"
+  ],
+  "report-dir": "./coverage",
+  "check-coverage": true,
+  "lines": 100,
+  "functions": 100,
+  "branches": 100,
+  "statements": 100
+}

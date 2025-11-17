@@ -372,7 +372,7 @@ class JSONJoiningTransformer extends AbstractJoiningTransformer {
    * Result form: ['tag', {attr: 'val'}, child1, child2, ...]
    * Helpers: dataset -> data-*; $a -> ordered attributes.
    * Supported signatures mirror StringJoiningTransformer.element.
-   * @param {string|Element} elName Element name or Element-like.
+   * @param {string|Element} elem Element name or Element-like.
    * @param {ElementAttributes|any[]|SimpleCallback} [atts]
    *   Attrs, children, or cb.
    * @param {any[]|SimpleCallback} [childNodes] Children or cb.
@@ -380,11 +380,16 @@ class JSONJoiningTransformer extends AbstractJoiningTransformer {
    * @param {string[]} [useAttributeSets] - Attribute set names to apply
    * @returns {JSONJoiningTransformer}
    */
-  element (elName, atts, childNodes, cb, useAttributeSets) {
+  element (elem, atts, childNodes, cb, useAttributeSets) {
     this._requireSameChildren('json', 'element');
+    const elementName = this._replaceNamespaceAliasInElement(
+      typeof elem === 'string'
+        ? elem
+        : elem.localName
+    );
     const isRoot = !this.root;
     if (isRoot) {
-      this.root = elName;
+      this.root = elementName;
     }
     // Normalize arguments similarly to StringJoiningTransformer.element
     if (Array.isArray(atts)) {
@@ -401,14 +406,11 @@ class JSONJoiningTransformer extends AbstractJoiningTransformer {
       childNodes = [];
     }
 
-    const elementName = typeof elName === 'string'
-      ? elName
-      : elName.localName;
     // Element-like object (DOM Element) -> extract attributes
-    if (typeof elName === 'object' && elName && 'attributes' in elName) {
+    if (typeof elem === 'object' && elem && 'attributes' in elem) {
       /** @type {Record<string, string>} */
       const objAtts = {};
-      [...elName.attributes].forEach((att) => {
+      [...elem.attributes].forEach((att) => {
         objAtts[att.name] = att.value;
       });
       atts = Object.assign(objAtts, atts);
@@ -556,8 +558,10 @@ class JSONJoiningTransformer extends AbstractJoiningTransformer {
       attsObj.xmlns = {};
     }
 
+    const alias = this._getNamespaceAlias(prefix);
     /** @type {Record<string, string>} */
-    (attsObj.xmlns)[prefix] = this._replaceCharacterMaps(namespaceURI);
+    (attsObj.xmlns)[alias === '#default' ? '' : alias] =
+      this._replaceCharacterMaps(namespaceURI);
 
     return this;
   }
@@ -600,7 +604,8 @@ class JSONJoiningTransformer extends AbstractJoiningTransformer {
       });
       return this;
     }
-    attsObj[name] = this._replaceCharacterMaps(/** @type {string} */ (val));
+    attsObj[this._replaceNamespaceAliasInNamespaceDeclaration(name)] =
+      this._replaceCharacterMaps(/** @type {string} */ (val));
     return this;
   }
 

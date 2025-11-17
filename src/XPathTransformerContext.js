@@ -1460,6 +1460,18 @@ class XPathTransformerContext {
   }
 
   /**
+   * @param {string} stylesheetPrefix
+   * @param {string} resultPrefix
+   * @returns {this}
+   */
+  namespaceAlias (stylesheetPrefix, resultPrefix) {
+    this._getJoiningTransformer().namespaceAlias(
+      stylesheetPrefix, resultPrefix
+    );
+    return this;
+  }
+
+  /**
    * Append element.
    * @param {string} name Tag name
    * @param {Record<string, string>|any[]|

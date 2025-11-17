@@ -471,20 +471,38 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
   }
 
   /**
-   * @param {string|Element} elName - Element name or element object
+   * @param {string|Element} elem - Element name or element object
    * @param {ElementAttributes} [atts] - Element attributes
    * @param {any[]} [childNodes] - Child nodes
    * @param {(this: StringJoiningTransformer) => void} [cb] - Callback function
    * @param {string[]} [useAttributeSets] - Attribute set names to apply
    * @returns {StringJoiningTransformer}
    */
-  element (elName, atts, childNodes, cb, useAttributeSets) {
+  element (elem, atts, childNodes, cb, useAttributeSets) {
     // If a parent element's start tag is still open, close it before
     // starting a new element to ensure valid nesting.
     if (this._openTagState) {
       this.append('>');
       this._openTagState = false;
     }
+
+    /** @type {string} */
+    let elName;
+    if (typeof elem === 'object') {
+      /** @type {Record<string, string>} */
+      const objAtts = {};
+      /** @type {any} */
+      const elObj = elem;
+      [...elObj.attributes].forEach(function (att, i) {
+        objAtts[att.name] = att.value;
+      });
+      atts = Object.assign(objAtts, atts);
+      elName = elObj.nodeName;
+    } else {
+      elName = elem;
+    }
+
+    elName = this._replaceNamespaceAliasInElement(elName);
 
     if (!this.root) {
       this.root = elName;
@@ -565,18 +583,6 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
       return this;
     }
 
-    if (typeof elName === 'object') {
-      /** @type {Record<string, string>} */
-      const objAtts = {};
-      /** @type {any} */
-      const elObj = elName;
-      [...elObj.attributes].forEach(function (att, i) {
-        objAtts[att.name] = att.value;
-      });
-      atts = Object.assign(objAtts, atts);
-      elName = elObj.nodeName;
-    }
-
     // Apply attribute sets if specified
     if (useAttributeSets && useAttributeSets.length) {
       const mergedAtts = {};
@@ -627,7 +633,10 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
    * @returns {StringJoiningTransformer}
    */
   namespace (prefix, namespaceURI) {
-    this.append(' xmlns:' + prefix + '="' +
+    const alias = this._getNamespaceAlias(prefix);
+    this.append(' ' + (
+      alias === '#default' ? 'xmlns' : 'xmlns:' + alias
+    ) + '="' +
         this._replaceCharacterMaps(namespaceURI) + '"');
     return this;
   }
@@ -644,8 +653,7 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
     // Adds an attribute to the most recently opened start tag. Supports
     // special objects for dataset and ordered attributes ($a). Escapes '&'
     // and '"' unless cfg.preEscapedAttributes or avoidAttEscape are set.
-    // eslint-disable-next-line unicorn/no-this-assignment -- Temporary
-    const that = this;
+
     if (!this._openTagState) {
       throw new Error(
         'An attribute cannot be added after an opening tag has been closed ' +
@@ -659,8 +667,8 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
         const valObj = /** @type {any} */ (val);
         switch (name) {
         case 'dataset': {
-          Object.keys(valObj).forEach(function (att) {
-            that.attribute(
+          Object.keys(valObj).forEach((att) => {
+            this.attribute(
               'data-' + att.replaceAll(
                 camelCase, _makeDatasetAttribute
               ),
@@ -673,8 +681,8 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
         case '$a': { // Ordered attributes
           /** @type {unknown[][]} */
           const valArr = /** @type {any} */ (val);
-          valArr.forEach(function (attArr) {
-            that.attribute(
+          valArr.forEach((attArr) => {
+            this.attribute(
               String(attArr[0]),
               /** @type {string|Record<string, unknown>} */ (attArr[1]),
               false
@@ -695,7 +703,10 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
     val = (this._cfg.preEscapedAttributes || avoidAttEscape)
       ? valStr
       : valStr.replaceAll('&', '&amp;').replaceAll('"', '&quot;');
-    this.append(' ' + name + '="' + this._replaceCharacterMaps(val) + '"');
+    this.append(
+      ' ' + this._replaceNamespaceAliasInNamespaceDeclaration(name) + '="' +
+      this._replaceCharacterMaps(val) + '"'
+    );
     return this;
   }
 

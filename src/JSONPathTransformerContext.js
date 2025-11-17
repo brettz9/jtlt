@@ -1779,6 +1779,18 @@ class JSONPathTransformerContext {
   }
 
   /**
+   * @param {string} stylesheetPrefix
+   * @param {string} resultPrefix
+   * @returns {this}
+   */
+  namespaceAlias (stylesheetPrefix, resultPrefix) {
+    this._getJoiningTransformer().namespaceAlias(
+      stylesheetPrefix, resultPrefix
+    );
+    return this;
+  }
+
+  /**
    * Create an element. Mirrors the joining transformer API so templates can
    * call `this.element()`.
    * @param {string} name - Element name
