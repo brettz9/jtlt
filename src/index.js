@@ -34,6 +34,7 @@ export const setWindow = (win) => {
  * @template TCtx
  * @typedef {object} TemplateObject
  * @property {string} [path] - JSONPath or XPath selector for matching nodes
+ * @property {string} [match] - Alias for 'path' (XSLT compatibility)
  * @property {string} [name] - Optional name for calling via callTemplate
  * @property {string} [mode] - Optional mode for template matching
  * @property {number} [priority] - Priority for template selection

@@ -407,6 +407,23 @@ declare class XPathTransformerContext {
      */
     output(cfg: import("./StringJoiningTransformer.js").OutputConfig): XPathTransformerContext;
     /**
+     * Configure mode behavior (similar to xsl:mode).
+     * @param {{
+     *   onMultipleMatch?: "use-last"|"fail",
+     *   warningOnMultipleMatch?: boolean,
+     *   onNoMatch?: "shallow-copy"|"deep-copy"|"fail"|"apply-templates"|
+     *     "shallow-skip"|"deep-skip"|"text-only-copy",
+     *   warningOnNoMatch?: boolean
+     * }} cfg - Mode configuration
+     * @returns {this}
+     */
+    mode(cfg: {
+        onMultipleMatch?: "use-last" | "fail";
+        warningOnMultipleMatch?: boolean;
+        onNoMatch?: "shallow-copy" | "deep-copy" | "fail" | "apply-templates" | "shallow-skip" | "deep-skip" | "text-only-copy";
+        warningOnNoMatch?: boolean;
+    }): this;
+    /**
      * @param {string} name
      * @param {import('./AbstractJoiningTransformer.js').
      *   OutputCharacters} outputCharacters

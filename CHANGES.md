@@ -2,7 +2,9 @@
 
 ## 0.9.0 (unreleased)
 
-- feat: `mode()` (`onMultipleMatch`, `warningOnMultipleMatch`)
+- feat: add `match` as alias to our `path`
+- feat: `mode()` (`onMultipleMatch`, `warningOnMultipleMatch`,
+  `onNoMatch`, `warningOnNoMatch`)
 
 ## 0.8.0
 

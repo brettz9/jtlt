@@ -107,6 +107,21 @@ declare class AbstractJoiningTransformer<T> {
     /** @type {Map<string, string>} */
     _namespaceAliases: Map<string, string>;
     /**
+     * @type {{
+     *   onMultipleMatch?: "use-last"|"fail",
+     *   warningOnMultipleMatch?: boolean,
+     *   onNoMatch?: "shallow-copy"|"deep-copy"|"fail"|"apply-templates"|
+     *     "shallow-skip"|"deep-skip"|"text-only-copy",
+     *   warningOnNoMatch?: boolean
+     * }|undefined}
+     */
+    _modeConfig: {
+        onMultipleMatch?: "use-last" | "fail";
+        warningOnMultipleMatch?: boolean;
+        onNoMatch?: "shallow-copy" | "deep-copy" | "fail" | "apply-templates" | "shallow-skip" | "deep-skip" | "text-only-copy";
+        warningOnNoMatch?: boolean;
+    } | undefined;
+    /**
      * @param {JoiningTransformerConfig<T>} cfg - Configuration object
      * @returns {void}
      */
@@ -118,6 +133,23 @@ declare class AbstractJoiningTransformer<T> {
     output(cfg: import("./StringJoiningTransformer.js").OutputConfig): this;
     _outputConfig: import("./StringJoiningTransformer.js").OutputConfig | undefined;
     mediaType: string | undefined;
+    /**
+     * Configure mode behavior (similar to xsl:mode).
+     * @param {{
+     *   onMultipleMatch?: "use-last"|"fail",
+     *   warningOnMultipleMatch?: boolean,
+     *   onNoMatch?: "shallow-copy"|"deep-copy"|"fail"|"apply-templates"|
+     *     "shallow-skip"|"deep-skip"|"text-only-copy",
+     *   warningOnNoMatch?: boolean
+     * }} cfg - Mode configuration
+     * @returns {this}
+     */
+    mode(cfg: {
+        onMultipleMatch?: "use-last" | "fail";
+        warningOnMultipleMatch?: boolean;
+        onNoMatch?: "shallow-copy" | "deep-copy" | "fail" | "apply-templates" | "shallow-skip" | "deep-skip" | "text-only-copy";
+        warningOnNoMatch?: boolean;
+    }): this;
     /**
      * @param {string} name
      * @param {OutputCharacters} outputCharacters

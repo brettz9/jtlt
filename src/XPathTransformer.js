@@ -34,6 +34,10 @@ class XPathTransformer {
       if (Array.isArray(template)) {
         return {path: template[0], template: template[1]};
       }
+      // Normalize 'match' to 'path' for XSLT compatibility
+      if (template.match && !template.path) {
+        return {...template, path: template.match};
+      }
       return template;
     });
     this.templates.forEach((template) => {
