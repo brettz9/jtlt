@@ -400,6 +400,39 @@ Notes for JSON joiner with `exposeDocuments`:
 - When `exposeDocuments` is enabled in the joiner config, `get()` returns an array of `$document` wrappers. Each wrapper has a `childNodes` array where the root element is the last entry; the first entry may be a DOCTYPE object when `method` is `xml` or `xhtml`.
 - For `html`, `text`, or `json` methods, no DOCTYPE is included in the JSON wrapper by default.
 
+### Mode configuration
+
+Similar to XSLT's `xsl:mode` element with the `on-multiple-match` and `warning-on-multiple-match` attributes, the `mode(cfg)` method configures template matching behavior when multiple templates match a node with equal priority:
+
+**Signature**: `mode({onMultipleMatch?, warningOnMultipleMatch?})`
+
+**Parameters**:
+- `onMultipleMatch`: Controls behavior when multiple templates match with equal priority:
+  - `"use-last"` (default): Uses the first template after sorting (maintains current behavior where the first template in the array wins).
+  - `"fail"`: Throws an error when multiple templates have equal priority.
+- `warningOnMultipleMatch` (boolean): When `true`, emits a console warning when multiple templates match with equal priority, but continues processing. This is independent of `onMultipleMatch`.
+
+**Examples**:
+```js
+// Strict mode - throw error on ambiguous matches
+this.mode({onMultipleMatch: 'fail'});
+this.applyTemplates('$.items[*]');
+
+// Development mode - warn but continue
+this.mode({warningOnMultipleMatch: true});
+this.applyTemplates('$.items[*]');
+
+// Can combine both (warning comes before error check)
+this.mode({onMultipleMatch: 'fail', warningOnMultipleMatch: true});
+this.applyTemplates('$.items[*]');
+```
+
+**Use cases**:
+- **Strict template matching**: Use `onMultipleMatch: 'fail'` where ambiguous matches should be caught as errors during development rather than silently choosing a template based on array order.
+- **Development debugging**: Use `warningOnMultipleMatch: true` during development to identify potential template conflicts without breaking the transformation.
+
+**Comparison to XSLT**: In XSLT 3.0, `<xsl:mode on-multiple-match="fail">` raises an error when multiple template rules match with the same priority and import precedence, while `<xsl:mode warning-on-multiple-match="yes">` emits a warning. JTLT's `mode()` method provides similar functionality for both JSONPath and XPath-based transformations.
+
 ## Error handling
 
 - Equal priority templates: either last wins (default) or error if `errorOnEqualPriority=true`.

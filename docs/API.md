@@ -129,6 +129,28 @@ joiner._resultDocuments.forEach((result) => {
 
 Note: With `exposeDocuments` enabled on a joiner, `get()` returns an array of `$document` wrappers. In the JSON joiner, the root element is the last entry of `$document.childNodes`; a DOCTYPE may precede it for `xml`/`xhtml`.
 
+### Mode configuration
+
+`mode({onMultipleMatch, warningOnMultipleMatch})` configures template matching behavior (similar to XSLT's `xsl:mode` element with `on-multiple-match` and `warning-on-multiple-match` attributes):
+
+- `onMultipleMatch: "use-last"` (default): When multiple templates match with equal priority, use the first one after sorting (current behavior).
+- `onMultipleMatch: "fail"`: When multiple templates match with equal priority, throw an error.
+- `warningOnMultipleMatch: true`: When multiple templates match with equal priority, emit a console warning but continue processing.
+
+**Example**:
+```js
+this.mode({onMultipleMatch: 'fail'});
+this.applyTemplates('$.items[*]');
+```
+
+Or:
+```js
+this.mode({warningOnMultipleMatch: true});
+this.applyTemplates('$.items[*]');
+```
+
+This is useful for strict template matching where ambiguity should be an error rather than silently choosing a template, or for development where warnings help identify potential issues.
+
 ## Sorting
 
 Path string (ascending text), comparator function, object spec

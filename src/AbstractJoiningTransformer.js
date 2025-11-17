@@ -77,6 +77,14 @@ class AbstractJoiningTransformer {
 
     /** @type {Map<string, string>} */
     this._namespaceAliases = new Map();
+
+    /**
+     * @type {{
+     *   onMultipleMatch?: "use-last"|"fail",
+     *   warningOnMultipleMatch?: boolean
+     * }|undefined}
+     */
+    this._modeConfig = undefined;
   }
 
   /**
@@ -98,6 +106,19 @@ class AbstractJoiningTransformer {
 
     // Use for file extension if making downloadable?
     this.mediaType = cfg.mediaType;
+    return this;
+  }
+
+  /**
+   * Configure mode behavior (similar to xsl:mode).
+   * @param {{
+   *   onMultipleMatch?: "use-last"|"fail",
+   *   warningOnMultipleMatch?: boolean
+   * }} cfg - Mode configuration
+   * @returns {this}
+   */
+  mode (cfg) {
+    this._modeConfig = cfg;
     return this;
   }
 

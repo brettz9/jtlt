@@ -30,7 +30,8 @@ export default [
       'import/unambiguous': 'off',
       'import/no-unresolved': 'off',
       'no-console': 'off',
-      'no-undef': 'off'
+      'no-undef': 'off',
+      'sonarjs/no-global-this': 'off'
     }
   }
 ];

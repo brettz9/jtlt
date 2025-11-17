@@ -1,6 +1,10 @@
 # jtlt CHANGES
 
-## 0.8.0 (unreleased)
+## 0.9.0 (unreleased)
+
+- feat: `mode()` (`onMultipleMatch`, `warningOnMultipleMatch`)
+
+## 0.8.0
 
 - feat: `namespaceAlias` and allow #default for `namespace`
 

@@ -110,7 +110,6 @@
   xsl:merge-action
   xsl:merge-key
   xsl:merge-source
-  xsl:mode
   xsl:next-iteration
   "xsl:next-match",
   xsl:on-completion
@@ -148,6 +147,7 @@
   ~~xsl:map-entry~~
   ~~"xsl:matching-substring",~~
   ~~"xsl:message",~~
+  ~~xsl:mode~~
   ~~"xsl:namespace",~~
   ~~"xsl:namespace-alias",~~
   ~~"xsl:non-matching-substring",~~

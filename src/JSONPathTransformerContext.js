@@ -446,6 +446,49 @@ class JSONPathTransformerContext {
           return (aPriority > bPriority) ? -1 : 1;
         });
 
+        // Check for multiple matches with same priority when mode is configured
+        const joiner = that._getJoiningTransformer();
+        const modeConfig = joiner._modeConfig;
+        if (modeConfig && pathMatchedTemplates.length > 1) {
+          // Check if top two templates have equal priority
+          const topPriority =
+            typeof pathMatchedTemplates[0].priority === 'number'
+              ? pathMatchedTemplates[0].priority
+              : (that._config.specificityPriorityResolver &&
+                pathMatchedTemplates[0].path
+                ? that._config.specificityPriorityResolver(
+                  pathMatchedTemplates[0].path
+                )
+                /* c8 ignore next 2 -- defensive, templates without paths
+                   are already filtered at line 388 */
+                : 0);
+          const secondPriority =
+            typeof pathMatchedTemplates[1].priority === 'number'
+              ? pathMatchedTemplates[1].priority
+              : (that._config.specificityPriorityResolver &&
+                pathMatchedTemplates[1].path
+                ? that._config.specificityPriorityResolver(
+                  pathMatchedTemplates[1].path
+                )
+                /* c8 ignore next 2 -- defensive, templates without paths
+                   are already filtered at line 388 */
+                : 0);
+          if (topPriority === secondPriority) {
+            if (modeConfig.onMultipleMatch === 'fail') {
+              throw new Error(
+                'Multiple templates match with equal priority. ' +
+                'Mode is configured with onMultipleMatch="fail".'
+              );
+            } else if (modeConfig.warningOnMultipleMatch !== false) {
+              // eslint-disable-next-line no-console -- Warning as specified
+              console.warn(
+                'Warning: Multiple templates match with equal priority. ' +
+                'Mode is configured with warningOnMultipleMatch=true.'
+              );
+            }
+          }
+        }
+
         templateObj =
           /** @type {import('./index.js').JSONPathTemplateObject<T>} */ (
             pathMatchedTemplates.shift()
@@ -1754,6 +1797,19 @@ class JSONPathTransformerContext {
    */
   output (cfg) {
     this._getJoiningTransformer().output(cfg);
+    return this;
+  }
+
+  /**
+   * Configure mode behavior (similar to xsl:mode).
+   * @param {{
+   *   onMultipleMatch?: "use-last"|"fail",
+   *   warningOnMultipleMatch?: boolean
+   * }} cfg - Mode configuration
+   * @returns {this}
+   */
+  mode (cfg) {
+    this._getJoiningTransformer().mode(cfg);
     return this;
   }
 
