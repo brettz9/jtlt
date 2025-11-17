@@ -30,6 +30,9 @@ describe('namespaceAlias edge cases', function () {
         joiner.namespace('', 'http://example.com');
       });
       const result = joiner.get();
+      if (Array.isArray(result)) {
+        throw new TypeError('Unexpected array result');
+      }
       const el = /** @type {Element} */ (result.firstChild);
       expect(el.hasAttribute('xmlns')).to.be.true;
       expect(el.getAttribute('xmlns')).to.equal('http://example.com');

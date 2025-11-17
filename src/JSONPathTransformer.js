@@ -19,6 +19,9 @@ class JSONPathTransformer {
     this._config = config;
     /** @type {import('./index.js').JSONPathTemplateObject<T>[]} */
     this.rootTemplates = [];
+    if (!config.templates) {
+      throw new TypeError('config.templates is required');
+    }
     this.templates = config.templates.map(function (template) {
       if (Array.isArray(template)) {
         // Todo: We could allow a third argument (at beginning or

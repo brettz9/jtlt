@@ -62,7 +62,7 @@ import JSONPathTransformer from './JSONPathTransformer.js';
  *   JSONPath
  * @property {(path: string) => number} [specificityPriorityResolver]
  *   Priority resolver function
- * @property {import('./index.js').JSONPathTemplateObject<T>[]} templates
+ * @property {import('./index.js').JSONPathTemplateObject<T>[]} [templates]
  */
 
 /**
@@ -1794,10 +1794,14 @@ class JSONPathTransformerContext {
    * Create an element. Mirrors the joining transformer API so templates can
    * call `this.element()`.
    * @param {string} name - Element name
-   * @param {Record<string, string>} [atts] - Attributes object
-   * @param {any[]} [children] - Child nodes
-   * @param {import('./JSONJoiningTransformer.js').
-   *   SimpleCallback<T>} [cb] - Callback function
+   * @param {Record<string, string>|any[]|
+   *   ((this: JSONPathTransformerContext<T>) => void)} [atts] -
+   *   Attributes object or children or callback
+   * @param {any[]|
+   *   ((this: JSONPathTransformerContext<T>) => void)} [children] -
+   *   Child nodes or callback
+   * @param {(this: JSONPathTransformerContext<T>) => void} [cb] -
+   *   Callback function
    * @param {string[]} [useAttributeSets] - Attribute set names to apply
    * @returns {this}
    */

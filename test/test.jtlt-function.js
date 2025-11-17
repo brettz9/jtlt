@@ -59,10 +59,8 @@ describe('jtlt function wrapper', () => {
         templates: [{
           path: '$.name',
           template (value) {
-            // @ts-expect-error - function as 3rd arg is cb, not children
             this.element('div', {}, function () {
-              // @ts-expect-error - value type
-              this.text(value);
+              this.text(String(value));
             });
           }
         }]
@@ -162,10 +160,8 @@ describe('jtlt function wrapper', () => {
         templates: [{
           path: '$.name',
           template (value) {
-            // @ts-expect-error - function as 3rd arg is cb, not children
             this.element('div', {}, function () {
-              // @ts-expect-error - value type
-              this.text(value);
+              this.text(String(value));
             });
           }
         }]

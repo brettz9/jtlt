@@ -59,6 +59,9 @@ describe('namespaceAlias() method', function () {
         joiner.text('Test');
       });
       const result = joiner.get();
+      if (Array.isArray(result)) {
+        throw new TypeError('Unexpected array result');
+      }
       const el = /** @type {Element} */ (result.firstChild);
       expect(el.hasAttribute('xmlns:ns1')).to.be.true;
       expect(el.getAttribute('xmlns:ns1')).
@@ -76,6 +79,9 @@ describe('namespaceAlias() method', function () {
         joiner.text('Test');
       });
       const result = joiner.get();
+      if (Array.isArray(result)) {
+        throw new TypeError('Unexpected array result');
+      }
       const el = /** @type {Element} */ (result.firstChild);
       expect(el.hasAttribute('xmlns:new')).to.be.true;
       expect(el.getAttribute('xmlns:new')).
@@ -94,6 +100,9 @@ describe('namespaceAlias() method', function () {
         joiner.namespace('b', 'http://example.com/b');
       });
       const result = joiner.get();
+      if (Array.isArray(result)) {
+        throw new TypeError('Unexpected array result');
+      }
       const el = /** @type {Element} */ (result.firstChild);
       expect(el.hasAttribute('xmlns:x')).to.be.true;
       expect(el.getAttribute('xmlns:x')).

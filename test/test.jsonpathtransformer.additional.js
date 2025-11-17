@@ -28,6 +28,15 @@ function runStringTransform (data, templates) {
 }
 
 describe('JSONPathTransformer additional coverage', function () {
+  it('throws if templates config is missing', function () {
+    expect(() => {
+      // @ts-expect-error Testing missing templates
+      return new JSONPathTransformer({
+        data: {}
+      });
+    }).to.throw(TypeError, 'config.templates is required');
+  });
+
   it('throws on duplicate template names in constructor', function () {
     expect(() => {
       // Only constructing should trigger the duplicate name check

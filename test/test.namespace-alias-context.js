@@ -12,6 +12,7 @@ describe('namespaceAlias() via context', function () {
   describe('JSONPathTransformerContext', function () {
     it('should call namespaceAlias on joiner', function () {
       const joiner = new StringJoiningTransformer('');
+      /** @type {JSONPathTransformerContext<"string">} */
       const ctx = new JSONPathTransformerContext({
         data: {test: 'value'},
         joiningTransformer: joiner
@@ -28,6 +29,7 @@ describe('namespaceAlias() via context', function () {
 
     it('should return this for chaining', function () {
       const joiner = new StringJoiningTransformer('');
+      /** @type {JSONPathTransformerContext<"string">} */
       const ctx = new JSONPathTransformerContext({
         data: {test: 'value'},
         joiningTransformer: joiner
@@ -54,7 +56,7 @@ describe('namespaceAlias() via context', function () {
         ctx.namespace('old', 'http://example.com/ns');
       });
 
-      const result = ctx.getOutput();
+      const result = /** @type {DocumentFragment} */ (ctx.getOutput());
       const el = /** @type {Element} */ (result.firstChild);
       expect(el.getAttribute('xmlns:new')).to.equal('http://example.com/ns');
     });
