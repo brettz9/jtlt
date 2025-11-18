@@ -1,5 +1,9 @@
 # jtlt CHANGES
 
+## 0.12.0
+
+- feat: allow `sequence` for this.function
+
 ## 0.11.0
 
 - feat: change `this.function` to `outputFunction` and add new `this.function`

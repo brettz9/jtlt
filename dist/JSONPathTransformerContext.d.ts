@@ -575,7 +575,8 @@ declare class JSONPathTransformerContext<T = "json"> {
      *   name: string,
      *   params?: Array<{name: string, as?: string}>,
      *   as?: string,
-     *   body: (...args: any[]) => any
+     *   body?: (...args: any[]) => any,
+     *   sequence?: string
      * }} cfg - Function configuration
      * @returns {this}
      */
@@ -586,7 +587,8 @@ declare class JSONPathTransformerContext<T = "json"> {
             as?: string;
         }>;
         as?: string;
-        body: (...args: any[]) => any;
+        body?: (...args: any[]) => any;
+        sequence?: string;
     }): this;
     /**
      * Invoke a registered stylesheet function with positional arguments.
