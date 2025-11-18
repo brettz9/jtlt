@@ -117,7 +117,8 @@ class AbstractJoiningTransformer {
      * @type {Map<string, {
      *   name: string,
      *   params: Array<{name: string, as?: string}>,
-     *   body: (...args: any[]) => any,
+     *   body?: (...args: any[]) => any,
+     *   sequence?: string,
      *   returnType?: string
      * }>}
      */
@@ -199,12 +200,13 @@ class AbstractJoiningTransformer {
    *   name: string,
    *   params?: Array<{name: string, as?: string}>,
    *   as?: string,
-   *   body: (...args: any[]) => any
+   *   body?: (...args: any[]) => any,
+   *   sequence?: string
    * }} cfg - Function configuration
    * @returns {this}
    */
   function (cfg) {
-    const {name, params = [], as: returnType, body} = cfg;
+    const {name, params = [], as: returnType, body, sequence} = cfg;
 
     // Validate name has namespace
     if (!name.includes(':') && !name.startsWith('Q{')) {
@@ -213,6 +215,20 @@ class AbstractJoiningTransformer {
         `(use prefix:name or Q{uri}name)`
       );
     }
+
+    // Validate that either body or sequence is provided, but not both
+    /* c8 ignore start -- Defensive validation; child contexts validate first */
+    if (body && sequence) {
+      throw new Error(
+        `Function "${name}" cannot have both 'body' and 'sequence' attributes`
+      );
+    }
+    if (!body && !sequence) {
+      throw new Error(
+        `Function "${name}" must have either 'body' or 'sequence' attribute`
+      );
+    }
+    /* c8 ignore stop */
 
     // Create function key with arity
     const arity = params.length;
@@ -230,6 +246,7 @@ class AbstractJoiningTransformer {
       name,
       params,
       body,
+      sequence,
       returnType
     });
 
@@ -254,6 +271,14 @@ class AbstractJoiningTransformer {
     }
 
     // Invoke function body with arguments
+    /* c8 ignore start -- Defensive check; actualBody always set */
+    if (!functionDef.body) {
+      throw new Error(
+        `Function '${name}' has no body (sequence may not be ` +
+        `supported in this context)`
+      );
+    }
+    /* c8 ignore stop */
     return functionDef.body(...args);
   }
 

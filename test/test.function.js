@@ -953,4 +953,409 @@ describe('function() - XSLT-like stylesheet functions', function () {
       }
     );
   });
+
+  // Tests for sequence attribute
+  describe('sequence attribute', function () {
+    it(
+      'should support sequence instead of body for XPath expressions',
+      (done) => {
+        const dom = new JSDOM('<root/>');
+        // eslint-disable-next-line no-new -- exercising API
+        new JTLT({
+          data: dom.window.document,
+          engineType: 'xpath',
+          xpathVersion: 3.1,
+          outputType: 'dom',
+          templates: [{
+            path: '/',
+            template () {
+              this.function({
+                name: 'f:range',
+                params: [{name: 'n'}],
+                sequence: '1 to xs:integer($n)'
+              });
+
+              this.valueOf({select: 'f:range(5)'});
+            }
+          }],
+          success (result) {
+            try {
+              expect(result.textContent).to.equal('1 2 3 4 5');
+              done();
+            } catch (err) {
+              done(err);
+            }
+          }
+        });
+      }
+    );
+
+    it('should reject function with both body and sequence', (done) => {
+      // eslint-disable-next-line no-new -- exercising API
+      new JTLT({
+        data: {},
+        outputType: 'string',
+        templates: [{
+          path: '$',
+          template () {
+            try {
+              this.function({
+                name: 'f:bad',
+                body: (n) => n * 2,
+                sequence: '$n * 2'
+              });
+              done(new Error('Should have thrown error'));
+            } catch (err) {
+              expect(/** @type {Error} */ (err).message).to.include(
+                'cannot have both'
+              );
+              done();
+            }
+          }
+        }],
+        success () {
+          // No success callback needed - test ends in template
+        }
+      });
+    });
+
+    it('should reject function with both body and sequence (XPath)', (done) => {
+      const dom = new JSDOM('<root/>');
+      // eslint-disable-next-line no-new -- exercising API
+      new JTLT({
+        data: dom.window.document,
+        engineType: 'xpath',
+        xpathVersion: 3.1,
+        outputType: 'dom',
+        templates: [{
+          path: '/',
+          template () {
+            try {
+              this.function({
+                name: 'f:bad',
+                body: (n) => n * 2,
+                sequence: 'xs:integer($n) * 2'
+              });
+              done(new Error('Should have thrown error'));
+            } catch (err) {
+              expect(/** @type {Error} */ (err).message).to.include(
+                'cannot have both'
+              );
+              done();
+            }
+          }
+        }],
+        success () {
+          // No success callback needed - test ends in template
+        }
+      });
+    });
+
+    it('should reject function with neither body nor sequence', (done) => {
+      // eslint-disable-next-line no-new -- exercising API
+      new JTLT({
+        data: {},
+        outputType: 'string',
+        templates: [{
+          path: '$',
+          template () {
+            try {
+              this.function({
+                name: 'f:bad',
+                params: [{name: 'n'}]
+              });
+              done(new Error('Should have thrown error'));
+            } catch (err) {
+              expect(/** @type {Error} */ (err).message).to.include(
+                'must have either'
+              );
+              done();
+            }
+          }
+        }],
+        success () {
+          // No success callback needed - test ends in template
+        }
+      });
+    });
+
+    it('should support sequence with multiple parameters', (done) => {
+      const dom = new JSDOM('<root/>');
+      // eslint-disable-next-line no-new -- exercising API
+      new JTLT({
+        data: dom.window.document,
+        engineType: 'xpath',
+        xpathVersion: 3.1,
+        outputType: 'dom',
+        templates: [{
+          path: '/',
+          template () {
+            this.function({
+              name: 'f:sum-range',
+              params: [{name: 'start'}, {name: 'end'}],
+              sequence: 'sum(xs:integer($start) to xs:integer($end))'
+            });
+
+            this.valueOf({select: 'f:sum-range(1, 10)'});
+          }
+        }],
+        success (result) {
+          try {
+            expect(result.textContent).to.equal('55');
+            done();
+          } catch (err) {
+            done(err);
+          }
+        }
+      });
+    });
+
+    it('should work with fontoxpath XPath 3.1', (done) => {
+      const dom = new JSDOM('<root/>');
+      // eslint-disable-next-line no-new -- exercising API
+      new JTLT({
+        data: dom.window.document,
+        outputType: 'dom',
+        engineType: 'xpath',
+        xpathVersion: 3.1,
+        templates: [{
+          path: '/',
+          template () {
+            this.function({
+              name: 'f:double-sequence',
+              params: [{name: 'n'}],
+              sequence: 'for $i in 1 to xs:integer($n) return $i * 2'
+            });
+
+            this.valueOf({select: 'f:double-sequence(5)'});
+          }
+        }],
+        success (result) {
+          try {
+            expect(result.textContent).to.equal('2 4 6 8 10');
+            done();
+          } catch (err) {
+            done(err);
+          }
+        }
+      });
+    });
+
+    it('should work with JSONPath', (done) => {
+      // eslint-disable-next-line no-new -- exercising API
+      new JTLT({
+        data: {items: [1, 2, 3, 4, 5]},
+        outputType: 'json',
+        templates: [{
+          path: '$',
+          template () {
+            this.function({
+              name: 'f:get-items',
+              params: [],
+              sequence: '$.items'
+            });
+
+            const items = this.invokeFunctionByArity('f:get-items', []);
+            this.object({items});
+          }
+        }],
+        success (result) {
+          try {
+            expect(result).to.deep.equal([{items: [1, 2, 3, 4, 5]}]);
+            done();
+          } catch (err) {
+            done(err);
+          }
+        }
+      });
+    });
+
+    it('should work with complex XPath expressions', (done) => {
+      const dom = new JSDOM('<root/>');
+      // eslint-disable-next-line no-new -- exercising API
+      new JTLT({
+        data: dom.window.document,
+        engineType: 'xpath',
+        xpathVersion: 3.1,
+        outputType: 'dom',
+        templates: [{
+          path: '/',
+          template () {
+            this.function({
+              name: 'f:fibonacci',
+              params: [{name: 'n'}],
+              sequence: 'if ($n <= 1) then $n else f:fibonacci($n - 1) + ' +
+                'f:fibonacci($n - 2)'
+            });
+
+            this.valueOf({select: 'f:fibonacci(10)'});
+          }
+        }],
+        success (result) {
+          try {
+            expect(result.textContent).to.equal('55');
+            done();
+          } catch (err) {
+            done(err);
+          }
+        }
+      });
+    });
+
+    it(
+      'should restore _params after sequence evaluation (JSONPath)',
+      (done) => {
+        // This covers JSONPathTransformerContext.js lines 2004-2006
+        // (finally block restores _params)
+        // eslint-disable-next-line no-new -- exercising API
+        new JTLT({
+          data: {value: 10, items: [1, 2, 3]},
+          outputType: 'json',
+          templates: [{
+            path: '$',
+            template () {
+              // Set up initial _params
+              this._params = {existing: 'value'};
+
+              this.function({
+                name: 'f:get-items',
+                params: [{name: 'x'}],
+                sequence: '$.items'
+              });
+
+              // Call function - should temporarily change _params
+              const result = this.invokeFunctionByArity('f:get-items', [5]);
+
+              // _params should be restored to original value
+              const restored = this._params?.existing === 'value';
+              this.object({result, restored});
+            }
+          }],
+          success (result) {
+            try {
+              const typedResult = /** @type {any[]} */ (result);
+              expect(typedResult[0].restored).to.equal(true);
+              expect(typedResult[0].result).to.deep.equal([1, 2, 3]);
+              done();
+            } catch (err) {
+              done(err);
+            }
+          }
+        });
+      }
+    );
+
+    it('should handle array return from sequence function', (done) => {
+      // This covers XPathTransformerContext.js fontoxpath callback
+      const dom = new JSDOM('<root/>');
+      // eslint-disable-next-line no-new -- exercising API
+      new JTLT({
+        data: dom.window.document,
+        engineType: 'xpath',
+        xpathVersion: 3.1,
+        outputType: 'dom',
+        templates: [{
+          path: '/',
+          template () {
+            // Register a sequence function that returns array already
+            this.function({
+              name: 'f:get-range',
+              params: [{name: 'n'}],
+              as: 'xs:integer*', // Sequence type
+              sequence: '1 to xs:integer($n)' // Returns array from fontoxpath
+            });
+
+            // Call in expression that fontoxpath must evaluate
+            // This forces fontoxpath to use the registered callback
+            const range = this.get('count(Q{urn:f}get-range(3))', false);
+            this.text(`count=${range}`);
+          }
+        }],
+        success (result) {
+          try {
+            expect(result.textContent).to.equal('count=3');
+            done();
+          } catch (err) {
+            done(err);
+          }
+        }
+      });
+    });
+
+    it('should handle regular body function in fontoxpath', (done) => {
+      // This covers XPathTransformerContext.js fontoxpath callback
+      // (regular body function pass through)
+      const dom = new JSDOM('<root/>');
+      // eslint-disable-next-line no-new -- exercising API
+      new JTLT({
+        data: dom.window.document,
+        engineType: 'xpath',
+        xpathVersion: 3.1,
+        outputType: 'dom',
+        templates: [{
+          path: '/',
+          template () {
+            this.function({
+              name: 'math:double',
+              params: [{name: 'n', as: 'xs:integer'}],
+              as: 'xs:integer',
+              body: (n) => n * 2
+            });
+
+            // Use get() with Q{} notation to call fontoxpath directly
+            const result = this.get('Q{urn:math}double(21)', false);
+            this.text(`${result}`);
+          }
+        }],
+        success (result) {
+          try {
+            expect(result.textContent).to.equal('42');
+            done();
+          } catch (err) {
+            done(err);
+          }
+        }
+      });
+    });
+
+    it('should handle sequence with XPath 2.0', (done) => {
+      // This covers XPathTransformerContext.js line 1815
+      // (finally block for XPath 1.0/2.0 sequence evaluation)
+      // Note: XPath 2.0 doesn't support variable binding in sequence,
+      // so we use a literal expression
+      const dom = new JSDOM('<root/>');
+      // eslint-disable-next-line no-new -- exercising API
+      new JTLT({
+        data: dom.window.document,
+        engineType: 'xpath',
+        xpathVersion: 2,
+        outputType: 'dom',
+        templates: [{
+          path: '/',
+          template () {
+            this.function({
+              name: 'f:test-seq',
+              params: [],
+              sequence: '1 to 5'
+            });
+
+            const result = this.invokeFunctionByArity('f:test-seq', []);
+            // XPath 2.0 returns array directly
+            const display = Array.isArray(result)
+              ? result.join(' ')
+              : result;
+            this.text(`${display}`);
+          }
+        }],
+        success (result) {
+          try {
+            expect(result.textContent).to.equal('1 2 3 4 5');
+            done();
+          } catch (err) {
+            done(err);
+          }
+        }
+      });
+    });
+  });
 });

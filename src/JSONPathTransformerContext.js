@@ -1973,12 +1973,59 @@ class JSONPathTransformerContext {
    *   name: string,
    *   params?: Array<{name: string, as?: string}>,
    *   as?: string,
-   *   body: (...args: any[]) => any
+   *   body?: (...args: any[]) => any,
+   *   sequence?: string
    * }} cfg - Function configuration
    * @returns {this}
    */
   function (cfg) {
-    /** @type {any} */ (this._getJoiningTransformer()).function(cfg);
+    const {name, params = [], as: returnType, body, sequence} = cfg;
+
+    // Validate body/sequence mutual exclusion
+    if (body && sequence) {
+      throw new Error(
+        `Function '${name}' cannot have both 'body' and 'sequence' attributes`
+      );
+    }
+    if (!body && !sequence) {
+      throw new Error(
+        `Function '${name}' must have either 'body' or 'sequence' attribute`
+      );
+    }
+
+    // If sequence is provided, create a body function that evaluates it
+    let actualBody = body;
+    if (sequence) {
+      actualBody = (...args) => {
+        // Build variables object from parameters
+        /** @type {Record<string, any>} */
+        const variables = {};
+        params.forEach((param, index) => {
+          if (index < args.length) {
+            variables[param.name] = args[index];
+          }
+        });
+
+        // Evaluate the JSONPath expression with bound variables
+        // Temporarily set _params so expressions can access them
+        const oldParams = this._params;
+        this._params = variables;
+        try {
+          return this.get(sequence, false);
+        } finally {
+          this._params = oldParams;
+        }
+      };
+    }
+
+    // Register with the modified config
+    const modifiedCfg = {
+      name,
+      params,
+      as: returnType,
+      body: actualBody
+    };
+    /** @type {any} */ (this._getJoiningTransformer()).function(modifiedCfg);
     return this;
   }
 
