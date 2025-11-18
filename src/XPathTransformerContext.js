@@ -2,6 +2,7 @@ import xpath2 from 'xpath2.js'; // Runtime JS import; ambient types declared
 // eslint-disable-next-line @stylistic/max-len -- Long
 // xpathVersion: 1 => browser/native XPathEvaluator API; 2 => xpath2.js, 3 => fontoxpath
 import fontoxpath from 'fontoxpath';
+import xsdValidator from 'xsd-validator';
 
 /**
  * @typedef {object} XPathTransformerContextConfig

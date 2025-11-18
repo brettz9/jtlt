@@ -1,4 +1,5 @@
 onlyBuiltDependencies:
   - ejs
   - is-hidden-file
+  - libxmljs
   - unrs-resolver
