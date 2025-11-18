@@ -100,7 +100,6 @@
   xsl:expose
   "xsl:fallback",
   xsl:fork
-  "xsl:function",
   xsl:global-context-item
   "xsl:import",
   "xsl:import-schema",
@@ -117,7 +116,6 @@
   xsl:on-non-empty
   xsl:override
   xsl:package
-  "xsl:param",
   "xsl:perform-sort",
   "xsl:sequence",
   xsl:source-document
@@ -141,6 +139,7 @@
   ~~"xsl:element",~~
   ~~"xsl:for-each",~~
   ~~"xsl:for-each-group",~~
+  ~~"xsl:function",~~
   ~~"xsl:if",~~
   ~~"xsl:key",~~
   ~~xsl:map~~
@@ -155,6 +154,7 @@
   ~~"xsl:otherwise",~~
   ~~"xsl:output",~~
   ~~"xsl:output-character",~~
+  ~~"xsl:param",~~
   ~~"xsl:preserve-space",~~
   ~~"xsl:processing-instruction",~~
   ~~"xsl:result-document",~~
