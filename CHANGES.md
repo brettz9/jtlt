@@ -1,6 +1,6 @@
 # jtlt CHANGES
 
-## ?
+## 0.11.0
 
 - feat: change `this.function` to `outputFunction` and add new `this.function`
 

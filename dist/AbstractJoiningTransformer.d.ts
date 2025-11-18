@@ -147,6 +147,25 @@ declare class AbstractJoiningTransformer<T> {
         namespaceURI: string;
     }>;
     /**
+     * Registered stylesheet functions (similar to xsl:function).
+     * Key format: "namespace:localName#arity".
+     * @type {Map<string, {
+     *   name: string,
+     *   params: Array<{name: string, as?: string}>,
+     *   body: (...args: any[]) => any,
+     *   returnType?: string
+     * }>}
+     */
+    _registeredFunctions: Map<string, {
+        name: string;
+        params: Array<{
+            name: string;
+            as?: string;
+        }>;
+        body: (...args: any[]) => any;
+        returnType?: string;
+    }>;
+    /**
      * @param {JoiningTransformerConfig<T>} cfg - Configuration object
      * @returns {void}
      */
@@ -197,6 +216,33 @@ declare class AbstractJoiningTransformer<T> {
     transform(cfg: {
         excludeResultPrefixes?: string[];
     }): this;
+    /**
+     * Register a stylesheet function (similar to xsl:function).
+     * Functions must have namespaced names and are invoked positionally.
+     * @param {{
+     *   name: string,
+     *   params?: Array<{name: string, as?: string}>,
+     *   as?: string,
+     *   body: (...args: any[]) => any
+     * }} cfg - Function configuration
+     * @returns {this}
+     */
+    function(cfg: {
+        name: string;
+        params?: Array<{
+            name: string;
+            as?: string;
+        }>;
+        as?: string;
+        body: (...args: any[]) => any;
+    }): this;
+    /**
+     * Invoke a registered stylesheet function with positional arguments.
+     * @param {string} name - Function name (with namespace)
+     * @param {any[]} args - Positional arguments
+     * @returns {any} Function return value
+     */
+    invokeFunctionByArity(name: string, args?: any[]): any;
     /**
      * @param {string} name
      * @param {OutputCharacters} outputCharacters

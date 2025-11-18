@@ -189,7 +189,7 @@ declare class StringJoiningTransformer extends AbstractJoiningTransformer<"strin
      * @param {((...args: any[]) => any)|Element} func - Function to stringify
      * @returns {StringJoiningTransformer}
      */
-    function(func: ((...args: any[]) => any) | Element): StringJoiningTransformer;
+    outputFunction(func: ((...args: any[]) => any) | Element): StringJoiningTransformer;
     /**
      * @param {string|Element} elem - Element name or element object
      * @param {ElementAttributes} [atts] - Element attributes

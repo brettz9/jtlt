@@ -124,7 +124,7 @@ declare class DOMJoiningTransformer extends AbstractJoiningTransformer<"dom"> {
      * @param {(...args: any[]) => any} func - Function to stringify
      * @returns {DOMJoiningTransformer}
      */
-    function(func: (...args: any[]) => any): DOMJoiningTransformer;
+    outputFunction(func: (...args: any[]) => any): DOMJoiningTransformer;
     /**
      * @overload
      * @param {Element|string} elName

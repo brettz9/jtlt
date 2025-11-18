@@ -191,7 +191,7 @@ declare class JSONJoiningTransformer extends AbstractJoiningTransformer<"json"> 
      * @param {(...args: any[]) => any} func Function to append.
      * @returns {JSONJoiningTransformer}
      */
-    function(func: (...args: any[]) => any): JSONJoiningTransformer;
+    outputFunction(func: (...args: any[]) => any): JSONJoiningTransformer;
     /**
      * Build a Jamilih-style element JSON array and append to current container.
      * Result form: ['tag', {attr: 'val'}, child1, child2, ...]

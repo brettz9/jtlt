@@ -570,6 +570,32 @@ declare class JSONPathTransformerContext<T = "json"> {
         excludeResultPrefixes?: string[];
     }): this;
     /**
+     * Register a stylesheet function (similar to xsl:function).
+     * @param {{
+     *   name: string,
+     *   params?: Array<{name: string, as?: string}>,
+     *   as?: string,
+     *   body: (...args: any[]) => any
+     * }} cfg - Function configuration
+     * @returns {this}
+     */
+    function(cfg: {
+        name: string;
+        params?: Array<{
+            name: string;
+            as?: string;
+        }>;
+        as?: string;
+        body: (...args: any[]) => any;
+    }): this;
+    /**
+     * Invoke a registered stylesheet function with positional arguments.
+     * @param {string} name - Function name (with namespace)
+     * @param {any[]} args - Positional arguments
+     * @returns {any} Function return value
+     */
+    invokeFunctionByArity(name: string, args?: any[]): any;
+    /**
      * Create an element. Mirrors the joining transformer API so templates can
      * call `this.element()`.
      * @param {string} name - Element name

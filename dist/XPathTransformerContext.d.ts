@@ -465,6 +465,32 @@ declare class XPathTransformerContext {
         excludeResultPrefixes?: string[];
     }): this;
     /**
+     * Register a stylesheet function (similar to xsl:function).
+     * @param {{
+     *   name: string,
+     *   params?: Array<{name: string, as?: string}>,
+     *   as?: string,
+     *   body: (...args: any[]) => any
+     * }} cfg - Function configuration
+     * @returns {this}
+     */
+    function(cfg: {
+        name: string;
+        params?: Array<{
+            name: string;
+            as?: string;
+        }>;
+        as?: string;
+        body: (...args: any[]) => any;
+    }): this;
+    /**
+     * Invoke a registered stylesheet function with positional arguments.
+     * @param {string} name - Function name (with namespace)
+     * @param {any[]} args - Positional arguments
+     * @returns {any} Function return value
+     */
+    invokeFunctionByArity(name: string, args?: any[]): any;
+    /**
      * Append element.
      * @param {string} name Tag name
      * @param {Record<string, string>|any[]|
