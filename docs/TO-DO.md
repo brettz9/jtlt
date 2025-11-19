@@ -23,7 +23,9 @@
     detecting those types from return values (and generic of each
     type like `dom()` and `json()`).
 
-5. Allow, depending on mode, containers to contain containers of other
+5. typeson methods with zodex validation
+
+6. Allow, depending on mode, containers to contain containers of other
     types (e.g., a JS container containing DOM objects, or temporary use
     of a string container, etc.).
 
@@ -32,16 +34,16 @@
     2. Support `appendJSON()`/`appendDOM()` and
         `appendType('json', ...)` (allowing type extensions).
 
-6. Add `appendResult(function () {return result})`.
+7. Add `appendResult(function () {return result})`.
 
-7. Add JSON update functions (equivalent to Xquery Update Facility for
+8. Add JSON update functions (equivalent to Xquery Update Facility for
     XML ([overview](http://www.xmlplease.com/xquery-update))) and create
     JSON serialization (as with XSLT expressed itself in declarative XML)
     so one can submit and evaluate
     through [HTTPQuery](https://github.com/brettz9/httpquery) (and also
     supply to JSONEditor, etc.). Utilize updating by reference.
 
-8. Demo narrowing to subset of JavaScript (as with `jsep`) to make
+9. Demo narrowing to subset of JavaScript (as with `jsep`) to make
     JTLT truly "declarative" as far as freedom from scripting
 
 ## Possible to-dos

@@ -1,5 +1,8 @@
-onlyBuiltDependencies:
-  - ejs
-  - is-hidden-file
-  - libxmljs
-  - unrs-resolver
+allowBuilds:
+  is-hidden-file: true
+  libxmljs: true
+  libxmljs2: true
+  unrs-resolver: true
+
+overrides:
+  "libxmljs": "npm:libxmljs2@^0.35.0"
