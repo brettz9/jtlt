@@ -40,13 +40,13 @@ describe('XPathTransformerContext copy / copyOf', () => {
     const childNodes = /** @type {DocumentFragment} */ (
       frag
     ).childNodes;
-    expect(childNodes.length).to.equal(2);
+    expect(childNodes).to.have.lengthOf(2);
     const shallowClone = childNodes[0];
     const deepClone = childNodes[1];
     // Shallow clone should have no children
-    expect(shallowClone.childNodes.length).to.equal(0);
+    expect(shallowClone.childNodes).to.have.lengthOf(0);
     // Deep clone should retain child
-    expect(deepClone.childNodes.length).to.equal(1);
+    expect(deepClone.childNodes).to.have.lengthOf(1);
     expect(
       deepClone.firstChild && deepClone.firstChild.textContent
     ).to.equal('C');
@@ -72,7 +72,7 @@ describe('XPathTransformerContext copy / copyOf', () => {
     const childNodes = /** @type {DocumentFragment} */ (
       frag
     ).childNodes;
-    expect(childNodes.length).to.equal(2);
+    expect(childNodes).to.have.lengthOf(2);
     expect(childNodes[0].textContent).to.equal('A');
     expect(childNodes[1].textContent).to.equal('B');
   });

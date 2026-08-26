@@ -12,7 +12,9 @@ describe('JSONPathTransformerContext branch coverage', () => {
     // Simulate structuredClone throwing and shallow fallback
     const obj = {a: 1, b: Symbol('s')};
     // Monkey-patch structuredClone to throw
-    const origStructuredClone = globalThis.structuredClone;
+    const origStructuredClone = structuredClone;
+    // eslint-disable-next-line @stylistic/max-len -- Long
+    // eslint-disable-next-line unicorn/no-global-object-property-assignment -- Testing
     globalThis.structuredClone = () => {
       throw new Error('fail');
     };
@@ -22,6 +24,8 @@ describe('JSONPathTransformerContext branch coverage', () => {
       // Should fallback to shallow clone, output should be an object
       expect(typeof ctx.getOutput()).to.equal('object');
     } finally {
+      // eslint-disable-next-line @stylistic/max-len -- Long
+      // eslint-disable-next-line unicorn/no-global-object-property-assignment -- Testing
       globalThis.structuredClone = origStructuredClone;
     }
   });
@@ -101,7 +105,7 @@ describe('JSONPathTransformerContext branch coverage', () => {
       joiningTransformer: new JSONJoiningTransformer(),
       templates: []
     }, []);
-    expect(ctx._formatNumber(Number.NaN, '1')).to.equal('NaN');
+    expect(ctx._formatNumber(NaN, '1')).to.equal('NaN');
   });
 
   it(

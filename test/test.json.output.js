@@ -76,6 +76,7 @@ describe('JSONJoiningTransformer output', () => {
           expect(
             result && typeof result === 'object' &&
             'price' in result && result.price
+          // eslint-disable-next-line sonarjs/no-floating-point-equality -- Ok
           ).to.equal(8.95);
           done();
         } catch (err) {
@@ -182,6 +183,21 @@ describe('JSONJoiningTransformer output', () => {
     expect(Array.isArray(first)).to.equal(false);
     expect(first).to.have.property('$DOCTYPE');
     expect(first.$DOCTYPE.name).to.equal('html');
+  });
+
+  it('skips DTD for xhtml with bareDoctype set to false', () => {
+    const joiner = new JSONJoiningTransformer([], {exposeDocuments: true});
+    joiner.output({method: 'xhtml', bareDoctype: false});
+    joiner.element('html', {}, [], () => {
+      joiner.element('body', {}, [], () => {
+        joiner.text('X');
+      });
+    });
+    const docs = joiner.get();
+    const doc = docs[0];
+    const {childNodes} = doc.$document;
+    const first = childNodes[0];
+    expect(Array.isArray(first)).to.equal(true);
   });
 
   it('includes xmlDecl and DTD for xml in element path', () => {

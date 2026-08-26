@@ -10,109 +10,7 @@ import JSONPathTransformerContext from './JSONPathTransformerContext.js';
  * @template T
  */
 class JSONPathTransformer {
-  /**
-   * @param {import('./JSONPathTransformerContext.js').
-   *   JSONPathTransformerContextConfig<T>} config - Configuration object
-   */
-  constructor (config) {
-    let map = /** @type {Record<string, boolean>} */ ({});
-    this._config = config;
-    /** @type {import('./index.js').JSONPathTemplateObject<T>[]} */
-    this.rootTemplates = [];
-    if (!config.templates) {
-      throw new TypeError('config.templates is required');
-    }
-    this.templates = config.templates.map(function (template) {
-      if (Array.isArray(template)) {
-        // Todo: We could allow a third argument (at beginning or
-        //    end?) to represent template name
-        return /** @type {import('./index.js').JSONPathTemplateObject<T>} */ (
-          {path: template[0], template: template[1]}
-        );
-      }
-      // Normalize 'match' to 'path' for XSLT compatibility
-      if (template.match && !template.path) {
-        return {...template, path: template.match};
-      }
-      return template;
-    });
-    this.templates.forEach((template, i, templates) => {
-      if (template.name && map[template.name]) {
-        throw new Error('Templates must all have different names.');
-      }
-      map[String(template.name)] = true;
-      // Only check for root templates if path is defined
-      if (template.path === '$') {
-        // eslint-disable-next-line unicorn/prefer-spread -- Refactor
-        this.rootTemplates = this.rootTemplates.concat(templates.splice(i, 1));
-      }
-    });
-    map = /** @type {any} */ (null);
-  }
-
-  /**
-   * @returns {void}
-   */
-  _triggerEqualPriorityError () {
-    if (this._config.errorOnEqualPriority) {
-      throw new Error(
-        'You have configured JSONPathTransformer to throw errors on finding ' +
-        'templates of equal priority and these have been found.'
-      );
-    }
-  }
-
-  /**
-   * @param {string} [mode] - Transformation mode
-   * @returns {import('./index.js').ResultType<T>} The transformation result
-   */
-  transform (mode) {
-    const jte = new JSONPathTransformerContext(
-      this._config, this.templates
-    );
-    const len = this.rootTemplates.length;
-    const templateObj = len
-      ? this.rootTemplates.pop()
-      : JSONPathTransformer.DefaultTemplateRules.transformRoot;
-    if (len > 1) {
-      this._triggerEqualPriorityError();
-    }
-    // Set up parameter context for valueOf() access in root template
-    jte._params = {0: jte._contextObj};
-    const ret = /** @type {import('./index.js').JSONPathTemplateObject<T>} */ (
-      templateObj
-    ).template.call(jte, undefined, {mode});
-    if (typeof ret !== 'undefined') {
-      // Will vary by jte._config.outputType
-      // After the undefined check, ret is ResultType<T>
-      const joiner = jte._getJoiningTransformer();
-      if (typeof ret === 'string' ||
-          (typeof ret === 'object' && ret !== null && 'nodeType' in ret)) {
-        joiner.append(/** @type {string|Node} */ (ret));
-      } else {
-        /** @type {import('./JSONJoiningTransformer.js').default} */ (
-          joiner
-        ).append(ret);
-      }
-    }
-    const result = jte.getOutput();
-    return /** @type {import('./index.js').ResultType<T>} */ (result);
-  }
-
-  /**
-   * @param {string} select - JSONPath selector
-   * @returns {string} Absolute JSONPath
-   */
-  static makeJSONPathAbsolute (select) {
-    // See todo in JSONPath to avoid need for '$' (but may still need
-    //   to add ".")
-    return select[0] !== '$'
-      ? ((select[0] === '[' ? '$' : '$.') + select)
-      : select;
-  }
-
   // To-do: Express as JSONPath expressions?
-
   static DefaultTemplateRules = {
     transformRoot: {
       /**
@@ -181,6 +79,109 @@ class JSONPathTransformer {
       }
     }
   };
+
+  /**
+   * @param {string} select - JSONPath selector
+   * @returns {string} Absolute JSONPath
+   */
+  static makeJSONPathAbsolute (select) {
+    // See todo in JSONPath to avoid need for '$' (but may still need
+    //   to add ".")
+    return select[0] !== '$'
+      ? ((select[0] === '[' ? '$' : '$.') + select)
+      : select;
+  }
+
+  /**
+   * @param {import('./JSONPathTransformerContext.js').
+   *   JSONPathTransformerContextConfig<T>} config - Configuration object
+   */
+  constructor (config) {
+    let map = /** @type {Record<string, boolean>} */ ({});
+    this._config = config;
+    /** @type {import('./index.js').JSONPathTemplateObject<T>[]} */
+    this.rootTemplates = [];
+    if (!config.templates) {
+      throw new TypeError('config.templates is required');
+    }
+    this.templates = config.templates.map(function (template) {
+      if (Array.isArray(template)) {
+        // Todo: We could allow a third argument (at beginning or
+        //    end?) to represent template name
+        return /** @type {import('./index.js').JSONPathTemplateObject<T>} */ (
+          {path: template[0], template: template[1]}
+        );
+      }
+      // Normalize 'match' to 'path' for XSLT compatibility
+      if (template.match && !template.path) {
+        return {...template, path: template.match};
+      }
+      return template;
+    });
+    this.templates.forEach((template, i, templates) => {
+      // eslint-disable-next-line @stylistic/max-len -- Long
+      // eslint-disable-next-line unicorn/no-computed-property-existence-check -- Needed
+      if (template.name && template.name in map) {
+        throw new Error('Templates must all have different names.');
+      }
+      map[String(template.name)] = true;
+      // Only check for root templates if path is defined
+      if (template.path === '$') {
+        // eslint-disable-next-line unicorn/prefer-spread -- Refactor
+        this.rootTemplates = this.rootTemplates.concat(templates.splice(i, 1));
+      }
+    });
+    map = /** @type {any} */ (null);
+  }
+
+  /**
+   * @returns {void}
+   */
+  _triggerEqualPriorityError () {
+    if (this._config.errorOnEqualPriority) {
+      throw new Error(
+        'You have configured JSONPathTransformer to throw errors on finding ' +
+        'templates of equal priority and these have been found.'
+      );
+    }
+  }
+
+  /**
+   * @param {string} [mode] - Transformation mode
+   * @returns {import('./index.js').ResultType<T>} The transformation result
+   */
+  transform (mode) {
+    const jte = new JSONPathTransformerContext(
+      this._config, this.templates
+    );
+    const len = this.rootTemplates.length;
+    const templateObj = len
+      ? this.rootTemplates.pop()
+      : JSONPathTransformer.DefaultTemplateRules.transformRoot;
+    if (len > 1) {
+      this._triggerEqualPriorityError();
+    }
+    // Set up parameter context for valueOf() access in root template
+    jte._params = {0: jte._contextObj};
+    const ret = /** @type {import('./index.js').JSONPathTemplateObject<T>} */ (
+      templateObj
+    ).template.call(jte, undefined, {mode});
+    if (typeof ret !== 'undefined') {
+      // Will vary by jte._config.outputType
+      // After the undefined check, ret is ResultType<T>
+      const joiner = jte._getJoiningTransformer();
+      if (typeof ret === 'string' ||
+          (typeof ret === 'object' && ret !== null && 'nodeType' in ret)) {
+        joiner.append(/** @type {string|Node} */ (ret));
+      } else {
+        /** @type {import('./JSONJoiningTransformer.js').default} */ (
+          joiner
+        ).append(ret);
+      }
+    }
+    const result = jte.getOutput();
+    return /** @type {import('./index.js').ResultType<T>} */ (result);
+  }
 }
 
 export default JSONPathTransformer;

@@ -18,6 +18,19 @@ import XPathTransformerContext from './XPathTransformerContext.js';
  * @template T
  */
 class XPathTransformer {
+  static DefaultTemplateRules = {
+    transformRoot: {
+      /**
+       * @param {any} node Node
+       * @param {{mode:string}} cfg Config
+       * @returns {void}
+       */
+      template (node, cfg) {
+        /** @type {any} */ (this).applyTemplates('.', cfg.mode);
+      }
+    }
+  };
+
   /**
    * @param {XPathTransformerConfig<T> &
    *   import('./XPathTransformerContext.js').
@@ -41,7 +54,11 @@ class XPathTransformer {
       return template;
     });
     this.templates.forEach((template) => {
-      if ('name' in template && template.name && map[template.name]) {
+      if ('name' in template && template.name &&
+        // eslint-disable-next-line @stylistic/max-len -- Long
+        // eslint-disable-next-line unicorn/no-computed-property-existence-check -- Desired
+        template.name in map
+      ) {
         /* c8 ignore next 6 -- c8/Istanbul known limitation: arrow function
         * predicates within filter assignments to instance properties are not
         * instrumented. Functionality fully tested via direct assertions on
@@ -97,19 +114,6 @@ class XPathTransformer {
       xte.getOutput()
     );
   }
-
-  static DefaultTemplateRules = {
-    transformRoot: {
-      /**
-       * @param {any} node Node
-       * @param {{mode:string}} cfg Config
-       * @returns {void}
-       */
-      template (node, cfg) {
-        /** @type {any} */ (this).applyTemplates('.', cfg.mode);
-      }
-    }
-  };
 }
 
 export default XPathTransformer;

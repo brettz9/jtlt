@@ -15,22 +15,22 @@ describe('namespaceAlias() method', function () {
       // Empty string prefix is automatically converted to '#default' internally
       joiner.namespaceAlias('', 'ns1');
       joiner.element('root', {}, [], function () {
-        joiner.namespace('', 'http://example.com/ns1');
+        joiner.namespace('', 'https://example.com/ns1');
         joiner.text('Test');
       });
       const result = joiner.get();
-      expect(result).to.include('xmlns:ns1="http://example.com/ns1"');
+      expect(result).to.include('xmlns:ns1="https://example.com/ns1"');
     });
 
     it('should use namespaceAlias with prefixed namespace', function () {
       const joiner = new StringJoiningTransformer('');
       joiner.namespaceAlias('old', 'new');
       joiner.element('root', {}, [], function () {
-        joiner.namespace('old', 'http://example.com/ns');
+        joiner.namespace('old', 'https://example.com/ns');
         joiner.text('Test');
       });
       const result = joiner.get();
-      expect(result).to.include('xmlns:new="http://example.com/ns"');
+      expect(result).to.include('xmlns:new="https://example.com/ns"');
     });
 
     it('should handle multiple namespace aliases', function () {
@@ -38,12 +38,12 @@ describe('namespaceAlias() method', function () {
       joiner.namespaceAlias('a', 'x');
       joiner.namespaceAlias('b', 'y');
       joiner.element('root', {}, [], function () {
-        joiner.namespace('a', 'http://example.com/a');
-        joiner.namespace('b', 'http://example.com/b');
+        joiner.namespace('a', 'https://example.com/a');
+        joiner.namespace('b', 'https://example.com/b');
       });
       const result = joiner.get();
-      expect(result).to.include('xmlns:x="http://example.com/a"');
-      expect(result).to.include('xmlns:y="http://example.com/b"');
+      expect(result).to.include('xmlns:x="https://example.com/a"');
+      expect(result).to.include('xmlns:y="https://example.com/b"');
     });
   });
 
@@ -55,7 +55,7 @@ describe('namespaceAlias() method', function () {
       );
       joiner.namespaceAlias('', 'ns1');
       joiner.element('root', {}, function () {
-        joiner.namespace('', 'http://example.com/ns1');
+        joiner.namespace('', 'https://example.com/ns1');
         joiner.text('Test');
       });
       const result = joiner.get();
@@ -65,7 +65,7 @@ describe('namespaceAlias() method', function () {
       const el = /** @type {Element} */ (result.firstChild);
       expect(el.hasAttribute('xmlns:ns1')).to.be.true;
       expect(el.getAttribute('xmlns:ns1')).
-        to.equal('http://example.com/ns1');
+        to.equal('https://example.com/ns1');
     });
 
     it('should use namespaceAlias with prefixed namespace', function () {
@@ -75,7 +75,7 @@ describe('namespaceAlias() method', function () {
       );
       joiner.namespaceAlias('old', 'new');
       joiner.element('root', {}, function () {
-        joiner.namespace('old', 'http://example.com/ns');
+        joiner.namespace('old', 'https://example.com/ns');
         joiner.text('Test');
       });
       const result = joiner.get();
@@ -85,7 +85,7 @@ describe('namespaceAlias() method', function () {
       const el = /** @type {Element} */ (result.firstChild);
       expect(el.hasAttribute('xmlns:new')).to.be.true;
       expect(el.getAttribute('xmlns:new')).
-        to.equal('http://example.com/ns');
+        to.equal('https://example.com/ns');
     });
 
     it('should handle multiple namespace aliases', function () {
@@ -96,8 +96,8 @@ describe('namespaceAlias() method', function () {
       joiner.namespaceAlias('a', 'x');
       joiner.namespaceAlias('b', 'y');
       joiner.element('root', {}, function () {
-        joiner.namespace('a', 'http://example.com/a');
-        joiner.namespace('b', 'http://example.com/b');
+        joiner.namespace('a', 'https://example.com/a');
+        joiner.namespace('b', 'https://example.com/b');
       });
       const result = joiner.get();
       if (Array.isArray(result)) {
@@ -106,10 +106,10 @@ describe('namespaceAlias() method', function () {
       const el = /** @type {Element} */ (result.firstChild);
       expect(el.hasAttribute('xmlns:x')).to.be.true;
       expect(el.getAttribute('xmlns:x')).
-        to.equal('http://example.com/a');
+        to.equal('https://example.com/a');
       expect(el.hasAttribute('xmlns:y')).to.be.true;
       expect(el.getAttribute('xmlns:y')).
-        to.equal('http://example.com/b');
+        to.equal('https://example.com/b');
     });
   });
 
@@ -118,22 +118,22 @@ describe('namespaceAlias() method', function () {
       const joiner = new JSONJoiningTransformer([]);
       joiner.namespaceAlias('', 'myns');
       joiner.element('root', {}, function () {
-        joiner.namespace('', 'http://example.com');
+        joiner.namespace('', 'https://example.com');
       });
       const result = joiner.get();
       expect(result[0][1].xmlns).to.have.property('myns');
-      expect(result[0][1].xmlns.myns).to.equal('http://example.com');
+      expect(result[0][1].xmlns.myns).to.equal('https://example.com');
     });
 
     it('should use namespaceAlias with prefixed namespace', function () {
       const joiner = new JSONJoiningTransformer([]);
       joiner.namespaceAlias('foo', 'bar');
       joiner.element('root', {}, function () {
-        joiner.namespace('foo', 'http://example.com/foo');
+        joiner.namespace('foo', 'https://example.com/foo');
       });
       const result = joiner.get();
       expect(result[0][1].xmlns).to.have.property('bar');
-      expect(result[0][1].xmlns.bar).to.equal('http://example.com/foo');
+      expect(result[0][1].xmlns.bar).to.equal('https://example.com/foo');
     });
 
     it('should handle multiple namespace aliases', function () {
@@ -141,14 +141,14 @@ describe('namespaceAlias() method', function () {
       joiner.namespaceAlias('a', 'x');
       joiner.namespaceAlias('b', 'y');
       joiner.element('root', {}, function () {
-        joiner.namespace('a', 'http://example.com/a');
-        joiner.namespace('b', 'http://example.com/b');
+        joiner.namespace('a', 'https://example.com/a');
+        joiner.namespace('b', 'https://example.com/b');
       });
       const result = joiner.get();
       expect(result[0][1].xmlns).to.have.property('x');
-      expect(result[0][1].xmlns.x).to.equal('http://example.com/a');
+      expect(result[0][1].xmlns.x).to.equal('https://example.com/a');
       expect(result[0][1].xmlns).to.have.property('y');
-      expect(result[0][1].xmlns.y).to.equal('http://example.com/b');
+      expect(result[0][1].xmlns.y).to.equal('https://example.com/b');
     });
   });
 });

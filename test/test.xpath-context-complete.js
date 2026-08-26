@@ -66,7 +66,7 @@ describe('XPathTransformerContext complete coverage', () => {
       // XPath variables aren't supported in jsdom, so it will throw
       expect(() => ctx.valueOf('$unknownParam')).to.throw(
         Error,
-        /Value should be a node-set|localStorage/v
+        /The result is not a node set|localStorage/v
       );
     });
 
@@ -87,7 +87,7 @@ describe('XPathTransformerContext complete coverage', () => {
       // unsupported variables
       expect(() => ctx.valueOf('$someVar')).to.throw(
         Error,
-        /Value should be a node-set|localStorage/v
+        /The result is not a node set|localStorage/v
       );
     });
 
@@ -108,7 +108,7 @@ describe('XPathTransformerContext complete coverage', () => {
       // $var doesn't exist in params, will throw trying to evaluate as XPath
       expect(() => ctx.valueOf('$missingVar')).to.throw(
         Error,
-        /Value should be a node-set|localStorage/v
+        /The result is not a node set|localStorage/v
       );
     });
   });

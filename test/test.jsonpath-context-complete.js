@@ -67,7 +67,7 @@ describe('JSONPathTransformerContext complete coverage', () => {
       }, []);
       ctx.copy();
       const result = joiner.get();
-      expect(result[0]).to.equal(undefined);
+      expect(result[0]).to.be.undefined;
     });
   });
 

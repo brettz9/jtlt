@@ -94,7 +94,7 @@ describe('DOMJoiningTransformer childNodes argument', () => {
       /** @type {unknown} */ (docsRaw)
     );
     expect(Array.isArray(docs)).to.be.true;
-    expect(docs.length).to.equal(1);
+    expect(docs).to.have.lengthOf(1);
 
     const div = docs[0].documentElement;
     expect(div).to.exist;
@@ -195,7 +195,7 @@ describe('DOMJoiningTransformer childNodes argument', () => {
     );
 
     expect(Array.isArray(docs)).to.be.true;
-    expect(docs.length).to.equal(1);
+    expect(docs).to.have.lengthOf(1);
 
     const root = docs[0].documentElement;
     expect(root.tagName.toLowerCase()).to.equal('root');

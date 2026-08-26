@@ -7,6 +7,7 @@ import AbstractJoiningTransformer from './AbstractJoiningTransformer.js';
  *   encoding?: string,
  *   indent?: boolean,
  *   omitXmlDeclaration?: boolean,
+ *   bareDoctype?: boolean,
  *   doctypePublic?: string,
  *   doctypeSystem?: string,
  *   cdataSectionElements?: string[]
@@ -509,7 +510,7 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
 
       // todo: indent, cdataSectionElements
       const {
-        omitXmlDeclaration, doctypePublic, doctypeSystem, method
+        omitXmlDeclaration, bareDoctype, doctypePublic, doctypeSystem, method
       } = this._outputConfig ?? {};
 
       let xmlDeclaration = '';
@@ -528,18 +529,16 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
       }
       /* c8 ignore stop */
 
-      let doctype = '';
-      if (doctypePublic !== undefined || doctypeSystem !== undefined) {
-        /* c8 ignore start -- nested ternary attribution issue */
-        doctype = `<!DOCTYPE ${elName}${
+      const doctype = bareDoctype ||
+        doctypePublic !== undefined || doctypeSystem !== undefined
+        ? `<!DOCTYPE ${elName}${
           doctypePublic
             ? ` PUBLIC "${doctypePublic}" "${doctypeSystem}"`
             : doctypeSystem
               ? ` SYSTEM "${doctypeSystem}"`
               : ''
-        }>\n`;
-        /* c8 ignore stop */
-      }
+        }>\n`
+        : '';
 
       this._str = xmlDeclaration + doctype + this._str;
       // Document pushing is handled by document() method or get()
@@ -587,7 +586,7 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
     if (useAttributeSets && useAttributeSets.length) {
       const mergedAtts = {};
       useAttributeSets.forEach((setName) => {
-        if (this._attributeSet[setName]) {
+        if (Object.hasOwn(this._attributeSet, setName)) {
           Object.assign(mergedAtts, this._attributeSet[setName]);
         }
       });
@@ -703,6 +702,8 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
           Object.keys(valObj).forEach((att) => {
             this.attribute(
               'data-' + att.replaceAll(
+                // eslint-disable-next-line @stylistic/max-len -- Long
+                // eslint-disable-next-line unicorn/no-unsafe-string-replacement -- Safe
                 camelCase, _makeDatasetAttribute
               ),
               /** @type {string|Record<string, unknown>} */ (valObj[att]),
@@ -733,7 +734,7 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
 
     /** @type {string} */
     const valStr = /** @type {any} */ (val);
-    val = (this._cfg.preEscapedAttributes || avoidAttEscape)
+    val = (avoidAttEscape || this._cfg.preEscapedAttributes)
       ? valStr
       : valStr.replaceAll('&', '&amp;').replaceAll('"', '&quot;');
 
@@ -894,7 +895,7 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
 
     // Reset state for new document
     this.root = undefined;
-    /** @type {OutputConfig} */
+    /** @type {OutputConfig|undefined} */
     this._outputConfig = cfg;
     this._str = '';
     this._openTagState = false;
@@ -929,6 +930,8 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
    */
   _usePropertySets (obj, psName) {
     // Merge named property set from this.propertySets into obj
+    // eslint-disable-next-line @stylistic/max-len -- Long
+    // eslint-disable-next-line unicorn/no-computed-property-existence-check -- TS
     if (this.propertySets && this.propertySets[psName]) {
       return {
         ...obj,

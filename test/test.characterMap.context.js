@@ -160,7 +160,7 @@ describe('characterMap - XPath context', () => {
             /** @type {unknown} */ (result)
           );
           expect(docs).to.be.an('array');
-          expect(docs.length).to.equal(1);
+          expect(docs).to.have.lengthOf(1);
           const el = docs[0].documentElement;
           expect(el.tagName.toLowerCase()).to.equal('result');
           expect(el.textContent).to.equal('(C) (R)');

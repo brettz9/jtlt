@@ -358,7 +358,7 @@ describe('XPathTransformerContext number formatting coverage', () => {
     }, []);
 
     // @ts-expect-error - testing private method
-    const result = ctx._formatNumber(Number.NaN, '1');
+    const result = ctx._formatNumber(NaN, '1');
     expect(result).to.equal('NaN');
   });
 

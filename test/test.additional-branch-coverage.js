@@ -57,11 +57,11 @@ describe('Additional branch coverage', () => {
       );
       joiner.output({method: 'xml'});
       // Element name without colon; xmlns comes from atts
-      joiner.element('root', {xmlns: 'http://test.com'}, () => {
+      joiner.element('root', {xmlns: 'https://test.com'}, () => {
         joiner.text('x');
       });
       const doc = /** @type {XMLDocument} */ (joiner._docs[0]);
-      expect(doc.documentElement.namespaceURI).to.equal('http://test.com');
+      expect(doc.documentElement.namespaceURI).to.equal('https://test.com');
     });
   });
 
@@ -76,8 +76,8 @@ describe('Additional branch coverage', () => {
       const {xmlDeclaration} = doc.$document;
       expect(xmlDeclaration).to.exist;
       expect(xmlDeclaration.standalone).to.equal(true);
-      expect(xmlDeclaration.version).to.equal(undefined);
-      expect(xmlDeclaration.encoding).to.equal(undefined);
+      expect(xmlDeclaration.version).to.be.undefined;
+      expect(xmlDeclaration.encoding).to.be.undefined;
     });
 
     it('xmlDecl with encoding but no version', () => {
@@ -90,7 +90,7 @@ describe('Additional branch coverage', () => {
       const {xmlDeclaration} = doc.$document;
       expect(xmlDeclaration).to.exist;
       expect(xmlDeclaration.encoding).to.equal('ascii');
-      expect(xmlDeclaration.version).to.equal(undefined);
+      expect(xmlDeclaration.version).to.be.undefined;
     });
 
     it('resultDocument with empty _obj array (line 682)', () => {
@@ -191,7 +191,7 @@ describe('Additional branch coverage', () => {
       const doc = /** @type {XMLDocument} */ (joiner._docs[0]);
       // Document created with null namespace when no xmlns provided
       expect(doc.documentElement.nodeName).to.equal('root');
-      expect(doc.documentElement.namespaceURI).to.equal(null);
+      expect(doc.documentElement.namespaceURI).to.be.null;
     });
 
     it('JSON: elementData fallback when _obj is object not array', () => {

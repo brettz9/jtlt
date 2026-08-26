@@ -55,7 +55,9 @@
     JSON file in full, but also for providing schema paths or other identifiers
     so that a transformed/queried subset of a file (or joining of multiple
     files) could point the way for edited contents to be saved back to the
-    correct JSON file and position in the JSON file.
+    correct JSON file and position in the JSON file. Also work with zodexy
+    and extend path expressions in jsonpath-plus to include its types like
+    `@bigint()`.
 
 2. ~~Add a [non-eval PR for JSONPath](https://github.com/s3u/JSONPath/pull/4).~~
     The OR condition (outside of filters) is another important feature as

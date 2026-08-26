@@ -1,7 +1,7 @@
 /* eslint-disable @stylistic/max-len, no-empty-function, no-new
   -- Coverage tests for edge cases */
 // @ts-nocheck
-import {assert} from 'chai';
+import {assert, expect} from 'chai';
 import XSLTStyleJSONPathResolver from '../src/XSLTStyleJSONPathResolver.js';
 import {JSDOM} from 'jsdom';
 import {toJHTMLDOM} from 'jhtml';
@@ -77,7 +77,7 @@ describe('Coverage - additional edge cases', function () {
     it('should handle nonfiniteNumber() in JavaScript mode', function () {
       const jt = new StringJoiningTransformer('', {mode: 'JavaScript'});
       jt.nonfiniteNumber(Infinity);
-      jt.nonfiniteNumber(Number.NaN);
+      jt.nonfiniteNumber(NaN);
       const out = jt.get();
       assert.include(out, 'Infinity');
       assert.include(out, 'NaN');
@@ -210,7 +210,7 @@ describe('Coverage - additional edge cases', function () {
         jt.undefined();
       }, /not allowed unless added in JavaScript mode/v);
       assert.throws(() => {
-        jt.nonfiniteNumber(Number.NaN);
+        jt.nonfiniteNumber(NaN);
       }, /Non-finite numbers are not allowed/v);
       assert.throws(() => {
         jt.outputFunction(function x () {});
@@ -678,7 +678,7 @@ describe('Coverage - additional edge cases', function () {
         success () {}
       });
       jtlt.config.data = undefined;
-      jtlt.config.ajaxData = 'http://example.com/data.json';
+      jtlt.config.ajaxData = 'https://example.com/data.json';
       assert.throws(() => {
         jtlt.transform();
       }, /You must wait/v);
@@ -863,12 +863,12 @@ describe('DOMJoiningTransformer extra', function () {
   });
 
   it('propValue stub does nothing', function () {
-    const {document} = new JSDOM('').window;
-    const jt = new DOMJoiningTransformer(document.createDocumentFragment(), {document});
-    // propValue is a stub, just calling for coverage
-    jt.propValue('key', 'value');
-    // Should not throw
-    assert.ok(true);
+    expect(() => {
+      const {document} = new JSDOM('').window;
+      const jt = new DOMJoiningTransformer(document.createDocumentFragment(), {document});
+      // propValue is a stub, just calling for coverage
+      jt.propValue('key', 'value');
+    }).to.not.throw();
   });
 
   it('attribute() sets attribute on element', function () {

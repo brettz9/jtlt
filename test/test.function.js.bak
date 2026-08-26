@@ -70,12 +70,12 @@ describe('function() - XSLT-like stylesheet functions', function () {
         path: '$',
         template () {
           this.function({
-            name: 'Q{http://example.com}triple',
+            name: 'Q{https://example.com}triple',
             params: [{name: 'n'}],
             body: (n) => n * 3
           });
 
-          const result = this.callFunction('Q{http://example.com}triple', [7]);
+          const result = this.callFunction('Q{https://example.com}triple', [7]);
           this.string(`${result}`);
         }
       }],

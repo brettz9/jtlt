@@ -102,7 +102,7 @@ describe('Final branch coverage for nested conditionals', () => {
       const {xmlDeclaration} = doc.$document;
       expect(xmlDeclaration.version).to.equal('1.1');
       expect(xmlDeclaration.standalone).to.equal(true);
-      expect(xmlDeclaration.encoding).to.equal(undefined);
+      expect(xmlDeclaration.encoding).to.be.undefined;
     });
 
     it('xmlDecl encoding and standalone', () => {
@@ -115,7 +115,7 @@ describe('Final branch coverage for nested conditionals', () => {
       const {xmlDeclaration} = doc.$document;
       expect(xmlDeclaration.encoding).to.equal('ascii');
       expect(xmlDeclaration.standalone).to.equal(true);
-      expect(xmlDeclaration.version).to.equal(undefined);
+      expect(xmlDeclaration.version).to.be.undefined;
     });
 
     it('resultDocument elementData from non-array _obj', () => {

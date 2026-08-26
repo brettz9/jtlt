@@ -424,7 +424,7 @@ class JSONJoiningTransformer extends AbstractJoiningTransformer {
     if (useAttributeSets && useAttributeSets.length) {
       const mergedAtts = {};
       useAttributeSets.forEach((setName) => {
-        if (this._attributeSet[setName]) {
+        if (Object.hasOwn(this._attributeSet, setName)) {
           Object.assign(mergedAtts, this._attributeSet[setName]);
         }
       });
@@ -436,11 +436,10 @@ class JSONJoiningTransformer extends AbstractJoiningTransformer {
       !Array.isArray(attsObj.dataset)
     ) {
       const ds = attsObj.dataset;
-      for (const k in ds) {
-        if (Object.hasOwn(ds, k)) {
-          const dashed = k.replaceAll(camelCase, _makeDatasetAttribute);
-          attsObj['data-' + dashed] = this._replaceCharacterMaps(ds[k]);
-        }
+      for (const [k, val] of Object.entries(ds)) {
+        // eslint-disable-next-line unicorn/no-unsafe-string-replacement -- Safe
+        const dashed = k.replaceAll(camelCase, _makeDatasetAttribute);
+        attsObj['data-' + dashed] = this._replaceCharacterMaps(val);
       }
       delete attsObj.dataset;
     }
@@ -454,9 +453,9 @@ class JSONJoiningTransformer extends AbstractJoiningTransformer {
     }
 
     // Apply character maps to all regular attribute values
-    for (const key in attsObj) {
-      if (Object.hasOwn(attsObj, key) && typeof attsObj[key] === 'string') {
-        attsObj[key] = this._replaceCharacterMaps(attsObj[key]);
+    for (const [key, val] of Object.entries(attsObj)) {
+      if (typeof val === 'string') {
+        attsObj[key] = this._replaceCharacterMaps(val);
       }
     }
 
@@ -493,14 +492,16 @@ class JSONJoiningTransformer extends AbstractJoiningTransformer {
     if (isRoot) {
       // todo: indent, cdataSectionElements
       const {
-        omitXmlDeclaration, doctypePublic, doctypeSystem, method
+        omitXmlDeclaration, bareDoctype, doctypePublic, doctypeSystem, method
       } = this._outputConfig ?? {};
 
-      const dtd = {$DOCTYPE: {
-        name: elementName,
-        publicId: doctypePublic ?? null, // Public ID (optional)
-        systemId: doctypeSystem ?? null // System ID (optional)
-      }};
+      const dtd = bareDoctype !== false
+        ? [{$DOCTYPE: {
+          name: elementName,
+          publicId: doctypePublic ?? null, // Public ID (optional)
+          systemId: doctypeSystem ?? null // System ID (optional)
+        }}]
+        : [];
 
       let xmlDeclaration;
       /* c8 ignore start -- third OR condition short-circuits */
@@ -520,7 +521,7 @@ class JSONJoiningTransformer extends AbstractJoiningTransformer {
       const doc = {$document: {
         ...(xmlDeclaration ? {xmlDeclaration} : {}),
         childNodes: [
-          ...(method === 'xml' || method === 'xhtml' ? [dtd] : []),
+          ...(method === 'xml' || method === 'xhtml' ? dtd : []),
           jmlEl
         ]
       }};
@@ -630,24 +631,25 @@ class JSONJoiningTransformer extends AbstractJoiningTransformer {
       !Array.isArray(val)
     ) {
       const datasetObj = /** @type {Record<string, unknown>} */ (val);
-      for (const k in datasetObj) {
-        if (Object.hasOwn(datasetObj, k)) {
-          const dashed = k.replaceAll(camelCase, _makeDatasetAttribute);
-          attsObj['data-' + dashed] = this._replaceCharacterMaps(
-            /** @type {string} */ (datasetObj[k])
-          );
-        }
+      for (const [k, v] of Object.entries(datasetObj)) {
+        // eslint-disable-next-line unicorn/no-unsafe-string-replacement -- Safe
+        const dashed = k.replaceAll(camelCase, _makeDatasetAttribute);
+        attsObj['data-' + dashed] = this._replaceCharacterMaps(
+          /** @type {string} */ (v)
+        );
       }
       return this;
     }
     if (name === '$a' && Array.isArray(val)) {
       val.forEach((pair) => {
-        if (Array.isArray(pair) && pair.length > 1) {
-          const attrName = String(pair[0]);
-          // Track each ordered attribute
-          this._trackAttributePrefix(attrName);
-          attsObj[attrName] = this._replaceCharacterMaps(pair[1]);
+        if (!(Array.isArray(pair) && pair.length > 1)) {
+          return;
         }
+
+        const attrName = String(pair[0]);
+        // Track each ordered attribute
+        this._trackAttributePrefix(attrName);
+        attsObj[attrName] = this._replaceCharacterMaps(pair[1]);
       });
       return this;
     }
@@ -806,7 +808,7 @@ class JSONJoiningTransformer extends AbstractJoiningTransformer {
       // We have output config but document wasn't pushed to _docs
       // Create the document wrapper manually
       const {
-        omitXmlDeclaration, doctypePublic, doctypeSystem, method
+        omitXmlDeclaration, bareDoctype, doctypePublic, doctypeSystem, method
       } = this._outputConfig;
 
       const elementData = Array.isArray(this._obj) && this._obj.length > 0
@@ -815,11 +817,13 @@ class JSONJoiningTransformer extends AbstractJoiningTransformer {
 
       const elementName = Array.isArray(elementData) ? elementData[0] : 'root';
 
-      const dtd = {$DOCTYPE: {
-        name: elementName,
-        publicId: doctypePublic ?? null,
-        systemId: doctypeSystem ?? null
-      }};
+      const dtd = bareDoctype !== false
+        ? [{$DOCTYPE: {
+          name: elementName,
+          publicId: doctypePublic ?? null,
+          systemId: doctypeSystem ?? null
+        }}]
+        : [];
 
       let xmlDeclaration;
       /* c8 ignore start -- third OR condition short-circuits */
@@ -838,7 +842,7 @@ class JSONJoiningTransformer extends AbstractJoiningTransformer {
       resultDoc = {$document: {
         ...(xmlDeclaration ? {xmlDeclaration} : {}),
         childNodes: [
-          ...(method === 'xml' || method === 'xhtml' ? [dtd] : []),
+          ...(method === 'xml' || method === 'xhtml' ? dtd : []),
           elementData
         ]
       }};
@@ -872,7 +876,7 @@ class JSONJoiningTransformer extends AbstractJoiningTransformer {
    */
   _usePropertySets (obj, psName) {
     // Merge the named property set (if present) into the provided object
-    if (this.propertySets[psName]) {
+    if (Object.hasOwn(this.propertySets, psName)) {
       return Object.assign(obj, this.propertySets[psName]);
     }
     return obj;

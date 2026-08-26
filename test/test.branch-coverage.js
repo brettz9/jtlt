@@ -17,11 +17,11 @@ describe('Branch coverage edge cases', () => {
       );
       joiner.output({method: 'xml'});
       // No colon in element name; hits else branch (xmlns from atts)
-      joiner.element('root', {xmlns: 'http://example.com/ns'}, () => {
+      joiner.element('root', {xmlns: 'https://example.com/ns'}, () => {
         joiner.text('x');
       });
       const doc = /** @type {XMLDocument} */ (joiner._docs[0]);
-      expect(doc.documentElement.namespaceURI).to.equal('http://example.com/ns');
+      expect(doc.documentElement.namespaceURI).to.equal('https://example.com/ns');
     });
 
     it('omitXmlDeclaration undefined with html method (line 220)', () => {
@@ -132,7 +132,7 @@ describe('Branch coverage edge cases', () => {
       const {xmlDeclaration} = doc.$document;
       expect(xmlDeclaration).to.exist;
       expect(xmlDeclaration.encoding).to.equal('utf16');
-      expect(xmlDeclaration.version).to.equal(undefined);
+      expect(xmlDeclaration.version).to.be.undefined;
     });
 
     it('elementData fallback when _obj not array (line 682-684)', () => {

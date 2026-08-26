@@ -283,6 +283,7 @@ joiner.document(() => {
     version: '1.0',
     encoding: 'utf8',
     doctypePublic: '-//W3C//DTD XHTML 1.0//EN',
+    // eslint-disable-next-line unicorn/prefer-https -- Early namespace
     doctypeSystem: 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd'
   });
   joiner.element('html', {xmlns: 'http://www.w3.org/1999/xhtml'}, () => {
@@ -351,6 +352,7 @@ pages.forEach((page) => {
     joiner.output({
       method: 'html',
       doctypePublic: '-//W3C//DTD XHTML 1.0 Strict//EN',
+      // eslint-disable-next-line unicorn/prefer-https -- Early namespace
       doctypeSystem: 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd'
     });
     joiner.element('html', {xmlns: 'http://www.w3.org/1999/xhtml'}, () => {

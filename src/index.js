@@ -13,6 +13,8 @@ let _win;
  * @param {import('jsdom').DOMWindow | typeof globalThis} win
  */
 export const setWindow = (win) => {
+  // eslint-disable-next-line @stylistic/max-len -- Long
+  // eslint-disable-next-line unicorn/no-top-level-assignment-in-function -- Desired
   _win = win;
 };
 
@@ -342,8 +344,7 @@ class JTLT {
    */
   _autoStart (mode) {
     // We wait to set this default as we want to pass in the data
-    this.config.joiningTransformer = this.config.joiningTransformer ||
-      this._createJoiningTransformer();
+    this.config.joiningTransformer ||= this._createJoiningTransformer();
 
     if (this.config.autostart === false) {
       return;
@@ -409,7 +410,7 @@ class JTLT {
         cfg.templates || [cfg.template]
       );
     this.config.errorOnEqualPriority = cfg.errorOnEqualPriority || false;
-    this.config.engine = this.config.engine ||
+    this.config.engine ||=
       /**
        * @param {JTLTOptions &
        *   Required<Pick<JTLTOptions, "joiningTransformer">>} configParam
@@ -433,7 +434,8 @@ class JTLT {
                */
               (configParam)
             );
-          // eslint-disable-next-line sonarjs/no-duplicated-branches -- TS
+          // eslint-disable-next-line @stylistic/max-len -- Long
+          // eslint-disable-next-line sonarjs/no-duplicated-branches, unicorn/no-duplicate-if-branches -- Placeholding
           } else if (outputType === 'json') {
             xt = new (/** @type {typeof XPathTransformer<"json">} */ (
               XPathTransformer
@@ -446,7 +448,8 @@ class JTLT {
                */
               (configParam)
             );
-          // eslint-disable-next-line sonarjs/no-duplicated-branches -- TS
+          // eslint-disable-next-line @stylistic/max-len -- Long
+          // eslint-disable-next-line sonarjs/no-duplicated-branches, unicorn/no-duplicate-if-branches -- Placeholding
           } else {
             xt = new (/** @type {typeof XPathTransformer<"dom">} */ (
               XPathTransformer
@@ -500,13 +503,12 @@ class JTLT {
     // Todo: Let's also, unlike XSLT and the following, give options for
     //   higher priority to absolute fixed paths over recursive descent
     //   and priority to longer paths and lower to wildcard terminal points
-    this.config.specificityPriorityResolver =
-      this.config.specificityPriorityResolver || (function () {
-        const xsjpr = new XSLTStyleJSONPathResolver();
-        return function (/** @type {string} */ path) {
-          return xsjpr.getPriorityBySpecificity(path);
-        };
-      }());
+    this.config.specificityPriorityResolver ||= (function () {
+      const xsjpr = new XSLTStyleJSONPathResolver();
+      return function (/** @type {string} */ path) {
+        return xsjpr.getPriorityBySpecificity(path);
+      };
+    }());
     return this;
   }
 

@@ -71,13 +71,13 @@ describe('function() - XSLT-like stylesheet functions', function () {
         path: '$',
         template () {
           this.function({
-            name: 'Q{http://example.com}triple',
+            name: 'Q{https://example.com}triple',
             params: [{name: 'n'}],
             body: (n) => n * 3
           });
 
           // Call via valueOf - Q{} notation works too
-          this.valueOf({select: 'Q{http://example.com}triple(7)'});
+          this.valueOf({select: 'Q{https://example.com}triple(7)'});
         }
       }],
       success (result) {
@@ -341,7 +341,7 @@ describe('function() - XSLT-like stylesheet functions', function () {
           this.forEach('item', function (item) {
             const value = Number(item.textContent);
             const result = this.invokeFunctionByArity('math:square', [value]);
-            this.string(`${result}`);
+            this.string(String(result));
           });
         }
       }],
@@ -875,7 +875,7 @@ describe('function() - XSLT-like stylesheet functions', function () {
 
             // Call via invokeFunctionByArity directly
             const result = this.invokeFunctionByArity('calc:multiply', [7, 6]);
-            this.text(`${result}`);
+            this.text(String(result));
           }
         }],
         success (result) {
@@ -1304,7 +1304,7 @@ describe('function() - XSLT-like stylesheet functions', function () {
 
             // Use get() with Q{} notation to call fontoxpath directly
             const result = this.get('Q{urn:math}double(21)', false);
-            this.text(`${result}`);
+            this.text(String(result));
           }
         }],
         success (result) {
@@ -1344,7 +1344,7 @@ describe('function() - XSLT-like stylesheet functions', function () {
             const display = Array.isArray(result)
               ? result.join(' ')
               : result;
-            this.text(`${display}`);
+            this.text(String(display));
           }
         }],
         success (result) {

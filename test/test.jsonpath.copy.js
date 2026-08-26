@@ -123,13 +123,17 @@ describe('JSONPathTransformerContext copy/copyOf', () => {
   it('copyOf uses shallow path when structuredClone missing', () => {
     const data = {x: {y: 1}};
     const {ctx, joiner} = makeCtx(data);
-    const oldSC = globalThis.structuredClone;
+    const oldSC = structuredClone;
     // Remove structuredClone to force else branch in initial try
     // @ts-expect-error Testing
+    // eslint-disable-next-line @stylistic/max-len -- Long
+    // eslint-disable-next-line unicorn/no-global-object-property-assignment -- Testing
     globalThis.structuredClone = undefined;
     try {
       ctx.copyOf();
     } finally {
+    // eslint-disable-next-line @stylistic/max-len -- Long
+    // eslint-disable-next-line unicorn/no-global-object-property-assignment -- Testing
       globalThis.structuredClone = oldSC;
     }
     const copied = joiner.get()[0];
@@ -139,12 +143,16 @@ describe('JSONPathTransformerContext copy/copyOf', () => {
   it('copyOf shallow-path covers array when structuredClone missing', () => {
     const data = [1, {y: 2}];
     const {ctx, joiner} = makeCtx(data);
-    const oldSC = globalThis.structuredClone;
+    const oldSC = structuredClone;
     // @ts-expect-error Testing
+    // eslint-disable-next-line @stylistic/max-len -- Long
+    // eslint-disable-next-line unicorn/no-global-object-property-assignment -- Testing
     globalThis.structuredClone = undefined;
     try {
       ctx.copyOf();
     } finally {
+      // eslint-disable-next-line @stylistic/max-len -- Long
+      // eslint-disable-next-line unicorn/no-global-object-property-assignment -- Testing
       globalThis.structuredClone = oldSC;
     }
     const copied = joiner.get()[0];

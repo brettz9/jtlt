@@ -381,13 +381,15 @@ class DOMJoiningTransformer extends AbstractJoiningTransformer {
       // Apply attribute sets if specified
       if (useAttributeSets && useAttributeSets.length) {
         useAttributeSets.forEach((setName) => {
-          if (this._attributeSet[setName]) {
-            for (const att in this._attributeSet[setName]) {
-              if (Object.hasOwn(this._attributeSet[setName], att)) {
-                el.setAttribute(att, this._replaceCharacterMaps(
-                  this._attributeSet[setName][att]
-                ));
-              }
+          if (Object.hasOwn(this._attributeSet, setName)) {
+            // eslint-disable-next-line @stylistic/max-len -- Long
+            // eslint-disable-next-line unicorn/no-unreadable-for-of-expression -- Long
+            for (const [att, attVal] of Object.entries(
+              this._attributeSet[setName]
+            )) {
+              el.setAttribute(att, this._replaceCharacterMaps(
+                attVal
+              ));
             }
           }
         });
@@ -431,13 +433,15 @@ class DOMJoiningTransformer extends AbstractJoiningTransformer {
     // Apply attribute sets if specified
     if (useAttributeSets && useAttributeSets.length) {
       useAttributeSets.forEach((setName) => {
-        if (this._attributeSet[setName]) {
-          for (const att in this._attributeSet[setName]) {
-            if (Object.hasOwn(this._attributeSet[setName], att)) {
-              el.setAttribute(att, this._replaceCharacterMaps(
-                this._attributeSet[setName][att]
-              ));
-            }
+        if (Object.hasOwn(this._attributeSet, setName)) {
+          // eslint-disable-next-line @stylistic/max-len -- Long
+          // eslint-disable-next-line unicorn/no-unreadable-for-of-expression -- Not complex
+          for (const [att, attVal] of Object.entries(
+            this._attributeSet[setName]
+          )) {
+            el.setAttribute(att, this._replaceCharacterMaps(
+              attVal
+            ));
           }
         }
       });
@@ -700,6 +704,8 @@ class DOMJoiningTransformer extends AbstractJoiningTransformer {
    */
   _usePropertySets (obj, psName) {
     // Merge named property set from this.propertySets into obj
+    // eslint-disable-next-line @stylistic/max-len -- Long
+    // eslint-disable-next-line unicorn/no-computed-property-existence-check -- TS
     if (this.propertySets && this.propertySets[psName]) {
       return {
         ...obj,

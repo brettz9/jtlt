@@ -7,11 +7,12 @@
     "allowJs": true,
     "checkJs": true,
     "noEmit": true,
-    "strict": true
+    "strict": true,
+    "types": ["mocha"]
   },
   "include": [
     "*.js", "*.d.ts", "src/**/*.js", "demo/**/*.js", "test/**/*.js",
     "typings/xpath2-js.d.ts"
   ],
-  "exclude": ["node_modules", "./dist/**/*.js", "demo/codemirror.esm.js", "demo/vendor"]
+  "exclude": ["node_modules", "test.js", "./dist/**/*.js", "demo/codemirror.esm.js", "demo/vendor"]
 }

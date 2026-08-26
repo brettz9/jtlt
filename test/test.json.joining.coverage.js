@@ -36,7 +36,7 @@ describe('JSONJoiningTransformer coverage additions', () => {
     // Text nodes represented as ['!', text]
     expect(out[0][1]).to.deep.include.members(['kept']);
     // Ensure the outside text did not append a raw string root element
-    expect(out.length).to.equal(1);
+    expect(out).to.have.lengthOf(1);
   });
 
   it('element() with empty atts and no children', () => {

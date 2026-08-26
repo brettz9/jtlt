@@ -176,19 +176,19 @@ describe('characterMap - DOMJoiningTransformer', () => {
       {document}
     );
     joiner.characterMap('special-chars', [
-      {character: '\u00A9', string: '(C)'},
-      {character: '\u00AE', string: '(R)'}
+      {character: '\u{A9}', string: '(C)'},
+      {character: '\u{AE}', string: '(R)'}
     ]);
     joiner.output({useCharacterMaps: ['special-chars']});
     joiner.element('div', {}, () => {
-      joiner.text('Copyright \u00A9 2024, Registered \u00AE');
+      joiner.text('Copyright \u{A9} 2024, Registered \u{AE}');
     });
     // With output() and root element, result goes to _docs
     const doc = /** @type {XMLDocument} */ (joiner._docs[0]);
     const root = doc.documentElement;
     expect(root.textContent).to.include('Copyright (C) 2024, Registered (R)');
-    expect(root.textContent).to.not.include('\u00A9');
-    expect(root.textContent).to.not.include('\u00AE');
+    expect(root.textContent).to.not.include('\u{A9}');
+    expect(root.textContent).to.not.include('\u{AE}');
   });
 
   it('replaces characters in attribute() when useCharacterMaps is set', () => {
@@ -199,11 +199,11 @@ describe('characterMap - DOMJoiningTransformer', () => {
       {document}
     );
     joiner.characterMap('special-chars', [
-      {character: '\u00A9', string: '(C)'}
+      {character: '\u{A9}', string: '(C)'}
     ]);
     joiner.output({useCharacterMaps: ['special-chars']});
     joiner.element('div', {}, () => {
-      joiner.attribute('title', 'Copyright \u00A9');
+      joiner.attribute('title', 'Copyright \u{A9}');
     });
     const doc = /** @type {XMLDocument} */ (joiner._docs[0]);
     const div = doc.documentElement;
@@ -218,11 +218,11 @@ describe('characterMap - DOMJoiningTransformer', () => {
       {document}
     );
     joiner.characterMap('euro', [
-      {character: '\u20AC', string: 'EUR'}
+      {character: '\u{20AC}', string: 'EUR'}
     ]);
     joiner.output({useCharacterMaps: ['euro']});
-    joiner.element('div', {price: 'Price: 100\u20AC'}, () => {
-      joiner.text('Item costs 100\u20AC');
+    joiner.element('div', {price: 'Price: 100\u{20AC}'}, () => {
+      joiner.text('Item costs 100\u{20AC}');
     });
     const doc = /** @type {XMLDocument} */ (joiner._docs[0]);
     const div = doc.documentElement;
@@ -238,15 +238,15 @@ describe('characterMap - DOMJoiningTransformer', () => {
       {document}
     );
     joiner.characterMap('symbols', [
-      {character: '\u00A9', string: '(C)'}
+      {character: '\u{A9}', string: '(C)'}
     ]);
     joiner.characterMap('more-symbols', [
-      {character: '\u00AE', string: '(R)'},
-      {character: '\u2122', string: '(TM)'}
+      {character: '\u{AE}', string: '(R)'},
+      {character: '\u{2122}', string: '(TM)'}
     ]);
     joiner.output({useCharacterMaps: ['symbols', 'more-symbols']});
     joiner.element('div', {}, () => {
-      joiner.text('\u00A9 \u00AE \u2122');
+      joiner.text('\u{A9} \u{AE} \u{2122}');
     });
     const doc = /** @type {XMLDocument} */ (joiner._docs[0]);
     expect(doc.documentElement.textContent).to.equal('(C) (R) (TM)');
@@ -260,15 +260,15 @@ describe('characterMap - DOMJoiningTransformer', () => {
       {document}
     );
     joiner.characterMap('special-chars', [
-      {character: '\u00A9', string: '(C)'}
+      {character: '\u{A9}', string: '(C)'}
     ]);
     // Note: no output() call with useCharacterMaps
     joiner.element('div', {}, () => {
-      joiner.text('Copyright \u00A9');
+      joiner.text('Copyright \u{A9}');
     });
     const result = joiner.get();
     const frag = /** @type {DocumentFragment} */ (result);
-    expect(frag.textContent).to.include('Copyright \u00A9');
+    expect(frag.textContent).to.include('Copyright \u{A9}');
   });
 
   it('handles empty character map array', () => {

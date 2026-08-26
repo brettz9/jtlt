@@ -55,7 +55,7 @@ describe('resultDocument() method', () => {
       });
 
       expect(joiner._resultDocuments).to.be.an('array');
-      expect(joiner._resultDocuments.length).to.equal(2);
+      expect(joiner._resultDocuments).to.have.lengthOf(2);
 
       // Check first result document
       const result1 = joiner._resultDocuments[0];
@@ -203,7 +203,7 @@ describe('resultDocument() method', () => {
       });
 
       // Verify result document was created
-      expect(joiner._resultDocuments.length).to.equal(1);
+      expect(joiner._resultDocuments).to.have.lengthOf(1);
       expect(joiner._resultDocuments[0].href).to.equal('separate.xml');
 
       // Verify main DOM still has original content
@@ -239,8 +239,8 @@ describe('resultDocument() method', () => {
       const root = result.document.documentElement;
       expect(root.nodeName).to.equal('root');
       expect(root.getAttribute('id')).to.equal('test');
-      expect(root.children.length).to.equal(2);
-      expect(root.children[0].nodeName).to.equal('child1');
+      expect(root.children).to.have.lengthOf(2);
+      expect(root.firstElementChild?.nodeName).to.equal('child1');
       expect(root.children[1].nodeName).to.equal('child2');
     });
   });
@@ -268,7 +268,7 @@ describe('resultDocument() method', () => {
       });
 
       expect(joiner._resultDocuments).to.be.an('array');
-      expect(joiner._resultDocuments.length).to.equal(2);
+      expect(joiner._resultDocuments).to.have.lengthOf(2);
 
       // Check first result document
       const result1 = joiner._resultDocuments[0];
@@ -282,6 +282,35 @@ describe('resultDocument() method', () => {
       expect(result2.href).to.equal('output/doc2.json');
       expect(result2.format).to.equal('xml');
     });
+
+    it(
+      'creates result documents with no doctype with bareDoctype false',
+      () => {
+        const joiner = new JSONJoiningTransformer([]);
+
+        // Create first result document
+        joiner.resultDocument('output/doc1.json', () => {
+          joiner.output({
+            method: 'xml', bareDoctype: false
+          });
+          joiner.element('doc1', {}, [], () => {
+            joiner.text('First document');
+          });
+        });
+
+        expect(joiner._resultDocuments).to.be.an('array');
+        expect(joiner._resultDocuments).to.have.lengthOf(1);
+
+        const result1 = joiner._resultDocuments[0];
+        expect(result1.href).to.equal('output/doc1.json');
+        expect(result1.format).to.equal('xml');
+        expect(result1.document).to.exist;
+        expect(result1.document.$document).to.exist;
+        expect(
+          result1.document.$document.childNodes[0]
+        ).to.not.have.property('$DOCTYPE');
+      }
+    );
 
     it('supports different output formats', () => {
       const joiner = new JSONJoiningTransformer([]);
@@ -345,12 +374,12 @@ describe('resultDocument() method', () => {
         joiner.text('Footer');
       });
 
-      expect(joiner._resultDocuments.length).to.equal(1);
+      expect(joiner._resultDocuments).to.have.lengthOf(1);
       expect(joiner._resultDocuments[0].href).to.equal('separate.json');
 
       // Main array should have two elements
       expect(Array.isArray(joiner._obj)).to.be.true;
-      expect(joiner._obj.length).to.equal(2);
+      expect(joiner._obj).to.have.lengthOf(2);
     });
 
     it('captures nested elements in result documents', () => {
@@ -394,7 +423,7 @@ describe('resultDocument() method', () => {
       expect(res.href).to.equal('simple.json');
       // Without output config, document is raw array/object
       expect(Array.isArray(res.document)).to.equal(true);
-      expect(res.format).to.equal(undefined);
+      expect(res.format).to.be.undefined;
       const el = res.document[0];
       expect(Array.isArray(el)).to.equal(true);
       expect(el[0]).to.equal('simple');
@@ -496,7 +525,7 @@ describe('resultDocument() method', () => {
       });
 
       expect(joiner._resultDocuments).to.be.an('array');
-      expect(joiner._resultDocuments.length).to.equal(2);
+      expect(joiner._resultDocuments).to.have.lengthOf(2);
 
       // Check first result document
       const result1 = joiner._resultDocuments[0];
@@ -559,7 +588,7 @@ describe('resultDocument() method', () => {
         joiner.text('Footer');
       });
 
-      expect(joiner._resultDocuments.length).to.equal(1);
+      expect(joiner._resultDocuments).to.have.lengthOf(1);
       expect(joiner._resultDocuments[0].href).to.equal('separate.xml');
 
       // Main string should contain original content
@@ -629,7 +658,7 @@ describe('resultDocument() method', () => {
         }, {method: 'html'});
       });
 
-      expect(joiner._resultDocuments.length).to.equal(3);
+      expect(joiner._resultDocuments).to.have.lengthOf(3);
 
       joiner._resultDocuments.forEach((result, index) => {
         expect(result.href).to.equal(hrefs[index]);
@@ -663,10 +692,10 @@ describe('resultDocument() method', () => {
       });
 
       // Check that both were created
-      expect(joiner._docs.length).to.equal(1); // document() pushes here
-      expect(
-        joiner._resultDocuments.length
-      ).to.equal(1); // resultDocument() pushes here
+      // document() pushes here
+      expect(joiner._docs).to.have.lengthOf(1);
+      // resultDocument() pushes here
+      expect(joiner._resultDocuments).to.have.lengthOf(1);
 
       expect(joiner._docs[0]).to.include('<regular>');
       expect(joiner._resultDocuments[0].href).to.equal('specific.xml');

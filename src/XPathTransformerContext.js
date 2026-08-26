@@ -2,7 +2,15 @@ import xpath2 from 'xpath2.js'; // Runtime JS import; ambient types declared
 // eslint-disable-next-line @stylistic/max-len -- Long
 // xpathVersion: 1 => browser/native XPathEvaluator API; 2 => xpath2.js, 3 => fontoxpath
 import fontoxpath from 'fontoxpath';
-import xsdValidator from 'xsd-validator';
+// import xsdValidator from 'xsd-validator';
+
+/**
+ * @param {string} string
+ * @returns {string}
+ */
+const escapeRegexReplacement = (string) => {
+  return string.replaceAll('$', '$$$$');
+};
 
 /**
  * @typedef {object} XPathTransformerContextConfig
@@ -28,6 +36,52 @@ import xsdValidator from 'xsd-validator';
  * - errorOnEqualPriority, specificityPriorityResolver (same semantics).
  */
 class XPathTransformerContext {
+  /* c8 ignore start -- static default rules object has spotty function
+   * attribution under coverage; behavior is exercised via applyTemplates */
+  static DefaultTemplateRules = {
+    transformRoot: {
+      /**
+       * @this {XPathTransformerContext}
+       * @param {unknown} node Root node
+       * @param {{mode:string}} cfg Config
+       * @returns {void}
+       */
+      template (node, cfg) {
+        this.applyTemplates('node()', cfg.mode);
+      }
+    },
+    transformElements: {
+      /**
+       * @this {XPathTransformerContext}
+       * @param {unknown} node Element node
+       * @param {{mode?:string}} cfg Config
+       * @returns {void}
+       */
+      template (node, cfg) {
+        this.applyTemplates('node()', cfg.mode);
+      }
+    },
+    transformTextNodes: {
+      /**
+       * @param {{nodeValue:string}} node Text node
+       * @returns {string}
+       */
+      template (node) {
+        return node.nodeValue;
+      }
+    },
+    transformScalars: {
+      /**
+       * @this {XPathTransformerContext}
+       * @returns {XPathTransformerContext}
+       */
+      template () {
+        return this.valueOf({select: '.'});
+      }
+    }
+  };
+  /* c8 ignore stop */
+
   /**
    * @param {XPathTransformerContextConfig} config
    * @param {import('./index.js').
@@ -119,14 +173,17 @@ class XPathTransformerContext {
           // Remove whitespace-only text node children
           const childNodes = [...n.childNodes];
           for (const child of childNodes) {
-            if (child.nodeType === 3) { // Text node
-              /* c8 ignore next 2  -- Branch inside loop already tested by
-                 integration tests; c8 artifact */
-              const text = child.nodeValue || '';
-              // Check if text is whitespace-only
-              if (text.trim() === '') {
-                child.remove();
-              }
+            if (child.nodeType !== 3) {
+              continue;
+            }
+
+            // Text node
+            /* c8 ignore next 2  -- Branch inside loop already tested by
+                integration tests; c8 artifact */
+            const text = child.nodeValue || '';
+            // Check if text is whitespace-only
+            if (text.trim() === '') {
+              child.remove();
             }
           }
         }
@@ -260,7 +317,7 @@ class XPathTransformerContext {
     }
 
     // eslint-disable-next-line @stylistic/max-len -- Long
-    // eslint-disable-next-line import/no-named-as-default-member -- Only as default
+    // // eslint-disable-next-line import/no-named-as-default-member -- Only as default
     const result = fontoxpath.evaluateXPath(
       expr, contextNode, undefined, undefined,
       // Non-deprecated, predictable all results
@@ -322,11 +379,11 @@ class XPathTransformerContext {
   applyTemplates (select, mode) {
     // Initialization similar to JSONPath context
     if (!this._initialized) {
-      select = select || '.';
+      select ||= '.';
       this._currPath = '.'; // Root context indicator
       this._initialized = true;
     } else {
-      select = select || '*';
+      select ||= '*';
     }
     const nodesResult = this._evalXPath(select, true);
     const nodes = /** @type {Node[]} */ (nodesResult);
@@ -486,7 +543,8 @@ class XPathTransformerContext {
                 'Multiple templates match with equal priority. ' +
                 'Mode is configured with onMultipleMatch="fail".'
               );
-            } else if (modeConfig.warningOnMultipleMatch !== false) {
+            }
+            if (modeConfig.warningOnMultipleMatch !== false) {
               // eslint-disable-next-line no-console -- Warning as specified
               console.warn(
                 'Warning: Multiple templates match with equal priority. ' +
@@ -546,7 +604,7 @@ class XPathTransformerContext {
       withParams = name.withParam || withParams;
       ({name} = name);
     }
-    withParams = withParams || /* c8 ignore next */ [];
+    withParams ||= [];
 
     // Store parameters in a temporary context for valueOf() access
     const prevParams = this._params;
@@ -899,37 +957,44 @@ class XPathTransformerContext {
             let stringChar = null;
             let depth = 0;
 
+            /**
+             * @param {string} char
+             */
+            const checkChar = (char) => {
+              switch (char) {
+              case '"':
+              case "'":
+                inString = true;
+                stringChar = char;
+                current += char;
+                break;
+              case '(':
+              case '[':
+                depth++;
+                current += char;
+                break;
+              case ')':
+              case ']':
+                depth--;
+                current += char;
+                break;
+              case ',':
+                if (depth === 0) {
+                  args.push(current.trim());
+                  current = '';
+                } else {
+                  current += char;
+                }
+                break;
+              default:
+                current += char;
+              }
+            };
+
             for (let i = 0; i < argsStr.length; i++) {
               const char = argsStr[i];
               if (!inString) {
-                switch (char) {
-                case '"':
-                case "'":
-                  inString = true;
-                  stringChar = char;
-                  current += char;
-                  break;
-                case '(':
-                case '[':
-                  depth++;
-                  current += char;
-                  break;
-                case ')':
-                case ']':
-                  depth--;
-                  current += char;
-                  break;
-                case ',':
-                  if (depth === 0) {
-                    args.push(current.trim());
-                    current = '';
-                  } else {
-                    current += char;
-                  }
-                  break;
-                default:
-                  current += char;
-                }
+                checkChar(char);
               } else {
                 current += char;
                 if (char === stringChar && argsStr[i - 1] !== '\\') {
@@ -956,7 +1021,7 @@ class XPathTransformerContext {
             // Parameter reference
             if (arg.startsWith('$')) {
               const paramName = arg.slice(1);
-              return this._params && paramName in this._params
+              return this._params && Object.hasOwn(this._params, paramName)
                 ? this._params[paramName]
                 : undefined;
             }
@@ -994,10 +1059,10 @@ class XPathTransformerContext {
         } = match.groups;
         // Evaluate the value expression
         let numValue;
-        if (valueExpr.trim().startsWith('$')) {
+        if (valueExpr.trimStart().startsWith('$')) {
           // Parameter reference
           const paramName = valueExpr.trim().slice(1);
-          numValue = this._params && paramName in this._params
+          numValue = this._params && Object.hasOwn(this._params, paramName)
             ? this._params[paramName]
             : 0;
         } else {
@@ -1025,7 +1090,7 @@ class XPathTransformerContext {
     // Check if this is a parameter reference (starts with $)
     if (selectStr && selectStr.startsWith('$')) {
       const paramName = selectStr.slice(1);
-      if (this._params && paramName in this._params) {
+      if (this._params && Object.hasOwn(this._params, paramName)) {
         val = this._params[paramName];
         // If val is a Node, extract its text content
         if (val && typeof val === 'object' && 'nodeType' in val) {
@@ -1095,6 +1160,7 @@ class XPathTransformerContext {
    * @returns {XPathTransformerContext}
    */
   copyOf (select) {
+    // eslint-disable-next-line no-useless-assignment -- Bug?
     /** @type {Node[]} */ let nodes = [];
     if (select) {
       try {
@@ -1413,7 +1479,7 @@ class XPathTransformerContext {
 
     // Get decimal format symbols if specified
     const symbols = decimalFormatName !== undefined &&
-      decimalFormatName in this.decimalFormats
+      Object.hasOwn(this.decimalFormats, decimalFormatName)
       ? this.decimalFormats[decimalFormatName]
       : undefined;
 
@@ -1454,23 +1520,27 @@ class XPathTransformerContext {
     default: {
       // Use Intl.NumberFormat for decimal formatting if grouping/locale
       //   options are provided
-      let options = {};
-      if (groupingSeparator || groupingSize) {
-        options = {
+      const options = groupingSeparator || groupingSize
+        ? {
           useGrouping: true
-        };
-      }
+        }
+        : {};
+
       try {
         result = new Intl.NumberFormat(loc, options).format(num);
 
         // Apply decimal format symbols if specified
         if (symbols) {
           // Use placeholders to avoid conflicts during replacement
-          const TEMP_GROUP = '\u0000GROUPSEP\u0000';
-          const TEMP_DECIMAL = '\u0000DECIMALSEP\u0000';
+          const TEMP_GROUP = '\u{0}GROUPSEP\u{0}';
+          const TEMP_DECIMAL = '\u{0}DECIMALSEP\u{0}';
 
           // Replace with temporary placeholders first
+          // eslint-disable-next-line @stylistic/max-len -- Long
+          // eslint-disable-next-line unicorn/no-unsafe-string-replacement -- Safe here
           result = result.replaceAll(',', TEMP_GROUP);
+          // eslint-disable-next-line @stylistic/max-len -- Long
+          // eslint-disable-next-line unicorn/no-unsafe-string-replacement -- Safe here
           result = result.replaceAll('.', TEMP_DECIMAL);
 
           // Now replace with actual symbols
@@ -1478,10 +1548,22 @@ class XPathTransformerContext {
             symbols.groupingSeparator || ',';
           const effectiveDecimalSep = symbols.decimalSeparator || '.';
 
-          result = result.replaceAll(TEMP_GROUP, effectiveGroupingSep);
-          result = result.replaceAll(TEMP_DECIMAL, effectiveDecimalSep);
+          result = result.replaceAll(
+            // eslint-disable-next-line @stylistic/max-len -- Long
+            // eslint-disable-next-line unicorn/no-unsafe-string-replacement -- Escaped
+            TEMP_GROUP, escapeRegexReplacement(effectiveGroupingSep)
+          );
+          result = result.replaceAll(
+            // eslint-disable-next-line @stylistic/max-len -- Long
+            // eslint-disable-next-line unicorn/no-unsafe-string-replacement -- Escaped
+            TEMP_DECIMAL, escapeRegexReplacement(effectiveDecimalSep)
+          );
         } else if (groupingSeparator) {
-          result = result.replaceAll(',', groupingSeparator);
+          result = result.replaceAll(
+            // eslint-disable-next-line @stylistic/max-len -- Long
+            // eslint-disable-next-line unicorn/no-unsafe-string-replacement -- Escaped
+            ',', escapeRegexReplacement(groupingSeparator)
+          );
         }
       } catch (e) {
         result = String(num);
@@ -1764,26 +1846,33 @@ class XPathTransformerContext {
     /* c8 ignore stop */
 
     // If sequence is provided, create a body function that evaluates it
-    let actualBody = body;
-    if (sequence) {
-      actualBody = (...args) => {
+    const actualBody = sequence
+      ? (
+        /** @type {any} */
+        ...args
+      ) => {
         // Build variables object from parameters
         /** @type {Record<string, any>} */
         const variables = {};
         params.forEach((param, index) => {
-          if (index < args.length) {
-            let value = args[index];
-            // Convert numbers to integers if they're whole numbers
-            // to avoid xs:double vs xs:integer type mismatches in XPath
-            if (typeof value === 'number' && Number.isInteger(value)) {
-              value = Math.floor(value);
-            }
-            variables[param.name] = value;
+          if (index >= args.length) {
+            return;
           }
+
+          let value = args[index];
+          // Convert numbers to integers if they're whole numbers
+          // to avoid xs:double vs xs:integer type mismatches in XPath
+          // eslint-disable-next-line @stylistic/max-len -- Long
+          // eslint-disable-next-line unicorn/prefer-number-is-safe-integer -- Ok
+          if (typeof value === 'number' && Number.isInteger(value)) {
+            value = Math.floor(value);
+          }
+          variables[param.name] = value;
         });
 
         // Evaluate the XPath expression with bound variables
         const version = this._config.xpathVersion /* c8 ignore next */ ?? 1;
+        // eslint-disable-next-line sonarjs/no-floating-point-equality -- Safe
         if (version === 3.1) {
           // Use fontoxpath for XPath 3.1
           // Create namespace resolver for function prefixes
@@ -1795,14 +1884,14 @@ class XPathTransformerContext {
             }
             return null;
           };
-          // eslint-disable-next-line import/no-named-as-default-member -- OK
+          // // eslint-disable-next-line import/no-named-as-default-member -- OK
           const result = fontoxpath.evaluateXPath(
             sequence,
             null,
             null,
             variables,
             // eslint-disable-next-line @stylistic/max-len -- Long
-            // eslint-disable-next-line import/no-named-as-default-member -- Only as default
+            // // eslint-disable-next-line import/no-named-as-default-member -- Only as default
             fontoxpath.evaluateXPath.ALL_RESULTS_TYPE,
             {namespaceResolver}
           );
@@ -1819,8 +1908,8 @@ class XPathTransformerContext {
         } finally {
           this._params = prevParams;
         }
-      };
-    }
+      }
+      : body;
 
     // Register with the modified config
     const modifiedCfg = {
@@ -1833,6 +1922,7 @@ class XPathTransformerContext {
 
     // Register with fontoxpath for native XPath 3.1 support
     const version = this._config.xpathVersion ?? 1;
+    // eslint-disable-next-line sonarjs/no-floating-point-equality -- Safe
     if (version === 3.1) {
       try {
         // Parse namespace from name
@@ -1860,7 +1950,7 @@ class XPathTransformerContext {
           // Check if return type expects a sequence (ends with * or +)
           const returnsSequence = (/[*+]$/v).test(returnTypeStr);
 
-          // eslint-disable-next-line import/no-named-as-default-member -- OK
+          // // eslint-disable-next-line import/no-named-as-default-member -- OK
           fontoxpath.registerCustomXPathFunction(
             {namespaceURI, localName},
             signature,
@@ -2072,11 +2162,14 @@ class XPathTransformerContext {
     /** @type {Node[]} */
     const nodesArray = /** @type {Node[]} */ (matches);
     for (const m of nodesArray) {
-      if (m && m.nodeType === 1) { // Element
-        const elem = /** @type {Element} */ (m);
-        if (elem.getAttribute(key.use) === value) {
-          return elem;
-        }
+      if (!(m && m.nodeType === 1)) {
+        continue;
+      }
+
+      // Element
+      const elem = /** @type {Element} */ (m);
+      if (elem.getAttribute(key.use) === value) {
+        return elem;
       }
     }
     return this;
@@ -2343,52 +2436,6 @@ class XPathTransformerContext {
 
     return this;
   }
-
-  /* c8 ignore start -- static default rules object has spotty function
-   * attribution under coverage; behavior is exercised via applyTemplates */
-  static DefaultTemplateRules = {
-    transformRoot: {
-      /**
-       * @this {XPathTransformerContext}
-       * @param {unknown} node Root node
-       * @param {{mode:string}} cfg Config
-       * @returns {void}
-       */
-      template (node, cfg) {
-        this.applyTemplates('node()', cfg.mode);
-      }
-    },
-    transformElements: {
-      /**
-       * @this {XPathTransformerContext}
-       * @param {unknown} node Element node
-       * @param {{mode?:string}} cfg Config
-       * @returns {void}
-       */
-      template (node, cfg) {
-        this.applyTemplates('node()', cfg.mode);
-      }
-    },
-    transformTextNodes: {
-      /**
-       * @param {{nodeValue:string}} node Text node
-       * @returns {string}
-       */
-      template (node) {
-        return node.nodeValue;
-      }
-    },
-    transformScalars: {
-      /**
-       * @this {XPathTransformerContext}
-       * @returns {XPathTransformerContext}
-       */
-      template () {
-        return this.valueOf({select: '.'});
-      }
-    }
-  };
-  /* c8 ignore stop */
 }
 
 export default XPathTransformerContext;

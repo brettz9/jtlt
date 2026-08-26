@@ -20,11 +20,11 @@ describe('namespaceAlias() via context', function () {
 
       ctx.namespaceAlias('old', 'new');
       ctx.element('root', function () {
-        ctx.namespace('old', 'http://example.com/ns');
+        ctx.namespace('old', 'https://example.com/ns');
       });
 
       const result = ctx.getOutput();
-      expect(result).to.include('xmlns:new="http://example.com/ns"');
+      expect(result).to.include('xmlns:new="https://example.com/ns"');
     });
 
     it('should return this for chaining', function () {
@@ -53,12 +53,12 @@ describe('namespaceAlias() via context', function () {
 
       ctx.namespaceAlias('old', 'new');
       ctx.element('root', {}, function () {
-        ctx.namespace('old', 'http://example.com/ns');
+        ctx.namespace('old', 'https://example.com/ns');
       });
 
       const result = /** @type {DocumentFragment} */ (ctx.getOutput());
       const el = /** @type {Element} */ (result.firstChild);
-      expect(el.getAttribute('xmlns:new')).to.equal('http://example.com/ns');
+      expect(el.getAttribute('xmlns:new')).to.equal('https://example.com/ns');
     });
 
     it('should return this for chaining', function () {

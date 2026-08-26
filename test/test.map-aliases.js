@@ -1,5 +1,6 @@
 /* eslint-disable @stylistic/max-len, no-new, array-callback-return
   -- Test file for map/mapEntry aliases */
+/* eslint-disable unicorn/no-unused-array-method-return -- Different `map` */
 // @ts-nocheck
 import {assert} from 'chai';
 import {JSDOM} from 'jsdom';

@@ -19,8 +19,8 @@ describe('stylesheet() and transform() methods', function () {
         const joiner = new StringJoiningTransformer('');
         joiner.stylesheet({excludeResultPrefixes: ['unused']});
         joiner.element('root', {}, [], function () {
-          joiner.namespace('unused', 'http://example.com/unused');
-          joiner.namespace('used', 'http://example.com/used');
+          joiner.namespace('unused', 'https://example.com/unused');
+          joiner.namespace('used', 'https://example.com/used');
           joiner.element('used:child');
         });
         const result = joiner.get();
@@ -28,7 +28,7 @@ describe('stylesheet() and transform() methods', function () {
         // Should not include unused namespace
         expect(result).not.to.include('xmlns:unused');
         // Should include used namespace
-        expect(result).to.include('xmlns:used="http://example.com/used"');
+        expect(result).to.include('xmlns:used="https://example.com/used"');
       }
     );
 
@@ -36,23 +36,23 @@ describe('stylesheet() and transform() methods', function () {
       const joiner = new StringJoiningTransformer('');
       joiner.stylesheet({excludeResultPrefixes: ['ns']});
       joiner.element('root', {}, [], function () {
-        joiner.namespace('ns', 'http://example.com/ns');
+        joiner.namespace('ns', 'https://example.com/ns');
         joiner.element('ns:child');
       });
       const result = joiner.get();
 
       // Should include namespace because it's used
-      expect(result).to.include('xmlns:ns="http://example.com/ns"');
+      expect(result).to.include('xmlns:ns="https://example.com/ns"');
     });
 
     it('should work with multiple excluded prefixes', function () {
       const joiner = new StringJoiningTransformer('');
       joiner.stylesheet({excludeResultPrefixes: ['a', 'b', 'c']});
       joiner.element('root', {}, [], function () {
-        joiner.namespace('a', 'http://example.com/a');
-        joiner.namespace('b', 'http://example.com/b');
-        joiner.namespace('c', 'http://example.com/c');
-        joiner.namespace('d', 'http://example.com/d');
+        joiner.namespace('a', 'https://example.com/a');
+        joiner.namespace('b', 'https://example.com/b');
+        joiner.namespace('c', 'https://example.com/c');
+        joiner.namespace('d', 'https://example.com/d');
         joiner.element('d:used');
       });
       const result = joiner.get();
@@ -60,14 +60,14 @@ describe('stylesheet() and transform() methods', function () {
       expect(result).not.to.include('xmlns:a');
       expect(result).not.to.include('xmlns:b');
       expect(result).not.to.include('xmlns:c');
-      expect(result).to.include('xmlns:d="http://example.com/d"');
+      expect(result).to.include('xmlns:d="https://example.com/d"');
     });
 
     it('should support transform() as alias to stylesheet()', function () {
       const joiner = new StringJoiningTransformer('');
       joiner.transform({excludeResultPrefixes: ['unused']});
       joiner.element('root', {}, [], function () {
-        joiner.namespace('unused', 'http://example.com/unused');
+        joiner.namespace('unused', 'https://example.com/unused');
       });
       const result = joiner.get();
 
@@ -87,36 +87,36 @@ describe('stylesheet() and transform() methods', function () {
       const joiner = new StringJoiningTransformer('');
       joiner.stylesheet({excludeResultPrefixes: []});
       joiner.element('root', {}, [], function () {
-        joiner.namespace('ns', 'http://example.com/ns');
+        joiner.namespace('ns', 'https://example.com/ns');
       });
       const result = joiner.get();
 
       // Should include namespace (nothing excluded)
-      expect(result).to.include('xmlns:ns="http://example.com/ns"');
+      expect(result).to.include('xmlns:ns="https://example.com/ns"');
     });
 
     it('should work without excludeResultPrefixes property', function () {
       const joiner = new StringJoiningTransformer('');
       joiner.stylesheet({});
       joiner.element('root', {}, [], function () {
-        joiner.namespace('ns', 'http://example.com/ns');
+        joiner.namespace('ns', 'https://example.com/ns');
       });
       const result = joiner.get();
 
-      expect(result).to.include('xmlns:ns="http://example.com/ns"');
+      expect(result).to.include('xmlns:ns="https://example.com/ns"');
     });
 
     it('should handle default namespace (empty prefix)', function () {
       const joiner = new StringJoiningTransformer('');
       joiner.stylesheet({excludeResultPrefixes: ['']});
       joiner.element('root', {}, [], function () {
-        joiner.namespace('', 'http://example.com/default');
+        joiner.namespace('', 'https://example.com/default');
         joiner.element('child'); // Uses default namespace
       });
       const result = joiner.get();
 
       // Should include default namespace because it's used
-      expect(result).to.include('xmlns="http://example.com/default"');
+      expect(result).to.include('xmlns="https://example.com/default"');
     });
   });
 
@@ -130,8 +130,8 @@ describe('stylesheet() and transform() methods', function () {
         );
         joiner.stylesheet({excludeResultPrefixes: ['unused']});
         joiner.element('root', {}, function () {
-          joiner.namespace('unused', 'http://example.com/unused');
-          joiner.namespace('used', 'http://example.com/used');
+          joiner.namespace('unused', 'https://example.com/unused');
+          joiner.namespace('used', 'https://example.com/used');
           joiner.element('used:child');
         });
         const result = joiner.get();
@@ -145,7 +145,7 @@ describe('stylesheet() and transform() methods', function () {
         // Should have used namespace
         expect(el.hasAttribute('xmlns:used')).to.be.true;
         expect(el.getAttribute('xmlns:used')).
-          to.equal('http://example.com/used');
+          to.equal('https://example.com/used');
       }
     );
 
@@ -156,7 +156,7 @@ describe('stylesheet() and transform() methods', function () {
       );
       joiner.stylesheet({excludeResultPrefixes: ['ns']});
       joiner.element('root', {}, function () {
-        joiner.namespace('ns', 'http://example.com/ns');
+        joiner.namespace('ns', 'https://example.com/ns');
         joiner.element('ns:child');
       });
       const result = joiner.get();
@@ -166,7 +166,7 @@ describe('stylesheet() and transform() methods', function () {
       const el = /** @type {Element} */ (result.firstChild);
 
       expect(el.hasAttribute('xmlns:ns')).to.be.true;
-      expect(el.getAttribute('xmlns:ns')).to.equal('http://example.com/ns');
+      expect(el.getAttribute('xmlns:ns')).to.equal('https://example.com/ns');
     });
 
     it('should support transform() as an alias', function () {
@@ -176,7 +176,7 @@ describe('stylesheet() and transform() methods', function () {
       );
       joiner.transform({excludeResultPrefixes: ['unused']});
       joiner.element('root', {}, function () {
-        joiner.namespace('unused', 'http://example.com/unused');
+        joiner.namespace('unused', 'https://example.com/unused');
       });
       const result = joiner.get();
       if (Array.isArray(result)) {
@@ -194,7 +194,7 @@ describe('stylesheet() and transform() methods', function () {
       );
       joiner.stylesheet({excludeResultPrefixes: ['']});
       joiner.element('root', {}, function () {
-        joiner.namespace('', 'http://example.com/default');
+        joiner.namespace('', 'https://example.com/default');
         joiner.element('child'); // Uses default namespace
       });
       const result = joiner.get();
@@ -205,7 +205,7 @@ describe('stylesheet() and transform() methods', function () {
 
       // Should include default namespace because it's used
       expect(el.hasAttribute('xmlns')).to.be.true;
-      expect(el.getAttribute('xmlns')).to.equal('http://example.com/default');
+      expect(el.getAttribute('xmlns')).to.equal('https://example.com/default');
     });
   });
 
@@ -216,8 +216,8 @@ describe('stylesheet() and transform() methods', function () {
         const joiner = new JSONJoiningTransformer([]);
         joiner.stylesheet({excludeResultPrefixes: ['unused']});
         joiner.element('root', {}, function () {
-          joiner.namespace('unused', 'http://example.com/unused');
-          joiner.namespace('used', 'http://example.com/used');
+          joiner.namespace('unused', 'https://example.com/unused');
+          joiner.namespace('used', 'https://example.com/used');
           joiner.element('used:child');
         });
         const result = joiner.get();
@@ -229,7 +229,7 @@ describe('stylesheet() and transform() methods', function () {
         expect(xmlns).not.to.have.property('unused');
         // Should have used namespace
         expect(xmlns).to.have.property('used');
-        expect(xmlns.used).to.equal('http://example.com/used');
+        expect(xmlns.used).to.equal('https://example.com/used');
       }
     );
 
@@ -237,7 +237,7 @@ describe('stylesheet() and transform() methods', function () {
       const joiner = new JSONJoiningTransformer([]);
       joiner.stylesheet({excludeResultPrefixes: ['ns']});
       joiner.element('root', {}, function () {
-        joiner.namespace('ns', 'http://example.com/ns');
+        joiner.namespace('ns', 'https://example.com/ns');
         joiner.element('ns:child');
       });
       const result = joiner.get();
@@ -246,14 +246,14 @@ describe('stylesheet() and transform() methods', function () {
       const {xmlns} = rootElement[1];
 
       expect(xmlns).to.have.property('ns');
-      expect(xmlns.ns).to.equal('http://example.com/ns');
+      expect(xmlns.ns).to.equal('https://example.com/ns');
     });
 
     it('should support transform() as an alias', function () {
       const joiner = new JSONJoiningTransformer([]);
       joiner.transform({excludeResultPrefixes: ['unused']});
       joiner.element('root', {}, function () {
-        joiner.namespace('unused', 'http://example.com/unused');
+        joiner.namespace('unused', 'https://example.com/unused');
       });
       const result = joiner.get();
 
@@ -267,9 +267,9 @@ describe('stylesheet() and transform() methods', function () {
       const joiner = new JSONJoiningTransformer([]);
       joiner.stylesheet({excludeResultPrefixes: ['a', 'b']});
       joiner.element('root', {}, function () {
-        joiner.namespace('a', 'http://example.com/a');
-        joiner.namespace('b', 'http://example.com/b');
-        joiner.namespace('c', 'http://example.com/c');
+        joiner.namespace('a', 'https://example.com/a');
+        joiner.namespace('b', 'https://example.com/b');
+        joiner.namespace('c', 'https://example.com/c');
         joiner.element('c:used');
       });
       const result = joiner.get();
@@ -286,7 +286,7 @@ describe('stylesheet() and transform() methods', function () {
       const joiner = new JSONJoiningTransformer([]);
       joiner.stylesheet({excludeResultPrefixes: ['']});
       joiner.element('root', {}, function () {
-        joiner.namespace('', 'http://example.com/default');
+        joiner.namespace('', 'https://example.com/default');
         joiner.element('child'); // Uses default namespace
       });
       const result = joiner.get();
@@ -296,7 +296,7 @@ describe('stylesheet() and transform() methods', function () {
 
       // Should include default namespace because it's used
       expect(xmlns).to.have.property('');
-      expect(xmlns['']).to.equal('http://example.com/default');
+      expect(xmlns['']).to.equal('https://example.com/default');
     });
   });
 
@@ -305,8 +305,8 @@ describe('stylesheet() and transform() methods', function () {
       const joiner = new StringJoiningTransformer('');
       joiner.stylesheet({excludeResultPrefixes: ['ns1', 'ns2']});
       joiner.element('root', {}, [], function () {
-        joiner.namespace('ns1', 'http://example.com/ns1');
-        joiner.namespace('ns2', 'http://example.com/ns2');
+        joiner.namespace('ns1', 'https://example.com/ns1');
+        joiner.namespace('ns2', 'https://example.com/ns2');
         joiner.element('ns1:outer', {}, [], function () {
           joiner.element('ns2:inner');
         });
@@ -314,8 +314,8 @@ describe('stylesheet() and transform() methods', function () {
       const result = joiner.get();
 
       // Both should be included because both are used
-      expect(result).to.include('xmlns:ns1="http://example.com/ns1"');
-      expect(result).to.include('xmlns:ns2="http://example.com/ns2"');
+      expect(result).to.include('xmlns:ns1="https://example.com/ns1"');
+      expect(result).to.include('xmlns:ns2="https://example.com/ns2"');
     });
 
     it('should accumulate excluded from multiple calls', function () {
@@ -323,9 +323,9 @@ describe('stylesheet() and transform() methods', function () {
       joiner.stylesheet({excludeResultPrefixes: ['a']});
       joiner.stylesheet({excludeResultPrefixes: ['b']});
       joiner.element('root', {}, [], function () {
-        joiner.namespace('a', 'http://example.com/a');
-        joiner.namespace('b', 'http://example.com/b');
-        joiner.namespace('c', 'http://example.com/c');
+        joiner.namespace('a', 'https://example.com/a');
+        joiner.namespace('b', 'https://example.com/b');
+        joiner.namespace('c', 'https://example.com/c');
       });
       const result = joiner.get();
 
@@ -333,7 +333,7 @@ describe('stylesheet() and transform() methods', function () {
       expect(result).not.to.include('xmlns:a');
       expect(result).not.to.include('xmlns:b');
       // c should be included (not excluded, even though unused)
-      expect(result).to.include('xmlns:c="http://example.com/c"');
+      expect(result).to.include('xmlns:c="https://example.com/c"');
     });
   });
 
@@ -342,26 +342,26 @@ describe('stylesheet() and transform() methods', function () {
       const joiner = new StringJoiningTransformer('');
       joiner.stylesheet({excludeResultPrefixes: ['']});
       joiner.element('root', {}, [], function () {
-        joiner.namespace('', 'http://example.com/default');
+        joiner.namespace('', 'https://example.com/default');
         joiner.element('child');
       });
       const result = joiner.get();
 
       // Default namespace IS included because child element uses it
-      expect(result).to.include('xmlns="http://example.com/default"');
+      expect(result).to.include('xmlns="https://example.com/default"');
     });
 
     it('should exclude unused default namespace', function () {
       const joiner = new StringJoiningTransformer('');
       joiner.stylesheet({excludeResultPrefixes: ['']});
       joiner.element('root', {}, [], function () {
-        joiner.namespace('', 'http://example.com/default');
+        joiner.namespace('', 'https://example.com/default');
         // Don't use any child elements - namespace is truly unused
       });
       const result = joiner.get();
 
       // Should not include unused default namespace
-      expect(result).not.to.include('xmlns="http://example.com/default"');
+      expect(result).not.to.include('xmlns="https://example.com/default"');
     });
 
     it('should flush default namespace in DOM joiner', function () {
@@ -371,7 +371,7 @@ describe('stylesheet() and transform() methods', function () {
       );
       joiner.stylesheet({excludeResultPrefixes: ['']});
       joiner.element('root', {}, function () {
-        joiner.namespace('', 'http://example.com/default');
+        joiner.namespace('', 'https://example.com/default');
         joiner.element('child');
       });
       const result = joiner.get();
@@ -382,14 +382,14 @@ describe('stylesheet() and transform() methods', function () {
 
       // Default namespace IS included because child uses it
       expect(el.hasAttribute('xmlns')).to.be.true;
-      expect(el.getAttribute('xmlns')).to.equal('http://example.com/default');
+      expect(el.getAttribute('xmlns')).to.equal('https://example.com/default');
     });
 
     it('should flush default namespace in JSON joiner', function () {
       const joiner = new JSONJoiningTransformer([]);
       joiner.stylesheet({excludeResultPrefixes: ['']});
       joiner.element('root', {}, function () {
-        joiner.namespace('', 'http://example.com/default');
+        joiner.namespace('', 'https://example.com/default');
         joiner.element('child');
       });
       const result = joiner.get();
@@ -399,7 +399,7 @@ describe('stylesheet() and transform() methods', function () {
 
       // Default namespace IS included because child uses it
       expect(xmlns).to.have.property('');
-      expect(xmlns['']).to.equal('http://example.com/default');
+      expect(xmlns['']).to.equal('https://example.com/default');
     });
 
     it('should handle namespace aliasing with excluded', function () {
@@ -407,13 +407,13 @@ describe('stylesheet() and transform() methods', function () {
       joiner.namespaceAlias('old', 'new');
       joiner.stylesheet({excludeResultPrefixes: ['new']});
       joiner.element('root', {}, [], function () {
-        joiner.namespace('old', 'http://example.com/ns');
+        joiner.namespace('old', 'https://example.com/ns');
         joiner.element('old:child'); // Tracked as 'new' after aliasing
       });
       const result = joiner.get();
 
       // Should be included because aliased prefix 'new' is used
-      expect(result).to.include('xmlns:new="http://example.com/ns"');
+      expect(result).to.include('xmlns:new="https://example.com/ns"');
     });
 
     it(
@@ -424,13 +424,13 @@ describe('stylesheet() and transform() methods', function () {
         joiner.namespaceAlias('temp', '');
         joiner.stylesheet({excludeResultPrefixes: ['']});
         joiner.element('root', {}, [], function () {
-          joiner.namespace('temp', 'http://example.com/default');
+          joiner.namespace('temp', 'https://example.com/default');
           joiner.element('child'); // Uses default namespace
         });
         const result = joiner.get();
 
         // Should include default namespace because it's used
-        expect(result).to.include('xmlns="http://example.com/default"');
+        expect(result).to.include('xmlns="https://example.com/default"');
       }
     );
 
@@ -442,7 +442,7 @@ describe('stylesheet() and transform() methods', function () {
       joiner.namespaceAlias('temp', '');
       joiner.stylesheet({excludeResultPrefixes: ['']});
       joiner.element('root', {}, function () {
-        joiner.namespace('temp', 'http://example.com/default');
+        joiner.namespace('temp', 'https://example.com/default');
         joiner.element('child');
       });
       const result = joiner.get();
@@ -452,7 +452,7 @@ describe('stylesheet() and transform() methods', function () {
       const el = /** @type {Element} */ (result.firstChild);
 
       expect(el.hasAttribute('xmlns')).to.be.true;
-      expect(el.getAttribute('xmlns')).to.equal('http://example.com/default');
+      expect(el.getAttribute('xmlns')).to.equal('https://example.com/default');
     });
 
     it('should handle aliasing to empty string in JSON joiner', function () {
@@ -460,7 +460,7 @@ describe('stylesheet() and transform() methods', function () {
       joiner.namespaceAlias('temp', '');
       joiner.stylesheet({excludeResultPrefixes: ['']});
       joiner.element('root', {}, function () {
-        joiner.namespace('temp', 'http://example.com/default');
+        joiner.namespace('temp', 'https://example.com/default');
         joiner.element('child');
       });
       const result = joiner.get();
@@ -469,7 +469,7 @@ describe('stylesheet() and transform() methods', function () {
       const {xmlns} = rootElement[1];
 
       expect(xmlns).to.have.property('');
-      expect(xmlns['']).to.equal('http://example.com/default');
+      expect(xmlns['']).to.equal('https://example.com/default');
     });
   });
 
@@ -484,7 +484,7 @@ describe('stylesheet() and transform() methods', function () {
 
       ctx.stylesheet({excludeResultPrefixes: ['unused']});
       ctx.element('root', {}, [], function () {
-        ctx.namespace('unused', 'http://example.com/unused');
+        ctx.namespace('unused', 'https://example.com/unused');
       });
 
       const result = ctx.getOutput();
@@ -505,7 +505,7 @@ describe('stylesheet() and transform() methods', function () {
 
         ctx.transform({excludeResultPrefixes: ['unused']});
         ctx.element('root', {}, function () {
-          ctx.namespace('unused', 'http://example.com/unused');
+          ctx.namespace('unused', 'https://example.com/unused');
         });
 
         const result = ctx.getOutput();
@@ -525,7 +525,7 @@ describe('stylesheet() and transform() methods', function () {
 
         ctx.transform({excludeResultPrefixes: ['test']});
         ctx.element('root', {}, [], function () {
-          ctx.namespace('test', 'http://example.com/test');
+          ctx.namespace('test', 'https://example.com/test');
         });
 
         const result = ctx.getOutput();
@@ -539,7 +539,7 @@ describe('stylesheet() and transform() methods', function () {
       const joiner = new StringJoiningTransformer('');
       joiner.stylesheet({excludeResultPrefixes: ['ns']});
       joiner.element('root', {}, [], function () {
-        joiner.namespace('ns', 'http://example.com/ns');
+        joiner.namespace('ns', 'https://example.com/ns');
         joiner.element('item', {}, [], function () {
           joiner.attribute('ns:attr', 'value');
         });
@@ -547,7 +547,7 @@ describe('stylesheet() and transform() methods', function () {
       const result = joiner.get();
 
       // Namespace should be included because prefixed attribute uses it
-      expect(result).to.include('xmlns:ns="http://example.com/ns"');
+      expect(result).to.include('xmlns:ns="https://example.com/ns"');
       expect(result).to.include('ns:attr="value"');
     });
 
@@ -555,10 +555,10 @@ describe('stylesheet() and transform() methods', function () {
       const joiner = new StringJoiningTransformer('');
       joiner.stylesheet({excludeResultPrefixes: ['ns']});
       joiner.element('root', {}, [], function () {
-        joiner.namespace('ns', 'http://example.com/ns');
+        joiner.namespace('ns', 'https://example.com/ns');
         joiner.element('item', {}, [], function () {
           // xmlns:ns itself shouldn't trigger tracking
-          joiner.attribute('xmlns:other', 'http://example.com/other');
+          joiner.attribute('xmlns:other', 'https://example.com/other');
         });
       });
       const result = joiner.get();
@@ -571,7 +571,7 @@ describe('stylesheet() and transform() methods', function () {
       const joiner = new StringJoiningTransformer('');
       joiner.stylesheet({excludeResultPrefixes: ['ns']});
       joiner.element('root', {}, [], function () {
-        joiner.namespace('ns', 'http://example.com/ns');
+        joiner.namespace('ns', 'https://example.com/ns');
         joiner.element('item', {}, [], function () {
           joiner.attribute('plain', 'value');
         });
@@ -592,7 +592,7 @@ describe('stylesheet() and transform() methods', function () {
       // Add something to the pending map
       baseJoiner._pendingNamespaceMap.set('ns', {
         prefix: 'ns',
-        namespaceURI: 'http://example.com/ns'
+        namespaceURI: 'https://example.com/ns'
       });
 
       // Call the base class method directly - it does nothing

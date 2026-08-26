@@ -51,14 +51,14 @@ describe('StringJoiningTransformer complete coverage', () => {
       const joiner = new StringJoiningTransformer('');
       joiner.output({
         method: 'xml',
-        doctypeSystem: 'http://example.com/custom.dtd'
+        doctypeSystem: 'https://example.com/custom.dtd'
       });
       joiner.element('custom', {}, [], () => {
         joiner.text('Test');
       });
       const result = joiner.get();
       expect(result).to.include(
-        '<!DOCTYPE custom SYSTEM "http://example.com/custom.dtd">'
+        '<!DOCTYPE custom SYSTEM "https://example.com/custom.dtd">'
       );
     });
 
@@ -67,7 +67,7 @@ describe('StringJoiningTransformer complete coverage', () => {
       joiner.output({
         method: 'xml',
         doctypePublic: '-//TEST//DTD Test 1.0//EN',
-        doctypeSystem: 'http://example.com/test.dtd'
+        doctypeSystem: 'https://example.com/test.dtd'
       });
       joiner.element('test', {}, [], () => {
         joiner.text('Test');
@@ -75,7 +75,58 @@ describe('StringJoiningTransformer complete coverage', () => {
       const result = joiner.get();
       expect(result).to.include(
         '<!DOCTYPE test PUBLIC "-//TEST//DTD Test 1.0//EN" ' +
-        '"http://example.com/test.dtd">'
+        '"https://example.com/test.dtd">'
+      );
+    });
+
+    it('omits DOCTYPE when neither PUBLIC nor SYSTEM provided', () => {
+      const joiner = new StringJoiningTransformer('');
+      joiner.output({
+        method: 'xml',
+        version: '1.0'
+      });
+      joiner.element('root', {}, [], () => {
+        joiner.text('Test');
+      });
+      const result = joiner.get();
+      expect(result).to.not.include('<!DOCTYPE');
+    });
+  });
+
+  describe('bareDoctype', () => {
+    it(
+      'outputs bare DOCTYPE with bareDoctype when no ' +
+      'systemId or publicId provided',
+      () => {
+        const joiner = new StringJoiningTransformer('');
+        joiner.output({
+          method: 'xml',
+          bareDoctype: true
+        });
+        joiner.element('custom', {}, [], () => {
+          joiner.text('Test');
+        });
+        const result = joiner.get();
+        expect(result).to.include(
+          '<!DOCTYPE custom>'
+        );
+      }
+    );
+
+    it('outputs PUBLIC DOCTYPE when both provided', () => {
+      const joiner = new StringJoiningTransformer('');
+      joiner.output({
+        method: 'xml',
+        doctypePublic: '-//TEST//DTD Test 1.0//EN',
+        doctypeSystem: 'https://example.com/test.dtd'
+      });
+      joiner.element('test', {}, [], () => {
+        joiner.text('Test');
+      });
+      const result = joiner.get();
+      expect(result).to.include(
+        '<!DOCTYPE test PUBLIC "-//TEST//DTD Test 1.0//EN" ' +
+        '"https://example.com/test.dtd">'
       );
     });
 

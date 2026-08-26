@@ -40,7 +40,8 @@ async function processTemplates () {
     // Firefox
     (data.documentElement.localName === 'parsererror' &&
     data.documentElement.namespaceURI ===
-      // eslint-disable-next-line sonarjs/no-clear-text-protocols -- Namespace
+    // eslint-disable-next-line @stylistic/max-len -- Long
+      // eslint-disable-next-line sonarjs/no-clear-text-protocols, unicorn/prefer-https -- Namespace
       'http://www.mozilla.org/newlayout/xml/parsererror.xml') ||
     // Chrome
     data.querySelector('parsererror')

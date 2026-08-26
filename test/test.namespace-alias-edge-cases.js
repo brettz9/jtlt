@@ -13,11 +13,11 @@ describe('namespaceAlias edge cases', function () {
       const joiner = new StringJoiningTransformer('');
       // Don't set any alias, so '#default' stays as '#default'
       joiner.element('root', {}, [], function () {
-        joiner.namespace('', 'http://example.com');
+        joiner.namespace('', 'https://example.com');
       });
       const result = joiner.get();
       // Should be xmlns="..." not xmlns:something="..."
-      expect(result).to.include('xmlns="http://example.com"');
+      expect(result).to.include('xmlns="https://example.com"');
       expect(result).not.to.include('xmlns:');
     });
 
@@ -27,7 +27,7 @@ describe('namespaceAlias edge cases', function () {
         {document}
       );
       joiner.element('root', {}, function () {
-        joiner.namespace('', 'http://example.com');
+        joiner.namespace('', 'https://example.com');
       });
       const result = joiner.get();
       if (Array.isArray(result)) {
@@ -35,7 +35,7 @@ describe('namespaceAlias edge cases', function () {
       }
       const el = /** @type {Element} */ (result.firstChild);
       expect(el.hasAttribute('xmlns')).to.be.true;
-      expect(el.getAttribute('xmlns')).to.equal('http://example.com');
+      expect(el.getAttribute('xmlns')).to.equal('https://example.com');
       // Should not have xmlns:default or similar
       expect(el.hasAttribute('xmlns:default')).to.be.false;
     });
@@ -43,12 +43,12 @@ describe('namespaceAlias edge cases', function () {
     it('JSONJoiningTransformer uses empty string key', function () {
       const joiner = new JSONJoiningTransformer([]);
       joiner.element('root', {}, function () {
-        joiner.namespace('', 'http://example.com');
+        joiner.namespace('', 'https://example.com');
       });
       const result = joiner.get();
       // Empty string key for default namespace
       expect(result[0][1].xmlns).to.have.property('');
-      expect(result[0][1].xmlns['']).to.equal('http://example.com');
+      expect(result[0][1].xmlns['']).to.equal('https://example.com');
     });
   });
 

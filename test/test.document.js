@@ -45,7 +45,7 @@ describe('document() method', () => {
       );
 
       expect(Array.isArray(docs)).to.be.true;
-      expect(docs.length).to.equal(2);
+      expect(docs).to.have.lengthOf(2);
 
       // Check first document
       expect(docs[0].nodeType).to.equal(9); // DOCUMENT_NODE
@@ -82,10 +82,10 @@ describe('document() method', () => {
         /** @type {unknown} */ (joiner.get())
       );
 
-      expect(docs.length).to.equal(1);
+      expect(docs).to.have.lengthOf(1);
       const root = docs[0].documentElement;
       expect(root.nodeName).to.equal('root');
-      expect(root.children.length).to.equal(2);
+      expect(root.children).to.have.lengthOf(2);
       expect(root.children[0].nodeName).to.equal('child1');
       expect(root.children[1].nodeName).to.equal('child2');
     });
@@ -117,7 +117,7 @@ describe('document() method', () => {
         /** @type {unknown} */ (joiner.get())
       );
 
-      expect(docs.length).to.equal(2);
+      expect(docs).to.have.lengthOf(2);
       expect(docs[0].documentElement.nodeName).to.equal('mainDoc');
       expect(docs[1].documentElement.nodeName).to.equal('nestedDoc');
     });
@@ -149,14 +149,14 @@ describe('document() method', () => {
       const docs = joiner.get();
 
       expect(Array.isArray(docs)).to.be.true;
-      expect(docs.length).to.equal(2);
+      expect(docs).to.have.lengthOf(2);
 
       // Check first document structure
       expect(docs[0].$document).to.exist;
       expect(docs[0].$document.childNodes).to.be.an('array');
       expect(
-        docs[0].$document.childNodes.length
-      ).to.equal(2); // DOCTYPE + element
+        docs[0].$document.childNodes
+      ).to.have.lengthOf(2); // DOCTYPE + element
 
       // Check second document structure
       expect(docs[1].$document).to.exist;
@@ -180,7 +180,7 @@ describe('document() method', () => {
 
       const docs = joiner.get();
 
-      expect(docs.length).to.equal(1);
+      expect(docs).to.have.lengthOf(1);
       expect(docs[0].$document).to.exist;
 
       // Extract root element from document
@@ -215,7 +215,7 @@ describe('document() method', () => {
 
       const docs = joiner.get();
 
-      expect(docs.length).to.equal(2);
+      expect(docs).to.have.lengthOf(2);
       // Main document should be preserved
       const mainElement = docs[0].$document.childNodes.find(
         (/** @type {any} */ node) => Array.isArray(node) &&
@@ -265,7 +265,7 @@ describe('document() method', () => {
       const docs = /** @type {string[]} */ (docsRaw);
 
       expect(Array.isArray(docs)).to.be.true;
-      expect(docs.length).to.equal(2);
+      expect(docs).to.have.lengthOf(2);
 
       // Check first document
       expect(docs[0]).to.include('<?xml');
@@ -300,7 +300,7 @@ describe('document() method', () => {
 
       const docs = /** @type {string[]} */ (joiner.get());
 
-      expect(docs.length).to.equal(1);
+      expect(docs).to.have.lengthOf(1);
       expect(docs[0]).to.include('<root id="test">');
       expect(docs[0]).to.include('<child1>');
       expect(docs[0]).to.include('Child 1');
@@ -330,7 +330,7 @@ describe('document() method', () => {
 
       const docs = /** @type {string[]} */ (joiner.get());
 
-      expect(docs.length).to.equal(2);
+      expect(docs).to.have.lengthOf(2);
       expect(docs[0]).to.include('<mainDoc>');
       expect(docs[0]).to.include('Main');
       expect(docs[1]).to.include('<nestedDoc>');
@@ -350,7 +350,7 @@ describe('document() method', () => {
 
       const docs = /** @type {string[]} */ (joiner.get());
 
-      expect(docs.length).to.equal(1);
+      expect(docs).to.have.lengthOf(1);
       expect(docs[0]).to.include('<simpleDoc>');
       expect(docs[0]).to.include('Content');
       // Should not include XML declaration without output() config

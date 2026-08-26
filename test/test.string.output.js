@@ -53,14 +53,14 @@ describe('StringJoiningTransformer output', () => {
     const joiner = new StringJoiningTransformer('');
     joiner.output({
       method: 'xml',
-      doctypeSystem: 'http://example.com/sys.dtd'
+      doctypeSystem: 'https://example.com/sys.dtd'
     });
     joiner.element('root', {}, [], () => {
       joiner.text('X');
     });
     const result = joiner.get();
     expect(result).to.be.a('string');
-    expect(result).to.include('<!DOCTYPE root SYSTEM "http://example.com/sys.dtd">');
+    expect(result).to.include('<!DOCTYPE root SYSTEM "https://example.com/sys.dtd">');
     expect(result).to.include('<root>');
     expect(result).to.include('X');
   });
@@ -73,7 +73,7 @@ describe('StringJoiningTransformer output', () => {
     });
     const docs = joiner.get();
     expect(Array.isArray(docs)).to.equal(true);
-    expect(docs.length).to.equal(1);
+    expect(docs).to.have.lengthOf(1);
     expect(docs[0]).to.include('<doc>Body</doc>');
   });
 

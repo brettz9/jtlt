@@ -217,7 +217,7 @@ describe('Coverage: uncovered functionality', () => {
         path: '$',
         template () {
           const jt = this._config.joiningTransformer;
-          jt.nonfiniteNumber(Number.POSITIVE_INFINITY);
+          jt.nonfiniteNumber(Infinity);
           jt.outputFunction(
             function testFn () {
               return 1;
@@ -249,7 +249,7 @@ describe('Coverage: uncovered functionality', () => {
           path: '$',
           template () {
             const jt = this._config.joiningTransformer;
-            jt.nonfiniteNumber(Number.NaN);
+            jt.nonfiniteNumber(NaN);
           }
         }],
         success () { /* not reached */ }

@@ -2,6 +2,14 @@ import {JSONPath as jsonpath} from 'jsonpath-plus';
 import JSONPathTransformer from './JSONPathTransformer.js';
 
 /**
+ * @param {string} string
+ * @returns {string}
+ */
+const escapeRegexReplacement = (string) => {
+  return string.replaceAll('$', '$$$$');
+};
+
+/**
  * Decimal format symbols for number formatting.
  * @typedef {object} DecimalFormatSymbols
  * @property {string} [decimalSeparator='.'] - Character for decimal point
@@ -232,11 +240,11 @@ class JSONPathTransformerContext {
       select = select.select ?? select;
     }
     if (!this._initialized) {
-      select = select || '$';
+      select ||= '$';
       this._currPath = '$';
       this._initialized = true;
     } else {
-      select = select || '*';
+      select ||= '*';
     }
     // Preserve original selector to support special suffixes (e.g., "$~")
     const originalSelect = /** @type {string} */ (select);
@@ -311,7 +319,7 @@ class JSONPathTransformerContext {
           return Number(order);
         }
         if (Number.isNaN(bn)) {
-          return -1 * order;
+          return -order;
         }
         return (an - bn) * order;
       }
@@ -521,7 +529,8 @@ class JSONPathTransformerContext {
                 'Multiple templates match with equal priority. ' +
                 'Mode is configured with onMultipleMatch="fail".'
               );
-            } else if (modeConfig.warningOnMultipleMatch !== false) {
+            }
+            if (modeConfig.warningOnMultipleMatch !== false) {
               // eslint-disable-next-line no-console -- Warning as specified
               console.warn(
                 'Warning: Multiple templates match with equal priority. ' +
@@ -598,7 +607,7 @@ class JSONPathTransformerContext {
       withParams = name.withParam || withParams;
       ({name} = name);
     }
-    withParams = withParams || [];
+    withParams ||= [];
 
     // Store parameters in a temporary context for valueOf() access
     const prevParams = this._params;
@@ -706,7 +715,7 @@ class JSONPathTransformerContext {
           return Number(order);
         }
         if (Number.isNaN(bn)) {
-          return -1 * order;
+          return -order;
         }
         return (an - bn) * order;
       }
@@ -1062,7 +1071,7 @@ class JSONPathTransformerContext {
           return Number(order);
         }
         if (Number.isNaN(bn)) {
-          return -1 * order;
+          return -order;
         }
         return (an - bn) * order;
       }
@@ -1153,7 +1162,7 @@ class JSONPathTransformerContext {
               // Check if it's a parameter reference ($param, not $.jsonpath)
               if (trimmed.startsWith('$') && !trimmed.startsWith('$.')) {
                 const paramName = trimmed.slice(1);
-                return this._params && paramName in this._params
+                return this._params && Object.hasOwn(this._params, paramName)
                   ? this._params[paramName]
                   : undefined;
               }
@@ -1190,11 +1199,11 @@ class JSONPathTransformerContext {
           } = match.groups;
           // Evaluate the value expression
           let numValue;
-          if (valueExpr.trim().startsWith('$') &&
+          if (valueExpr.trimStart().startsWith('$') &&
               !valueExpr.includes('.') && !valueExpr.includes('[')) {
             // Parameter reference (no path components)
             const paramName = valueExpr.trim().slice(1);
-            numValue = this._params && paramName in this._params
+            numValue = this._params && Object.hasOwn(this._params, paramName)
               ? this._params[paramName]
               : 0;
           } else {
@@ -1224,7 +1233,7 @@ class JSONPathTransformerContext {
       // Check if this is a parameter reference (starts with $)
       if (selectStr && selectStr.startsWith('$')) {
         const paramName = selectStr.slice(1);
-        result = (this._params && paramName in this._params)
+        result = (this._params && Object.hasOwn(this._params, paramName))
           ? this._params[paramName]
           : this.get(/** @type {string} */ (selectStr), false);
       } else {
@@ -1406,8 +1415,8 @@ class JSONPathTransformerContext {
          * vary across environments; behavior covered by tests. */
         // structuredClone failed (e.g., Symbols); if any functions present
         // on own enumerable string-keyed properties, preserve via shallow.
-        for (const k of Object.keys(val)) {
-          const v = /** @type {any} */ (val)[k];
+        for (const value of Object.values(val)) {
+          const v = /** @type {any} */ (value);
           if (typeof v === 'function') {
             break;
           }
@@ -1440,7 +1449,7 @@ class JSONPathTransformerContext {
       clone = Array.isArray(src) ? [...src] : {...src};
       if (Array.isArray(propertySets)) {
         for (const ps of propertySets) {
-          if (this.propertySets[ps]) {
+          if (Object.hasOwn(this.propertySets, ps)) {
             Object.assign(clone, this.propertySets[ps]);
           }
         }
@@ -1703,12 +1712,11 @@ class JSONPathTransformerContext {
     default: {
       // Use Intl.NumberFormat for decimal formatting if grouping/locale
       //   options are provided
-      let options = {};
-      if (groupingSeparator || groupingSize) {
-        options = {
+      const options = groupingSeparator || groupingSize
+        ? {
           useGrouping: true
-        };
-      }
+        }
+        : {};
 
       try {
         result = new Intl.NumberFormat(locale, options).format(num);
@@ -1716,11 +1724,15 @@ class JSONPathTransformerContext {
         // Apply decimal format symbols if specified
         if (decimalFormat) {
           // Use placeholders to avoid conflicts during replacement
-          const TEMP_GROUP = '\u0000GROUPSEP\u0000';
-          const TEMP_DECIMAL = '\u0000DECIMALSEP\u0000';
+          const TEMP_GROUP = '\u{0}GROUPSEP\u{0}';
+          const TEMP_DECIMAL = '\u{0}DECIMALSEP\u{0}';
 
           // Replace with temporary placeholders first
+          // eslint-disable-next-line @stylistic/max-len -- Long
+          // eslint-disable-next-line unicorn/no-unsafe-string-replacement -- Safe here
           result = result.replaceAll(',', TEMP_GROUP);
+          // eslint-disable-next-line @stylistic/max-len -- Long
+          // eslint-disable-next-line unicorn/no-unsafe-string-replacement -- Safe here
           result = result.replaceAll('.', TEMP_DECIMAL);
 
           // Now replace with actual symbols
@@ -1728,10 +1740,22 @@ class JSONPathTransformerContext {
             decimalFormat.groupingSeparator || ',';
           const effectiveDecimalSep = decimalFormat.decimalSeparator || '.';
 
-          result = result.replaceAll(TEMP_GROUP, effectiveGroupingSep);
-          result = result.replaceAll(TEMP_DECIMAL, effectiveDecimalSep);
+          result = result.replaceAll(
+            // eslint-disable-next-line @stylistic/max-len -- Long
+            // eslint-disable-next-line unicorn/no-unsafe-string-replacement -- Escaped
+            TEMP_GROUP, escapeRegexReplacement(effectiveGroupingSep)
+          );
+          result = result.replaceAll(
+            // eslint-disable-next-line @stylistic/max-len -- Long
+            // eslint-disable-next-line unicorn/no-unsafe-string-replacement -- Escaped
+            TEMP_DECIMAL, escapeRegexReplacement(effectiveDecimalSep)
+          );
         } else if (groupingSeparator) {
-          result = result.replaceAll(',', groupingSeparator);
+          result = result.replaceAll(
+            // eslint-disable-next-line @stylistic/max-len -- Long
+            // eslint-disable-next-line unicorn/no-unsafe-string-replacement -- Escaped
+            ',', escapeRegexReplacement(groupingSeparator)
+          );
         }
       } catch (e) {
         result = String(num);
@@ -1994,9 +2018,13 @@ class JSONPathTransformerContext {
     }
 
     // If sequence is provided, create a body function that evaluates it
-    let actualBody = body;
-    if (sequence) {
-      actualBody = (...args) => {
+    const actualBody = sequence
+      ? (
+      /**
+       * @type {any} args
+       */
+        ...args
+      ) => {
         // Build variables object from parameters
         /** @type {Record<string, any>} */
         const variables = {};
@@ -2015,8 +2043,8 @@ class JSONPathTransformerContext {
         } finally {
           this._params = oldParams;
         }
-      };
-    }
+      }
+      : body;
 
     // Register with the modified config
     const modifiedCfg = {

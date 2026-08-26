@@ -33,11 +33,13 @@ export function editorFromTextArea (textarea, extensions, inputHandler) {
         basicSetup,
         EditorView.updateListener.of((viewUpdate) => {
           // Check if the document content has changed
-          if (viewUpdate.docChanged) {
-            const newContent = viewUpdate.state.doc.toString();
-            inputHandler(newContent);
-            // You can perform actions here based on the new content
+          if (!viewUpdate.docChanged) {
+            return;
           }
+
+          const newContent = viewUpdate.state.doc.toString();
+          inputHandler(newContent);
+          // You can perform actions here based on the new content
         }),
         ...(extensions.javascript ? [javascript(extensions.javascript)] : []),
         ...(extensions.xml ? [xml(extensions.xml)] : []),
@@ -54,7 +56,7 @@ export function editorFromTextArea (textarea, extensions, inputHandler) {
     const prevLang = /** @type {HTMLElement} */ (
       textarea.previousElementSibling.querySelector('.cm-content')
     ).dataset.language;
-    if (prevLang && prevLang in extensions) {
+    if (prevLang && Object.hasOwn(extensions, prevLang)) {
       // console.log('same language');
       return view;
     }

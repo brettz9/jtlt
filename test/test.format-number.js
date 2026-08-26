@@ -123,7 +123,7 @@ describe('format-number() function', function () {
     it(
       'should handle NaN with custom NaN string in decimal format',
       function () {
-        const data = {value: Number.NaN};
+        const data = {value: NaN};
         const result = new JSONPathTransformer({
           templates: [
             {
@@ -135,7 +135,7 @@ describe('format-number() function', function () {
                 this.valueOf("format-number(0, '1', 'custom')");
                 // Manually append NaN value formatted
                 const formatted = this._formatNumber(
-                  Number.NaN, '1', undefined, undefined, 'custom', 'en'
+                  NaN, '1', undefined, undefined, 'custom', 'en'
                 );
                 this.plainText(' ' + formatted);
               }

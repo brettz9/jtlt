@@ -11,7 +11,7 @@ describe('namespace() method', () => {
     it('adds namespace declaration to element attributes', () => {
       const joiner = new JSONJoiningTransformer([]);
       joiner.element('root', {}, function () {
-        joiner.namespace('ns', 'http://example.com/ns');
+        joiner.namespace('ns', 'https://example.com/ns');
       });
       const result = joiner.get();
       // JSONJoiningTransformer uses JHTML format:
@@ -20,7 +20,7 @@ describe('namespace() method', () => {
         'root',
         {
           xmlns: {
-            ns: 'http://example.com/ns'
+            ns: 'https://example.com/ns'
           }
         },
         []
@@ -30,16 +30,16 @@ describe('namespace() method', () => {
     it('adds multiple namespace declarations to same element', () => {
       const joiner = new JSONJoiningTransformer([]);
       joiner.element('root', {}, function () {
-        joiner.namespace('ns1', 'http://example.com/ns1');
-        joiner.namespace('ns2', 'http://example.com/ns2');
+        joiner.namespace('ns1', 'https://example.com/ns1');
+        joiner.namespace('ns2', 'https://example.com/ns2');
       });
       const result = joiner.get();
       expect(result).to.deep.equal([[
         'root',
         {
           xmlns: {
-            ns1: 'http://example.com/ns1',
-            ns2: 'http://example.com/ns2'
+            ns1: 'https://example.com/ns1',
+            ns2: 'https://example.com/ns2'
           }
         },
         []
@@ -50,7 +50,7 @@ describe('namespace() method', () => {
       const joiner = new JSONJoiningTransformer([]);
       joiner.element('root', {}, function () {
         joiner.element('child', {}, function () {
-          joiner.namespace('ns', 'http://example.com/child-ns');
+          joiner.namespace('ns', 'https://example.com/child-ns');
         });
       });
       const result = joiner.get();
@@ -60,7 +60,7 @@ describe('namespace() method', () => {
           'child',
           {
             xmlns: {
-              ns: 'http://example.com/child-ns'
+              ns: 'https://example.com/child-ns'
             }
           },
           []
@@ -70,7 +70,7 @@ describe('namespace() method', () => {
 
     it('is no-op when called outside element context', () => {
       const joiner = new JSONJoiningTransformer([]);
-      joiner.namespace('ns', 'http://example.com/ns');
+      joiner.namespace('ns', 'https://example.com/ns');
       const result = joiner.get();
       expect(result).to.deep.equal([]);
     });
@@ -82,19 +82,19 @@ describe('namespace() method', () => {
       ]);
       joiner.output({useCharacterMaps: ['amp-map']});
       joiner.element('root', {}, function () {
-        joiner.namespace('ns', 'http://example.com/ns?a=1&b=2');
+        joiner.namespace('ns', 'https://example.com/ns?a=1&b=2');
       });
       const result = joiner.get();
       // Result is [['root', {xmlns: {ns: '...'}}, []]]
       expect(result[0][1].xmlns.ns).to.equal(
-        'http://example.com/ns?a=1&amp;b=2'
+        'https://example.com/ns?a=1&amp;b=2'
       );
     });
 
     it('returns this for chaining', () => {
       const joiner = new JSONJoiningTransformer([]);
       joiner.element('root', {}, function () {
-        const result = joiner.namespace('ns', 'http://example.com/ns');
+        const result = joiner.namespace('ns', 'https://example.com/ns');
         expect(result).to.equal(joiner);
       });
     });
@@ -109,13 +109,13 @@ describe('namespace() method', () => {
         {document}
       );
       joiner.element('root', {}, function () {
-        joiner.namespace('ns', 'http://example.com/ns');
+        joiner.namespace('ns', 'https://example.com/ns');
       });
       const frag = joiner.get();
       const rootEl = /** @type {Element} */ (
         /** @type {DocumentFragment} */ (frag).firstChild
       );
-      expect(rootEl.getAttribute('xmlns:ns')).to.equal('http://example.com/ns');
+      expect(rootEl.getAttribute('xmlns:ns')).to.equal('https://example.com/ns');
     });
 
     it('adds multiple namespace declarations', () => {
@@ -126,15 +126,15 @@ describe('namespace() method', () => {
         {document}
       );
       joiner.element('root', {}, function () {
-        joiner.namespace('ns1', 'http://example.com/ns1');
-        joiner.namespace('ns2', 'http://example.com/ns2');
+        joiner.namespace('ns1', 'https://example.com/ns1');
+        joiner.namespace('ns2', 'https://example.com/ns2');
       });
       const frag = joiner.get();
       const rootEl = /** @type {Element} */ (
         /** @type {DocumentFragment} */ (frag).firstChild
       );
-      expect(rootEl.getAttribute('xmlns:ns1')).to.equal('http://example.com/ns1');
-      expect(rootEl.getAttribute('xmlns:ns2')).to.equal('http://example.com/ns2');
+      expect(rootEl.getAttribute('xmlns:ns1')).to.equal('https://example.com/ns1');
+      expect(rootEl.getAttribute('xmlns:ns2')).to.equal('https://example.com/ns2');
     });
 
     it('returns this for chaining', () => {
@@ -145,7 +145,7 @@ describe('namespace() method', () => {
         {document}
       );
       joiner.element('root', {}, function () {
-        const result = joiner.namespace('ns', 'http://example.com/ns');
+        const result = joiner.namespace('ns', 'https://example.com/ns');
         expect(result).to.equal(joiner);
       });
     });
@@ -155,21 +155,21 @@ describe('namespace() method', () => {
     it('appends namespace declaration as attribute', () => {
       const joiner = new StringJoiningTransformer('');
       joiner.element('root', {}, [], function () {
-        joiner.namespace('ns', 'http://example.com/ns');
+        joiner.namespace('ns', 'https://example.com/ns');
       });
       const result = joiner.get();
-      expect(result).to.equal('<root xmlns:ns="http://example.com/ns"></root>');
+      expect(result).to.equal('<root xmlns:ns="https://example.com/ns"></root>');
     });
 
     it('adds multiple namespace declarations', () => {
       const joiner = new StringJoiningTransformer('');
       joiner.element('root', {}, [], function () {
-        joiner.namespace('ns1', 'http://example.com/ns1');
-        joiner.namespace('ns2', 'http://example.com/ns2');
+        joiner.namespace('ns1', 'https://example.com/ns1');
+        joiner.namespace('ns2', 'https://example.com/ns2');
       });
       const result = joiner.get();
-      expect(result).to.include('xmlns:ns1="http://example.com/ns1"');
-      expect(result).to.include('xmlns:ns2="http://example.com/ns2"');
+      expect(result).to.include('xmlns:ns1="https://example.com/ns1"');
+      expect(result).to.include('xmlns:ns2="https://example.com/ns2"');
     });
 
     it('applies character maps to namespace URI', () => {
@@ -179,16 +179,16 @@ describe('namespace() method', () => {
       ]);
       joiner.output({useCharacterMaps: ['amp-map']});
       joiner.element('root', {}, [], function () {
-        joiner.namespace('ns', 'http://example.com/ns?a=1&b=2');
+        joiner.namespace('ns', 'https://example.com/ns?a=1&b=2');
       });
       const result = joiner.get();
-      expect(result).to.include('xmlns:ns="http://example.com/ns?a=1&amp;b=2"');
+      expect(result).to.include('xmlns:ns="https://example.com/ns?a=1&amp;b=2"');
     });
 
     it('returns this for chaining', () => {
       const joiner = new StringJoiningTransformer('');
       joiner.element('root', {}, [], function () {
-        const result = joiner.namespace('ns', 'http://example.com/ns');
+        const result = joiner.namespace('ns', 'https://example.com/ns');
         expect(result).to.equal(joiner);
       });
     });
@@ -204,7 +204,7 @@ describe('namespace() method', () => {
       }, []);
 
       ctx.element('root', {}, [], function () {
-        ctx.namespace('ns', 'http://example.com/ns');
+        ctx.namespace('ns', 'https://example.com/ns');
       });
 
       const result = ctx.getOutput();
@@ -213,7 +213,7 @@ describe('namespace() method', () => {
         'root',
         {
           xmlns: {
-            ns: 'http://example.com/ns'
+            ns: 'https://example.com/ns'
           }
         },
         []
@@ -229,7 +229,7 @@ describe('namespace() method', () => {
       }, []);
 
       ctx.element('root', {}, [], function () {
-        const result = ctx.namespace('ns', 'http://example.com/ns');
+        const result = ctx.namespace('ns', 'https://example.com/ns');
         expect(result).to.equal(ctx);
       });
     });
@@ -243,11 +243,11 @@ describe('namespace() method', () => {
       }, []);
 
       ctx.element('root', {}, [], function () {
-        ctx.namespace('ns', 'http://example.com/ns');
+        ctx.namespace('ns', 'https://example.com/ns');
       });
 
       const result = ctx.getOutput();
-      expect(result).to.equal('<root xmlns:ns="http://example.com/ns"></root>');
+      expect(result).to.equal('<root xmlns:ns="https://example.com/ns"></root>');
     });
   });
 
@@ -265,13 +265,13 @@ describe('namespace() method', () => {
       }, []);
 
       ctx.element('root', {}, [], function () {
-        ctx.namespace('ns', 'http://example.com/ns');
+        ctx.namespace('ns', 'https://example.com/ns');
       });
 
       const result = ctx.getOutput();
       const frag = /** @type {DocumentFragment} */ (result);
       const rootEl = /** @type {Element} */ (frag.firstChild);
-      expect(rootEl.getAttribute('xmlns:ns')).to.equal('http://example.com/ns');
+      expect(rootEl.getAttribute('xmlns:ns')).to.equal('https://example.com/ns');
     });
 
     it('returns this for chaining', () => {
@@ -287,7 +287,7 @@ describe('namespace() method', () => {
       }, []);
 
       ctx.element('root', {}, [], function () {
-        const result = ctx.namespace('ns', 'http://example.com/ns');
+        const result = ctx.namespace('ns', 'https://example.com/ns');
         expect(result).to.equal(ctx);
       });
     });
@@ -302,11 +302,11 @@ describe('namespace() method', () => {
       }, []);
 
       ctx.element('root', {}, [], function () {
-        ctx.namespace('ns', 'http://example.com/ns');
+        ctx.namespace('ns', 'https://example.com/ns');
       });
 
       const result = ctx.getOutput();
-      expect(result).to.equal('<root xmlns:ns="http://example.com/ns"></root>');
+      expect(result).to.equal('<root xmlns:ns="https://example.com/ns"></root>');
     });
   });
 });

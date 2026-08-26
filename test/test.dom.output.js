@@ -37,7 +37,7 @@ describe('DOMJoiningTransformer', () => {
       /** @type {unknown} */ (docsRaw)
     );
     expect(Array.isArray(docs)).to.be.true;
-    expect(docs.length).to.equal(2);
+    expect(docs).to.have.lengthOf(2);
     docs.forEach((doc, i) => {
       expect(doc.nodeType).to.equal(9);
       expect(doc.documentElement.nodeName).to.equal('html');
@@ -120,7 +120,7 @@ describe('DOMJoiningTransformer output', () => {
     joiner.array([]);
     const frag = /** @type {DocumentFragment} */ (joiner.get());
     // Should have two text nodes (empty strings)
-    expect(frag.childNodes.length).to.equal(2);
+    expect(frag.childNodes).to.have.lengthOf(2);
     expect(frag.firstChild && frag.firstChild.nodeType).to.equal(3);
     expect(frag.lastChild && frag.lastChild.nodeType).to.equal(3);
   });
@@ -148,7 +148,7 @@ describe('DOMJoiningTransformer output', () => {
         try {
           // Result is a DocumentFragment; check text contents
           expect(frag.textContent).to.equal('abc');
-          expect(frag.querySelectorAll('li').length).to.equal(3);
+          expect(frag.querySelectorAll('li')).to.have.lengthOf(3);
           done();
         } catch (err) {
           done(err);
@@ -197,7 +197,7 @@ describe('DOMJoiningTransformer output', () => {
       const childNodes = /** @type {DocumentFragment} */ (
         result
       ).childNodes;
-      expect(childNodes.length).to.equal(1);
+      expect(childNodes).to.have.lengthOf(1);
       const div = /** @type {Element} */ (childNodes[0]);
       expect(div.nodeName).to.equal('DIV');
       expect(div.getAttribute('class')).to.equal('test');
@@ -274,12 +274,12 @@ describe('DOMJoiningTransformer output', () => {
       // New: namespaced root via prefix in element name
       // Reset for a namespaced root element
       joiner.root = undefined;
-      joiner.element('x:root', {x: 'http://example.com/ns'}, () => {
+      joiner.element('x:root', {x: 'https://example.com/ns'}, () => {
         joiner.text('ns');
       });
       const xmlDoc2 = /** @type {XMLDocument} */ (joiner._docs[1]);
       expect(xmlDoc2.documentElement.prefix).to.equal('x');
-      expect(xmlDoc2.documentElement.namespaceURI).to.equal('http://example.com/ns');
+      expect(xmlDoc2.documentElement.namespaceURI).to.equal('https://example.com/ns');
     }
   );
 });

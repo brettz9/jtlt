@@ -212,6 +212,8 @@ class AbstractJoiningTransformer {
     if (!name.includes(':') && !name.startsWith('Q{')) {
       throw new Error(
         `Function name "${name}" must be in a namespace ` +
+        // eslint-disable-next-line @stylistic/max-len -- Long
+        // eslint-disable-next-line unicorn/no-incorrect-template-string-interpolation -- Not an HTML template
         `(use prefix:name or Q{uri}name)`
       );
     }
@@ -406,7 +408,12 @@ class AbstractJoiningTransformer {
   _replaceCharacterMaps (str) {
     this._outputConfig?.useCharacterMaps?.forEach((name) => {
       this._characterMap[name].forEach(({character, string}) => {
-        str = str.replaceAll(character, string);
+        str = str.replaceAll(
+          character,
+          // eslint-disable-next-line @stylistic/max-len -- Long
+          // eslint-disable-next-line unicorn/no-unsafe-string-replacement -- Safe with replacement
+          string.replaceAll('$', '$$$$')
+        );
       });
     });
     return str;
