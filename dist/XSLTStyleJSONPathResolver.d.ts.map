@@ -1,1 +1,1 @@
-{"version":3,"file":"XSLTStyleJSONPathResolver.d.ts","sourceRoot":"","sources":["../src/XSLTStyleJSONPathResolver.js"],"names":[],"mappings":";AAEA;;;;;;GAMG;AACH;IACE;;;OAGG;IAEH,+BAJW,MAAM,GAAC,MAAM,EAAE,GACb,CAAC,GAAG,GAAC,GAAG,GAAC,CAAC,CAuBtB;CACF"}
+{"version":3,"file":"XSLTStyleJSONPathResolver.d.ts","sourceRoot":"","sources":["../src/XSLTStyleJSONPathResolver.js"],"names":[],"mappings":"AAEA;;;;;;GAMG;AACH,cAAM,yBAAyB;IAC7B;;;OAGG;IAEH,wBAAwB,CAAE,IAAI,EAJnB,MAAM,GAAC,MAAM,EAIM,GAHjB,CAAC,GAAG,GAAC,GAAG,GAAC,CAAC,CAuBtB;CACF;eAEc,yBAAyB"}

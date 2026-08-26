@@ -1,8 +1,9 @@
-export default StringJoiningTransformer;
+import AbstractJoiningTransformer from './AbstractJoiningTransformer.js';
 export type OutputConfig = {
     encoding?: string;
     indent?: boolean;
     omitXmlDeclaration?: boolean;
+    bareDoctype?: boolean;
     doctypePublic?: string;
     doctypeSystem?: string;
     cdataSectionElements?: string[];
@@ -12,11 +13,8 @@ export type OutputConfig = {
     method?: "xml" | "html" | "text" | "json" | "xhtml";
     useCharacterMaps?: string[];
 };
-export type SimpleCallback = (this: StringJoiningTransformer) => void;
-/**
- * Attributes object for element() allowing standard string attributes
- * plus special helpers: dataset (object) and $a (ordered attribute array).
- */
+export type SimpleCallback = (@this {StringJoiningTransformer}
+ * : StringJoiningTransformer) => void;
 export type ElementAttributes = Record<string, unknown> & {
     dataset?: Record<string, string>;
     $a?: Array<[string, string]>;
@@ -61,12 +59,6 @@ export type ElementAttributes = Record<string, unknown> & {
  * @extends {AbstractJoiningTransformer<"string">}
  */
 declare class StringJoiningTransformer extends AbstractJoiningTransformer<"string"> {
-    /**
-     * @param {string} s - Initial string
-     * @param {import('./AbstractJoiningTransformer.js').
-     *   StringJoiningTransformerConfig} [cfg] - Configuration object
-     */
-    constructor(s: string, cfg?: import("./AbstractJoiningTransformer.js").StringJoiningTransformerConfig);
     _str: string;
     /** @type {any} */
     _context: any;
@@ -96,6 +88,14 @@ declare class StringJoiningTransformer extends AbstractJoiningTransformer<"strin
         document: string;
         format?: string;
     }>;
+    _openTagState: any;
+    root: any;
+    /**
+     * @param {string} s - Initial string
+     * @param {import('./AbstractJoiningTransformer.js').
+     *   StringJoiningTransformerConfig} [cfg] - Configuration object
+     */
+    constructor(s: string, cfg?: import('./AbstractJoiningTransformer.js').StringJoiningTransformerConfig);
     /**
      * Set the transformer context for callback invocations.
      * @param {any} context - The transformer context object
@@ -199,14 +199,18 @@ declare class StringJoiningTransformer extends AbstractJoiningTransformer<"strin
      * @returns {StringJoiningTransformer}
      */
     element(elem: string | Element, atts?: ElementAttributes, childNodes?: any[], cb?: (this: StringJoiningTransformer) => void, useAttributeSets?: string[]): StringJoiningTransformer;
-    _openTagState: any;
-    root: any;
     /**
      * @param {string} prefix
      * @param {string} namespaceURI
      * @returns {StringJoiningTransformer}
      */
     namespace(prefix: string, namespaceURI: string): StringJoiningTransformer;
+    /**
+     * @param {string} prefix
+     * @returns {void}
+     * @override
+     */
+    _flushPendingNamespace(prefix: string): void;
     /**
      * @param {string} name - Attribute name
      * @param {string|Record<string, unknown>|
@@ -280,5 +284,5 @@ declare class StringJoiningTransformer extends AbstractJoiningTransformer<"strin
      */
     _usePropertySets(obj: Record<string, unknown>, psName: string): Record<string, unknown>;
 }
-import AbstractJoiningTransformer from './AbstractJoiningTransformer.js';
+export default StringJoiningTransformer;
 //# sourceMappingURL=StringJoiningTransformer.d.ts.map

@@ -63,7 +63,7 @@
   "scripts": {
     "start": "open http://localhost:8021/demo/ && static -p 8021",
     "prepublishOnly": "pnpm i && pnpm build && pnpm tsc && pnpm attw",
-    "attw": "attw --pack",
+    "attw": "attw --pack . --profile esm-only",
     "tsc": "tsc",
     "build": "tsc -p tsconfig-prod.json && npm run rollup",
     "rollup": "rollup -c",

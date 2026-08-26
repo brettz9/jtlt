@@ -1,5 +1,6 @@
-export default DOMJoiningTransformer;
-export type SimpleCallback = (this: DOMJoiningTransformer) => void;
+import AbstractJoiningTransformer from './AbstractJoiningTransformer.js';
+export type SimpleCallback = (@this {DOMJoiningTransformer}
+ * : DOMJoiningTransformer) => void;
 /**
  * @callback SimpleCallback
  * @this {DOMJoiningTransformer}
@@ -15,13 +16,7 @@ export type SimpleCallback = (this: DOMJoiningTransformer) => void;
  * @extends {AbstractJoiningTransformer<"dom">}
  */
 declare class DOMJoiningTransformer extends AbstractJoiningTransformer<"dom"> {
-    /**
-     * @param {DocumentFragment|Element} o - Initial DOM node
-     * @param {import('./AbstractJoiningTransformer.js').
-     *   DOMJoiningTransformerConfig} cfg - Configuration object
-     */
-    constructor(o: DocumentFragment | Element, cfg: import("./AbstractJoiningTransformer.js").DOMJoiningTransformerConfig);
-    _dom: Element | DocumentFragment;
+    _dom: DocumentFragment | Element;
     /** @type {any} */
     _context: any;
     /** @type {XMLDocument[]} */
@@ -34,6 +29,15 @@ declare class DOMJoiningTransformer extends AbstractJoiningTransformer<"dom"> {
     }>;
     /** @type {Record<string, unknown>} */
     propertySets: Record<string, unknown>;
+    root: any;
+    /** @type {any} */
+    _outputConfig: any;
+    /**
+     * @param {DocumentFragment|Element} o - Initial DOM node
+     * @param {import('./AbstractJoiningTransformer.js').
+     *   DOMJoiningTransformerConfig} cfg - Configuration object
+     */
+    constructor(o: DocumentFragment | Element, cfg: import('./AbstractJoiningTransformer.js').DOMJoiningTransformerConfig);
     /**
      * @param {Node} item
      * @returns {void}
@@ -133,12 +137,123 @@ declare class DOMJoiningTransformer extends AbstractJoiningTransformer<"dom"> {
      * @param {(this: DOMJoiningTransformer) => void} cb
      * @returns {DOMJoiningTransformer}
      */
+    /**
+     * @overload
+     * @param {Element|string} elName
+     * @param {Record<string, string>} atts
+     * @param {(Node|string)[]} childNodes
+     * @returns {DOMJoiningTransformer}
+     */
+    /**
+     * @overload
+     * @param {Element|string} elName
+     * @param {Record<string, string>} atts
+     * @param {(this: DOMJoiningTransformer) => void} cb
+     * @returns {DOMJoiningTransformer}
+     */
+    /**
+     * @overload
+     * @param {Element|string} elName
+     * @param {Record<string, string>} atts
+     * @returns {DOMJoiningTransformer}
+     */
+    /**
+     * @overload
+     * @param {Element|string} elName
+     * @param {(Node|string)[]} childNodes
+     * @param {(this: DOMJoiningTransformer) => void} cb
+     * @returns {DOMJoiningTransformer}
+     */
+    /**
+     * @overload
+     * @param {Element|string} elName
+     * @param {(Node|string)[]} childNodes
+     * @returns {DOMJoiningTransformer}
+     */
+    /**
+     * @overload
+     * @param {Element|string} elName
+     * @param {(this: DOMJoiningTransformer) => void} cb
+     * @returns {DOMJoiningTransformer}
+     */
+    /**
+     * @overload
+     * @param {Element|string} elName
+     * @returns {DOMJoiningTransformer}
+     */
+    /**
+     * @param {Element|string} elem - Element name
+     * @param {Record<string, string>|(Node|string)[
+     *   ]|((this: DOMJoiningTransformer) => void)} [atts] - Attributes,
+     *   childNodes, or callback
+     * @param {(Node|string)[]|((this: DOMJoiningTransformer) => void)
+     *   } [childNodes] - Child nodes or callback
+     * @param {(this: DOMJoiningTransformer) => void} [cb] - Callback
+     * @param {string[]} [useAttributeSets] - Attribute set names to apply
+     * @returns {DOMJoiningTransformer}
+     */
     element(elName: Element | string, atts: Record<string, string>, childNodes: (Node | string)[], cb: (this: DOMJoiningTransformer) => void): DOMJoiningTransformer;
     /**
      * @overload
      * @param {Element|string} elName
      * @param {Record<string, string>} atts
      * @param {(Node|string)[]} childNodes
+     * @param {(this: DOMJoiningTransformer) => void} cb
+     * @returns {DOMJoiningTransformer}
+     */
+    /**
+     * @overload
+     * @param {Element|string} elName
+     * @param {Record<string, string>} atts
+     * @param {(Node|string)[]} childNodes
+     * @returns {DOMJoiningTransformer}
+     */
+    /**
+     * @overload
+     * @param {Element|string} elName
+     * @param {Record<string, string>} atts
+     * @param {(this: DOMJoiningTransformer) => void} cb
+     * @returns {DOMJoiningTransformer}
+     */
+    /**
+     * @overload
+     * @param {Element|string} elName
+     * @param {Record<string, string>} atts
+     * @returns {DOMJoiningTransformer}
+     */
+    /**
+     * @overload
+     * @param {Element|string} elName
+     * @param {(Node|string)[]} childNodes
+     * @param {(this: DOMJoiningTransformer) => void} cb
+     * @returns {DOMJoiningTransformer}
+     */
+    /**
+     * @overload
+     * @param {Element|string} elName
+     * @param {(Node|string)[]} childNodes
+     * @returns {DOMJoiningTransformer}
+     */
+    /**
+     * @overload
+     * @param {Element|string} elName
+     * @param {(this: DOMJoiningTransformer) => void} cb
+     * @returns {DOMJoiningTransformer}
+     */
+    /**
+     * @overload
+     * @param {Element|string} elName
+     * @returns {DOMJoiningTransformer}
+     */
+    /**
+     * @param {Element|string} elem - Element name
+     * @param {Record<string, string>|(Node|string)[
+     *   ]|((this: DOMJoiningTransformer) => void)} [atts] - Attributes,
+     *   childNodes, or callback
+     * @param {(Node|string)[]|((this: DOMJoiningTransformer) => void)
+     *   } [childNodes] - Child nodes or callback
+     * @param {(this: DOMJoiningTransformer) => void} [cb] - Callback
+     * @param {string[]} [useAttributeSets] - Attribute set names to apply
      * @returns {DOMJoiningTransformer}
      */
     element(elName: Element | string, atts: Record<string, string>, childNodes: (Node | string)[]): DOMJoiningTransformer;
@@ -146,7 +261,63 @@ declare class DOMJoiningTransformer extends AbstractJoiningTransformer<"dom"> {
      * @overload
      * @param {Element|string} elName
      * @param {Record<string, string>} atts
+     * @param {(Node|string)[]} childNodes
      * @param {(this: DOMJoiningTransformer) => void} cb
+     * @returns {DOMJoiningTransformer}
+     */
+    /**
+     * @overload
+     * @param {Element|string} elName
+     * @param {Record<string, string>} atts
+     * @param {(Node|string)[]} childNodes
+     * @returns {DOMJoiningTransformer}
+     */
+    /**
+     * @overload
+     * @param {Element|string} elName
+     * @param {Record<string, string>} atts
+     * @param {(this: DOMJoiningTransformer) => void} cb
+     * @returns {DOMJoiningTransformer}
+     */
+    /**
+     * @overload
+     * @param {Element|string} elName
+     * @param {Record<string, string>} atts
+     * @returns {DOMJoiningTransformer}
+     */
+    /**
+     * @overload
+     * @param {Element|string} elName
+     * @param {(Node|string)[]} childNodes
+     * @param {(this: DOMJoiningTransformer) => void} cb
+     * @returns {DOMJoiningTransformer}
+     */
+    /**
+     * @overload
+     * @param {Element|string} elName
+     * @param {(Node|string)[]} childNodes
+     * @returns {DOMJoiningTransformer}
+     */
+    /**
+     * @overload
+     * @param {Element|string} elName
+     * @param {(this: DOMJoiningTransformer) => void} cb
+     * @returns {DOMJoiningTransformer}
+     */
+    /**
+     * @overload
+     * @param {Element|string} elName
+     * @returns {DOMJoiningTransformer}
+     */
+    /**
+     * @param {Element|string} elem - Element name
+     * @param {Record<string, string>|(Node|string)[
+     *   ]|((this: DOMJoiningTransformer) => void)} [atts] - Attributes,
+     *   childNodes, or callback
+     * @param {(Node|string)[]|((this: DOMJoiningTransformer) => void)
+     *   } [childNodes] - Child nodes or callback
+     * @param {(this: DOMJoiningTransformer) => void} [cb] - Callback
+     * @param {string[]} [useAttributeSets] - Attribute set names to apply
      * @returns {DOMJoiningTransformer}
      */
     element(elName: Element | string, atts: Record<string, string>, cb: (this: DOMJoiningTransformer) => void): DOMJoiningTransformer;
@@ -154,44 +325,334 @@ declare class DOMJoiningTransformer extends AbstractJoiningTransformer<"dom"> {
      * @overload
      * @param {Element|string} elName
      * @param {Record<string, string>} atts
+     * @param {(Node|string)[]} childNodes
+     * @param {(this: DOMJoiningTransformer) => void} cb
+     * @returns {DOMJoiningTransformer}
+     */
+    /**
+     * @overload
+     * @param {Element|string} elName
+     * @param {Record<string, string>} atts
+     * @param {(Node|string)[]} childNodes
+     * @returns {DOMJoiningTransformer}
+     */
+    /**
+     * @overload
+     * @param {Element|string} elName
+     * @param {Record<string, string>} atts
+     * @param {(this: DOMJoiningTransformer) => void} cb
+     * @returns {DOMJoiningTransformer}
+     */
+    /**
+     * @overload
+     * @param {Element|string} elName
+     * @param {Record<string, string>} atts
+     * @returns {DOMJoiningTransformer}
+     */
+    /**
+     * @overload
+     * @param {Element|string} elName
+     * @param {(Node|string)[]} childNodes
+     * @param {(this: DOMJoiningTransformer) => void} cb
+     * @returns {DOMJoiningTransformer}
+     */
+    /**
+     * @overload
+     * @param {Element|string} elName
+     * @param {(Node|string)[]} childNodes
+     * @returns {DOMJoiningTransformer}
+     */
+    /**
+     * @overload
+     * @param {Element|string} elName
+     * @param {(this: DOMJoiningTransformer) => void} cb
+     * @returns {DOMJoiningTransformer}
+     */
+    /**
+     * @overload
+     * @param {Element|string} elName
+     * @returns {DOMJoiningTransformer}
+     */
+    /**
+     * @param {Element|string} elem - Element name
+     * @param {Record<string, string>|(Node|string)[
+     *   ]|((this: DOMJoiningTransformer) => void)} [atts] - Attributes,
+     *   childNodes, or callback
+     * @param {(Node|string)[]|((this: DOMJoiningTransformer) => void)
+     *   } [childNodes] - Child nodes or callback
+     * @param {(this: DOMJoiningTransformer) => void} [cb] - Callback
+     * @param {string[]} [useAttributeSets] - Attribute set names to apply
      * @returns {DOMJoiningTransformer}
      */
     element(elName: Element | string, atts: Record<string, string>): DOMJoiningTransformer;
     /**
      * @overload
      * @param {Element|string} elName
+     * @param {Record<string, string>} atts
      * @param {(Node|string)[]} childNodes
      * @param {(this: DOMJoiningTransformer) => void} cb
+     * @returns {DOMJoiningTransformer}
+     */
+    /**
+     * @overload
+     * @param {Element|string} elName
+     * @param {Record<string, string>} atts
+     * @param {(Node|string)[]} childNodes
+     * @returns {DOMJoiningTransformer}
+     */
+    /**
+     * @overload
+     * @param {Element|string} elName
+     * @param {Record<string, string>} atts
+     * @param {(this: DOMJoiningTransformer) => void} cb
+     * @returns {DOMJoiningTransformer}
+     */
+    /**
+     * @overload
+     * @param {Element|string} elName
+     * @param {Record<string, string>} atts
+     * @returns {DOMJoiningTransformer}
+     */
+    /**
+     * @overload
+     * @param {Element|string} elName
+     * @param {(Node|string)[]} childNodes
+     * @param {(this: DOMJoiningTransformer) => void} cb
+     * @returns {DOMJoiningTransformer}
+     */
+    /**
+     * @overload
+     * @param {Element|string} elName
+     * @param {(Node|string)[]} childNodes
+     * @returns {DOMJoiningTransformer}
+     */
+    /**
+     * @overload
+     * @param {Element|string} elName
+     * @param {(this: DOMJoiningTransformer) => void} cb
+     * @returns {DOMJoiningTransformer}
+     */
+    /**
+     * @overload
+     * @param {Element|string} elName
+     * @returns {DOMJoiningTransformer}
+     */
+    /**
+     * @param {Element|string} elem - Element name
+     * @param {Record<string, string>|(Node|string)[
+     *   ]|((this: DOMJoiningTransformer) => void)} [atts] - Attributes,
+     *   childNodes, or callback
+     * @param {(Node|string)[]|((this: DOMJoiningTransformer) => void)
+     *   } [childNodes] - Child nodes or callback
+     * @param {(this: DOMJoiningTransformer) => void} [cb] - Callback
+     * @param {string[]} [useAttributeSets] - Attribute set names to apply
      * @returns {DOMJoiningTransformer}
      */
     element(elName: Element | string, childNodes: (Node | string)[], cb: (this: DOMJoiningTransformer) => void): DOMJoiningTransformer;
     /**
      * @overload
      * @param {Element|string} elName
+     * @param {Record<string, string>} atts
+     * @param {(Node|string)[]} childNodes
+     * @param {(this: DOMJoiningTransformer) => void} cb
+     * @returns {DOMJoiningTransformer}
+     */
+    /**
+     * @overload
+     * @param {Element|string} elName
+     * @param {Record<string, string>} atts
      * @param {(Node|string)[]} childNodes
      * @returns {DOMJoiningTransformer}
      */
-    element(elName: Element | string, childNodes: (Node | string)[]): DOMJoiningTransformer;
+    /**
+     * @overload
+     * @param {Element|string} elName
+     * @param {Record<string, string>} atts
+     * @param {(this: DOMJoiningTransformer) => void} cb
+     * @returns {DOMJoiningTransformer}
+     */
+    /**
+     * @overload
+     * @param {Element|string} elName
+     * @param {Record<string, string>} atts
+     * @returns {DOMJoiningTransformer}
+     */
+    /**
+     * @overload
+     * @param {Element|string} elName
+     * @param {(Node|string)[]} childNodes
+     * @param {(this: DOMJoiningTransformer) => void} cb
+     * @returns {DOMJoiningTransformer}
+     */
+    /**
+     * @overload
+     * @param {Element|string} elName
+     * @param {(Node|string)[]} childNodes
+     * @returns {DOMJoiningTransformer}
+     */
     /**
      * @overload
      * @param {Element|string} elName
      * @param {(this: DOMJoiningTransformer) => void} cb
      * @returns {DOMJoiningTransformer}
      */
-    element(elName: Element | string, cb: (this: DOMJoiningTransformer) => void): DOMJoiningTransformer;
     /**
      * @overload
      * @param {Element|string} elName
      * @returns {DOMJoiningTransformer}
      */
+    /**
+     * @param {Element|string} elem - Element name
+     * @param {Record<string, string>|(Node|string)[
+     *   ]|((this: DOMJoiningTransformer) => void)} [atts] - Attributes,
+     *   childNodes, or callback
+     * @param {(Node|string)[]|((this: DOMJoiningTransformer) => void)
+     *   } [childNodes] - Child nodes or callback
+     * @param {(this: DOMJoiningTransformer) => void} [cb] - Callback
+     * @param {string[]} [useAttributeSets] - Attribute set names to apply
+     * @returns {DOMJoiningTransformer}
+     */
+    element(elName: Element | string, childNodes: (Node | string)[]): DOMJoiningTransformer;
+    /**
+     * @overload
+     * @param {Element|string} elName
+     * @param {Record<string, string>} atts
+     * @param {(Node|string)[]} childNodes
+     * @param {(this: DOMJoiningTransformer) => void} cb
+     * @returns {DOMJoiningTransformer}
+     */
+    /**
+     * @overload
+     * @param {Element|string} elName
+     * @param {Record<string, string>} atts
+     * @param {(Node|string)[]} childNodes
+     * @returns {DOMJoiningTransformer}
+     */
+    /**
+     * @overload
+     * @param {Element|string} elName
+     * @param {Record<string, string>} atts
+     * @param {(this: DOMJoiningTransformer) => void} cb
+     * @returns {DOMJoiningTransformer}
+     */
+    /**
+     * @overload
+     * @param {Element|string} elName
+     * @param {Record<string, string>} atts
+     * @returns {DOMJoiningTransformer}
+     */
+    /**
+     * @overload
+     * @param {Element|string} elName
+     * @param {(Node|string)[]} childNodes
+     * @param {(this: DOMJoiningTransformer) => void} cb
+     * @returns {DOMJoiningTransformer}
+     */
+    /**
+     * @overload
+     * @param {Element|string} elName
+     * @param {(Node|string)[]} childNodes
+     * @returns {DOMJoiningTransformer}
+     */
+    /**
+     * @overload
+     * @param {Element|string} elName
+     * @param {(this: DOMJoiningTransformer) => void} cb
+     * @returns {DOMJoiningTransformer}
+     */
+    /**
+     * @overload
+     * @param {Element|string} elName
+     * @returns {DOMJoiningTransformer}
+     */
+    /**
+     * @param {Element|string} elem - Element name
+     * @param {Record<string, string>|(Node|string)[
+     *   ]|((this: DOMJoiningTransformer) => void)} [atts] - Attributes,
+     *   childNodes, or callback
+     * @param {(Node|string)[]|((this: DOMJoiningTransformer) => void)
+     *   } [childNodes] - Child nodes or callback
+     * @param {(this: DOMJoiningTransformer) => void} [cb] - Callback
+     * @param {string[]} [useAttributeSets] - Attribute set names to apply
+     * @returns {DOMJoiningTransformer}
+     */
+    element(elName: Element | string, cb: (this: DOMJoiningTransformer) => void): DOMJoiningTransformer;
+    /**
+     * @overload
+     * @param {Element|string} elName
+     * @param {Record<string, string>} atts
+     * @param {(Node|string)[]} childNodes
+     * @param {(this: DOMJoiningTransformer) => void} cb
+     * @returns {DOMJoiningTransformer}
+     */
+    /**
+     * @overload
+     * @param {Element|string} elName
+     * @param {Record<string, string>} atts
+     * @param {(Node|string)[]} childNodes
+     * @returns {DOMJoiningTransformer}
+     */
+    /**
+     * @overload
+     * @param {Element|string} elName
+     * @param {Record<string, string>} atts
+     * @param {(this: DOMJoiningTransformer) => void} cb
+     * @returns {DOMJoiningTransformer}
+     */
+    /**
+     * @overload
+     * @param {Element|string} elName
+     * @param {Record<string, string>} atts
+     * @returns {DOMJoiningTransformer}
+     */
+    /**
+     * @overload
+     * @param {Element|string} elName
+     * @param {(Node|string)[]} childNodes
+     * @param {(this: DOMJoiningTransformer) => void} cb
+     * @returns {DOMJoiningTransformer}
+     */
+    /**
+     * @overload
+     * @param {Element|string} elName
+     * @param {(Node|string)[]} childNodes
+     * @returns {DOMJoiningTransformer}
+     */
+    /**
+     * @overload
+     * @param {Element|string} elName
+     * @param {(this: DOMJoiningTransformer) => void} cb
+     * @returns {DOMJoiningTransformer}
+     */
+    /**
+     * @overload
+     * @param {Element|string} elName
+     * @returns {DOMJoiningTransformer}
+     */
+    /**
+     * @param {Element|string} elem - Element name
+     * @param {Record<string, string>|(Node|string)[
+     *   ]|((this: DOMJoiningTransformer) => void)} [atts] - Attributes,
+     *   childNodes, or callback
+     * @param {(Node|string)[]|((this: DOMJoiningTransformer) => void)
+     *   } [childNodes] - Child nodes or callback
+     * @param {(this: DOMJoiningTransformer) => void} [cb] - Callback
+     * @param {string[]} [useAttributeSets] - Attribute set names to apply
+     * @returns {DOMJoiningTransformer}
+     */
     element(elName: Element | string): DOMJoiningTransformer;
-    root: any;
     /**
      * @param {string} prefix
      * @param {string} namespaceURI
      * @returns {DOMJoiningTransformer}
      */
     namespace(prefix: string, namespaceURI: string): DOMJoiningTransformer;
+    /**
+     * @param {string} prefix
+     * @returns {void}
+     * @override
+     */
+    _flushPendingNamespace(prefix: string): void;
     /**
      * @param {string} name
      * @param {string} val
@@ -231,7 +692,7 @@ declare class DOMJoiningTransformer extends AbstractJoiningTransformer<"dom"> {
      *   Output configuration for the document (encoding, doctype, etc.)
      * @returns {DOMJoiningTransformer}
      */
-    document(cb: (this: DOMJoiningTransformer) => void, cfg?: import("./StringJoiningTransformer.js").OutputConfig): DOMJoiningTransformer;
+    document(cb: (this: DOMJoiningTransformer) => void, cfg?: import('./StringJoiningTransformer.js').OutputConfig): DOMJoiningTransformer;
     /**
      * Creates a new result document with metadata (href, format).
      * Similar to XSLT's xsl:result-document, this allows templates to generate
@@ -245,7 +706,7 @@ declare class DOMJoiningTransformer extends AbstractJoiningTransformer<"dom"> {
      *   Output configuration for the document (encoding, doctype, format, etc.)
      * @returns {DOMJoiningTransformer}
      */
-    resultDocument(href: string, cb: (this: DOMJoiningTransformer) => void, cfg?: import("./StringJoiningTransformer.js").OutputConfig): DOMJoiningTransformer;
+    resultDocument(href: string, cb: (this: DOMJoiningTransformer) => void, cfg?: import('./StringJoiningTransformer.js').OutputConfig): DOMJoiningTransformer;
     /**
      * Helper method to use property sets.
      * @param {Record<string, unknown>} obj - Object to apply property set to
@@ -254,5 +715,5 @@ declare class DOMJoiningTransformer extends AbstractJoiningTransformer<"dom"> {
      */
     _usePropertySets(obj: Record<string, unknown>, psName: string): Record<string, unknown>;
 }
-import AbstractJoiningTransformer from './AbstractJoiningTransformer.js';
+export default DOMJoiningTransformer;
 //# sourceMappingURL=DOMJoiningTransformer.d.ts.map

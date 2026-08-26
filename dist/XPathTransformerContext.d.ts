@@ -1,4 +1,3 @@
-export default XPathTransformerContext;
 export type XPathTransformerContextConfig = {
     /**
      * - XML/DOM root to transform
@@ -7,13 +6,13 @@ export type XPathTransformerContextConfig = {
     /**
      * - 1, 2, 3.1 (default 1)
      */
-    xpathVersion?: number | undefined;
+    xpathVersion?: number;
     /**
      * Joiner
      */
-    joiningTransformer: import("./index.js").JoiningTransformer;
-    errorOnEqualPriority?: boolean | undefined;
-    specificityPriorityResolver?: ((path: string) => number) | undefined;
+    joiningTransformer: import('./index.js').JoiningTransformer;
+    errorOnEqualPriority?: boolean;
+    specificityPriorityResolver?: (path: string) => number;
 };
 /**
  * @typedef {object} XPathTransformerContextConfig
@@ -38,6 +37,35 @@ export type XPathTransformerContextConfig = {
  * - errorOnEqualPriority, specificityPriorityResolver (same semantics).
  */
 declare class XPathTransformerContext {
+    _config: XPathTransformerContextConfig;
+    _templates: import("./index.js").XPathTemplateObject<any>[];
+    /** @type {Document|Element|Node} */
+    _contextNode: Document | Element | Node;
+    _origNode: Document | Element | Node;
+    /** @type {Record<string, unknown>} */
+    vars: Record<string, unknown>;
+    /** @type {Record<string, Record<string, unknown>>} */
+    propertySets: Record<string, Record<string, unknown>>;
+    /** @type {Record<string, {match: string, use: string}>} */
+    keys: Record<string, {
+        match: string;
+        use: string;
+    }>;
+    /**
+     * @type {Record<string,
+     *   import('./JSONPathTransformerContext.js').DecimalFormatSymbols>}
+     */
+    decimalFormats: Record<string, import('./JSONPathTransformerContext.js').DecimalFormatSymbols>;
+    /** @type {boolean|undefined} */
+    _initialized: boolean | undefined;
+    /** @type {string|undefined} */
+    _currPath: string | undefined;
+    /** @type {Record<string, any> | undefined} */
+    _params: Record<string, any> | undefined;
+    /** @type {string[]} */
+    _preserveSpaceElements: string[];
+    /** @type {string[]} */
+    _stripSpaceElements: string[];
     static DefaultTemplateRules: {
         transformRoot: {
             /**
@@ -83,38 +111,9 @@ declare class XPathTransformerContext {
      * @param {import('./index.js').
      *   XPathTemplateObject<any>[]} templates - Template objects
      */
-    constructor(config: XPathTransformerContextConfig, templates: import("./index.js").XPathTemplateObject<any>[]);
-    _config: XPathTransformerContextConfig;
-    _templates: import("./index.js").XPathTemplateObject<any>[];
-    /** @type {Document|Element|Node} */
-    _contextNode: Document | Element | Node;
-    _origNode: Document | Element | Node;
-    /** @type {Record<string, unknown>} */
-    vars: Record<string, unknown>;
-    /** @type {Record<string, Record<string, unknown>>} */
-    propertySets: Record<string, Record<string, unknown>>;
-    /** @type {Record<string, {match: string, use: string}>} */
-    keys: Record<string, {
-        match: string;
-        use: string;
-    }>;
-    /**
-     * @type {Record<string,
-     *   import('./JSONPathTransformerContext.js').DecimalFormatSymbols>}
-     */
-    decimalFormats: Record<string, import("./JSONPathTransformerContext.js").DecimalFormatSymbols>;
-    /** @type {boolean|undefined} */
-    _initialized: boolean | undefined;
-    /** @type {string|undefined} */
-    _currPath: string | undefined;
-    /** @type {Record<string, any> | undefined} */
-    _params: Record<string, any> | undefined;
-    /** @type {string[]} */
-    _preserveSpaceElements: string[];
-    /** @type {string[]} */
-    _stripSpaceElements: string[];
+    constructor(config: XPathTransformerContextConfig, templates: import('./index.js').XPathTemplateObject<any>[]);
     /** @returns {import('./index.js').JoiningTransformer} */
-    _getJoiningTransformer(): import("./index.js").JoiningTransformer;
+    _getJoiningTransformer(): import('./index.js').JoiningTransformer;
     /**
      * Check if whitespace should be stripped for a given element.
      * @param {Node} node - The node to check
@@ -208,10 +207,10 @@ declare class XPathTransformerContext {
      * @returns {this}
      */
     forEachGroup(select: string, options: {
-        groupBy?: string | undefined;
-        groupAdjacent?: string | undefined;
-        groupStartingWith?: string | undefined;
-        groupEndingWith?: string | undefined;
+        groupBy?: string;
+        groupAdjacent?: string;
+        groupStartingWith?: string;
+        groupEndingWith?: string;
     }, cb: (this: XPathTransformerContext, key: any, items: Node[], ctx: any) => void): this;
     /**
      * Returns the current group (for use within forEachGroup callback).
@@ -280,7 +279,7 @@ declare class XPathTransformerContext {
     number(num: number | string | {
         value?: number | string;
         count?: string;
-        level?: "single" | "multiple" | "any";
+        level?: 'single' | 'multiple' | 'any';
         from?: string;
         format?: string;
         decimalFormat?: string;
@@ -405,7 +404,7 @@ declare class XPathTransformerContext {
      * @param {import('./StringJoiningTransformer.js').OutputConfig} cfg Text
      * @returns {XPathTransformerContext}
      */
-    output(cfg: import("./StringJoiningTransformer.js").OutputConfig): XPathTransformerContext;
+    output(cfg: import('./StringJoiningTransformer.js').OutputConfig): XPathTransformerContext;
     /**
      * Configure mode behavior (similar to xsl:mode).
      * @param {{
@@ -429,7 +428,7 @@ declare class XPathTransformerContext {
      *   OutputCharacters} outputCharacters
      * @returns {this}
      */
-    characterMap(name: string, outputCharacters: import("./AbstractJoiningTransformer.js").OutputCharacters): this;
+    characterMap(name: string, outputCharacters: import('./AbstractJoiningTransformer.js').OutputCharacters): this;
     /**
      * @param {string} name
      * @param {Record<string, string>} attributes
@@ -526,7 +525,7 @@ declare class XPathTransformerContext {
      *   DecimalFormatSymbols} [symbols] - Format symbols
      * @returns {this}
      */
-    decimalFormat(nameOrSymbols: string | import("./JSONPathTransformerContext.js").DecimalFormatSymbols, symbols?: import("./JSONPathTransformerContext.js").DecimalFormatSymbols): this;
+    decimalFormat(nameOrSymbols: string | import('./JSONPathTransformerContext.js').DecimalFormatSymbols, symbols?: import('./JSONPathTransformerContext.js').DecimalFormatSymbols): this;
     /**
      * Append attribute.
      * @param {string} name Attribute name
@@ -652,4 +651,5 @@ declare class XPathTransformerContext {
         flags?: string;
     }): XPathTransformerContext;
 }
+export default XPathTransformerContext;
 //# sourceMappingURL=XPathTransformerContext.d.ts.map

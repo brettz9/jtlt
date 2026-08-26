@@ -1,4 +1,3 @@
-export default XSLTStyleJSONPathResolver;
 /**
  * Computes a simple specificity score for JSONPath selectors inspired by XSLT.
  *
@@ -13,4 +12,5 @@ declare class XSLTStyleJSONPathResolver {
      */
     getPriorityBySpecificity(path: string | string[]): -0.5 | 0.5 | 0;
 }
+export default XSLTStyleJSONPathResolver;
 //# sourceMappingURL=XSLTStyleJSONPathResolver.d.ts.map

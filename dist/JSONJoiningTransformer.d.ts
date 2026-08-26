@@ -1,11 +1,12 @@
-export default JSONJoiningTransformer;
-export type ObjectCallback = (this: JSONJoiningTransformer, obj: Record<string, unknown>) => void;
-export type ArrayCallback = (this: JSONJoiningTransformer, arr: any[]) => void;
-export type SimpleCallback<T = "json"> = (this: T extends "json" ? JSONJoiningTransformer : T extends "string" ? import("./StringJoiningTransformer.js").default : import("./DOMJoiningTransformer.js").default) => void;
-/**
- * Attributes object for element() allowing standard string attributes
- * plus special helpers: dataset (object) and $a (ordered attribute array).
- */
+import AbstractJoiningTransformer from './AbstractJoiningTransformer.js';
+export type ObjectCallback = (@this {JSONJoiningTransformer}
+ * : JSONJoiningTransformer, obj: Record<string, unknown>) => void;
+export type ArrayCallback = (@this {JSONJoiningTransformer}
+ * : JSONJoiningTransformer, arr: any[]) => void;
+export type SimpleCallback<T = "json"> = (@this {T extends "json" ? JSONJoiningTransformer :
+ *   T extends "string" ? import('./StringJoiningTransformer.js').default
+ *   : import('./DOMJoiningTransformer.js').default}
+ * : T extends "json" ? JSONJoiningTransformer : T extends "string" ? import('./StringJoiningTransformer.js').default : import('./DOMJoiningTransformer.js').default) => void;
 export type ElementAttributes = Record<string, unknown> & {
     dataset?: Record<string, string>;
     $a?: [string, string][];
@@ -58,12 +59,6 @@ export type ElementInfo = {
  * @extends {AbstractJoiningTransformer<"json">}
  */
 declare class JSONJoiningTransformer extends AbstractJoiningTransformer<"json"> {
-    /**
-     * @param {any[]|Record<string, unknown>} [o] - Initial object or array
-     * @param {import('./AbstractJoiningTransformer.js').
-     *   JSONJoiningTransformerConfig} [cfg] - Configuration object
-     */
-    constructor(o?: any[] | Record<string, unknown>, cfg?: import("./AbstractJoiningTransformer.js").JSONJoiningTransformerConfig);
     /** @type {any[]|Record<string, unknown>} */
     _obj: any[] | Record<string, unknown>;
     /** @type {any} */
@@ -84,6 +79,15 @@ declare class JSONJoiningTransformer extends AbstractJoiningTransformer<"json"> 
         document: any;
         format?: string;
     }>;
+    root: any;
+    /** @type {any} */
+    _outputConfig: any;
+    /**
+     * @param {any[]|Record<string, unknown>} [o] - Initial object or array
+     * @param {import('./AbstractJoiningTransformer.js').
+     *   JSONJoiningTransformerConfig} [cfg] - Configuration object
+     */
+    constructor(o?: any[] | Record<string, unknown>, cfg?: import('./AbstractJoiningTransformer.js').JSONJoiningTransformerConfig);
     /**
      * Directly appends an item to the internal array without checks.
      * @param {any} item - Item to append
@@ -206,13 +210,18 @@ declare class JSONJoiningTransformer extends AbstractJoiningTransformer<"json"> 
      * @returns {JSONJoiningTransformer}
      */
     element(elem: string | Element, atts?: ElementAttributes | any[] | SimpleCallback, childNodes?: any[] | SimpleCallback, cb?: SimpleCallback, useAttributeSets?: string[]): JSONJoiningTransformer;
-    root: any;
     /**
      * @param {string} prefix
      * @param {string} namespaceURI
      * @returns {JSONJoiningTransformer}
      */
     namespace(prefix: string, namespaceURI: string): JSONJoiningTransformer;
+    /**
+     * @param {string} prefix
+     * @returns {void}
+     * @override
+     */
+    _flushPendingNamespace(prefix: string): void;
     /**
      * Adds/updates an attribute for the most recently open element built via
      * a callback-driven element(). When not in an element callback context,
@@ -266,7 +275,7 @@ declare class JSONJoiningTransformer extends AbstractJoiningTransformer<"json"> 
      *   Output configuration for the document (encoding, doctype, etc.)
      * @returns {JSONJoiningTransformer}
      */
-    document(cb: (this: JSONJoiningTransformer) => void, cfg?: import("./StringJoiningTransformer.js").OutputConfig): JSONJoiningTransformer;
+    document(cb: (this: JSONJoiningTransformer) => void, cfg?: import('./StringJoiningTransformer.js').OutputConfig): JSONJoiningTransformer;
     /**
      * Creates a new result document with metadata (href, format).
      * Similar to XSLT's xsl:result-document, this allows templates to generate
@@ -280,7 +289,7 @@ declare class JSONJoiningTransformer extends AbstractJoiningTransformer<"json"> 
      *   Output configuration for the document (encoding, doctype, format, etc.)
      * @returns {JSONJoiningTransformer}
      */
-    resultDocument(href: string, cb: (this: JSONJoiningTransformer) => void, cfg?: import("./StringJoiningTransformer.js").OutputConfig): JSONJoiningTransformer;
+    resultDocument(href: string, cb: (this: JSONJoiningTransformer) => void, cfg?: import('./StringJoiningTransformer.js').OutputConfig): JSONJoiningTransformer;
     /**
      * Helper method to use property sets.
      * @param {Record<string, unknown>} obj - Object to which to apply
@@ -290,5 +299,5 @@ declare class JSONJoiningTransformer extends AbstractJoiningTransformer<"json"> 
      */
     _usePropertySets(obj: Record<string, unknown>, psName: string): Record<string, unknown>;
 }
-import AbstractJoiningTransformer from './AbstractJoiningTransformer.js';
+export default JSONJoiningTransformer;
 //# sourceMappingURL=JSONJoiningTransformer.d.ts.map

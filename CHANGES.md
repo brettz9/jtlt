@@ -1,5 +1,9 @@
 # jtlt CHANGES
 
+## ?
+
+- chore: update deps and devDeps
+
 ## 0.12.0
 
 - feat: allow `sequence` for this.function

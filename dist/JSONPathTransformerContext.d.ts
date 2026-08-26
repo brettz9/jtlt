@@ -1,49 +1,45 @@
-export default JSONPathTransformerContext;
-/**
- * Decimal format symbols for number formatting.
- */
 export type DecimalFormatSymbols = {
     /**
      * - Character for decimal point
      */
-    decimalSeparator?: string | undefined;
+    decimalSeparator?: string;
     /**
      * - Character for thousands
      */
-    groupingSeparator?: string | undefined;
+    groupingSeparator?: string;
     /**
      * - Character for percent
      */
-    percent?: string | undefined;
+    percent?: string;
     /**
      * - Character for per-mille
      */
-    perMille?: string | undefined;
+    perMille?: string;
     /**
      * - Character for zero
      */
-    zeroDigit?: string | undefined;
+    zeroDigit?: string;
     /**
      * - Character for digit placeholder
      */
-    digit?: string | undefined;
+    digit?: string;
     /**
      * - Character separating
      * positive/negative patterns
      */
-    patternSeparator?: string | undefined;
+    patternSeparator?: string;
     /**
      * - Character for minus sign
      */
-    minusSign?: string | undefined;
+    minusSign?: string;
     /**
      * - String for infinity
      */
-    infinity?: string | undefined;
+    infinity?: string;
     /**
      * - String for NaN
      */
-    NaN?: string | undefined;
+    NaN?: string;
 };
 export type NumberValue = number | string | {
     value?: number | string;
@@ -55,23 +51,14 @@ export type NumberValue = number | string | {
     lang?: string;
     letterValue?: string;
 };
-/**
- * Sort spec types used by applyTemplates() and forEach().
- */
 export type SortObject = {
     select?: string;
-    order?: "ascending" | "descending";
-    type?: "text" | "number";
+    order?: 'ascending' | 'descending';
+    type?: 'text' | 'number';
     locale?: string;
     localeOptions?: unknown;
 };
-/**
- * Sort spec types used by applyTemplates() and forEach().
- */
 export type SortComparator = (a: unknown, b: unknown, ctx: JSONPathTransformerContext) => number;
-/**
- * Sort spec types used by applyTemplates() and forEach().
- */
 export type SortSpec = string | SortObject | SortComparator | Array<string | SortObject>;
 export type JSONPathTransformerContextConfig<T = "json"> = {
     /**
@@ -81,30 +68,30 @@ export type JSONPathTransformerContextConfig<T = "json"> = {
     /**
      * - Parent object
      */
-    parent?: object | undefined;
+    parent?: object;
     /**
      * - Parent property name
      */
-    parentProperty?: string | undefined;
+    parentProperty?: string;
     /**
      * - Whether to error on
      * equal priority
      */
-    errorOnEqualPriority?: boolean | undefined;
+    errorOnEqualPriority?: boolean;
     /**
      * - Joining transformer
      */
-    joiningTransformer: T extends "json" ? import("./JSONJoiningTransformer.js").default : T extends "string" ? import("./StringJoiningTransformer.js").default : import("./DOMJoiningTransformer.js").default;
+    joiningTransformer: T extends "json" ? import('./JSONJoiningTransformer.js').default : T extends "string" ? import('./StringJoiningTransformer.js').default : import('./DOMJoiningTransformer.js').default;
     /**
      * - Whether to prevent eval in
      * JSONPath
      */
-    preventEval?: boolean | undefined;
+    preventEval?: boolean;
     /**
      * Priority resolver function
      */
-    specificityPriorityResolver?: ((path: string) => number) | undefined;
-    templates?: import("./index.js").JSONPathTemplateObject<T>[] | undefined;
+    specificityPriorityResolver?: (path: string) => number;
+    templates?: import('./index.js').JSONPathTemplateObject<T>[];
 };
 /**
  * Decimal format symbols for number formatting.
@@ -176,19 +163,6 @@ export type JSONPathTransformerContextConfig<T = "json"> = {
  * @template [T = "json"]
  */
 declare class JSONPathTransformerContext<T = "json"> {
-    /**
-     * @param {JSONPathTransformerContextConfig<T>} config
-     * @param {import('./index.js').JSONPathTemplateObject<T>[]} templates - Array
-     *   of template objects
-     */
-    constructor(config: JSONPathTransformerContextConfig<T>, templates: import("./index.js").JSONPathTemplateObject<T>[]);
-    /**
-     * Holds the current iteration state (for position calculations).
-     * @type {{ index?: number } | undefined}
-     */
-    iterationState: {
-        index?: number;
-    } | undefined;
     _config: JSONPathTransformerContextConfig<T>;
     _templates: import("./index.js").JSONPathTemplateObject<T>[];
     _contextObj: string | number | boolean | object | null;
@@ -217,6 +191,19 @@ declare class JSONPathTransformerContext<T = "json"> {
     /** @type {string[]} */
     _stripSpaceElements: string[];
     /**
+     * Holds the current iteration state (for position calculations).
+     * @type {{ index?: number } | undefined}
+     */
+    iterationState: {
+        index?: number;
+    } | undefined;
+    /**
+     * @param {JSONPathTransformerContextConfig<T>} config
+     * @param {import('./index.js').JSONPathTemplateObject<T>[]} templates - Array
+     *   of template objects
+     */
+    constructor(config: JSONPathTransformerContextConfig<T>, templates: import('./index.js').JSONPathTemplateObject<T>[]);
+    /**
      * Triggers an error if equal priority templates are found.
      * @returns {void}
      */
@@ -234,7 +221,7 @@ declare class JSONPathTransformerContext<T = "json"> {
      *   default : import('./DOMJoiningTransformer.js').
      *   default} The joining transformer
      */
-    _getJoiningTransformer(): T extends "json" ? import("./JSONJoiningTransformer.js").default : T extends "string" ? import("./StringJoiningTransformer.js").default : import("./DOMJoiningTransformer.js").default;
+    _getJoiningTransformer(): T extends "json" ? import('./JSONJoiningTransformer.js').default : T extends "string" ? import('./StringJoiningTransformer.js').default : import('./DOMJoiningTransformer.js').default;
     /**
      * @param {string | Node} item - Item to append to output
      * @returns {this}
@@ -322,10 +309,10 @@ declare class JSONPathTransformerContext<T = "json"> {
      * @returns {this}
      */
     forEachGroup(select: string, options: {
-        groupBy?: string | undefined;
-        groupAdjacent?: string | undefined;
-        groupStartingWith?: string | undefined;
-        groupEndingWith?: string | undefined;
+        groupBy?: string;
+        groupAdjacent?: string;
+        groupStartingWith?: string;
+        groupEndingWith?: string;
         sort?: any;
     }, cb: (this: JSONPathTransformerContext<T>, key: any, items: any[], ctx: any) => void): this;
     /**
@@ -407,7 +394,7 @@ declare class JSONPathTransformerContext<T = "json"> {
      *   string content
      * @returns {this}
      */
-    string(str: string, cb?: import("./JSONJoiningTransformer.js").SimpleCallback<T>): this;
+    string(str: string, cb?: import('./JSONJoiningTransformer.js').SimpleCallback<T>): this;
     /**
      * Append a number to JSON output with xsl:number-like formatting.
      * @param {NumberValue} num - Number value, "position()" string, or
@@ -510,7 +497,7 @@ declare class JSONPathTransformerContext<T = "json"> {
      * @param {import('./StringJoiningTransformer.js').OutputConfig} cfg Text
      * @returns {this}
      */
-    output(cfg: import("./StringJoiningTransformer.js").OutputConfig): this;
+    output(cfg: import('./StringJoiningTransformer.js').OutputConfig): this;
     /**
      * Configure mode behavior (similar to xsl:mode).
      * @param {{
@@ -534,7 +521,7 @@ declare class JSONPathTransformerContext<T = "json"> {
      *   OutputCharacters} outputCharacters
      * @returns {this}
      */
-    characterMap(name: string, outputCharacters: import("./AbstractJoiningTransformer.js").OutputCharacters): this;
+    characterMap(name: string, outputCharacters: import('./AbstractJoiningTransformer.js').OutputCharacters): this;
     /**
      * @param {string} name
      * @param {Record<string, string>} attributes
@@ -738,4 +725,5 @@ declare class JSONPathTransformerContext<T = "json"> {
      */
     assert(test: string, message?: string): this;
 }
+export default JSONPathTransformerContext;
 //# sourceMappingURL=JSONPathTransformerContext.d.ts.map

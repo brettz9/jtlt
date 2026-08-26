@@ -1,4 +1,3 @@
-export default AbstractJoiningTransformer;
 export type OutputCharacters = {
     character: string;
     string: string;
@@ -8,28 +7,20 @@ export type BaseTransformerConfig = {
     JHTMLForJSON?: boolean;
     mode?: "JSON" | "JavaScript";
 };
-/**
- * When exposeDocuments is true, get() returns an array of XMLDocument
- * objects (one per root element) instead of a DocumentFragment.
- */
 export type DOMJoiningTransformerConfig = BaseTransformerConfig & {
     document: Document;
     exposeDocuments?: boolean;
 };
 export type JSONJoiningTransformerConfig = {
-    requireSameChildren?: boolean | undefined;
-    unwrapSingleResult?: boolean | undefined;
+    requireSameChildren?: boolean;
+    unwrapSingleResult?: boolean;
     /**
      * - When true, get() returns an array
      * of document wrapper objects (one per root element) instead of the raw array.
      */
-    exposeDocuments?: boolean | undefined;
-    mode?: "JSON" | "JavaScript" | undefined;
+    exposeDocuments?: boolean;
+    mode?: "JSON" | "JavaScript";
 };
-/**
- * When exposeDocuments is true, get() returns an array of document
- * strings (one per root element) instead of a single concatenated string.
- */
 export type StringJoiningTransformerConfig = BaseTransformerConfig & {
     xmlElements?: boolean;
     preEscapedAttributes?: boolean;
@@ -95,10 +86,6 @@ export type JoiningTransformerConfig<T> = T extends "string" ? StringJoiningTran
  * @template T
  */
 declare class AbstractJoiningTransformer<T> {
-    /**
-     * @param {JoiningTransformerConfig<T>} [cfg] - Configuration object
-     */
-    constructor(cfg?: JoiningTransformerConfig<T>);
     _cfg: JoiningTransformerConfig<T>;
     /** @type {Record<string, OutputCharacters>} */
     _characterMap: Record<string, OutputCharacters>;
@@ -167,6 +154,12 @@ declare class AbstractJoiningTransformer<T> {
         sequence?: string;
         returnType?: string;
     }>;
+    _outputConfig: import("./StringJoiningTransformer.js").OutputConfig | undefined;
+    mediaType: string | undefined;
+    /**
+     * @param {JoiningTransformerConfig<T>} [cfg] - Configuration object
+     */
+    constructor(cfg?: JoiningTransformerConfig<T>);
     /**
      * @param {JoiningTransformerConfig<T>} cfg - Configuration object
      * @returns {void}
@@ -176,9 +169,7 @@ declare class AbstractJoiningTransformer<T> {
      * @param {import('./StringJoiningTransformer.js').OutputConfig} cfg
      * @returns {this}
      */
-    output(cfg: import("./StringJoiningTransformer.js").OutputConfig): this;
-    _outputConfig: import("./StringJoiningTransformer.js").OutputConfig | undefined;
-    mediaType: string | undefined;
+    output(cfg: import('./StringJoiningTransformer.js').OutputConfig): this;
     /**
      * Configure mode behavior (similar to xsl:mode).
      * @param {{
@@ -313,4 +304,5 @@ declare class AbstractJoiningTransformer<T> {
      */
     config(prop: string, val: any, cb?: (this: AbstractJoiningTransformer<T>) => void): void;
 }
+export default AbstractJoiningTransformer;
 //# sourceMappingURL=AbstractJoiningTransformer.d.ts.map

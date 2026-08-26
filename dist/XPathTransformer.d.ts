@@ -1,17 +1,16 @@
-export default XPathTransformer;
 export type XPathTransformerConfig<T> = {
     /**
      * Throw on equal priority
      */
-    errorOnEqualPriority?: boolean | undefined;
+    errorOnEqualPriority?: boolean;
     /**
      * Template objects
      */
-    templates: import("./index.js").XPathTemplateArray<T>;
+    templates: import('./index.js').XPathTemplateArray<T>;
     /**
      * XPath version (1|2|3.1)
      */
-    xpathVersion?: number | undefined;
+    xpathVersion?: number;
 };
 /**
  * @template T
@@ -30,6 +29,11 @@ export type XPathTransformerConfig<T> = {
  * @template T
  */
 declare class XPathTransformer<T> {
+    _config: XPathTransformerConfig<T> & import("./XPathTransformerContext.js").XPathTransformerContextConfig;
+    /** @type {any[]} */
+    rootTemplates: any[];
+    /** @type {import('./index.js').XPathTemplateObject<T>[]} */
+    templates: import('./index.js').XPathTemplateObject<T>[];
     static DefaultTemplateRules: {
         transformRoot: {
             /**
@@ -47,12 +51,7 @@ declare class XPathTransformer<T> {
      *   import('./XPathTransformerContext.js').
      *   XPathTransformerContextConfig} config Configuration
      */
-    constructor(config: XPathTransformerConfig<T> & import("./XPathTransformerContext.js").XPathTransformerContextConfig);
-    _config: XPathTransformerConfig<T> & import("./XPathTransformerContext.js").XPathTransformerContextConfig;
-    /** @type {any[]} */
-    rootTemplates: any[];
-    /** @type {import('./index.js').XPathTemplateObject<T>[]} */
-    templates: import("./index.js").XPathTemplateObject<T>[];
+    constructor(config: XPathTransformerConfig<T> & import('./XPathTransformerContext.js').XPathTransformerContextConfig);
     /**
      * @returns {void}
      */
@@ -61,6 +60,7 @@ declare class XPathTransformer<T> {
      * @param {string} [mode] Transformation mode
      * @returns {import('./index.js').ResultType<T>} Result of transformation
      */
-    transform(mode?: string): import("./index.js").ResultType<T>;
+    transform(mode?: string): import('./index.js').ResultType<T>;
 }
+export default XPathTransformer;
 //# sourceMappingURL=XPathTransformer.d.ts.map

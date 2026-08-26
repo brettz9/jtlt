@@ -6,10 +6,8 @@ describe('jtlt', () => {
   it('performs a string transformation', async () => {
     const result = await jtlt({
       data: new DOMParser().parseFromString(
-        `<div type="questions-answers">
-          <p n="1">Some text</p>
-          <p n="2">More text</p>
-        </div>`,
+        // eslint-disable-next-line @stylistic/max-len -- Long
+        `<div type="questions-answers"><p n="1">Some text</p><p n="2">More text</p></div>`,
         'text/xml'
       ),
       engineType: 'xpath',

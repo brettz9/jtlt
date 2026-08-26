@@ -1,4 +1,4 @@
-export default JSONPathTransformer;
+import JSONPathTransformerContext from './JSONPathTransformerContext.js';
 /**
  * Applies named JSONPath-driven templates to JSON data.
  *
@@ -9,11 +9,10 @@ export default JSONPathTransformer;
  * @template T
  */
 declare class JSONPathTransformer<T> {
-    /**
-     * @param {string} select - JSONPath selector
-     * @returns {string} Absolute JSONPath
-     */
-    static makeJSONPathAbsolute(select: string): string;
+    _config: import("./JSONPathTransformerContext.js").JSONPathTransformerContextConfig<T>;
+    /** @type {import('./index.js').JSONPathTemplateObject<T>[]} */
+    rootTemplates: import('./index.js').JSONPathTemplateObject<T>[];
+    templates: import("./index.js").JSONPathTemplateObject<T>[];
     static DefaultTemplateRules: {
         transformRoot: {
             /**
@@ -41,7 +40,7 @@ declare class JSONPathTransformer<T> {
              * @param {{mode?: string}} cfg - Configuration
              * @returns {void}
              */
-            template(this: JSONPathTransformerContext<"json">, value: any, cfg: {
+            template(this: JSONPathTransformerContext, value: any, cfg: {
                 mode?: string;
             }): void;
         };
@@ -52,7 +51,7 @@ declare class JSONPathTransformer<T> {
              * @param {{mode?: string}} cfg - Configuration
              * @returns {void}
              */
-            template(this: JSONPathTransformerContext<"json">, value: any, cfg: {
+            template(this: JSONPathTransformerContext, value: any, cfg: {
                 mode?: string;
             }): void;
         };
@@ -61,7 +60,7 @@ declare class JSONPathTransformer<T> {
              * @this {JSONPathTransformerContext}
              * @returns {JSONPathTransformerContext}
              */
-            template(this: JSONPathTransformerContext<"json">): JSONPathTransformerContext;
+            template(this: JSONPathTransformerContext): JSONPathTransformerContext;
         };
         transformFunctions: {
             /**
@@ -72,14 +71,15 @@ declare class JSONPathTransformer<T> {
         };
     };
     /**
+     * @param {string} select - JSONPath selector
+     * @returns {string} Absolute JSONPath
+     */
+    static makeJSONPathAbsolute(select: string): string;
+    /**
      * @param {import('./JSONPathTransformerContext.js').
      *   JSONPathTransformerContextConfig<T>} config - Configuration object
      */
-    constructor(config: import("./JSONPathTransformerContext.js").JSONPathTransformerContextConfig<T>);
-    _config: import("./JSONPathTransformerContext.js").JSONPathTransformerContextConfig<T>;
-    /** @type {import('./index.js').JSONPathTemplateObject<T>[]} */
-    rootTemplates: import("./index.js").JSONPathTemplateObject<T>[];
-    templates: import("./index.js").JSONPathTemplateObject<T>[];
+    constructor(config: import('./JSONPathTransformerContext.js').JSONPathTransformerContextConfig<T>);
     /**
      * @returns {void}
      */
@@ -88,7 +88,7 @@ declare class JSONPathTransformer<T> {
      * @param {string} [mode] - Transformation mode
      * @returns {import('./index.js').ResultType<T>} The transformation result
      */
-    transform(mode?: string): import("./index.js").ResultType<T>;
+    transform(mode?: string): import('./index.js').ResultType<T>;
 }
-import JSONPathTransformerContext from './JSONPathTransformerContext.js';
+export default JSONPathTransformer;
 //# sourceMappingURL=JSONPathTransformer.d.ts.map

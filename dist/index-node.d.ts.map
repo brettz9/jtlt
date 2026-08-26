@@ -1,1 +1,1 @@
-{"version":3,"file":"index-node.d.ts","sourceRoot":"","sources":["../src/index-node.js"],"names":[],"mappings":";;iBAC8B,YAAY"}
+{"version":3,"file":"index-node.d.ts","sourceRoot":"","sources":["../src/index-node.js"],"names":[],"mappings":"AACA,OAAO,IAAiB,MAAM,YAAY,CAAC;AAC3C,cAAc,YAAY,CAAC;eACZ,IAAI"}
