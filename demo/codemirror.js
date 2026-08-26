@@ -1,5 +1,6 @@
 import {javascript} from '@codemirror/lang-javascript';
 import {EditorView, basicSetup} from 'codemirror';
+import {syntaxHighlighting, defaultHighlightStyle} from '@codemirror/language';
 import {xml} from '@codemirror/lang-xml';
 import {json} from '@codemirror/lang-json';
 
@@ -31,6 +32,7 @@ export function editorFromTextArea (textarea, extensions, inputHandler) {
       doc: val ?? textarea.value,
       extensions: [
         basicSetup,
+        syntaxHighlighting(defaultHighlightStyle, {fallback: true}),
         EditorView.updateListener.of((viewUpdate) => {
           // Check if the document content has changed
           if (!viewUpdate.docChanged) {
