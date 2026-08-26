@@ -86,7 +86,7 @@
 
 7. See code for other possible to-dos
 
-8. Promise-based templates
+8. Promise-based templates; jtlt as templating engine (including zodexy-aware path expressions like @blob() for jsonpath-plus with `copyOf`/`valueOf` `document(...url...)` or our own indexeddb path db/store/key equivalent); work on **schema-driven** search forms too
 
 9. Consider implementing the following elements from <https://www.w3.org/TR/xslt-30/>
     which are not yet implemented.
