@@ -168,7 +168,7 @@ describe('jtlt function wrapper', () => {
       });
 
       // With exposeDocuments, result should be array-like
-      expect(result).to.exist;
+      expect(result).to.be.an('Array');
     });
 
     it('passes exposeDocuments to string joiner', async () => {
