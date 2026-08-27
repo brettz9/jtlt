@@ -34,6 +34,8 @@ const escapeRegexReplacement = (string) => {
  * - joiningTransformer: joiner with append(), string(), object(), array(), etc.
  * - xpathVersion: 1|2|3.1 (default 1)
  * - errorOnEqualPriority, specificityPriorityResolver (same semantics).
+ * @template [T="dom"]
+ * @template [V=DocumentFragment|Element]
  */
 class XPathTransformerContext {
   /* c8 ignore start -- static default rules object has spotty function

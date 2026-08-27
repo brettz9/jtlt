@@ -8,6 +8,16 @@ import JTLT, {
   DOMJoiningTransformer, JSONJoiningTransformer, StringJoiningTransformer
 } from '../src/index-node.js';
 
+/**
+ * @typedef {object} TestData
+ * @property {string} [name]
+ * @property {number} [val]
+ * @property {number} [n]
+ * @property {number} [x]
+ * @property {number} [y]
+ * @property {string} [group]
+ */
+
 describe('Coverage - additional edge cases', function () {
   describe('StringJoiningTransformer', function () {
     it('should normalize className/htmlFor in HTML mode', function () {
@@ -546,7 +556,8 @@ describe('Coverage - additional edge cases', function () {
 
     it('dataset and $a ordered attributes', function () {
       const data = {};
-      let out;
+
+      let out = '';
 
       /** @type {import('../src/index.js').JSONPathTemplateObject<"string">[]} */
       const templates = [{path: '$', template () {
@@ -566,7 +577,8 @@ describe('Coverage - additional edge cases', function () {
 
     it('preEscapedAttributes prevents escaping', function () {
       const data = {};
-      let out;
+
+      let out = '';
 
       /** @type {import('../src/index.js').JSONPathTemplateObject<"string">[]} */
       const templates = [{path: '$', template () {
@@ -828,7 +840,7 @@ describe('Coverage - additional edge cases', function () {
           this.applyTemplates({select: '$.people[*]', mode: 'person'}, undefined, {select: '$.age', type: 'number', order: 'descending'});
         }},
         {path: '$.people[*]', mode: 'person', template (p) {
-          this.string(p.name);
+          this.string((/** @type {TestData} */ (p)).name);
         }}
       ];
       new JTLT({
@@ -1053,9 +1065,11 @@ describe('index.js additional branches', function () {
     const customJT = {
       _s: '',
       /** @param {string|unknown} s */
+      /** @param {string|unknown} s */
       append (s) {
         this._s += typeof s === 'string' ? s : String(s);
       },
+      /** @param {string} str */
       /** @param {string} str */
       string (str) {
         this.append(str);
@@ -1072,7 +1086,7 @@ describe('index.js additional branches', function () {
     let out;
     const jtlt = new JTLT({
       data: {a: 1}, outputType: 'string', autostart: false,
-      joiningTransformer: jtInstance,
+      joiningTransformer: /** @type {import('../src/index.js').StringJoiningTransformer} */ (/** @type {unknown} */ (jtInstance)),
       templates: [{path: '$', template () {
         this.string('y');
       }}],
@@ -1240,7 +1254,7 @@ describe('index.js - additional configuration branches', function () {
       data,
       outputType: 'string',
       forQuery: ['$.items[*]', function (arg) {
-        this.string(arg.x);
+        this.string((/** @type {TestData} */ (arg)).x);
       }],
       success (result) {
         out = result; return result;
@@ -1293,6 +1307,7 @@ describe('index.js - additional configuration branches', function () {
     new JTLT({
       data,
       outputType: 'string',
+      /** @this {import('../src/index.js').JSONPathTransformerContext<"string">} */
       templates () {
         this.string('from templates func');
       },
@@ -1328,7 +1343,7 @@ describe('JSONPathTransformerContext - sorting edge cases', function () {
     /** @type {import('../src/index.js').JSONPathTemplateObject<"string">[]} */
     const templates = [{path: '$', template () {
       this.forEach('$.items[*]', function (item) {
-        this.string(item.name);
+        this.string((/** @type {TestData} */ (item)).name);
         this.string(',');
       }, [{
         select: '$.name',
@@ -1352,7 +1367,7 @@ describe('JSONPathTransformerContext - sorting edge cases', function () {
     /** @type {import('../src/index.js').JSONPathTemplateObject<"string">[]} */
     const templates = [{path: '$', template () {
       this.forEach('$.items[*]', function (item) {
-        this.string(String(item.val));
+        this.string(String((/** @type {TestData} */ (item)).val));
         this.string(',');
       }, [{
         select: '$.val',
@@ -1376,7 +1391,7 @@ describe('JSONPathTransformerContext - sorting edge cases', function () {
     /** @type {import('../src/index.js').JSONPathTemplateObject<"string">[]} */
     const templates = [{path: '$', template () {
       this.forEach('$.items[*]', function (item) {
-        this.string(item.name);
+        this.string((/** @type {TestData} */ (item)).name);
         this.string(',');
       }, [{select: '$.name', type: 'text', order: 'ascending'}]);
     }}];
@@ -1398,7 +1413,7 @@ describe('JSONPathTransformerContext - sorting edge cases', function () {
     const templates = [{path: '$', template () {
       // String sortSpec should use default text/ascending
       this.forEach('$.items[*]', function (item) {
-        this.string(String(item.val));
+        this.string(String((/** @type {TestData} */ (item)).val));
       }, '$.val');
     }}];
     new JTLT({
@@ -1421,7 +1436,7 @@ describe('JSONPathTransformerContext - sorting edge cases', function () {
         this.applyTemplates({select: '$.items[*]'});
       }},
       {path: '$.items[*]', template (item) {
-        this.string(String(item.n));
+        this.string(String((/** @type {TestData} */ (item)).n));
       }}
     ];
     new JTLT({
@@ -1441,7 +1456,7 @@ describe('JSONPathTransformerContext - sorting edge cases', function () {
     const templates = [{path: '$', template () {
       // String sortSpec in forEach (feBuildComparator)
       this.forEach('$.items[*]', function (item) {
-        this.string(String(item.n));
+        this.string(String((/** @type {TestData} */ (item)).n));
       }, '$.n');
     }}];
     new JTLT({
@@ -1462,7 +1477,7 @@ describe('JSONPathTransformerContext - sorting edge cases', function () {
     const templates = [{path: '$', template () {
       // Object sortSpec in forEach (feBuildComparator)
       this.forEach('$.items[*]', function (item) {
-        this.string(String(item.n));
+        this.string(String((/** @type {TestData} */ (item)).n));
       }, {select: '$.n', type: 'number', order: 'ascending'});
     }}];
     new JTLT({
@@ -1481,7 +1496,7 @@ describe('JSONPathTransformerContext - sorting edge cases', function () {
     /** @type {import('../src/index.js').JSONPathTemplateObject<"string">[]} */
     const templates = [{path: '$', template () {
       this.forEach('$.items[*]', function (item) {
-        this.string(String(item.name));
+        this.string(String((/** @type {TestData} */ (item)).name));
         this.string(',');
       }, [{select: '$.name', type: 'text'}]);
     }}];
@@ -1497,12 +1512,12 @@ describe('JSONPathTransformerContext - sorting edge cases', function () {
 
   it('should handle text sorting with equal values', function () {
     const data = {items: [{name: 'apple'}, {name: 'apple'}, {name: 'banana'}]};
-    let out;
+    let out = '';
 
     /** @type {import('../src/index.js').JSONPathTemplateObject<"string">[]} */
     const templates = [{path: '$', template () {
       this.forEach('$.items[*]', function (item) {
-        this.string(item.name);
+        this.string((/** @type {TestData} */ (item)).name);
         this.string(',');
       }, {select: '$.name', type: 'text'});
     }}];
@@ -1524,7 +1539,7 @@ describe('JSONPathTransformerContext - sorting edge cases', function () {
     /** @type {import('../src/index.js').JSONPathTemplateObject<"string">[]} */
     const templates = [{path: '$', template () {
       this.forEach('$.items[*]', function (item) {
-        this.string(item.name);
+        this.string((/** @type {TestData} */ (item)).name);
         this.string(',');
       }, {select: '$.name', type: 'text', order: 'descending'});
     }}];
@@ -1548,9 +1563,9 @@ describe('JSONPathTransformerContext - sorting edge cases', function () {
     const templates = [{path: '$', template () {
       // Function sortSpec
       this.forEach('$.items[*]', function (item) {
-        this.string(String(item.n));
+        this.string(String((/** @type {TestData} */ (item)).n));
       }, (a, b) => {
-        return a.n - b.n;
+        return (/** @type {TestData} */ (a)).n - (/** @type {TestData} */ (b)).n;
       });
     }}];
     new JTLT({
@@ -1616,7 +1631,7 @@ describe('JSONPathTransformerContext - sorting edge cases', function () {
     const templates = [{path: '$', template () {
       // Sorting with locale
       this.forEach('$.items[*]', function (item) {
-        this.string(item.name);
+        this.string((/** @type {TestData} */ (item)).name);
         this.string(',');
       }, {select: '$.name', type: 'text', locale: 'de', order: 'ascending'});
     }}];
@@ -1638,7 +1653,7 @@ describe('JSONPathTransformerContext - sorting edge cases', function () {
     const templates = [{path: '$', template () {
       // Sorting with locale and options
       this.forEach('$.items[*]', function (item) {
-        this.string(item.name);
+        this.string((/** @type {TestData} */ (item)).name);
       }, {
         select: '$.name',
         type: 'text',
@@ -1666,7 +1681,7 @@ describe('JSONPathTransformerContext - sorting edge cases', function () {
     const templates = [{path: '$', template () {
       this.applyTemplates('$.items[*]', 'sorted', {select: '$.name', type: 'text', order: 'descending'});
     }}, {path: '$.items[*]', mode: 'sorted', template (item) {
-      this.string(item.name + ',');
+      this.string((/** @type {TestData} */ (item)).name + ',');
     }}];
     new JTLT({
       data, templates, outputType: 'string',
@@ -1690,7 +1705,7 @@ describe('JSONPathTransformerContext - sorting edge cases', function () {
       // Sort by name (all equal), should hit return 0 in buildComparator
       this.applyTemplates('$.items[*]', 'sorted', [{select: '$.name', type: 'text'}]);
     }}, {path: '$.items[*]', mode: 'sorted', template (item) {
-      this.string(item.x + ',');
+      this.string((/** @type {TestData} */ (item)).x + ',');
     }}];
     new JTLT({
       data, templates, outputType: 'string',
@@ -1717,7 +1732,7 @@ describe('JSONPathTransformerContext - sorting edge cases', function () {
         order: 'ascending'
       });
     }}, {path: '$.items[*]', mode: 'sorted', template (item) {
-      this.string(item.name);
+      this.string((/** @type {TestData} */ (item)).name);
     }}];
     new JTLT({
       data, templates, outputType: 'string',
@@ -1741,7 +1756,7 @@ describe('JSONPathTransformerContext - sorting edge cases', function () {
         {select: '$.name', type: 'text'}
       ]);
     }}, {path: '$.items[*]', mode: 'sorted', template (item) {
-      this.string(item.group + item.name + ',');
+      this.string((/** @type {TestData} */ (item)).group + (/** @type {TestData} */ (item)).name + ',');
     }}];
     new JTLT({
       data, templates, outputType: 'string',
@@ -1762,10 +1777,10 @@ describe('JSONPathTransformerContext - sorting edge cases', function () {
     const templates = [{path: '$', template () {
       // Use a function comparator
       this.applyTemplates('$.items[*]', 'sorted', function (aVal, bVal) {
-        return aVal.val - bVal.val; // Ascending by val
+        return (/** @type {TestData} */ (aVal)).val - (/** @type {TestData} */ (bVal)).val; // Ascending by val
       });
     }}, {path: '$.items[*]', mode: 'sorted', template (item) {
-      this.string(item.val + ',');
+      this.string((/** @type {TestData} */ (item)).val + ',');
     }}];
     new JTLT({
       data, templates, outputType: 'string',
@@ -1982,7 +1997,7 @@ describe('JSONPathTransformerContext - Branch Coverage', function () {
         path: '$.x.*',
         mode: 'test',
         template (value) {
-          this.number(value * 2);
+          this.number((/** @type {number} */ (value)) * 2);
         }
       },
       {
@@ -1990,7 +2005,7 @@ describe('JSONPathTransformerContext - Branch Coverage', function () {
         path: '$.x.y',
         mode: 'test',
         template (value) {
-          this.number(value * 3);
+          this.number((/** @type {number} */ (value)) * 3);
         }
       }
     ];
@@ -2024,7 +2039,7 @@ describe('JSONPathTransformerContext - Branch Coverage', function () {
       path: '$.items[*]',
       mode: 'item',
       template (value) {
-        this.number(value.val);
+        this.number((/** @type {TestData} */ (value)).val);
       }
     }];
     new JTLT({
@@ -2051,7 +2066,7 @@ describe('JSONPathTransformerContext - Branch Coverage', function () {
       path: '$.items[*]',
       mode: 'item',
       template (value) {
-        this.number(value.val);
+        this.number((/** @type {TestData} */ (value)).val);
       }
     }];
     new JTLT({
@@ -2078,7 +2093,7 @@ describe('JSONPathTransformerContext - Branch Coverage', function () {
       path: '$.items[*]',
       mode: 'item',
       template (value) {
-        this.string(String(value.val));
+        this.string(String((/** @type {TestData} */ (value)).val));
       }
     }];
     new JTLT({

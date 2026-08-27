@@ -47,7 +47,8 @@ const escapeRegexReplacement = (string) => {
  *   locale?: string,
  *   localeOptions?: unknown
  * }} SortObject
- * @typedef {(a: unknown, b: unknown,
+ * @template [V=unknown]
+ * @typedef {(a: V, b: V,
  *   ctx: JSONPathTransformerContext
  * ) => number} SortComparator
  * @typedef {string | SortObject | SortComparator |
@@ -81,6 +82,7 @@ const escapeRegexReplacement = (string) => {
  * joining transformer (e.g., string(), object(), array()) so templates can
  * emit results without referencing the joiner directly.
  * @template [T = "json"]
+ * @template [V=unknown]
  */
 class JSONPathTransformerContext {
   /**
@@ -226,7 +228,7 @@ class JSONPathTransformerContext {
    *   {mode?: string, select?: string}
    * } [select] - JSONPath selector or options object
    * @param {string} [mode] - Mode to apply
-   * @param {SortSpec} [sort] - Sort spec
+   * @param {SortSpec<V>} [sort] - Sort spec
    * @returns {this}
    */
   applyTemplates (select, mode, sort) {
@@ -657,7 +659,7 @@ class JSONPathTransformerContext {
    * @param {(this: JSONPathTransformerContext<T>,
    *   value: any
    * ) => void} cb - Callback function
-   * @param {SortSpec} [sort] - Sort spec
+   * @param {SortSpec<V>} [sort] - Sort spec
    * @returns {this}
    */
   forEach (select, cb, sort) {

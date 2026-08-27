@@ -165,9 +165,11 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
           !this._docs.includes(this._str)) {
         this._docs.push(this._str);
       }
-      return /** @type {any} */ (this._docs);
+      /* eslint-disable @stylistic/max-len -- Long */
+      return /** @type {T['exposeDocuments'] extends true ? string[] : string} */ (/** @type {unknown} */ (this._docs));
     }
-    return /** @type {any} */ (this._str);
+    return /** @type {T['exposeDocuments'] extends true ? string[] : string} */ (/** @type {unknown} */ (this._str));
+    /* eslint-enable @stylistic/max-len -- Long */
   }
 
   /**
@@ -224,7 +226,7 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
   }
 
   /**
-   * @param {Record<string, unknown>|Element} obj - Object to serialize
+   * @param {null|Record<string, unknown>|Element} obj - Object to serialize
    * @param {((this: StringJoiningTransformer) => void)|null} [cb] - Callback
    *   function
    * @param {any[]} [usePropertySets] - Property sets to use

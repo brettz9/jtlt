@@ -69,10 +69,12 @@ class DOMJoiningTransformer extends AbstractJoiningTransformer {
    *   XMLDocument[] : DocumentFragment|Element}
    */
   get () {
+    /* eslint-disable @stylistic/max-len -- Long */
     if (this._cfg.exposeDocuments) {
-      return /** @type {any} */ (this._docs);
+      return /** @type {TConfig['exposeDocuments'] extends true ? XMLDocument[] : DocumentFragment | Element} */ (/** @type {unknown} */ (this._docs));
     }
-    return /** @type {any} */ (this._dom);
+    return /** @type {TConfig['exposeDocuments'] extends true ? XMLDocument[] : DocumentFragment | Element} */ (/** @type {unknown} */ (this._dom));
+    /* eslint-enable @stylistic/max-len -- Long */
   }
 
   /**

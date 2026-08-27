@@ -130,10 +130,9 @@ class JSONJoiningTransformer extends AbstractJoiningTransformer {
    * @returns {TConfig['exposeDocuments'] extends true ? any[] : any[]|Record<string, unknown>|any}
    */
   get () {
-    /* eslint-enable @stylistic/max-len -- Long */
     // If exposeDocuments is set, return the array of documents
     if (this._cfg.exposeDocuments) {
-      return /** @type {any} */ (this._docs);
+      return /** @type {TConfig['exposeDocuments'] extends true ? any[] : any[]|Record<string, unknown>|any} */ (/** @type {unknown} */ (this._docs));
     }
     // Removed this._doc logic; use this._docs only
     // Unwrap single-element arrays at the root level if configured
@@ -141,7 +140,8 @@ class JSONJoiningTransformer extends AbstractJoiningTransformer {
         Array.isArray(this._obj) && this._obj.length === 1) {
       return this._obj[0];
     }
-    return /** @type {any} */ (this._obj);
+    return /** @type {TConfig['exposeDocuments'] extends true ? any[] : any[]|Record<string, unknown>|any} */ (/** @type {unknown} */ (this._obj));
+    /* eslint-enable @stylistic/max-len -- Long */
   }
 
   /**
