@@ -243,8 +243,8 @@ describe('Coverage - additional edge cases', function () {
         jt.nonfiniteNumber(Infinity);
         jt.outputFunction(function y () {});
       });
-      const frag = jt.get();
-      const div = frag.querySelector('div');
+      const frag = /** @type {DocumentFragment} */ (jt.get());
+      const div = /** @type {HTMLDivElement} */ (frag.querySelector('div'));
       const txt = div.textContent;
       // Should include 'undefined' and 'Infinity' and function source
       assert.include(txt, 'undefined');
@@ -260,8 +260,9 @@ describe('Coverage - additional edge cases', function () {
         jt.boolean(false);
         jt.null();
       });
-      const frag = jt.get();
-      const p = frag.querySelector('p');
+
+      const frag = /** @type {DocumentFragment} */ (jt.get());
+      const p = /** @type {HTMLParagraphElement} */ (frag.querySelector('p'));
       assert.equal(p.textContent, '7falsenull');
     });
 
@@ -271,13 +272,16 @@ describe('Coverage - additional edge cases', function () {
       jt.element('span', {}, () => {
         jt.boolean(true);
       });
-      const frag = jt.get();
-      const span = frag.querySelector('span');
+      const frag = /** @type {DocumentFragment} */ (jt.get());
+      const span = /** @type {HTMLSpanElement} */ (frag.querySelector('span'));
       assert.equal(span.textContent, 'true');
     });
 
     it('object()/array() branch with JHTMLForJSON', function () {
+      const {document} = new JSDOM('').window;
       const data = {};
+
+      /** @type {DocumentFragment|Element|undefined} */
       let out;
 
       /** @type {import('../src/index.js').JSONPathTemplateObject<"dom">[]} */
@@ -286,12 +290,12 @@ describe('Coverage - additional edge cases', function () {
         this.array([1, 2]);
       }}];
       new JTLT({
-        data, templates, outputType: 'dom', joiningConfig: {JHTMLForJSON: true},
+        data, templates, outputType: 'dom', joiningConfig: {document, JHTMLForJSON: true},
         success (result) {
           out = result; return result;
         }
       });
-      assert.isAbove(out.childNodes.length, 1);
+      assert.isAbove(out?.childNodes?.length ?? 0, 1);
     });
   });
 

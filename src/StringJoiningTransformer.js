@@ -53,6 +53,7 @@ function _makeDatasetAttribute (n0) {
  * }} ElementAttributes
  */
 
+/* eslint-disable @stylistic/max-len -- Long */
 /**
  * Joining transformer that builds a string result.
  *
@@ -79,13 +80,14 @@ function _makeDatasetAttribute (n0) {
  *   name mapping rules differ, etc.).
  * - cfg.preEscapedAttributes: skip escaping attribute values.
  * - cfg.JHTMLForJSON / cfg.mode: affect how object()/array() serialize.
+ * @template {import('./AbstractJoiningTransformer.js').StringJoiningTransformerConfig} [T=import('./AbstractJoiningTransformer.js').StringJoiningTransformerConfig]
  * @extends {AbstractJoiningTransformer<"string">}
  */
 class StringJoiningTransformer extends AbstractJoiningTransformer {
+  /* eslint-enable @stylistic/max-len -- Long */
   /**
    * @param {string} s - Initial string
-   * @param {import('./AbstractJoiningTransformer.js').
-   *   StringJoiningTransformerConfig} [cfg] - Configuration object
+   * @param {T} [cfg] - Configuration object
    */
   constructor (s, cfg) {
     super(cfg); // Include this in any subclass of AbstractJoiningTransformer
@@ -153,7 +155,7 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
   }
 
   /**
-   * @returns {string|string[]}
+   * @returns {T['exposeDocuments'] extends true ? string[] : string}
    */
   get () {
     if (this._cfg.exposeDocuments) {
@@ -163,9 +165,9 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
           !this._docs.includes(this._str)) {
         this._docs.push(this._str);
       }
-      return this._docs;
+      return /** @type {any} */ (this._docs);
     }
-    return this._str;
+    return /** @type {any} */ (this._str);
   }
 
   /**
@@ -223,7 +225,8 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
 
   /**
    * @param {Record<string, unknown>|Element} obj - Object to serialize
-   * @param {(this: StringJoiningTransformer) => void} cb - Callback function
+   * @param {((this: StringJoiningTransformer) => void)|null} [cb] - Callback
+   *   function
    * @param {any[]} [usePropertySets] - Property sets to use
    * @param {Record<string, unknown>} [propSets] - Additional property sets
    * @returns {StringJoiningTransformer}

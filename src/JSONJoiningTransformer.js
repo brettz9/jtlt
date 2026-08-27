@@ -247,7 +247,7 @@ class JSONJoiningTransformer extends AbstractJoiningTransformer {
 
   /**
    * Creates a new array and executes a callback in its context.
-   * @param {any[]|ArrayCallback} [arrOrCb] Seed array or callback.
+   * @param {any[]|ArrayCallback|null} [arrOrCb] Seed array or callback.
    * @param {ArrayCallback} [cb] Callback when first arg was array.
    * @returns {JSONJoiningTransformer}
    */
