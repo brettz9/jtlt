@@ -234,6 +234,7 @@ describe('namespace() method', () => {
       const joiner = StringJoiningTransformer.create('');
       const ctx = new JSONPathTransformerContext({
         data: {},
+        outputType: 'string',
         joiningTransformer: joiner,
         templates: []
       }, []);

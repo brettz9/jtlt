@@ -11,6 +11,7 @@ describe('JSONPathTransformerContext complete coverage', () => {
       const joiner = StringJoiningTransformer.create('');
       const ctx = new JSONPathTransformerContext({
         data: 'hello',
+        outputType: 'string',
         joiningTransformer: joiner,
         templates: []
       }, []);

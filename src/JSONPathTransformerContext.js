@@ -56,17 +56,22 @@ const escapeRegexReplacement = (string) => {
  */
 
 /**
- * @template [T = "json"]
+ * @typedef {object} JoiningTransformerMap
+ * @property {import('./JSONJoiningTransformer.js').default} json
+ * @property {import('./StringJoiningTransformer.js').default} string
+ * @property {import('./DOMJoiningTransformer.js').default} dom
+ */
+
+/**
+ * @template {"json"|"string"|"dom"} [T="json"]
  * @typedef {object} JSONPathTransformerContextConfig
  * @property {null|boolean|number|string|object} data - Data to transform
  * @property {object} [parent] - Parent object
  * @property {string} [parentProperty] - Parent property name
  * @property {boolean} [errorOnEqualPriority] - Whether to error on
  *   equal priority
- * @property {T extends "json" ? import('./JSONJoiningTransformer.js').
- *   default : T extends "string" ? import('./StringJoiningTransformer.js').
- *   default : import('./DOMJoiningTransformer.js').
- *   default} joiningTransformer - Joining transformer
+ * @property {T} [outputType] - Output type
+ * @property {JoiningTransformerMap[T]} joiningTransformer - Joining transformer
  * @property {boolean} [preventEval] - Whether to prevent eval in
  *   JSONPath
  * @property {(path: string) => number} [specificityPriorityResolver]
@@ -82,7 +87,7 @@ const escapeRegexReplacement = (string) => {
  * running templates. Exposes helper methods that mirror the underlying
  * joining transformer (e.g., string(), object(), array()) so templates can
  * emit results without referencing the joiner directly.
- * @template [T = "json"]
+ * @template {"json"|"string"|"dom"} [T="json"]
  * @template [V=unknown]
  */
 class JSONPathTransformerContext {
@@ -159,10 +164,7 @@ class JSONPathTransformerContext {
 
   /**
    * Gets the joining transformer from config.
-   * @returns {T extends "json" ? import('./JSONJoiningTransformer.js').
-   *   default : T extends "string" ? import('./StringJoiningTransformer.js').
-   *   default : import('./DOMJoiningTransformer.js').
-   *   default} The joining transformer
+   * @returns {JoiningTransformerMap[T]} The joining transformer
    */
   _getJoiningTransformer () {
     return this._config.joiningTransformer;

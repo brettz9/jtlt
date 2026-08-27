@@ -124,8 +124,7 @@ describe('characterMap - XPath context', () => {
     const {window} = new JSDOM('<!doctype html><html><body></body></html>');
     const {document} = window;
 
-    // eslint-disable-next-line no-new -- exercising API
-    new JTLT({
+    JTLT.create({
       data: doc,
       engineType: 'xpath',
       outputType: 'dom',

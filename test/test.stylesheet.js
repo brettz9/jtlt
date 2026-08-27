@@ -519,6 +519,7 @@ describe('stylesheet() and transform() methods', function () {
         const joiner = StringJoiningTransformer.create('');
         const ctx = new JSONPathTransformerContext({
           data: {},
+          outputType: 'string',
           joiningTransformer: joiner,
           templates: []
         }, []);
