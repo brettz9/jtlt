@@ -47,6 +47,7 @@ function _makeDatasetAttribute (n0) {
  * }} ElementInfo
  */
 
+/* eslint-disable @stylistic/max-len -- Long */
 /**
  * JSON-based joining transformer for building JSON/JavaScript objects.
  *
@@ -55,8 +56,10 @@ function _makeDatasetAttribute (n0) {
  * boolean/null add primitives accordingly. It does not perform HTML escaping
  * or string serialization; it builds real JS values.
  * @extends {AbstractJoiningTransformer<"json">}
+ * @template {import('./AbstractJoiningTransformer.js').JSONJoiningTransformerConfig} [TConfig=import('./AbstractJoiningTransformer.js').JSONJoiningTransformerConfig]
  */
 class JSONJoiningTransformer extends AbstractJoiningTransformer {
+  /* eslint-enable @stylistic/max-len -- Long */
   /**
    * @param {any[]|Record<string, unknown>} [o] - Initial object or array
    * @param {import('./AbstractJoiningTransformer.js').
@@ -119,16 +122,18 @@ class JSONJoiningTransformer extends AbstractJoiningTransformer {
     return this;
   }
 
+  /* eslint-disable @stylistic/max-len -- Long */
   /**
    * Gets the current object or array. If unwrapSingleResult config option is
    * enabled and the root array contains exactly one element, returns that
    * element directly (unwrapped).
-   * @returns {any[]|Record<string, unknown>|any}
+   * @returns {TConfig['exposeDocuments'] extends true ? any[] : any[]|Record<string, unknown>|any}
    */
   get () {
+    /* eslint-enable @stylistic/max-len -- Long */
     // If exposeDocuments is set, return the array of documents
     if (this._cfg.exposeDocuments) {
-      return this._docs;
+      return /** @type {any} */ (this._docs);
     }
     // Removed this._doc logic; use this._docs only
     // Unwrap single-element arrays at the root level if configured
@@ -136,7 +141,7 @@ class JSONJoiningTransformer extends AbstractJoiningTransformer {
         Array.isArray(this._obj) && this._obj.length === 1) {
       return this._obj[0];
     }
-    return this._obj;
+    return /** @type {any} */ (this._obj);
   }
 
   /**

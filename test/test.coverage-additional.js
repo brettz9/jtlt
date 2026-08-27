@@ -96,7 +96,7 @@ describe('Coverage - additional edge cases', function () {
       jt.outputFunction(function testFunc () {
         return 42;
       });
-      const out = /** @type {string} */ (jt.get());
+      const out = jt.get();
       assert.match(out, /function testFunc/v);
     });
 
@@ -1052,9 +1052,11 @@ describe('index.js additional branches', function () {
     let created = 0;
     const customJT = {
       _s: '',
+      /** @param {string|unknown} s */
       append (s) {
         this._s += typeof s === 'string' ? s : String(s);
       },
+      /** @param {string} str */
       string (str) {
         this.append(str);
       },

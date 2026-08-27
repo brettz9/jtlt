@@ -148,7 +148,9 @@ export const setWindow = (win) => {
  * JSONPath engine options with context-aware template typing.
  * @template [T = "json"]
  * @typedef {BaseJTLTOptions<T> & {
- *   templates?: JSONPathTemplateArray<T>[],
+ *   templates?: JSONPathTemplateArray<T>[] |
+ *     TemplateFunction<T, "json",
+ *     import('./JSONPathTransformerContext.js').default<T>>,
  *   template?: JSONPathTemplateObject<T> | TemplateFunction<T, "json",
  *     import('./JSONPathTransformerContext.js').default
  *   >,
@@ -167,7 +169,9 @@ export const setWindow = (win) => {
  * XPath engine options with context-aware template typing.
  * @template T
  * @typedef {BaseJTLTOptions<T> & {
- *   templates?: XPathTemplateArray<T>,
+ *   templates?: XPathTemplateArray<T> |
+ *     TemplateFunction<T, "dom",
+ *       import('./XPathTransformerContext.js').default<T>>,
  *   template?: XPathTemplateObject<T> | TemplateFunction<T, "dom",
  *     import('./XPathTransformerContext.js').default
  *   >,

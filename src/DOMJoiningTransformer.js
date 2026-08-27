@@ -7,6 +7,7 @@ import AbstractJoiningTransformer from './AbstractJoiningTransformer.js';
  * @returns {void}
  */
 
+/* eslint-disable @stylistic/max-len -- Long */
 /**
  * Joining transformer that accumulates into a DOM tree.
  *
@@ -15,8 +16,10 @@ import AbstractJoiningTransformer from './AbstractJoiningTransformer.js';
  * attribute(), and text()), though string/number/boolean will append text
  * nodes for convenience.
  * @extends {AbstractJoiningTransformer<"dom">}
+ * @template {import('./AbstractJoiningTransformer.js').DOMJoiningTransformerConfig} [TConfig=import('./AbstractJoiningTransformer.js').DOMJoiningTransformerConfig]
  */
 class DOMJoiningTransformer extends AbstractJoiningTransformer {
+  /* eslint-enable @stylistic/max-len -- Long */
   /**
    * @param {DocumentFragment|Element} o - Initial DOM node
    * @param {import('./AbstractJoiningTransformer.js').
@@ -62,13 +65,14 @@ class DOMJoiningTransformer extends AbstractJoiningTransformer {
   }
 
   /**
-   * @returns {DocumentFragment|Element|XMLDocument[]}
+   * @returns {TConfig['exposeDocuments'] extends true ?
+   *   XMLDocument[] : DocumentFragment|Element}
    */
   get () {
     if (this._cfg.exposeDocuments) {
-      return this._docs;
+      return /** @type {any} */ (this._docs);
     }
-    return this._dom;
+    return /** @type {any} */ (this._dom);
   }
 
   /**
