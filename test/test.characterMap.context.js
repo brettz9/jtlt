@@ -23,8 +23,7 @@ describe('characterMap - XPath context', () => {
     `;
     const doc = parseXML(xmlString);
 
-    // eslint-disable-next-line no-new -- exercising API
-    new JTLT({
+    JTLT.create({
       data: doc,
       engineType: 'xpath',
       outputType: 'string',
@@ -74,8 +73,7 @@ describe('characterMap - XPath context', () => {
     `;
     const doc = parseXML(xmlString);
 
-    // eslint-disable-next-line no-new -- exercising API
-    new JTLT({
+    JTLT.create({
       data: doc,
       engineType: 'xpath',
       outputType: 'string',
@@ -170,8 +168,7 @@ describe('characterMap - XPath context', () => {
     const xmlString = `<root><text>a b c</text></root>`;
     const doc = parseXML(xmlString);
 
-    // eslint-disable-next-line no-new -- exercising API
-    new JTLT({
+    JTLT.create({
       data: doc,
       engineType: 'xpath',
       outputType: 'string',
@@ -222,8 +219,7 @@ describe('characterMap - JSONPath context', () => {
       ]
     };
 
-    // eslint-disable-next-line no-new -- exercising API
-    new JTLT({
+    JTLT.create({
       data,
       outputType: 'string',
       templates: [
@@ -272,8 +268,7 @@ describe('characterMap - JSONPath context', () => {
       ]
     };
 
-    // eslint-disable-next-line no-new -- exercising API
-    new JTLT({
+    JTLT.create({
       data,
       outputType: 'string',
       templates: [
@@ -320,8 +315,7 @@ describe('characterMap - JSONPath context', () => {
       text: '© ®'
     };
 
-    // eslint-disable-next-line no-new -- exercising API
-    new JTLT({
+    JTLT.create({
       data,
       outputType: 'json',
       templates: [
@@ -359,8 +353,7 @@ describe('characterMap - JSONPath context', () => {
       text: 'a b c'
     };
 
-    // eslint-disable-next-line no-new -- exercising API
-    new JTLT({
+    JTLT.create({
       data,
       outputType: 'string',
       templates: [
@@ -399,8 +392,7 @@ describe('characterMap - JSONPath context', () => {
       text: '© ® ™'
     };
 
-    // eslint-disable-next-line no-new -- exercising API
-    new JTLT({
+    JTLT.create({
       data,
       outputType: 'string',
       templates: [

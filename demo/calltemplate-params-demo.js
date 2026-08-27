@@ -6,12 +6,12 @@
  * instead of having to receive them as function parameters.
  */
 
-/* eslint-disable no-console, no-new -- Demo file */
+/* eslint-disable no-console -- Demo file */
 
 import JTLT from '../src/index-node.js';
 
 console.log('=== Demo 1: Named parameters ===');
-new JTLT({
+JTLT.create({
   data: {
     users: [
       {name: 'Alice', role: 'Admin'},
@@ -58,7 +58,7 @@ new JTLT({
 });
 
 console.log('=== Demo 2: Indexed parameters (no names) ===');
-new JTLT({
+JTLT.create({
   data: {value: 'Test'},
   outputType: 'string',
   templates: [
@@ -96,7 +96,7 @@ new JTLT({
 });
 
 console.log('=== Demo 3: Nested callTemplate ===');
-new JTLT({
+JTLT.create({
   data: {company: 'ACME Corp'},
   outputType: 'string',
   templates: [

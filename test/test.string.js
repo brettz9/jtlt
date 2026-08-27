@@ -57,8 +57,7 @@ function runTest (done, expected, templates, replace) {
     config.templates.push(template);
   });
   try {
-    // eslint-disable-next-line no-new -- API
-    new JTLT(config);
+    JTLT.create(config);
   } catch (e) {
     // eslint-disable-next-line no-console -- Testing
     console.error('Error', e);

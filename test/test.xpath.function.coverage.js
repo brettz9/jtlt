@@ -125,8 +125,7 @@ describe('XPathTransformerContext function coverage', () => {
     let called = false;
     const {window} = new JSDOM('<!doctype html><html><body></body></html>');
     const doc = new window.DOMParser().parseFromString('<root />', 'text/xml');
-    // eslint-disable-next-line no-new -- exercising API
-    new JTLT({
+    JTLT.create({
       data: doc,
       outputType: 'string',
       engineType: 'xpath',

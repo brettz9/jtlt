@@ -19,7 +19,7 @@ describe('valueOf in element callbacks', function () {
       }];
 
       let result;
-      new JTLT({
+      JTLT.create({
         data,
         templates,
         outputType: 'string',
@@ -46,7 +46,7 @@ describe('valueOf in element callbacks', function () {
     }];
 
     let result;
-    new JTLT({
+    JTLT.create({
       data,
       templates,
       outputType: 'string',
@@ -72,7 +72,7 @@ describe('valueOf in element callbacks', function () {
       }];
 
       let result;
-      new JTLT({
+      JTLT.create({
         data,
         templates,
         outputType: 'string',

@@ -9,7 +9,7 @@ const sample = {store: {book: [
 
 describe('JSONPath if() method', () => {
   it('should conditionally execute callback on non-empty result set', () => {
-    const jt = new JTLT({
+    const jt = JTLT.create({
       data: sample,
       outputType: 'string',
       templates: [{
@@ -32,7 +32,7 @@ describe('JSONPath if() method', () => {
   });
 
   it('should handle multiple matches as truthy', () => {
-    const jt = new JTLT({
+    const jt = JTLT.create({
       data: sample,
       outputType: 'string',
       templates: [{
@@ -53,7 +53,7 @@ describe('JSONPath if() method', () => {
   });
 
   it('should coerce scalar selection and skip falsy (0)', () => {
-    const jt = new JTLT({
+    const jt = JTLT.create({
       data: {a: 0, b: 1},
       outputType: 'string',
       templates: [{
@@ -76,7 +76,7 @@ describe('JSONPath if() method', () => {
   });
 
   it('should no-op if callback missing', () => {
-    const jt = new JTLT({
+    const jt = JTLT.create({
       data: {x: 1},
       outputType: 'string',
       templates: [{
@@ -95,7 +95,7 @@ describe('JSONPath if() method', () => {
   });
 
   it('should treat single object result as truthy', () => {
-    const jt = new JTLT({
+    const jt = JTLT.create({
       data: {nested: {empty: {}}, arr: [1, 2], num: 5},
       outputType: 'string',
       templates: [{
@@ -121,7 +121,7 @@ describe('JSONPath if() method', () => {
   });
 
   it('should use Boolean() for single primitive result', () => {
-    const jt = new JTLT({
+    const jt = JTLT.create({
       data: {empty: '', full: 'text'},
       outputType: 'string',
       templates: [{
@@ -144,7 +144,7 @@ describe('JSONPath if() method', () => {
   });
 
   it('should handle null as falsy despite being object type', () => {
-    const jt = new JTLT({
+    const jt = JTLT.create({
       data: {n: null, z: 0},
       outputType: 'string',
       templates: [{
@@ -168,7 +168,7 @@ describe('JSONPath if() method', () => {
   });
 
   it('should handle non-function callback parameter', () => {
-    const jt = new JTLT({
+    const jt = JTLT.create({
       data: {val: 1},
       outputType: 'string',
       templates: [{

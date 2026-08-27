@@ -4,8 +4,7 @@ import JTLT from '../src/index-node.js';
 describe('Coverage: uncovered functionality', () => {
   it('calls config() method on joiner', (done) => {
     // Test AbstractJoiningTransformer.config()
-    // eslint-disable-next-line no-new -- exercising API
-    new JTLT({
+    JTLT.create({
       data: {x: 'test'},
       outputType: 'string',
       templates: [{
@@ -32,8 +31,7 @@ describe('Coverage: uncovered functionality', () => {
   it('uses _requireSameChildren guard', () => {
     // Test StringJoiningTransformer with requireSameChildren config
     expect(() => {
-      // eslint-disable-next-line no-new -- exercising API
-      new JTLT({
+      JTLT.create({
         data: {},
         outputType: 'string',
         joiningConfig: {requireSameChildren: true},
@@ -51,8 +49,7 @@ describe('Coverage: uncovered functionality', () => {
   });
 
   it('handles variable() in context', (done) => {
-    // eslint-disable-next-line no-new -- exercising API
-    new JTLT({
+    JTLT.create({
       data: {x: 'stored'},
       outputType: 'string',
       templates: [{
@@ -71,8 +68,7 @@ describe('Coverage: uncovered functionality', () => {
 
   it('calls message() for logging', (done) => {
     let called = false;
-    // eslint-disable-next-line no-new -- exercising API
-    new JTLT({
+    JTLT.create({
       data: {},
       outputType: 'string',
       templates: [{
@@ -91,8 +87,7 @@ describe('Coverage: uncovered functionality', () => {
   });
 
   it('uses propertySet and _usePropertySets', (done) => {
-    // eslint-disable-next-line no-new -- exercising API
-    new JTLT({
+    JTLT.create({
       data: {},
       outputType: 'string',
       templates: [{
@@ -112,8 +107,7 @@ describe('Coverage: uncovered functionality', () => {
   });
 
   it('uses key() and getKey()', (done) => {
-    // eslint-disable-next-line no-new -- exercising API
-    new JTLT({
+    JTLT.create({
       data: {items: [{id: 1, name: 'A'}, {id: 2, name: 'B'}]},
       outputType: 'string',
       templates: [{
@@ -132,8 +126,7 @@ describe('Coverage: uncovered functionality', () => {
   });
 
   it('handles callTemplate with withParam', (done) => {
-    // eslint-disable-next-line no-new -- exercising API
-    new JTLT({
+    JTLT.create({
       data: {x: 'val'},
       outputType: 'string',
       templates: [
@@ -165,8 +158,7 @@ describe('Coverage: uncovered functionality', () => {
 
   it('throws on missing callTemplate', () => {
     expect(() => {
-      // eslint-disable-next-line no-new -- exercising API
-      new JTLT({
+      JTLT.create({
         data: {},
         outputType: 'string',
         templates: [{
@@ -181,8 +173,7 @@ describe('Coverage: uncovered functionality', () => {
   });
 
   it('uses number(), boolean(), null() joiners', (done) => {
-    // eslint-disable-next-line no-new -- exercising API
-    new JTLT({
+    JTLT.create({
       data: {},
       outputType: 'string',
       templates: [{
@@ -208,8 +199,7 @@ describe('Coverage: uncovered functionality', () => {
   });
 
   it('uses nonfiniteNumber() and function() in JS mode', (done) => {
-    // eslint-disable-next-line no-new -- exercising API
-    new JTLT({
+    JTLT.create({
       data: {},
       outputType: 'string',
       joiningConfig: {mode: 'JavaScript'},
@@ -241,8 +231,7 @@ describe('Coverage: uncovered functionality', () => {
 
   it('rejects nonfinite in non-JS mode', () => {
     expect(() => {
-      // eslint-disable-next-line no-new -- exercising API
-      new JTLT({
+      JTLT.create({
         data: {},
         outputType: 'string',
         templates: [{
@@ -258,8 +247,7 @@ describe('Coverage: uncovered functionality', () => {
   });
 
   it('uses rawAppend on string joiner', (done) => {
-    // eslint-disable-next-line no-new -- exercising API
-    new JTLT({
+    JTLT.create({
       data: {},
       outputType: 'string',
       templates: [{
@@ -281,8 +269,7 @@ describe('Coverage: uncovered functionality', () => {
   });
 
   it('handles element with object elName', (done) => {
-    // eslint-disable-next-line no-new -- exercising API
-    new JTLT({
+    JTLT.create({
       data: {},
       outputType: 'dom',
       templates: [{
@@ -306,8 +293,7 @@ describe('Coverage: uncovered functionality', () => {
   });
 
   it('uses DOMJoiningTransformer methods', (done) => {
-    // eslint-disable-next-line no-new -- exercising API
-    new JTLT({
+    JTLT.create({
       data: {},
       outputType: 'dom',
       templates: [{
@@ -333,8 +319,7 @@ describe('Coverage: uncovered functionality', () => {
   });
 
   it('uses JSONJoiningTransformer methods', (done) => {
-    // eslint-disable-next-line no-new -- exercising API
-    new JTLT({
+    JTLT.create({
       data: {},
       outputType: 'json',
       templates: [{
@@ -361,8 +346,7 @@ describe('Coverage: uncovered functionality', () => {
   });
 
   it('uses XSLTStyleJSONPathResolver with complex paths', (done) => {
-    // eslint-disable-next-line no-new -- exercising API
-    new JTLT({
+    JTLT.create({
       data: {a: {b: 'val'}},
       outputType: 'string',
       templates: [
@@ -385,8 +369,7 @@ describe('Coverage: uncovered functionality', () => {
   });
 
   it('handles applyTemplates with mode', (done) => {
-    // eslint-disable-next-line no-new -- exercising API
-    new JTLT({
+    JTLT.create({
       data: {x: 'test'},
       outputType: 'string',
       templates: [
@@ -409,8 +392,7 @@ describe('Coverage: uncovered functionality', () => {
   });
 
   it('uses default template for property names', (done) => {
-    // eslint-disable-next-line no-new -- exercising API
-    new JTLT({
+    JTLT.create({
       data: {prop: 'val'},
       outputType: 'string',
       templates: [{
@@ -431,8 +413,7 @@ describe('Coverage: uncovered functionality', () => {
   });
 
   it('uses default template for functions', (done) => {
-    // eslint-disable-next-line no-new -- exercising API
-    new JTLT({
+    JTLT.create({
       data: {fn () {
         return 'result';
       }},
@@ -455,7 +436,7 @@ describe('Coverage: uncovered functionality', () => {
   });
 
   it('handles index.js autostart false', (done) => {
-    const inst = new JTLT({
+    const inst = JTLT.create({
       data: {x: 'test'},
       outputType: 'string',
       autostart: false,
@@ -477,8 +458,7 @@ describe('Coverage: uncovered functionality', () => {
   });
 
   it('uses ajaxData loading', (done) => {
-    // eslint-disable-next-line no-new -- exercising API
-    new JTLT({
+    JTLT.create({
       ajaxData: import.meta.dirname + '/data/jsonpath-sample.json',
       outputType: 'string',
       templates: [{
@@ -501,8 +481,7 @@ describe('Coverage: uncovered functionality', () => {
 
 describe('More coverage for missing branches', () => {
   it('uses propOnly on string joiner', (done) => {
-    // eslint-disable-next-line no-new -- exercising API
-    new JTLT({
+    JTLT.create({
       data: {},
       outputType: 'string',
       joiningConfig: {mode: 'JavaScript'},
@@ -533,8 +512,7 @@ describe('More coverage for missing branches', () => {
   it('throws on propValue without object state', () => {
     // As execution is synchronous at construction, we can assert throw
     expect(() => {
-      // eslint-disable-next-line no-new -- exercising API
-      new JTLT({
+      JTLT.create({
         data: {},
         outputType: 'string',
         templates: [{
@@ -550,8 +528,7 @@ describe('More coverage for missing branches', () => {
   });
 
   it('uses stringifier with array', (done) => {
-    // eslint-disable-next-line no-new -- exercising API
-    new JTLT({
+    JTLT.create({
       data: {},
       outputType: 'string',
       templates: [{
@@ -573,8 +550,7 @@ describe('More coverage for missing branches', () => {
   });
 
   it('uses valueOf with select string', (done) => {
-    // eslint-disable-next-line no-new -- exercising API
-    new JTLT({
+    JTLT.create({
       data: {x: 'value'},
       outputType: 'string',
       templates: [{
@@ -595,8 +571,7 @@ describe('More coverage for missing branches', () => {
   });
 
   it('handles callTemplate with value param', (done) => {
-    // eslint-disable-next-line no-new -- exercising API
-    new JTLT({
+    JTLT.create({
       data: {},
       outputType: 'string',
       templates: [

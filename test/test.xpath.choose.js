@@ -10,7 +10,7 @@ const doc = window.document;
 
 describe('XPath choose() method', () => {
   it('should branch for match and non-match node sets', () => {
-    const jt = new JTLT({
+    const jt = JTLT.create({
       data: doc,
       outputType: 'string',
       engineType: 'xpath',
@@ -38,7 +38,7 @@ describe('XPath choose() method', () => {
   });
 
   it('should evaluate boolean expressions and branch', () => {
-    const jt = new JTLT({
+    const jt = JTLT.create({
       data: doc,
       outputType: 'string',
       engineType: 'xpath',
@@ -66,7 +66,7 @@ describe('XPath choose() method', () => {
   });
 
   it('should ignore non-function arguments gracefully', () => {
-    const jt = new JTLT({
+    const jt = JTLT.create({
       data: doc,
       outputType: 'string',
       engineType: 'xpath',

@@ -1,4 +1,4 @@
-/* eslint-disable @stylistic/max-len, no-new, array-callback-return
+/* eslint-disable @stylistic/max-len, array-callback-return
   -- Test file for map/mapEntry aliases */
 /* eslint-disable unicorn/no-unused-array-method-return -- Different `map` */
 import {assert} from 'chai';
@@ -19,7 +19,7 @@ describe('map() and mapEntry() aliases', function () {
           this.mapEntry('key2', 'value2');
         });
       }}];
-      new JTLT({
+      JTLT.create({
         data, templates, outputType: 'json', unwrapSingleResult: true,
         success (result) {
           out = result; return result;
@@ -37,7 +37,7 @@ describe('map() and mapEntry() aliases', function () {
           this.mapEntry('extra', 'added');
         });
       }}];
-      new JTLT({
+      JTLT.create({
         data, templates, outputType: 'json', unwrapSingleResult: true,
         success (result) {
           out = result; return result;
@@ -57,7 +57,7 @@ describe('map() and mapEntry() aliases', function () {
           this.mapEntry('c', 3);
         });
       }}];
-      new JTLT({
+      JTLT.create({
         data, templates, outputType: 'json', unwrapSingleResult: true,
         success (result) {
           out = result; return result;
@@ -88,7 +88,7 @@ describe('map() and mapEntry() aliases', function () {
           this.mapEntry('value', 42);
         });
       }}];
-      new JTLT({
+      JTLT.create({
         data, templates, outputType: 'string', joiningConfig: {mode: 'JavaScript'},
         success (result) {
           out = result; return result;
@@ -108,7 +108,7 @@ describe('map() and mapEntry() aliases', function () {
       const templates = [{path: '$', template () {
         this.map({x: 1, y: 2});
       }}];
-      new JTLT({
+      JTLT.create({
         data, templates, outputType: 'string', joiningConfig: {mode: 'JavaScript'},
         success (result) {
           out = result; return result;
@@ -140,7 +140,7 @@ describe('map() and mapEntry() aliases', function () {
           this.map({a: 1});
         });
       }}];
-      new JTLT({
+      JTLT.create({
         data, templates, outputType: 'dom',
         success (result) {
           out = result; return result;
@@ -160,7 +160,7 @@ describe('map() and mapEntry() aliases', function () {
           this.text('content');
         });
       }}];
-      new JTLT({
+      JTLT.create({
         data, templates, outputType: 'dom',
         success (result) {
           out = result; return result;
@@ -197,7 +197,7 @@ describe('map() and mapEntry() aliases', function () {
           });
         }
       }];
-      new JTLT({
+      JTLT.create({
         data, templates, outputType: 'json', unwrapSingleResult: true,
         engineType: 'xpath',
         success (result) {
@@ -223,7 +223,7 @@ describe('map() and mapEntry() aliases', function () {
           this.map({inner: 'data'});
         });
       }}];
-      new JTLT({
+      JTLT.create({
         data, templates, outputType: 'json',
         success (result) {
           out = /** @type {{outer: string}[]} */ (result); return result;
@@ -250,7 +250,7 @@ describe('map() and mapEntry() aliases', function () {
           this.propValue('d', 4); // Old name
         });
       }}];
-      new JTLT({
+      JTLT.create({
         data, templates, outputType: 'json',
         success (result) {
           out = /** @type {{a?: number, b?: number, c?: number, d?: number}[]|undefined} */ (

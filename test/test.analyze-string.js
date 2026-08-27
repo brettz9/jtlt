@@ -3,8 +3,7 @@ import JTLT from '../src/index-node.js';
 
 describe('JSONPathTransformerContext analyzeString', () => {
   it('should split text on newlines', function splitNewlines (done) {
-    // eslint-disable-next-line no-new -- exercising API
-    new JTLT({
+    JTLT.create({
       data: {text: 'Line 1\nLine 2\nLine 3'},
       outputType: 'string',
       templates: [{
@@ -34,8 +33,7 @@ describe('JSONPathTransformerContext analyzeString', () => {
   it(
     'should extract content from square brackets',
     function extractBrackets (done) {
-      // eslint-disable-next-line no-new -- exercising API
-      new JTLT({
+      JTLT.create({
         data: {text: 'Some [cited] text with [multiple] citations'},
         outputType: 'string',
         templates: [{
@@ -73,8 +71,7 @@ describe('JSONPathTransformerContext analyzeString', () => {
   );
 
   it('should handle empty string input', function emptyString (done) {
-    // eslint-disable-next-line no-new -- exercising API
-    new JTLT({
+    JTLT.create({
       data: {text: ''},
       outputType: 'string',
       templates: [{
@@ -102,8 +99,7 @@ describe('JSONPathTransformerContext analyzeString', () => {
   });
 
   it('should parse date format', function parseDate (done) {
-    // eslint-disable-next-line no-new -- exercising API
-    new JTLT({
+    JTLT.create({
       data: {date: '23 March 2002'},
       outputType: 'string',
       templates: [{
@@ -144,8 +140,7 @@ describe('JSONPathTransformerContext analyzeString', () => {
   it(
     'should handle text with only non-matching parts',
     function onlyNonMatch (done) {
-      // eslint-disable-next-line no-new -- exercising API
-      new JTLT({
+      JTLT.create({
         data: {text: 'No digits here'},
         outputType: 'string',
         templates: [{
@@ -174,8 +169,7 @@ describe('JSONPathTransformerContext analyzeString', () => {
   );
 
   it('should handle text with only matching parts', function onlyMatch (done) {
-    // eslint-disable-next-line no-new -- exercising API
-    new JTLT({
+    JTLT.create({
       data: {text: '123'},
       outputType: 'string',
       templates: [{
@@ -206,8 +200,7 @@ describe('JSONPathTransformerContext analyzeString', () => {
     'should throw on zero-length matching regex',
     function zeroLength (done) {
       try {
-        // eslint-disable-next-line no-new -- exercising API
-        new JTLT({
+        JTLT.create({
           data: {text: 'test'},
           outputType: 'string',
           templates: [{
@@ -234,8 +227,7 @@ describe('JSONPathTransformerContext analyzeString', () => {
   );
 
   it('should work with string regex and flags', function stringRegex (done) {
-    // eslint-disable-next-line no-new -- exercising API
-    new JTLT({
+    JTLT.create({
       data: {text: 'Test TEST test'},
       outputType: 'string',
       templates: [{
@@ -266,8 +258,7 @@ describe('JSONPathTransformerContext analyzeString', () => {
   it(
     'should handle multiple capturing groups',
     function multipleGroups (done) {
-      // eslint-disable-next-line no-new -- exercising API
-      new JTLT({
+      JTLT.create({
         data: {text: 'Name: John, Age: 30'},
         outputType: 'string',
         templates: [{
@@ -299,8 +290,7 @@ describe('JSONPathTransformerContext analyzeString', () => {
   it(
     'should handle context object during processing',
     function contextObj (done) {
-      // eslint-disable-next-line no-new -- exercising API
-      new JTLT({
+      JTLT.create({
         data: {text: 'a1b2c3'},
         outputType: 'string',
         templates: [{
@@ -333,8 +323,7 @@ describe('JSONPathTransformerContext analyzeString', () => {
   it(
     'should return empty string for invalid regex groups',
     function invalidGroups (done) {
-      // eslint-disable-next-line no-new -- exercising API
-      new JTLT({
+      JTLT.create({
         data: {text: 'test123'},
         outputType: 'string',
         templates: [{
@@ -371,8 +360,7 @@ describe('JSONPathTransformerContext analyzeString', () => {
   it(
     'should handle regex that could cause infinite loop',
     function preventInfiniteLoop (done) {
-      // eslint-disable-next-line no-new -- exercising API
-      new JTLT({
+      JTLT.create({
         data: {text: 'abc'},
         outputType: 'string',
         templates: [{
@@ -410,8 +398,7 @@ describe('JSONPathTransformerContext analyzeString', () => {
   it(
     'should handle string regex with g flag already present',
     function gFlagPresent (done) {
-      // eslint-disable-next-line no-new -- exercising API
-      new JTLT({
+      JTLT.create({
         data: {text: 'a b c'},
         outputType: 'string',
         templates: [{
@@ -443,8 +430,7 @@ describe('JSONPathTransformerContext analyzeString', () => {
   it(
     'should preserve g flag when already in flags string',
     function preserveGFlag (done) {
-      // eslint-disable-next-line no-new -- exercising API
-      new JTLT({
+      JTLT.create({
         data: {text: '1 2 3'},
         outputType: 'string',
         templates: [{
@@ -476,8 +462,7 @@ describe('JSONPathTransformerContext analyzeString', () => {
   it(
     'should handle RegExp with global flag already set',
     function regexGlobal (done) {
-      // eslint-disable-next-line no-new -- exercising API
-      new JTLT({
+      JTLT.create({
         data: {text: 'x y z'},
         outputType: 'string',
         templates: [{
@@ -508,8 +493,7 @@ describe('JSONPathTransformerContext analyzeString', () => {
   it(
     'should handle only nonMatchingSubstring callback',
     function onlyNonMatching (done) {
-      // eslint-disable-next-line no-new -- exercising API
-      new JTLT({
+      JTLT.create({
         data: {text: 'hello123world'},
         outputType: 'string',
         templates: [{
@@ -537,8 +521,7 @@ describe('JSONPathTransformerContext analyzeString', () => {
   it(
     'should handle only matchingSubstring callback',
     function onlyMatching (done) {
-      // eslint-disable-next-line no-new -- exercising API
-      new JTLT({
+      JTLT.create({
         data: {text: 'abc123def'},
         outputType: 'string',
         templates: [{
@@ -566,8 +549,7 @@ describe('JSONPathTransformerContext analyzeString', () => {
   it(
     'should handle empty captured groups',
     function emptyGroups (done) {
-      // eslint-disable-next-line no-new -- exercising API
-      new JTLT({
+      JTLT.create({
         data: {text: 'test  space'},
         outputType: 'string',
         templates: [{

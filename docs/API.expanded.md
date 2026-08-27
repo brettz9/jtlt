@@ -11,7 +11,7 @@ High-level entry point for running a transform over JSON data using JSONPath.
 ```js
 import JTLT from 'jtlt';
 
-const out = new JTLT({
+const out = JTLT.create({
   data: {title: 'Hello'},
   outputType: 'string',
   templates: [
@@ -27,7 +27,7 @@ const out = new JTLT({
 }).transform('');
 ```
 
-### `new JTLT(config)` options
+### `new JTLT(config)` or `JTLT.create(config)` options
 
 | Option | Type | Description |
 | ------ | ---- | ----------- |

@@ -122,8 +122,7 @@ describe('DOMJoiningTransformer output', () => {
   });
 
   it('builds a simple list', (done) => {
-    // eslint-disable-next-line no-new -- exercising API
-    new JTLT({
+    JTLT.create({
       data: {items: ['a', 'b', 'c']},
       outputType: 'dom',
       templates: [

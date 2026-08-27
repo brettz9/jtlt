@@ -153,7 +153,7 @@ describe('JSONPathTransformer return value handling', () => {
   });
 
   it('integrates return values in full transform', (done) => {
-    const jtlt = new JTLT({
+    JTLT.create({
       data: {message: 'test'},
       outputType: 'string',
       templates: [

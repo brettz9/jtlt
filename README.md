@@ -198,7 +198,7 @@ const data = {
   ]
 };
 
-const jtlt = new JTLT({
+const jtlt = JTLT.create({
   data,
   outputType: 'json', // Top-level result will be a JSON array
   // forQuery mirrors: this.forEach(select, cb)
@@ -274,7 +274,7 @@ const templates = [
   }}
 ];
 
-const out = new JTLT({data, templates, outputType: 'string'}).
+const out = JTLT.create({data, templates, outputType: 'string'}).
   transform('html');
 
 // -> <ul><li>Brave New</li><li>Cobalt</li><li>Delta</li></ul>
@@ -333,7 +333,9 @@ const templates = [
   }}
 ];
 
-const out = new JTLT({data, templates, outputType: 'string'}).transform('html');
+const out = JTLT.create({
+  data, templates, outputType: 'string'
+}).transform('html');
 // -> <ul><li>Bob — Keyboard</li><li>Alice — Mouse</li></ul>
 console.log(out);
 ```
@@ -381,7 +383,9 @@ const templates = [
   }}
 ];
 
-const out = new JTLT({data, templates, outputType: 'string'}).transform('html');
+const out = JTLT.create({
+  data, templates, outputType: 'string'
+}).transform('html');
 // -> <ul><li>Bob: Keyboard</li></ul>
 console.log(out);
 ```

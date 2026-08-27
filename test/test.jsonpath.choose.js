@@ -9,7 +9,7 @@ const sample = {store: {book: [
 
 describe('JSONPath choose() method', () => {
   it('should execute whenCb on truthy match and skip otherwiseCb', () => {
-    const jt = new JTLT({
+    const jt = JTLT.create({
       data: sample,
       outputType: 'string',
       templates: [{
@@ -31,7 +31,7 @@ describe('JSONPath choose() method', () => {
   });
 
   it('should execute otherwiseCb when no match', () => {
-    const jt = new JTLT({
+    const jt = JTLT.create({
       data: sample,
       outputType: 'string',
       templates: [{
@@ -53,7 +53,7 @@ describe('JSONPath choose() method', () => {
   });
 
   it('should treat multiple matches as truthy', () => {
-    const jt = new JTLT({
+    const jt = JTLT.create({
       data: sample,
       outputType: 'string',
       templates: [{
@@ -75,7 +75,7 @@ describe('JSONPath choose() method', () => {
   });
 
   it('should apply Boolean() for single primitive and decide branches', () => {
-    const jt = new JTLT({
+    const jt = JTLT.create({
       data: {a: 0, b: 1},
       outputType: 'string',
       templates: [{
@@ -102,7 +102,7 @@ describe('JSONPath choose() method', () => {
   });
 
   it('should treat single object result as truthy', () => {
-    const jt = new JTLT({
+    const jt = JTLT.create({
       data: {nested: {}, num: 5},
       outputType: 'string',
       templates: [{
@@ -129,7 +129,7 @@ describe('JSONPath choose() method', () => {
   });
 
   it('should invoke otherwiseCb for falsy (null, empty)', () => {
-    const jt = new JTLT({
+    const jt = JTLT.create({
       data: {n: null, empty: ''},
       outputType: 'string',
       templates: [{
@@ -156,7 +156,7 @@ describe('JSONPath choose() method', () => {
   });
 
   it('should ignore non-function callbacks gracefully', () => {
-    const jt = new JTLT({
+    const jt = JTLT.create({
       data: {val: 1, none: 0},
       outputType: 'string',
       templates: [{

@@ -7,7 +7,7 @@ property sets, defaults, roadmap), see `docs/API.expanded.md`.
 
 ```js
 import JTLT from 'jtlt';
-new JTLT({
+JTLT.create({
   data: {title: 'Hi'},
   templates: [
     {path: '$.title', template (v) {

@@ -26,8 +26,7 @@ describe('XPath valueOf edge cases', () => {
         null
       );
 
-      // eslint-disable-next-line no-new -- exercising API
-      new JTLT({
+      JTLT.create({
         data: doc,
         engineType: 'xpath',
         outputType: 'string',
@@ -50,9 +49,6 @@ describe('XPath valueOf edge cases', () => {
             }
           }
         ],
-        /**
-         * @param {string} result
-         */
         success (result) {
           try {
             expect(result).to.be.a('string');
@@ -75,8 +71,7 @@ describe('XPath valueOf edge cases', () => {
       null
     );
 
-    // eslint-disable-next-line no-new -- exercising API
-    new JTLT({
+    JTLT.create({
       data: emptyDoc,
       engineType: 'xpath',
       outputType: 'string',
@@ -95,9 +90,6 @@ describe('XPath valueOf edge cases', () => {
           }
         }
       ],
-      /**
-       * @param {string} result
-       */
       success (result) {
         try {
           expect(result).to.be.a('string');

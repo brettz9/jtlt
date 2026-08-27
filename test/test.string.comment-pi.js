@@ -6,8 +6,7 @@ import JTLT from '../src/index-node.js';
 
 describe('StringJoiningTransformer comment()/processingInstruction()', () => {
   it('emits HTML comment and PI in string output', function commentPI (done) {
-    // eslint-disable-next-line no-new -- exercising API
-    new JTLT({
+    JTLT.create({
       data: {},
       outputType: 'string',
       templates: [

@@ -8,7 +8,7 @@ const doc = window.document;
 
 describe('XPath if() method', () => {
   it('should execute callback for matching node set and skip non-match', () => {
-    const jt = new JTLT({
+    const jt = JTLT.create({
       data: doc,
       outputType: 'string',
       engineType: 'xpath',
@@ -32,7 +32,7 @@ describe('XPath if() method', () => {
   });
 
   it('should evaluate boolean XPath expression', () => {
-    const jt = new JTLT({
+    const jt = JTLT.create({
       data: doc,
       outputType: 'string',
       engineType: 'xpath',
@@ -56,7 +56,7 @@ describe('XPath if() method', () => {
   });
 
   it('should no-op if callback missing', () => {
-    const jt = new JTLT({
+    const jt = JTLT.create({
       data: doc,
       outputType: 'string',
       engineType: 'xpath',
@@ -78,7 +78,7 @@ describe('XPath if() method', () => {
   it('should unwrap single-item primitive array from scalar eval', () => {
     const {window: win2} = new JSDOM('<root><price>5</price></root>');
     const doc2 = win2.document;
-    const jt = new JTLT({
+    const jt = JTLT.create({
       data: doc2,
       outputType: 'string',
       engineType: 'xpath',
@@ -103,7 +103,7 @@ describe('XPath if() method', () => {
   });
 
   it('should handle node selection fallback with invalid XPath', () => {
-    const jt = new JTLT({
+    const jt = JTLT.create({
       data: doc,
       outputType: 'string',
       engineType: 'xpath',
@@ -129,7 +129,7 @@ describe('XPath if() method', () => {
   it('should handle string expressions without path chars', () => {
     const {window: win3} = new JSDOM('<root><val>test</val></root>');
     const doc3 = win3.document;
-    const jt = new JTLT({
+    const jt = JTLT.create({
       data: doc3,
       outputType: 'string',
       engineType: 'xpath',
@@ -156,7 +156,7 @@ describe('XPath if() method', () => {
   it('should handle scalar eval that returns non-primitive', () => {
     const {window: win4} = new JSDOM('<root><item>1</item></root>');
     const doc4 = win4.document;
-    const jt = new JTLT({
+    const jt = JTLT.create({
       data: doc4,
       outputType: 'string',
       engineType: 'xpath',
@@ -183,7 +183,7 @@ describe('XPath if() method', () => {
   it('should handle edge case of single-item array from scalar eval', () => {
     const {window: win5} = new JSDOM('<root><val>42</val></root>');
     const doc5 = win5.document;
-    const jt = new JTLT({
+    const jt = JTLT.create({
       data: doc5,
       outputType: 'string',
       engineType: 'xpath',
@@ -212,7 +212,7 @@ describe('XPath if() method', () => {
   it('should handle node selection when scalar eval returns falsy', () => {
     const {window: win6} = new JSDOM('<root><item>test</item></root>');
     const doc6 = win6.document;
-    const jt = new JTLT({
+    const jt = JTLT.create({
       data: doc6,
       outputType: 'string',
       engineType: 'xpath',

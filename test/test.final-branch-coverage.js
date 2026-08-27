@@ -232,8 +232,7 @@ describe('XPathTransformerContext final missing coverage', function () {
     'should ignore missing arguments in params.forEach (lines 1859-1860)',
     function (done) {
       const {window} = new JSDOM('<root/>');
-      // eslint-disable-next-line no-new -- Testing
-      new JTLT({
+      JTLT.create({
         data: window.document,
         outputType: 'string',
         engineType: 'xpath',
@@ -280,8 +279,7 @@ describe('XPathTransformerContext final missing coverage', function () {
     'should skip non-elements in getKey (lines 2166-2167)',
     function (done) {
       const {window} = new JSDOM('<root>textNode</root>');
-      // eslint-disable-next-line no-new -- Testing
-      new JTLT({
+      JTLT.create({
         data: window.document,
         outputType: 'string',
         engineType: 'xpath',

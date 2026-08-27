@@ -347,7 +347,7 @@ describe('attributeSet - JSONPath Context API', () => {
     const data = {name: 'Test'};
     let output;
 
-    new JTLT({
+    JTLT.create({
       data,
       outputType: 'string',
       engineType: 'jsonpath',
@@ -381,7 +381,7 @@ describe('attributeSet - XPath Context API', () => {
     const doc = window.document;
     let output;
 
-    new JTLT({
+    JTLT.create({
       data: doc,
       outputType: 'string',
       engineType: 'xpath',

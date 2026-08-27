@@ -3,8 +3,7 @@ import JTLT from '../src/index-node.js';
 
 describe('StringJoiningTransformer helpers', () => {
   it('text() escapes and closes open tag', function textEscapes (done) {
-    // eslint-disable-next-line no-new -- exercising API
-    new JTLT({
+    JTLT.create({
       data: {},
       outputType: 'string',
       templates: [
@@ -28,8 +27,7 @@ describe('StringJoiningTransformer helpers', () => {
   });
 
   it('attribute dataset and $a ordering', function atts (done) {
-    // eslint-disable-next-line no-new -- exercising API
-    new JTLT({
+    JTLT.create({
       data: {},
       outputType: 'string',
       templates: [
@@ -53,8 +51,7 @@ describe('StringJoiningTransformer helpers', () => {
   });
 
   it('element() callback closes tag', function serializerModes (done) {
-    // eslint-disable-next-line no-new -- exercising API
-    new JTLT({
+    JTLT.create({
       data: {},
       outputType: 'string',
       templates: [{
@@ -78,8 +75,7 @@ describe('StringJoiningTransformer helpers', () => {
   });
 
   it('string() vs plainText()', function plainVsString (done) {
-    // eslint-disable-next-line no-new -- exercising API
-    new JTLT({
+    JTLT.create({
       data: {},
       outputType: 'string',
       templates: [

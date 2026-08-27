@@ -8,7 +8,7 @@ import JTLT from '../src/index-node.js';
 describe('Template function this-binding', () => {
   it('binds `this` to JSONPathTransformerContext for template', () => {
     let isCtxInstance;
-    const jtlt = new JTLT({
+    const jtlt = JTLT.create({
       data: {foo: 'bar'},
       success (result) { /* noop */ },
       engineType: 'jsonpath',
@@ -28,7 +28,7 @@ describe('Template function this-binding', () => {
 
   it('binds `this` for explicit templates array', () => {
     let isCtxInstance2;
-    const jtlt = new JTLT({
+    const jtlt = JTLT.create({
       data: {foo: 'baz'},
       success (result) { /* noop */ },
       engineType: 'jsonpath',

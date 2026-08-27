@@ -8,7 +8,7 @@ describe('forQuery with return values (index.js lines 386-388)', function () {
   it('forQuery function returns value to append (JSONPath)', function () {
     const data = {items: [{x: 1}, {x: 2}, {x: 3}]};
     let out;
-    new JTLT({
+    JTLT.create({
       data,
       outputType: 'string',
       forQuery: ['$.items[*]', function (arg) {
@@ -31,7 +31,7 @@ describe('forQuery with return values (index.js lines 386-388)', function () {
     );
     const data = w.document;
     let out;
-    new JTLT({
+    JTLT.create({
       data,
       outputType: 'string',
       engineType: 'xpath',

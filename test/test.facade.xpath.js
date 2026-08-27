@@ -18,7 +18,7 @@ function buildDoc () {
 describe('Facade XPath engineType integration', () => {
   it('renders via engineType "xpath" with Document input', () => {
     const doc = buildDoc();
-    const out = new JTLT({
+    const out = JTLT.create({
       data: doc,
       engineType: 'xpath',
       xpathVersion: 1,
@@ -49,7 +49,7 @@ describe('Facade XPath engineType integration', () => {
   it('renders via engineType "xpath" with Element input', () => {
     const doc = buildDoc();
     const rootEl = doc.documentElement; // <root>
-    const out = new JTLT({
+    const out = JTLT.create({
       data: rootEl,
       engineType: 'xpath',
       xpathVersion: 1,

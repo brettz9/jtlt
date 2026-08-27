@@ -4,8 +4,7 @@ import JTLT from '../src/index-node.js';
 
 describe('function() - XSLT-like stylesheet functions', function () {
   it('should register and call a simple function', (done) => {
-    // eslint-disable-next-line no-new -- exercising API
-    new JTLT({
+    JTLT.create({
       data: {x: 5},
       outputType: 'string',
       templates: [{
@@ -35,8 +34,7 @@ describe('function() - XSLT-like stylesheet functions', function () {
   });
 
   it('should require namespaced function names', (done) => {
-    // eslint-disable-next-line no-new -- exercising API
-    new JTLT({
+    JTLT.create({
       data: {},
       outputType: 'string',
       templates: [{
@@ -63,8 +61,7 @@ describe('function() - XSLT-like stylesheet functions', function () {
   });
 
   it('should support Q{uri}name notation', (done) => {
-    // eslint-disable-next-line no-new -- exercising API
-    new JTLT({
+    JTLT.create({
       data: {},
       outputType: 'string',
       templates: [{
@@ -92,8 +89,7 @@ describe('function() - XSLT-like stylesheet functions', function () {
   });
 
   it('should handle multiple parameters', (done) => {
-    // eslint-disable-next-line no-new -- exercising API
-    new JTLT({
+    JTLT.create({
       data: {},
       outputType: 'string',
       templates: [{
@@ -121,8 +117,7 @@ describe('function() - XSLT-like stylesheet functions', function () {
   });
 
   it('should handle zero parameters', (done) => {
-    // eslint-disable-next-line no-new -- exercising API
-    new JTLT({
+    JTLT.create({
       data: {},
       outputType: 'string',
       templates: [{
@@ -149,8 +144,7 @@ describe('function() - XSLT-like stylesheet functions', function () {
   });
 
   it('should distinguish functions by arity', (done) => {
-    // eslint-disable-next-line no-new -- exercising API
-    new JTLT({
+    JTLT.create({
       data: {},
       outputType: 'string',
       templates: [{
@@ -188,8 +182,7 @@ describe('function() - XSLT-like stylesheet functions', function () {
   });
 
   it('should throw error for duplicate function registration', (done) => {
-    // eslint-disable-next-line no-new -- exercising API
-    new JTLT({
+    JTLT.create({
       data: {},
       outputType: 'string',
       templates: [{
@@ -223,8 +216,7 @@ describe('function() - XSLT-like stylesheet functions', function () {
   });
 
   it('should throw error when calling undefined function', (done) => {
-    // eslint-disable-next-line no-new -- exercising API
-    new JTLT({
+    JTLT.create({
       data: {},
       outputType: 'string',
       templates: [{
@@ -248,8 +240,7 @@ describe('function() - XSLT-like stylesheet functions', function () {
   });
 
   it('should throw error for wrong arity', (done) => {
-    // eslint-disable-next-line no-new -- exercising API
-    new JTLT({
+    JTLT.create({
       data: {},
       outputType: 'string',
       templates: [{
@@ -280,8 +271,7 @@ describe('function() - XSLT-like stylesheet functions', function () {
   });
 
   it('should return complex values', (done) => {
-    // eslint-disable-next-line no-new -- exercising API
-    new JTLT({
+    JTLT.create({
       data: {},
       outputType: 'json',
       templates: [{
@@ -322,8 +312,7 @@ describe('function() - XSLT-like stylesheet functions', function () {
       'text/xml'
     );
 
-    // eslint-disable-next-line no-new -- exercising API
-    new JTLT({
+    JTLT.create({
       data: doc,
       engineType: 'xpath',
       xpathVersion: 1,
@@ -357,8 +346,7 @@ describe('function() - XSLT-like stylesheet functions', function () {
   });
 
   it('should be callable from different templates', (done) => {
-    // eslint-disable-next-line no-new -- exercising API
-    new JTLT({
+    JTLT.create({
       data: {items: [1, 2, 3]},
       outputType: 'string',
       templates: [
@@ -400,8 +388,7 @@ describe('function() - XSLT-like stylesheet functions', function () {
   });
 
   it('should support recursive functions', (done) => {
-    // eslint-disable-next-line no-new -- exercising API
-    new JTLT({
+    JTLT.create({
       data: {},
       outputType: 'string',
       templates: [{
@@ -438,8 +425,7 @@ describe('function() - XSLT-like stylesheet functions', function () {
   });
 
   it('should handle functions with context access', (done) => {
-    // eslint-disable-next-line no-new -- exercising API
-    new JTLT({
+    JTLT.create({
       data: {threshold: 10},
       outputType: 'string',
       templates: [{
@@ -477,8 +463,7 @@ describe('function() - XSLT-like stylesheet functions', function () {
   });
 
   it('should work with parameter type hints (as attribute)', (done) => {
-    // eslint-disable-next-line no-new -- exercising API
-    new JTLT({
+    JTLT.create({
       data: {},
       outputType: 'string',
       templates: [{
@@ -509,8 +494,7 @@ describe('function() - XSLT-like stylesheet functions', function () {
   it('should work with callTemplate inside forEach', (done) => {
     // Test that functions can be called from within callTemplate
     // invoked inside forEach
-    // eslint-disable-next-line no-new -- exercising API
-    new JTLT({
+    JTLT.create({
       data: {items: [1, 2, 3]},
       outputType: 'string',
       templates: [
@@ -558,8 +542,7 @@ describe('function() - XSLT-like stylesheet functions', function () {
   it(
     'should support parameter references in valueOf function calls (JSONPath)',
     (done) => {
-      // eslint-disable-next-line no-new -- exercising API
-      new JTLT({
+      JTLT.create({
         data: {value: 10},
         outputType: 'string',
         templates: [{
@@ -595,8 +578,7 @@ describe('function() - XSLT-like stylesheet functions', function () {
 
   it('should support parameter references in valueOf (XPath)', (done) => {
     const dom = new JSDOM('<root><value>10</value></root>');
-    // eslint-disable-next-line no-new -- exercising API
-    new JTLT({
+    JTLT.create({
       data: dom.window.document,
       engineType: 'xpath',
       outputType: 'dom',
@@ -628,8 +610,7 @@ describe('function() - XSLT-like stylesheet functions', function () {
   });
 
   it('should handle complex argument parsing (nested parens)', (done) => {
-    // eslint-disable-next-line no-new -- exercising API
-    new JTLT({
+    JTLT.create({
       data: {},
       outputType: 'string',
       templates: [{
@@ -659,8 +640,7 @@ describe('function() - XSLT-like stylesheet functions', function () {
   describe('XPath context', function () {
     it('should call registered function via valueOf (XPath 1.0)', (done) => {
       const dom = new JSDOM('<root><item>test</item></root>');
-      // eslint-disable-next-line no-new -- exercising API
-      new JTLT({
+      JTLT.create({
         data: dom.window.document,
         engineType: 'xpath',
         outputType: 'dom',
@@ -692,8 +672,7 @@ describe('function() - XSLT-like stylesheet functions', function () {
 
     it('should call registered function natively (fontoxpath 3.1)', (done) => {
       const dom = new JSDOM('<root><value>42</value></root>');
-      // eslint-disable-next-line no-new -- exercising API
-      new JTLT({
+      JTLT.create({
         data: dom.window.document,
         engineType: 'xpath',
         outputType: 'dom',
@@ -732,8 +711,7 @@ describe('function() - XSLT-like stylesheet functions', function () {
 
     it('should support function with multiple parameters (XPath)', (done) => {
       const dom = new JSDOM('<root/>');
-      // eslint-disable-next-line no-new -- exercising API
-      new JTLT({
+      JTLT.create({
         data: dom.window.document,
         engineType: 'xpath',
         outputType: 'dom',
@@ -763,8 +741,7 @@ describe('function() - XSLT-like stylesheet functions', function () {
 
     it('should handle undefined param reference in XPath function', (done) => {
       const dom = new JSDOM('<root/>');
-      // eslint-disable-next-line no-new -- exercising API
-      new JTLT({
+      JTLT.create({
         data: dom.window.document,
         engineType: 'xpath',
         outputType: 'dom',
@@ -795,8 +772,7 @@ describe('function() - XSLT-like stylesheet functions', function () {
 
     it('should support Q{uri}name syntax (fontoxpath)', (done) => {
       const dom = new JSDOM('<root/>');
-      // eslint-disable-next-line no-new -- exercising API
-      new JTLT({
+      JTLT.create({
         data: dom.window.document,
         engineType: 'xpath',
         outputType: 'dom',
@@ -827,8 +803,7 @@ describe('function() - XSLT-like stylesheet functions', function () {
 
     it('should work with undefined xpathVersion (defaults to 1)', (done) => {
       const dom = new JSDOM('<root/>');
-      // eslint-disable-next-line no-new -- exercising API
-      new JTLT({
+      JTLT.create({
         data: dom.window.document,
         engineType: 'xpath',
         outputType: 'dom',
@@ -858,8 +833,7 @@ describe('function() - XSLT-like stylesheet functions', function () {
 
     it('should call invokeFunctionByArity directly', (done) => {
       const dom = new JSDOM('<root/>');
-      // eslint-disable-next-line no-new -- exercising API
-      new JTLT({
+      JTLT.create({
         data: dom.window.document,
         engineType: 'xpath',
         outputType: 'dom',
@@ -891,8 +865,7 @@ describe('function() - XSLT-like stylesheet functions', function () {
 
     it('should handle strings with escaped characters in valueOf', (done) => {
       const dom = new JSDOM('<root/>');
-      // eslint-disable-next-line no-new -- exercising API
-      new JTLT({
+      JTLT.create({
         data: dom.window.document,
         engineType: 'xpath',
         outputType: 'dom',
@@ -924,8 +897,7 @@ describe('function() - XSLT-like stylesheet functions', function () {
     it(
       'should handle JSONPath expression arguments in function calls',
       (done) => {
-        // eslint-disable-next-line no-new -- exercising API
-        new JTLT({
+        JTLT.create({
           data: {val: 5},
           outputType: 'string',
           templates: [{
@@ -960,8 +932,7 @@ describe('function() - XSLT-like stylesheet functions', function () {
       'should support sequence instead of body for XPath expressions',
       (done) => {
         const dom = new JSDOM('<root/>');
-        // eslint-disable-next-line no-new -- exercising API
-        new JTLT({
+        JTLT.create({
           data: dom.window.document,
           engineType: 'xpath',
           xpathVersion: 3.1,
@@ -991,8 +962,7 @@ describe('function() - XSLT-like stylesheet functions', function () {
     );
 
     it('should reject function with both body and sequence', (done) => {
-      // eslint-disable-next-line no-new -- exercising API
-      new JTLT({
+      JTLT.create({
         data: {},
         outputType: 'string',
         templates: [{
@@ -1021,8 +991,7 @@ describe('function() - XSLT-like stylesheet functions', function () {
 
     it('should reject function with both body and sequence (XPath)', (done) => {
       const dom = new JSDOM('<root/>');
-      // eslint-disable-next-line no-new -- exercising API
-      new JTLT({
+      JTLT.create({
         data: dom.window.document,
         engineType: 'xpath',
         xpathVersion: 3.1,
@@ -1052,8 +1021,7 @@ describe('function() - XSLT-like stylesheet functions', function () {
     });
 
     it('should reject function with neither body nor sequence', (done) => {
-      // eslint-disable-next-line no-new -- exercising API
-      new JTLT({
+      JTLT.create({
         data: {},
         outputType: 'string',
         templates: [{
@@ -1081,8 +1049,7 @@ describe('function() - XSLT-like stylesheet functions', function () {
 
     it('should support sequence with multiple parameters', (done) => {
       const dom = new JSDOM('<root/>');
-      // eslint-disable-next-line no-new -- exercising API
-      new JTLT({
+      JTLT.create({
         data: dom.window.document,
         engineType: 'xpath',
         xpathVersion: 3.1,
@@ -1112,8 +1079,7 @@ describe('function() - XSLT-like stylesheet functions', function () {
 
     it('should work with fontoxpath XPath 3.1', (done) => {
       const dom = new JSDOM('<root/>');
-      // eslint-disable-next-line no-new -- exercising API
-      new JTLT({
+      JTLT.create({
         data: dom.window.document,
         outputType: 'dom',
         engineType: 'xpath',
@@ -1142,8 +1108,7 @@ describe('function() - XSLT-like stylesheet functions', function () {
     });
 
     it('should work with JSONPath', (done) => {
-      // eslint-disable-next-line no-new -- exercising API
-      new JTLT({
+      JTLT.create({
         data: {items: [1, 2, 3, 4, 5]},
         outputType: 'json',
         templates: [{
@@ -1172,8 +1137,7 @@ describe('function() - XSLT-like stylesheet functions', function () {
 
     it('should work with complex XPath expressions', (done) => {
       const dom = new JSDOM('<root/>');
-      // eslint-disable-next-line no-new -- exercising API
-      new JTLT({
+      JTLT.create({
         data: dom.window.document,
         engineType: 'xpath',
         xpathVersion: 3.1,
@@ -1207,8 +1171,7 @@ describe('function() - XSLT-like stylesheet functions', function () {
       (done) => {
         // This covers JSONPathTransformerContext.js lines 2004-2006
         // (finally block restores _params)
-        // eslint-disable-next-line no-new -- exercising API
-        new JTLT({
+        JTLT.create({
           data: {value: 10, items: [1, 2, 3]},
           outputType: 'json',
           templates: [{
@@ -1254,8 +1217,7 @@ describe('function() - XSLT-like stylesheet functions', function () {
     it('should handle array return from sequence function', (done) => {
       // This covers XPathTransformerContext.js fontoxpath callback
       const dom = new JSDOM('<root/>');
-      // eslint-disable-next-line no-new -- exercising API
-      new JTLT({
+      JTLT.create({
         data: dom.window.document,
         engineType: 'xpath',
         xpathVersion: 3.1,
@@ -1292,8 +1254,7 @@ describe('function() - XSLT-like stylesheet functions', function () {
       // This covers XPathTransformerContext.js fontoxpath callback
       // (regular body function pass through)
       const dom = new JSDOM('<root/>');
-      // eslint-disable-next-line no-new -- exercising API
-      new JTLT({
+      JTLT.create({
         data: dom.window.document,
         engineType: 'xpath',
         xpathVersion: 3.1,
@@ -1330,8 +1291,7 @@ describe('function() - XSLT-like stylesheet functions', function () {
       // Note: XPath 2.0 doesn't support variable binding in sequence,
       // so we use a literal expression
       const dom = new JSDOM('<root/>');
-      // eslint-disable-next-line no-new -- exercising API
-      new JTLT({
+      JTLT.create({
         data: dom.window.document,
         engineType: 'xpath',
         xpathVersion: 2,

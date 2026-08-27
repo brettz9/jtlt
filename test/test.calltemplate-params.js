@@ -3,8 +3,7 @@ import JTLT from '../src/index-node.js';
 
 describe('callTemplate with valueOf parameter access', function () {
   it('should access parameters via valueOf with $paramName', (done) => {
-    // eslint-disable-next-line no-new -- exercising API
-    new JTLT({
+    JTLT.create({
       data: {x: 'val', y: 'another'},
       outputType: 'string',
       templates: [
@@ -44,8 +43,7 @@ describe('callTemplate with valueOf parameter access', function () {
   });
 
   it('should access parameters by index when name not provided', (done) => {
-    // eslint-disable-next-line no-new -- exercising API
-    new JTLT({
+    JTLT.create({
       data: {x: 'first', y: 'second'},
       outputType: 'string',
       templates: [
@@ -83,8 +81,7 @@ describe('callTemplate with valueOf parameter access', function () {
   });
 
   it('should work with params in string output', (done) => {
-    // eslint-disable-next-line no-new -- exercising API
-    new JTLT({
+    JTLT.create({
       data: {name: 'Alice', age: 30},
       outputType: 'string',
       templates: [
@@ -123,8 +120,7 @@ describe('callTemplate with valueOf parameter access', function () {
   });
 
   it('should handle nested callTemplate calls', (done) => {
-    // eslint-disable-next-line no-new -- exercising API
-    new JTLT({
+    JTLT.create({
       data: {value: 'test'},
       outputType: 'string',
       templates: [
@@ -170,8 +166,7 @@ describe('callTemplate with valueOf parameter access', function () {
   });
 
   it('should fall back to normal JSONPath when $ param not found', (done) => {
-    // eslint-disable-next-line no-new -- exercising API
-    new JTLT({
+    JTLT.create({
       data: {x: 'val'},
       outputType: 'string',
       templates: [

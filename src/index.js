@@ -661,8 +661,7 @@ export function jtlt (cfg) {
       const outputType = cfg.outputType || 'string';
 
       if (outputType === 'json') {
-        // eslint-disable-next-line no-new -- API
-        new JTLT(
+        JTLT.create(
           /** @type {XPathJTLTOptions<"json">} */ ({
             ...cfg,
             outputType: 'json',
@@ -672,8 +671,7 @@ export function jtlt (cfg) {
           })
         );
       } else if (outputType === 'dom') {
-        // eslint-disable-next-line no-new -- API
-        new JTLT(
+        JTLT.create(
           /** @type {XPathJTLTOptions<"dom">} */ ({
             ...cfg,
             outputType: 'dom',
@@ -683,8 +681,7 @@ export function jtlt (cfg) {
           })
         );
       } else {
-        // eslint-disable-next-line no-new -- API
-        new JTLT(
+        JTLT.create(
           /** @type {XPathJTLTOptions<"string">} */ ({
             ...cfg,
             outputType: 'string',
@@ -700,8 +697,7 @@ export function jtlt (cfg) {
     const outputType = cfg.outputType || 'json';
 
     if (outputType === 'string') {
-      // eslint-disable-next-line no-new -- API
-      new JTLT(
+      JTLT.create(
         /** @type {JSONPathJTLTOptions<"string">} */ ({
           ...cfg,
           outputType: 'string',
@@ -711,8 +707,7 @@ export function jtlt (cfg) {
         })
       );
     } else if (outputType === 'dom') {
-      // eslint-disable-next-line no-new -- API
-      new JTLT(
+      JTLT.create(
         /** @type {JSONPathJTLTOptions<"dom">} */ ({
           ...cfg,
           outputType: 'dom',
@@ -722,8 +717,7 @@ export function jtlt (cfg) {
         })
       );
     } else {
-      // eslint-disable-next-line no-new -- API
-      new JTLT(
+      JTLT.create(
         /** @type {JSONPathJTLTOptions<"json">} */ ({
           ...cfg,
           outputType: 'json',

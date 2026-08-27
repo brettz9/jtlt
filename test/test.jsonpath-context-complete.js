@@ -73,8 +73,7 @@ describe('JSONPathTransformerContext complete coverage', () => {
     it('filters out named-only templates from path matching', (done) => {
       // This tests that named-only templates are filtered out early
       // so line 322-323 defensive check is not hit in normal flow
-      // eslint-disable-next-line no-new -- exercising API
-      new JTLT({
+      JTLT.create({
         data: {a: 1, b: 2},
         outputType: 'string',
         templates: [
@@ -113,8 +112,7 @@ describe('JSONPathTransformerContext complete coverage', () => {
 
     it('callTemplate can invoke named-only templates', (done) => {
       // Named-only templates are meant to be called via callTemplate
-      // eslint-disable-next-line no-new -- exercising API
-      new JTLT({
+      JTLT.create({
         data: {x: 10},
         outputType: 'string',
         templates: [
@@ -147,8 +145,7 @@ describe('JSONPathTransformerContext complete coverage', () => {
   describe('callTemplate error handling (line 463-464)', () => {
     it('throws when calling non-existent template', () => {
       expect(() => {
-        // eslint-disable-next-line no-new -- exercising API
-        new JTLT({
+        JTLT.create({
           data: {},
           outputType: 'string',
           templates: [{
@@ -166,8 +163,7 @@ describe('JSONPathTransformerContext complete coverage', () => {
 
     it('throws with name parameter object', () => {
       expect(() => {
-        // eslint-disable-next-line no-new -- exercising API
-        new JTLT({
+        JTLT.create({
           data: {},
           outputType: 'string',
           templates: [{
@@ -184,8 +180,7 @@ describe('JSONPathTransformerContext complete coverage', () => {
 
   describe('Full integration tests for edge cases', () => {
     it('handles multiple named-only templates with callTemplate', (done) => {
-      // eslint-disable-next-line no-new -- exercising API
-      new JTLT({
+      JTLT.create({
         data: {val: 5},
         outputType: 'string',
         templates: [
@@ -241,8 +236,7 @@ describe('JSONPathTransformerContext complete coverage', () => {
 
   describe('output() method coverage (lines 801-803)', () => {
     it('calls output() on string joiner for document config', (done) => {
-      // eslint-disable-next-line no-new -- exercising API
-      new JTLT({
+      JTLT.create({
         data: {text: 'hello'},
         outputType: 'string',
         templates: [

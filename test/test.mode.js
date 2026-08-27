@@ -5,8 +5,7 @@ import {JSDOM} from 'jsdom';
 
 describe('mode() configuration - JSONPath', () => {
   it('defaults to use-last behavior when onMultipleMatch not set', (done) => {
-    // eslint-disable-next-line no-new -- exercising API
-    new JTLT({
+    JTLT.create({
       data: {x: 'value'},
       outputType: 'string',
       templates: [
@@ -38,8 +37,7 @@ describe('mode() configuration - JSONPath', () => {
   });
 
   it('uses last template with onMultipleMatch=use-last (explicit)', (done) => {
-    // eslint-disable-next-line no-new -- exercising API
-    new JTLT({
+    JTLT.create({
       data: {x: 'value'},
       outputType: 'string',
       templates: [
@@ -77,8 +75,7 @@ describe('mode() configuration - JSONPath', () => {
     'throws error with onMultipleMatch=fail when multiple templates match',
     () => {
       expect(() => {
-        // eslint-disable-next-line no-new -- exercising API
-        new JTLT({
+        JTLT.create({
           data: {x: 'value'},
           outputType: 'string',
           templates: [
@@ -113,8 +110,7 @@ describe('mode() configuration - JSONPath', () => {
   it(
     'works with onMultipleMatch=fail when only one template matches',
     (done) => {
-      // eslint-disable-next-line no-new -- exercising API
-      new JTLT({
+      JTLT.create({
         data: {x: 'value'},
         outputType: 'string',
         templates: [
@@ -141,8 +137,7 @@ describe('mode() configuration - JSONPath', () => {
   );
 
   it('does not throw when templates have different priorities', (done) => {
-    // eslint-disable-next-line no-new -- exercising API
-    new JTLT({
+    JTLT.create({
       data: {x: 'value'},
       outputType: 'string',
       templates: [
@@ -176,8 +171,7 @@ describe('mode() configuration - JSONPath', () => {
   });
 
   it('mode() returns context for chaining', (done) => {
-    // eslint-disable-next-line no-new -- exercising API
-    new JTLT({
+    JTLT.create({
       data: {x: 'value'},
       outputType: 'string',
       templates: [
@@ -218,8 +212,7 @@ describe('mode() configuration - JSONPath', () => {
       };
 
       try {
-        // eslint-disable-next-line no-new -- exercising API
-        new JTLT({
+        JTLT.create({
           data: {x: 'value'},
           outputType: 'string',
           templates: [
@@ -274,8 +267,7 @@ describe('mode() configuration - JSONPath', () => {
       };
 
       try {
-        // eslint-disable-next-line no-new -- exercising API
-        new JTLT({
+        JTLT.create({
           data: {x: 'value'},
           outputType: 'string',
           templates: [
@@ -322,8 +314,7 @@ describe('mode() configuration - JSONPath', () => {
       };
 
       try {
-        // eslint-disable-next-line no-new -- exercising API
-        new JTLT({
+        JTLT.create({
           data: {x: 'value'},
           outputType: 'string',
           templates: [
@@ -378,8 +369,7 @@ describe('mode() configuration - JSONPath', () => {
       };
 
       try {
-        // eslint-disable-next-line no-new -- exercising API
-        new JTLT({
+        JTLT.create({
           data: {x: 'value'},
           outputType: 'string',
           templates: [
@@ -432,8 +422,7 @@ describe('mode() configuration - JSONPath', () => {
       };
 
       try {
-        // eslint-disable-next-line no-new -- exercising API
-        new JTLT({
+        JTLT.create({
           data: {x: 'value'},
           outputType: 'string',
           templates: [
@@ -487,8 +476,7 @@ describe('mode() configuration - JSONPath', () => {
       };
 
       try {
-        // eslint-disable-next-line no-new -- exercising API
-        new JTLT({
+        JTLT.create({
           data: {x: 'value'},
           outputType: 'string',
           specificityPriorityResolver: undefined,
@@ -535,8 +523,7 @@ describe('mode() configuration - XPath', () => {
     const {window} = new JSDOM('<root><item>test</item></root>');
     const doc = window.document;
 
-    // eslint-disable-next-line no-new -- exercising API
-    new JTLT({
+    JTLT.create({
       data: doc,
       engineType: 'xpath',
       outputType: 'string',
@@ -572,8 +559,7 @@ describe('mode() configuration - XPath', () => {
     const {window} = new JSDOM('<root><item>test</item></root>');
     const doc = window.document;
 
-    // eslint-disable-next-line no-new -- exercising API
-    new JTLT({
+    JTLT.create({
       data: doc,
       engineType: 'xpath',
       outputType: 'string',
@@ -615,8 +601,7 @@ describe('mode() configuration - XPath', () => {
       const doc = window.document;
 
       expect(() => {
-        // eslint-disable-next-line no-new -- exercising API
-        new JTLT({
+        JTLT.create({
           data: doc,
           engineType: 'xpath',
           outputType: 'string',
@@ -655,8 +640,7 @@ describe('mode() configuration - XPath', () => {
       const {window} = new JSDOM('<root><item>test</item></root>');
       const doc = window.document;
 
-      // eslint-disable-next-line no-new -- exercising API
-      new JTLT({
+      JTLT.create({
         data: doc,
         engineType: 'xpath',
         outputType: 'string',
@@ -687,8 +671,7 @@ describe('mode() configuration - XPath', () => {
     const {window} = new JSDOM('<root><item>test</item></root>');
     const doc = window.document;
 
-    // eslint-disable-next-line no-new -- exercising API
-    new JTLT({
+    JTLT.create({
       data: doc,
       engineType: 'xpath',
       outputType: 'string',
@@ -726,8 +709,7 @@ describe('mode() configuration - XPath', () => {
     const {window} = new JSDOM('<root><item>test</item></root>');
     const doc = window.document;
 
-    // eslint-disable-next-line no-new -- exercising API
-    new JTLT({
+    JTLT.create({
       data: doc,
       engineType: 'xpath',
       outputType: 'string',
@@ -772,8 +754,7 @@ describe('mode() configuration - XPath', () => {
       };
 
       try {
-        // eslint-disable-next-line no-new -- exercising API
-        new JTLT({
+        JTLT.create({
           data: doc,
           engineType: 'xpath',
           outputType: 'string',
@@ -832,8 +813,7 @@ describe('mode() configuration - XPath', () => {
       };
 
       try {
-        // eslint-disable-next-line no-new -- exercising API
-        new JTLT({
+        JTLT.create({
           data: doc,
           engineType: 'xpath',
           outputType: 'string',
@@ -884,8 +864,7 @@ describe('mode() configuration - XPath', () => {
       };
 
       try {
-        // eslint-disable-next-line no-new -- exercising API
-        new JTLT({
+        JTLT.create({
           data: doc,
           engineType: 'xpath',
           outputType: 'string',
@@ -944,8 +923,7 @@ describe('mode() configuration - XPath', () => {
       };
 
       try {
-        // eslint-disable-next-line no-new -- exercising API
-        new JTLT({
+        JTLT.create({
           data: doc,
           engineType: 'xpath',
           outputType: 'string',
@@ -1002,8 +980,7 @@ describe('mode() configuration - XPath', () => {
       };
 
       try {
-        // eslint-disable-next-line no-new -- exercising API
-        new JTLT({
+        JTLT.create({
           data: doc,
           engineType: 'xpath',
           outputType: 'string',
@@ -1061,8 +1038,7 @@ describe('mode() configuration - XPath', () => {
       };
 
       try {
-        // eslint-disable-next-line no-new -- exercising API
-        new JTLT({
+        JTLT.create({
           data: doc,
           engineType: 'xpath',
           outputType: 'string',
@@ -1107,8 +1083,7 @@ describe('mode() configuration - XPath', () => {
 
 describe('mode() onNoMatch configuration - JSONPath', () => {
   it('uses text-only-copy as default when onNoMatch not set', (done) => {
-    // eslint-disable-next-line no-new -- exercising API
-    new JTLT({
+    JTLT.create({
       data: {x: {y: 'value'}},
       outputType: 'string',
       templates: [
@@ -1131,8 +1106,7 @@ describe('mode() onNoMatch configuration - JSONPath', () => {
 
   it('throws error when onNoMatch=fail', () => {
     expect(() => {
-      // eslint-disable-next-line no-new -- exercising API
-      new JTLT({
+      JTLT.create({
         data: {x: 'value'},
         outputType: 'string',
         templates: [
@@ -1153,8 +1127,7 @@ describe('mode() onNoMatch configuration - JSONPath', () => {
   });
 
   it('skips node when onNoMatch=deep-skip', (done) => {
-    // eslint-disable-next-line no-new -- exercising API
-    new JTLT({
+    JTLT.create({
       data: {items: [{x: 1}, {x: 2}]},
       outputType: 'string',
       templates: [
@@ -1197,8 +1170,7 @@ describe('mode() onNoMatch configuration - JSONPath', () => {
     };
 
     try {
-      // eslint-disable-next-line no-new -- exercising API
-      new JTLT({
+      JTLT.create({
         data: {x: 'value'},
         outputType: 'string',
         templates: [
@@ -1236,8 +1208,7 @@ describe('mode() onNoMatch configuration - JSONPath', () => {
     };
 
     try {
-      // eslint-disable-next-line no-new -- exercising API
-      new JTLT({
+      JTLT.create({
         data: {x: 'value'},
         outputType: 'string',
         templates: [
@@ -1265,8 +1236,7 @@ describe('mode() onNoMatch configuration - JSONPath', () => {
   });
 
   it('can combine onNoMatch with onMultipleMatch', (done) => {
-    // eslint-disable-next-line no-new -- exercising API
-    new JTLT({
+    JTLT.create({
       data: {a: 'one', b: 'two'},
       outputType: 'string',
       templates: [
@@ -1297,8 +1267,7 @@ describe('mode() onNoMatch configuration - JSONPath', () => {
   });
 
   it('outputs value with onNoMatch=shallow-copy', (done) => {
-    // eslint-disable-next-line no-new -- exercising API
-    new JTLT({
+    JTLT.create({
       data: {x: {y: {z: 'nested'}}},
       outputType: 'string',
       templates: [
@@ -1319,8 +1288,7 @@ describe('mode() onNoMatch configuration - JSONPath', () => {
   });
 
   it('outputs JSON string with onNoMatch=deep-copy', (done) => {
-    // eslint-disable-next-line no-new -- exercising API
-    new JTLT({
+    JTLT.create({
       data: {x: {y: 'value', z: 123}},
       outputType: 'string',
       templates: [
@@ -1341,8 +1309,7 @@ describe('mode() onNoMatch configuration - JSONPath', () => {
   });
 
   it('outputs only primitives with onNoMatch=text-only-copy', (done) => {
-    // eslint-disable-next-line no-new -- exercising API
-    new JTLT({
+    JTLT.create({
       data: {items: ['text', 42, true, {nested: 'obj'}]},
       outputType: 'string',
       templates: [
@@ -1363,8 +1330,7 @@ describe('mode() onNoMatch configuration - JSONPath', () => {
   });
 
   it('uses default template rules with onNoMatch=apply-templates', (done) => {
-    // eslint-disable-next-line no-new -- exercising API
-    new JTLT({
+    JTLT.create({
       data: {x: {y: 'value'}},
       outputType: 'string',
       templates: [
@@ -1385,8 +1351,7 @@ describe('mode() onNoMatch configuration - JSONPath', () => {
   });
 
   it('uses default template rules with onNoMatch=shallow-skip', (done) => {
-    // eslint-disable-next-line no-new -- exercising API
-    new JTLT({
+    JTLT.create({
       data: {x: {y: 'value'}},
       outputType: 'string',
       templates: [
@@ -1412,8 +1377,7 @@ describe('mode() onNoMatch configuration - XPath', () => {
     const {window} = new JSDOM('<root><item>test</item></root>');
     const doc = window.document;
 
-    // eslint-disable-next-line no-new -- exercising API
-    new JTLT({
+    JTLT.create({
       data: doc,
       engineType: 'xpath',
       outputType: 'string',
@@ -1442,8 +1406,7 @@ describe('mode() onNoMatch configuration - XPath', () => {
     const doc = window.document;
 
     expect(() => {
-      // eslint-disable-next-line no-new -- exercising API
-      new JTLT({
+      JTLT.create({
         data: doc,
         engineType: 'xpath',
         outputType: 'string',
@@ -1470,8 +1433,7 @@ describe('mode() onNoMatch configuration - XPath', () => {
     );
     const doc = window.document;
 
-    // eslint-disable-next-line no-new -- exercising API
-    new JTLT({
+    JTLT.create({
       data: doc,
       engineType: 'xpath',
       outputType: 'string',
@@ -1519,8 +1481,7 @@ describe('mode() onNoMatch configuration - XPath', () => {
     };
 
     try {
-      // eslint-disable-next-line no-new -- exercising API
-      new JTLT({
+      JTLT.create({
         data: doc,
         engineType: 'xpath',
         outputType: 'string',
@@ -1562,8 +1523,7 @@ describe('mode() onNoMatch configuration - XPath', () => {
     };
 
     try {
-      // eslint-disable-next-line no-new -- exercising API
-      new JTLT({
+      JTLT.create({
         data: doc,
         engineType: 'xpath',
         outputType: 'string',
@@ -1597,8 +1557,7 @@ describe('mode() onNoMatch configuration - XPath', () => {
     );
     const doc = window.document;
 
-    // eslint-disable-next-line no-new -- exercising API
-    new JTLT({
+    JTLT.create({
       data: doc,
       engineType: 'xpath',
       outputType: 'string',
@@ -1633,8 +1592,7 @@ describe('mode() onNoMatch configuration - XPath', () => {
     const {window} = new JSDOM('<root><item attr="val">text</item></root>');
     const doc = window.document;
 
-    // eslint-disable-next-line no-new -- exercising API
-    new JTLT({
+    JTLT.create({
       data: doc,
       engineType: 'xpath',
       outputType: 'string',
@@ -1665,8 +1623,7 @@ describe('mode() onNoMatch configuration - XPath', () => {
     );
     const doc = window.document;
 
-    // eslint-disable-next-line no-new -- exercising API
-    new JTLT({
+    JTLT.create({
       data: doc,
       engineType: 'xpath',
       outputType: 'string',
@@ -1699,8 +1656,7 @@ describe('mode() onNoMatch configuration - XPath', () => {
     );
     const doc = window.document;
 
-    // eslint-disable-next-line no-new -- exercising API
-    new JTLT({
+    JTLT.create({
       data: doc,
       engineType: 'xpath',
       outputType: 'string',
@@ -1727,8 +1683,7 @@ describe('mode() onNoMatch configuration - XPath', () => {
     const {window} = new JSDOM('<root><item>text</item></root>');
     const doc = window.document;
 
-    // eslint-disable-next-line no-new -- exercising API
-    new JTLT({
+    JTLT.create({
       data: doc,
       engineType: 'xpath',
       outputType: 'string',
@@ -1755,8 +1710,7 @@ describe('mode() onNoMatch configuration - XPath', () => {
     const {window} = new JSDOM('<root><item>text</item></root>');
     const doc = window.document;
 
-    // eslint-disable-next-line no-new -- exercising API
-    new JTLT({
+    JTLT.create({
       data: doc,
       engineType: 'xpath',
       outputType: 'string',
@@ -1783,8 +1737,7 @@ describe('mode() onNoMatch configuration - XPath', () => {
     const {window} = new JSDOM('<root>text content</root>');
     const doc = window.document;
 
-    // eslint-disable-next-line no-new -- exercising API
-    new JTLT({
+    JTLT.create({
       data: doc,
       engineType: 'xpath',
       outputType: 'string',
@@ -1811,8 +1764,7 @@ describe('mode() onNoMatch configuration - XPath', () => {
     const {window} = new JSDOM('<root>deep text</root>');
     const doc = window.document;
 
-    // eslint-disable-next-line no-new -- exercising API
-    new JTLT({
+    JTLT.create({
       data: doc,
       engineType: 'xpath',
       outputType: 'string',
@@ -1839,8 +1791,7 @@ describe('mode() onNoMatch configuration - XPath', () => {
     const {window} = new JSDOM('<root>plain text</root>');
     const doc = window.document;
 
-    // eslint-disable-next-line no-new -- exercising API
-    new JTLT({
+    JTLT.create({
       data: doc,
       engineType: 'xpath',
       outputType: 'string',

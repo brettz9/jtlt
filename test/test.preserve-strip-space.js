@@ -1,4 +1,4 @@
-/* eslint-disable @stylistic/max-len, no-new, no-empty-function
+/* eslint-disable @stylistic/max-len, no-empty-function
   -- Test file for preserveSpace/stripSpace */
 import {assert} from 'chai';
 import {JSDOM} from 'jsdom';
@@ -16,7 +16,7 @@ describe('preserveSpace() and stripSpace()', function () {
         this.preserveSpace(['code', 'textarea']);
         this.string('test');
       }}];
-      new JTLT({
+      JTLT.create({
         data, templates, outputType: 'string',
         success (result) {
           out = result; return result;
@@ -35,7 +35,7 @@ describe('preserveSpace() and stripSpace()', function () {
         this.stripSpace(['span', 'p']);
         this.string('test');
       }}];
-      new JTLT({
+      JTLT.create({
         data, templates, outputType: 'string',
         success (result) {
           out = result; return result;
@@ -53,7 +53,7 @@ describe('preserveSpace() and stripSpace()', function () {
         this.stripSpace('*');
         this.string('test');
       }}];
-      new JTLT({
+      JTLT.create({
         data, templates, outputType: 'string',
         success (result) {
           out = result; return result;
@@ -73,7 +73,7 @@ describe('preserveSpace() and stripSpace()', function () {
         assert.isTrue(this._shouldStripSpace('div'));
         assert.isFalse(this._shouldStripSpace('span'));
       }}];
-      new JTLT({
+      JTLT.create({
         data, templates, outputType: 'string',
         success () {}
       });
@@ -89,7 +89,7 @@ describe('preserveSpace() and stripSpace()', function () {
         // preserve-space takes precedence
         assert.isFalse(this._shouldStripSpace('div'));
       }}];
-      new JTLT({
+      JTLT.create({
         data, templates, outputType: 'string',
         success () {}
       });
@@ -104,7 +104,7 @@ describe('preserveSpace() and stripSpace()', function () {
         assert.isTrue(this._shouldStripSpace('div'));
         assert.isTrue(this._shouldStripSpace('span'));
       }}];
-      new JTLT({
+      JTLT.create({
         data, templates, outputType: 'string',
         success () {}
       });
@@ -120,7 +120,7 @@ describe('preserveSpace() and stripSpace()', function () {
         assert.strictEqual(result1, this);
         assert.strictEqual(result2, this);
       }}];
-      new JTLT({
+      JTLT.create({
         data, templates, outputType: 'string',
         success () {}
       });
@@ -142,7 +142,7 @@ describe('preserveSpace() and stripSpace()', function () {
           this.text('test');
         }
       }];
-      new JTLT({
+      JTLT.create({
         data, templates, outputType: 'string', engineType: 'xpath',
         success (result) {
           out = result; return result;
@@ -165,7 +165,7 @@ describe('preserveSpace() and stripSpace()', function () {
           this.text('test');
         }
       }];
-      new JTLT({
+      JTLT.create({
         data, templates, outputType: 'string', engineType: 'xpath',
         success (result) {
           out = result; return result;
@@ -195,7 +195,7 @@ describe('preserveSpace() and stripSpace()', function () {
           assert.isFalse(this._shouldStripSpace(textNode));
         }
       }];
-      new JTLT({
+      JTLT.create({
         data, templates, outputType: 'string', engineType: 'xpath',
         success () {}
       });
@@ -215,7 +215,7 @@ describe('preserveSpace() and stripSpace()', function () {
           assert.isTrue(this._shouldStripSpace(divNode));
         }
       }];
-      new JTLT({
+      JTLT.create({
         data, templates, outputType: 'string', engineType: 'xpath',
         success () {}
       });
@@ -236,7 +236,7 @@ describe('preserveSpace() and stripSpace()', function () {
           assert.isFalse(this._shouldStripSpace(divNode));
         }
       }];
-      new JTLT({
+      JTLT.create({
         data, templates, outputType: 'string', engineType: 'xpath',
         success () {}
       });
@@ -257,7 +257,7 @@ describe('preserveSpace() and stripSpace()', function () {
           assert.isTrue(this._shouldStripSpace(spanNode));
         }
       }];
-      new JTLT({
+      JTLT.create({
         data, templates, outputType: 'string', engineType: 'xpath',
         success () {}
       });
@@ -277,7 +277,7 @@ describe('preserveSpace() and stripSpace()', function () {
           assert.strictEqual(result2, this);
         }
       }];
-      new JTLT({
+      JTLT.create({
         data, templates, outputType: 'string', engineType: 'xpath',
         success () {}
       });
@@ -297,7 +297,7 @@ describe('preserveSpace() and stripSpace()', function () {
           this.string(elem + ',');
         });
       }}];
-      new JTLT({
+      JTLT.create({
         data, templates, outputType: 'string',
         success (result) {
           out = result; return result;
@@ -324,7 +324,7 @@ describe('preserveSpace() and stripSpace()', function () {
           this.text(/** @type {string} */ (node.nodeValue));
         }
       }];
-      new JTLT({
+      JTLT.create({
         data, templates, outputType: 'dom', engineType: 'xpath',
         success (result) {
           out = result; return result;
@@ -359,7 +359,7 @@ describe('preserveSpace() and stripSpace()', function () {
           textNodes.push(/** @type {string} */ (node.nodeValue));
         }
       }];
-      new JTLT({
+      JTLT.create({
         data, templates, outputType: 'string', engineType: 'xpath',
         success () {}
       });
@@ -401,7 +401,7 @@ describe('preserveSpace() and stripSpace()', function () {
           textContent = texts.join('');
         }
       }];
-      new JTLT({
+      JTLT.create({
         data, templates, outputType: 'string', engineType: 'xpath',
         success () {}
       });
@@ -451,7 +451,7 @@ describe('preserveSpace() and stripSpace()', function () {
           elementCounts[/** @type {Texts} */ (name + '_texts')] = textNodeCount;
         }
       }];
-      new JTLT({
+      JTLT.create({
         data, templates, outputType: 'string', engineType: 'xpath',
         success () {}
       });
@@ -487,7 +487,7 @@ describe('preserveSpace() and stripSpace()', function () {
           textNodes.push(/** @type {string} */ (node.nodeValue));
         }
       }];
-      new JTLT({
+      JTLT.create({
         data, templates, outputType: 'string', engineType: 'xpath',
         success () {}
       });
@@ -515,7 +515,7 @@ describe('preserveSpace() and stripSpace()', function () {
           this.applyTemplates();
         }
       }];
-      new JTLT({
+      JTLT.create({
         data, templates, outputType: 'string', engineType: 'xpath',
         success () {}
       });
@@ -547,7 +547,7 @@ describe('preserveSpace() and stripSpace()', function () {
 
         this.string('ok');
       }}];
-      new JTLT({
+      JTLT.create({
         data, templates, outputType: 'string',
         success (result) {
           out = result; return result;
@@ -571,7 +571,7 @@ describe('preserveSpace() and stripSpace()', function () {
           assert.notStrictEqual(cloned, this._origNode);
         }
       }];
-      new JTLT({
+      JTLT.create({
         data, templates, outputType: 'string', engineType: 'xpath',
         success () {}
       });
@@ -612,7 +612,7 @@ describe('preserveSpace() and stripSpace()', function () {
           assert.isTrue(this._shouldStripSpace(divNode)); // only in strip list
         }
       }];
-      new JTLT({
+      JTLT.create({
         data, templates, outputType: 'string', engineType: 'xpath',
         success () {}
       });

@@ -3,8 +3,7 @@ import JTLT from '../src/index-node.js';
 
 describe('Template priority and equal handling', () => {
   it('prefers last template when equal priority (default)', (done) => {
-    // eslint-disable-next-line no-new -- exercising API
-    new JTLT({
+    JTLT.create({
       data: {x: 'A'},
       outputType: 'string',
       templates: [
@@ -28,8 +27,7 @@ describe('Template priority and equal handling', () => {
 
   it('throws when errorOnEqualPriority is true', () => {
     expect(() => {
-      // eslint-disable-next-line no-new -- exercising API
-      new JTLT({
+      JTLT.create({
         data: {x: 'A'},
         errorOnEqualPriority: true,
         outputType: 'string',

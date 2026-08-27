@@ -4,21 +4,19 @@ import JTLT, {JSONPathTransformer} from '../src/index-node.js';
 // Helper to run a JTLT transform with minimal config
 /**
  * @param {null|boolean|number|string|object} data
- * @param {import('../src/index.js').JSONPathTemplateArray<any>[]} templates
+ * @param {import('../src/index.js').JSONPathTemplateArray<
+ *   "string"
+ * >[]} templates
  * @returns {string}
  */
 function runStringTransform (data, templates) {
   /** @type {string} */
   let result = '';
   // Use a classic function for lint preference
-  const jtlt = new JTLT({
+  JTLT.create({
     data,
     templates,
     outputType: 'string',
-    /**
-     * @param {string} r
-     * @returns {void}
-     */
     success (r) {
       result = r;
     }

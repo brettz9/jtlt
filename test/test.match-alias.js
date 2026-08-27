@@ -6,8 +6,7 @@ import {JSDOM} from 'jsdom';
 describe('match as alias for path', () => {
   describe('JSONPath', () => {
     it('should accept match instead of path', (done) => {
-      // eslint-disable-next-line no-new -- exercising API
-      new JTLT({
+      JTLT.create({
         data: {items: ['one', 'two', 'three']},
         outputType: 'string',
         templates: [
@@ -38,8 +37,7 @@ describe('match as alias for path', () => {
     });
 
     it('should prefer path over match when both present', (done) => {
-      // eslint-disable-next-line no-new -- exercising API
-      new JTLT({
+      JTLT.create({
         data: {x: 'value'},
         outputType: 'string',
         templates: [
@@ -73,8 +71,7 @@ describe('match as alias for path', () => {
       );
       const doc = window.document;
 
-      // eslint-disable-next-line no-new -- exercising API
-      new JTLT({
+      JTLT.create({
         data: doc,
         engineType: 'xpath',
         outputType: 'string',
@@ -108,8 +105,7 @@ describe('match as alias for path', () => {
       const {window} = new JSDOM('<root><x>value</x></root>');
       const doc = window.document;
 
-      // eslint-disable-next-line no-new -- exercising API
-      new JTLT({
+      JTLT.create({
         data: doc,
         engineType: 'xpath',
         outputType: 'string',

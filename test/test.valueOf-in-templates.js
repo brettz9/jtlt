@@ -11,8 +11,7 @@ describe(
         (done) => {
           // This test shows that valueOf($paramName) should work in
           // templates when the template function receives parameters
-          // eslint-disable-next-line no-new -- exercising API
-          new JTLT({
+          JTLT.create({
             data: {users: [{name: 'Alice'}]},
             outputType: 'string',
             templates: [
@@ -52,8 +51,7 @@ describe(
     describe('valueOf with parameters in forEach', function () {
       it('should work when forEach callback has access to value', (done) => {
         // Test that we can use valueOf to access the forEach value
-        // eslint-disable-next-line no-new -- exercising API
-        new JTLT({
+        JTLT.create({
           data: {items: ['apple', 'banana', 'cherry']},
           outputType: 'string',
           templates: [
@@ -85,8 +83,7 @@ describe(
       it('should support valueOf($0) to access forEach value', (done) => {
         // This is what we want to enable - accessing forEach value
         // via valueOf
-        // eslint-disable-next-line no-new -- exercising API
-        new JTLT({
+        JTLT.create({
           data: {items: ['apple', 'banana', 'cherry']},
           outputType: 'string',
           templates: [
@@ -117,8 +114,7 @@ describe(
 
       it('should support valueOf(.) to access current context', (done) => {
         // Test that valueOf({select: '.'}) gets the current context
-        // eslint-disable-next-line no-new -- exercising API
-        new JTLT({
+        JTLT.create({
           data: {items: ['apple', 'banana', 'cherry']},
           outputType: 'string',
           templates: [
@@ -148,8 +144,7 @@ describe(
 
       it('should access object properties via valueOf in forEach', (done) => {
         // Test with more complex objects
-        // eslint-disable-next-line no-new -- exercising API
-        new JTLT({
+        JTLT.create({
           data: {
             users: [
               {name: 'Alice', age: 30},
@@ -186,8 +181,7 @@ describe(
     describe('valueOf in regular templates', function () {
       it('should support valueOf(.) in template to get context', (done) => {
         // Test valueOf({select: '.'}) in regular templates
-        // eslint-disable-next-line no-new -- exercising API
-        new JTLT({
+        JTLT.create({
           data: {items: ['x', 'y', 'z']},
           outputType: 'string',
           templates: [
@@ -219,8 +213,7 @@ describe(
 
       it('should support valueOf($0) in template', (done) => {
         // Test valueOf({select: '$0'}) in regular templates
-        // eslint-disable-next-line no-new -- exercising API
-        new JTLT({
+        JTLT.create({
           data: {numbers: [1, 2, 3]},
           outputType: 'string',
           templates: [
@@ -255,8 +248,7 @@ describe(
         (done) => {
           // Test valueOf({select: '.'}) when applyTemplates()
           // called without arguments
-          // eslint-disable-next-line no-new -- exercising API
-          new JTLT({
+          JTLT.create({
             data: {
               items: ['X', 'Y', 'Z']
             },
@@ -293,8 +285,7 @@ describe(
 
     describe('valueOf in root templates', function () {
       it('should support valueOf($0) in root template', (done) => {
-        // eslint-disable-next-line no-new -- exercising API
-        new JTLT({
+        JTLT.create({
           data: {name: 'Root', value: 42},
           outputType: 'string',
           templates: [
@@ -320,8 +311,7 @@ describe(
       });
 
       it('should support valueOf(.) in root template', (done) => {
-        // eslint-disable-next-line no-new -- exercising API
-        new JTLT({
+        JTLT.create({
           data: 'simple-value',
           outputType: 'string',
           templates: [
@@ -366,8 +356,7 @@ describe('valueOf in XPath templates and forEach', function () {
   describe('valueOf in XPath forEach', function () {
     it('should support valueOf($0) in forEach callback', (done) => {
       const {document} = buildDom();
-      // eslint-disable-next-line no-new -- exercising API
-      new JTLT({
+      JTLT.create({
         data: document,
         outputType: 'string',
         engineType: 'xpath',
@@ -398,8 +387,7 @@ describe('valueOf in XPath templates and forEach', function () {
 
     it('should support valueOf(.) in forEach to get current node', (done) => {
       const {document} = buildDom();
-      // eslint-disable-next-line no-new -- exercising API
-      new JTLT({
+      JTLT.create({
         data: document,
         outputType: 'string',
         engineType: 'xpath',
@@ -432,8 +420,7 @@ describe('valueOf in XPath templates and forEach', function () {
   describe('valueOf in XPath templates', function () {
     it('should support valueOf(.) in template', (done) => {
       const {document} = buildDom();
-      // eslint-disable-next-line no-new -- exercising API
-      new JTLT({
+      JTLT.create({
         data: document,
         outputType: 'string',
         engineType: 'xpath',
@@ -468,8 +455,7 @@ describe('valueOf in XPath templates and forEach', function () {
 
     it('should support valueOf($0) in template', (done) => {
       const {document} = buildDom();
-      // eslint-disable-next-line no-new -- exercising API
-      new JTLT({
+      JTLT.create({
         data: document,
         outputType: 'string',
         engineType: 'xpath',
@@ -507,8 +493,7 @@ describe('valueOf in XPath templates and forEach', function () {
         `<root><item>First</item><item>Second</item></root>`
       );
       const {document} = dom.window;
-      // eslint-disable-next-line no-new -- exercising API
-      new JTLT({
+      JTLT.create({
         data: document,
         outputType: 'string',
         engineType: 'xpath',
@@ -546,8 +531,7 @@ describe('valueOf in XPath templates and forEach', function () {
           `<root><item>X</item><item>Y</item><item>Z</item></root>`
         );
         const {document} = dom.window;
-        // eslint-disable-next-line no-new -- exercising API
-        new JTLT({
+        JTLT.create({
           data: document,
           outputType: 'string',
           engineType: 'xpath',
@@ -592,8 +576,7 @@ describe('valueOf in XPath templates and forEach', function () {
 
     it('should support valueOf(.) in XPath root template', (done) => {
       const {document} = buildSimpleDom();
-      // eslint-disable-next-line no-new -- exercising API
-      new JTLT({
+      JTLT.create({
         data: document,
         outputType: 'string',
         engineType: 'xpath',
@@ -622,8 +605,7 @@ describe('valueOf in XPath templates and forEach', function () {
 
     it('should support valueOf($0) in XPath root template', (done) => {
       const {document} = buildSimpleDom();
-      // eslint-disable-next-line no-new -- exercising API
-      new JTLT({
+      JTLT.create({
         data: document,
         outputType: 'string',
         engineType: 'xpath',

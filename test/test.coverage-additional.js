@@ -1,4 +1,4 @@
-/* eslint-disable @stylistic/max-len, no-empty-function, no-new
+/* eslint-disable @stylistic/max-len, no-empty-function
   -- Coverage tests for edge cases */
 import {assert, expect} from 'chai';
 import XSLTStyleJSONPathResolver from '../src/XSLTStyleJSONPathResolver.js';
@@ -31,7 +31,7 @@ describe('Coverage - additional edge cases', function () {
           this.element('div', {className: 'test', htmlFor: 'id1'}, [], () => {});
         }}
       ];
-      new JTLT({
+      JTLT.create({
         data, templates, outputType: 'string',
         success (result) {
           out = result; return result;
@@ -53,7 +53,7 @@ describe('Coverage - additional edge cases', function () {
           this.attribute('other', {x: 1});
         });
       }}];
-      new JTLT({
+      JTLT.create({
         data, templates, outputType: 'string',
         success (result) {
           out = result; return result;
@@ -182,7 +182,7 @@ describe('Coverage - additional edge cases', function () {
       const templates = [{path: '$', template () {
         this.element('span', {id: 'test'});
       }}];
-      new JTLT({
+      JTLT.create({
         data, templates, outputType: 'dom',
         success (result) {
           out = result; return result;
@@ -201,7 +201,7 @@ describe('Coverage - additional edge cases', function () {
         this.attribute('id', 'oops');
       }}];
       assert.throws(() => {
-        new JTLT({
+        JTLT.create({
           data, templates, outputType: 'dom',
           success () {}
         });
@@ -221,7 +221,7 @@ describe('Coverage - additional edge cases', function () {
           this.plainText('Hello');
         });
       }}];
-      new JTLT({
+      JTLT.create({
         data, templates, outputType: 'dom',
         success (result) {
           out = result; return result;
@@ -299,7 +299,7 @@ describe('Coverage - additional edge cases', function () {
         this.object({a: 1});
         this.array([1, 2]);
       }}];
-      new JTLT({
+      JTLT.create({
         data, templates, outputType: 'dom', joiningConfig: {document, JHTMLForJSON: true},
         success (result) {
           out = result; return result;
@@ -368,7 +368,7 @@ describe('Coverage - additional edge cases', function () {
           this.propValue('b', 2);
         });
       }}];
-      new JTLT({
+      JTLT.create({
         data, templates, outputType: 'json',
         unwrapSingleResult: true,
         success (result) {
@@ -389,7 +389,7 @@ describe('Coverage - additional edge cases', function () {
           this.string('x');
         });
       }}];
-      new JTLT({
+      JTLT.create({
         data, templates, outputType: 'json',
         unwrapSingleResult: true,
         success (result) {
@@ -413,7 +413,7 @@ describe('Coverage - additional edge cases', function () {
           this.plainText('ignored2');
         });
       }}];
-      new JTLT({
+      JTLT.create({
         data, templates, outputType: 'json', unwrapSingleResult: true,
         success (result) {
           out = result; return result;
@@ -563,7 +563,7 @@ describe('Coverage - additional edge cases', function () {
       const templates = [{path: '$', template () {
         this.element('div', {dataset: {fooBar: 'v', userID: 'id'}, $a: [['z', '1'], ['y', '2']]}, [], () => {});
       }}];
-      new JTLT({
+      JTLT.create({
         data, templates, outputType: 'string',
         success (result) {
           out = result; return result;
@@ -586,7 +586,7 @@ describe('Coverage - additional edge cases', function () {
           this.attribute('title', 'A & "B"');
         });
       }}];
-      new JTLT({
+      JTLT.create({
         data, templates, outputType: 'string', joiningConfig: {preEscapedAttributes: true},
         success (result) {
           out = result; return result;
@@ -607,7 +607,7 @@ describe('Coverage - additional edge cases', function () {
           this.text('X');
         });
       }}];
-      new JTLT({
+      JTLT.create({
         data: {}, templates, outputType: 'string',
         success (result) {
           out = result; return result;
@@ -631,7 +631,7 @@ describe('Coverage - additional edge cases', function () {
         // Should return the context (this)
         this.string(String(res === this));
       }}];
-      new JTLT({
+      JTLT.create({
         data, templates, outputType: 'string',
         success (result) {
           out = result; return result;
@@ -650,7 +650,7 @@ describe('Coverage - additional edge cases', function () {
         // and copy appends shallow copy; then we append marker string.
         this.copyOf('$.a').copy().string('ok');
       }}];
-      new JTLT({
+      JTLT.create({
         data, templates, outputType: 'string',
         success (result) {
           out = result; return result;
@@ -670,7 +670,7 @@ describe('Coverage - additional edge cases', function () {
         this.propertySet('derived', {b: 2}, ['base']);
         this.string(String(this.propertySets.derived.a) + String(this.propertySets.derived.b));
       }}];
-      new JTLT({
+      JTLT.create({
         data, templates, outputType: 'string',
         success (result) {
           out = result; return result;
@@ -689,7 +689,7 @@ describe('Coverage - additional edge cases', function () {
         this.appendOutput({x: 1});
         this.appendOutput({y: 2});
       }}];
-      new JTLT({
+      JTLT.create({
         data, templates, outputType: 'json',
         success (result) {
           out = result; return result;
@@ -704,7 +704,7 @@ describe('Coverage - additional edge cases', function () {
 
   describe('index.js specificityPriorityResolver', function () {
     it('computes priority for a path', function () {
-      const jtlt = new JTLT({
+      const jtlt = JTLT.create({
         data: {a: {b: 1}},
         templates: [{path: '$.a.b', template () {
           this.string('x');
@@ -719,7 +719,7 @@ describe('Coverage - additional edge cases', function () {
 
   describe('index.js - error paths', function () {
     it('should throw if data undefined and ajaxData not set', function () {
-      const jtlt = new JTLT({
+      const jtlt = JTLT.create({
         data: {}, templates: [{path: '$', template () {}}], autostart: false,
         success () {}
       });
@@ -731,7 +731,7 @@ describe('Coverage - additional edge cases', function () {
     });
 
     it('should throw "wait until ajax" if ajaxData set but data still undefined', function () {
-      const jtlt = new JTLT({
+      const jtlt = JTLT.create({
         data: {}, templates: [{path: '$', template () {}}], autostart: false,
         success () {}
       });
@@ -743,7 +743,7 @@ describe('Coverage - additional edge cases', function () {
     });
 
     it('should throw if success callback not a function', function () {
-      const jtlt = new JTLT({
+      const jtlt = JTLT.create({
         data: {}, templates: [{path: '$', template () {}}], autostart: false,
         success () {}
       });
@@ -755,7 +755,7 @@ describe('Coverage - additional edge cases', function () {
 
     it('should throw on construction if neither ajaxData nor data provided', function () {
       assert.throws(() => {
-        new JTLT({templates: [{path: '$', template () {}}]});
+        JTLT.create({templates: [{path: '$', template () {}}]});
       }, /You must supply either config.ajaxData or config.data/v);
     });
 
@@ -763,13 +763,13 @@ describe('Coverage - additional edge cases', function () {
       // This tests the config || {} branch in constructor
       // Pass undefined explicitly, but this will fail validation, so catch it
       assert.throws(() => {
-        new JTLT(undefined);
+        JTLT.create(undefined);
       }, /You must supply either config.ajaxData or config.data/v);
       // The branch was still covered even though it threw
     });
 
     it('setDefaults with null config defaults to empty object (line 168)', function () {
-      const jtlt = new JTLT({
+      const jtlt = JTLT.create({
         data: {}, templates: [{path: '$', template () {}}], autostart: false,
         success () {}
       });
@@ -782,7 +782,7 @@ describe('Coverage - additional edge cases', function () {
       // Test cfg.templates || [cfg.template] branch
       const data = {x: 1};
       let out;
-      new JTLT({
+      JTLT.create({
         data,
         template: {path: '$.x', template (v) {
           this.string(String(v));
@@ -810,7 +810,7 @@ describe('Coverage - additional edge cases', function () {
           this.string(String(v));
         }}
       ];
-      new JTLT({
+      JTLT.create({
         data, templates, outputType: 'string',
         autostart: false,
         success (result) {
@@ -843,7 +843,7 @@ describe('Coverage - additional edge cases', function () {
           this.string((/** @type {TestData} */ (p)).name);
         }}
       ];
-      new JTLT({
+      JTLT.create({
         data, templates, outputType: 'string', autostart: false,
         success (result) {
           out = result; return result;
@@ -880,7 +880,7 @@ describe('Coverage - additional edge cases', function () {
           ]);
         }}
       ];
-      new JTLT({
+      JTLT.create({
         data, templates, outputType: 'string',
         success (result) {
           out = result; return result;
@@ -1011,7 +1011,7 @@ describe('StringJoiningTransformer xmlElements & attributes', function () {
         this.text('X');
       });
     }}];
-    new JTLT({
+    JTLT.create({
       data, templates, outputType: 'string', joiningConfig: {xmlElements: true},
       success (result) {
         out = result; return result;
@@ -1049,7 +1049,7 @@ describe('JSONPathTransformerContext nested property sets', function () {
         this.propValue('c', this.propertySets.top.c);
       });
     }}];
-    new JTLT({
+    JTLT.create({
       data, templates, outputType: 'json', unwrapSingleResult: true,
       success (result) {
         out = result; return result;
@@ -1084,7 +1084,7 @@ describe('index.js additional branches', function () {
       return customJT;
     })();
     let out;
-    const jtlt = new JTLT({
+    const jtlt = JTLT.create({
       data: {a: 1}, outputType: 'string', autostart: false,
       joiningTransformer: /** @type {import('../src/index.js').StringJoiningTransformer} */ (/** @type {unknown} */ (jtInstance)),
       templates: [{path: '$', template () {
@@ -1110,7 +1110,7 @@ describe('StringJoiningTransformer - additional branches', function () {
       // atts is array -> treated as childNodes
       this.element('div', ['hello']);
     }}];
-    new JTLT({
+    JTLT.create({
       data, templates, outputType: 'string',
       success (result) {
         out = result; return result;
@@ -1131,7 +1131,7 @@ describe('StringJoiningTransformer - additional branches', function () {
         this.text('content');
       });
     }}];
-    new JTLT({
+    JTLT.create({
       data, templates, outputType: 'string',
       success (result) {
         out = result; return result;
@@ -1152,7 +1152,7 @@ describe('StringJoiningTransformer - additional branches', function () {
         this.text('text');
       });
     }}];
-    new JTLT({
+    JTLT.create({
       data, templates, outputType: 'string',
       success (result) {
         out = result; return result;
@@ -1174,7 +1174,7 @@ describe('StringJoiningTransformer - additional branches', function () {
         this.text('more');
       });
     }}];
-    new JTLT({
+    JTLT.create({
       data, templates, outputType: 'string',
       success (result) {
         out = result; return result;
@@ -1196,7 +1196,7 @@ describe('StringJoiningTransformer - additional branches', function () {
         this.attribute('data-x', 'y');
       });
     }}];
-    new JTLT({
+    JTLT.create({
       data, templates, outputType: 'string',
       success (result) {
         out = result; return result;
@@ -1216,7 +1216,7 @@ describe('StringJoiningTransformer - additional branches', function () {
         this.string('inner');
       });
     }}];
-    new JTLT({
+    JTLT.create({
       data, templates, outputType: 'string',
       success (result) {
         out = result; return result;
@@ -1236,7 +1236,7 @@ describe('StringJoiningTransformer - additional branches', function () {
         this.attribute('data-raw', 'val&"ue', true); // avoidAttEscape=true
       });
     }}];
-    new JTLT({
+    JTLT.create({
       data, templates, outputType: 'string',
       success (result) {
         out = result; return result;
@@ -1250,7 +1250,7 @@ describe('index.js - additional configuration branches', function () {
   it('should use forQuery configuration', function () {
     const data = {items: [{x: 1}, {x: 2}]};
     let out = '';
-    new JTLT({
+    JTLT.create({
       data,
       outputType: 'string',
       forQuery: ['$.items[*]', function (arg) {
@@ -1270,7 +1270,7 @@ describe('index.js - additional configuration branches', function () {
     );
     const data = window.document;
     let out = '';
-    new JTLT({
+    JTLT.create({
       data,
       outputType: 'string',
       engineType: 'xpath',
@@ -1288,7 +1288,7 @@ describe('index.js - additional configuration branches', function () {
   it('should use query function configuration', function () {
     const data = {test: 'value'};
     let out;
-    new JTLT({
+    JTLT.create({
       data,
       outputType: 'string',
       query () {
@@ -1304,7 +1304,7 @@ describe('index.js - additional configuration branches', function () {
   it('should use templates function configuration', function () {
     const data = {};
     let out;
-    new JTLT({
+    JTLT.create({
       data,
       outputType: 'string',
       /** @this {import('../src/index.js').JSONPathTransformerContext<"string">} */
@@ -1321,7 +1321,7 @@ describe('index.js - additional configuration branches', function () {
   it('should use template function configuration', function () {
     const data = {};
     let out;
-    new JTLT({
+    JTLT.create({
       data,
       outputType: 'string',
       template () {
@@ -1351,7 +1351,7 @@ describe('JSONPathTransformerContext - sorting edge cases', function () {
         localeOptions: {sensitivity: 'base'}
       }]);
     }}];
-    new JTLT({
+    JTLT.create({
       data, templates, outputType: 'string',
       success (result) {
         out = result; return result;
@@ -1374,7 +1374,7 @@ describe('JSONPathTransformerContext - sorting edge cases', function () {
         type: 'number'
       }]);
     }}];
-    new JTLT({
+    JTLT.create({
       data, templates, outputType: 'string',
       success (result) {
         out = result; return result;
@@ -1395,7 +1395,7 @@ describe('JSONPathTransformerContext - sorting edge cases', function () {
         this.string(',');
       }, [{select: '$.name', type: 'text', order: 'ascending'}]);
     }}];
-    new JTLT({
+    JTLT.create({
       data, templates, outputType: 'string',
       success (result) {
         out = result; return result;
@@ -1416,7 +1416,7 @@ describe('JSONPathTransformerContext - sorting edge cases', function () {
         this.string(String((/** @type {TestData} */ (item)).val));
       }, '$.val');
     }}];
-    new JTLT({
+    JTLT.create({
       data, templates, outputType: 'string',
       success (result) {
         out = result; return result;
@@ -1439,7 +1439,7 @@ describe('JSONPathTransformerContext - sorting edge cases', function () {
         this.string(String((/** @type {TestData} */ (item)).n));
       }}
     ];
-    new JTLT({
+    JTLT.create({
       data, templates, outputType: 'string',
       success (result) {
         out = result; return result;
@@ -1459,7 +1459,7 @@ describe('JSONPathTransformerContext - sorting edge cases', function () {
         this.string(String((/** @type {TestData} */ (item)).n));
       }, '$.n');
     }}];
-    new JTLT({
+    JTLT.create({
       data, templates, outputType: 'string',
       success (result) {
         out = result; return result;
@@ -1480,7 +1480,7 @@ describe('JSONPathTransformerContext - sorting edge cases', function () {
         this.string(String((/** @type {TestData} */ (item)).n));
       }, {select: '$.n', type: 'number', order: 'ascending'});
     }}];
-    new JTLT({
+    JTLT.create({
       data, templates, outputType: 'string',
       success (result) {
         out = result; return result;
@@ -1500,7 +1500,7 @@ describe('JSONPathTransformerContext - sorting edge cases', function () {
         this.string(',');
       }, [{select: '$.name', type: 'text'}]);
     }}];
-    new JTLT({
+    JTLT.create({
       data, templates, outputType: 'string',
       success (result) {
         out = result; return result;
@@ -1521,7 +1521,7 @@ describe('JSONPathTransformerContext - sorting edge cases', function () {
         this.string(',');
       }, {select: '$.name', type: 'text'});
     }}];
-    new JTLT({
+    JTLT.create({
       data, templates, outputType: 'string',
       success (result) {
         out = result; return result;
@@ -1543,7 +1543,7 @@ describe('JSONPathTransformerContext - sorting edge cases', function () {
         this.string(',');
       }, {select: '$.name', type: 'text', order: 'descending'});
     }}];
-    new JTLT({
+    JTLT.create({
       data, templates, outputType: 'string',
       success (result) {
         out = result; return result;
@@ -1568,7 +1568,7 @@ describe('JSONPathTransformerContext - sorting edge cases', function () {
         return (/** @type {TestData} */ (a)).n - (/** @type {TestData} */ (b)).n;
       });
     }}];
-    new JTLT({
+    JTLT.create({
       data, templates, outputType: 'string',
       success (result) {
         out = result; return result;
@@ -1591,7 +1591,7 @@ describe('JSONPathTransformerContext - sorting edge cases', function () {
         {select: '$.b', type: 'number'}
       ]);
     }}];
-    new JTLT({
+    JTLT.create({
       data, templates, outputType: 'string',
       success (result) {
         out = result; return result;
@@ -1612,7 +1612,7 @@ describe('JSONPathTransformerContext - sorting edge cases', function () {
         this.string(`${item.a}${item.b}`);
       }, ['$.a', '$.b']); // String paths instead of objects
     }}];
-    new JTLT({
+    JTLT.create({
       data, templates, outputType: 'string',
       success (result) {
         out = result; return result;
@@ -1635,7 +1635,7 @@ describe('JSONPathTransformerContext - sorting edge cases', function () {
         this.string(',');
       }, {select: '$.name', type: 'text', locale: 'de', order: 'ascending'});
     }}];
-    new JTLT({
+    JTLT.create({
       data, templates, outputType: 'string',
       success (result) {
         out = result; return result;
@@ -1662,7 +1662,7 @@ describe('JSONPathTransformerContext - sorting edge cases', function () {
         order: 'ascending'
       });
     }}];
-    new JTLT({
+    JTLT.create({
       data, templates, outputType: 'string',
       success (result) {
         out = result; return result;
@@ -1683,7 +1683,7 @@ describe('JSONPathTransformerContext - sorting edge cases', function () {
     }}, {path: '$.items[*]', mode: 'sorted', template (item) {
       this.string((/** @type {TestData} */ (item)).name + ',');
     }}];
-    new JTLT({
+    JTLT.create({
       data, templates, outputType: 'string',
       success (result) {
         out = result; return result;
@@ -1707,7 +1707,7 @@ describe('JSONPathTransformerContext - sorting edge cases', function () {
     }}, {path: '$.items[*]', mode: 'sorted', template (item) {
       this.string((/** @type {TestData} */ (item)).x + ',');
     }}];
-    new JTLT({
+    JTLT.create({
       data, templates, outputType: 'string',
       success (result) {
         out = result; return result;
@@ -1734,7 +1734,7 @@ describe('JSONPathTransformerContext - sorting edge cases', function () {
     }}, {path: '$.items[*]', mode: 'sorted', template (item) {
       this.string((/** @type {TestData} */ (item)).name);
     }}];
-    new JTLT({
+    JTLT.create({
       data, templates, outputType: 'string',
       success (result) {
         out = result; return result;
@@ -1758,7 +1758,7 @@ describe('JSONPathTransformerContext - sorting edge cases', function () {
     }}, {path: '$.items[*]', mode: 'sorted', template (item) {
       this.string((/** @type {TestData} */ (item)).group + (/** @type {TestData} */ (item)).name + ',');
     }}];
-    new JTLT({
+    JTLT.create({
       data, templates, outputType: 'string',
       success (result) {
         out = result; return result;
@@ -1782,7 +1782,7 @@ describe('JSONPathTransformerContext - sorting edge cases', function () {
     }}, {path: '$.items[*]', mode: 'sorted', template (item) {
       this.string((/** @type {TestData} */ (item)).val + ',');
     }}];
-    new JTLT({
+    JTLT.create({
       data, templates, outputType: 'string',
       success (result) {
         out = result; return result;
@@ -1806,7 +1806,7 @@ describe('JSONPathTransformerContext - sorting edge cases', function () {
         return `<${val}>`;
       }}
     ];
-    new JTLT({
+    JTLT.create({
       data, templates, outputType: 'string',
       success (result) {
         out = result; return result;
@@ -1836,7 +1836,7 @@ describe('JSONPathTransformerContext - Branch Coverage', function () {
         this.number(value);
       }
     }];
-    new JTLT({
+    JTLT.create({
       data, templates, outputType: 'json',
       success (result) {
         out = result;
@@ -1865,7 +1865,7 @@ describe('JSONPathTransformerContext - Branch Coverage', function () {
         this.number(42);
       }
     }];
-    new JTLT({
+    JTLT.create({
       data, templates, outputType: 'json',
       success (result) {
         out = result;
@@ -1893,7 +1893,7 @@ describe('JSONPathTransformerContext - Branch Coverage', function () {
     }];
     // This should throw because template name will be null and not found
     assert.throws(() => {
-      new JTLT({
+      JTLT.create({
         data, templates, outputType: 'json',
         success (result) {
           out = result;
@@ -1917,7 +1917,7 @@ describe('JSONPathTransformerContext - Branch Coverage', function () {
         }, {select: ''});
       }
     }];
-    new JTLT({
+    JTLT.create({
       data, templates, outputType: 'json',
       success (result) {
         out = result;
@@ -1946,7 +1946,7 @@ describe('JSONPathTransformerContext - Branch Coverage', function () {
         this.number(value);
       }
     }];
-    new JTLT({
+    JTLT.create({
       data, templates, outputType: 'json',
       success (result) {
         out = result;
@@ -1969,7 +1969,7 @@ describe('JSONPathTransformerContext - Branch Coverage', function () {
         }, {select: '@'});
       }
     }];
-    new JTLT({
+    JTLT.create({
       data, templates, outputType: 'json',
       success (result) {
         out = result;
@@ -2009,7 +2009,7 @@ describe('JSONPathTransformerContext - Branch Coverage', function () {
         }
       }
     ];
-    new JTLT({
+    JTLT.create({
       data,
       templates,
       outputType: 'json',
@@ -2042,7 +2042,7 @@ describe('JSONPathTransformerContext - Branch Coverage', function () {
         this.number((/** @type {TestData} */ (value)).val);
       }
     }];
-    new JTLT({
+    JTLT.create({
       data, templates, outputType: 'json',
       success (result) {
         out = result;
@@ -2069,7 +2069,7 @@ describe('JSONPathTransformerContext - Branch Coverage', function () {
         this.number((/** @type {TestData} */ (value)).val);
       }
     }];
-    new JTLT({
+    JTLT.create({
       data, templates, outputType: 'json',
       success (result) {
         out = result;
@@ -2096,7 +2096,7 @@ describe('JSONPathTransformerContext - Branch Coverage', function () {
         this.string(String((/** @type {TestData} */ (value)).val));
       }
     }];
-    new JTLT({
+    JTLT.create({
       data, templates, outputType: 'string',
       success (result) {
         out = result; return result;
@@ -2124,7 +2124,7 @@ describe('JSONPathTransformerContext - Branch Coverage', function () {
         this.number(value);
       }
     }];
-    new JTLT({
+    JTLT.create({
       data, templates, outputType: 'json',
       success (result) {
         out = result; return result;

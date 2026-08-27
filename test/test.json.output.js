@@ -8,8 +8,7 @@ const data = (await import(
 
 describe('JSONJoiningTransformer output', () => {
   it('builds an array of authors using root + author templates', (done) => {
-    // eslint-disable-next-line no-new -- exercising API
-    new JTLT({
+    JTLT.create({
       data,
       outputType: 'json',
       templates: [
@@ -37,8 +36,7 @@ describe('JSONJoiningTransformer output', () => {
   });
 
   it('builds an object with propValue via object() and string()', (done) => {
-    // eslint-disable-next-line no-new -- exercising API
-    new JTLT({
+    JTLT.create({
       data,
       outputType: 'json',
       unwrapSingleResult: true,
