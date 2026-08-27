@@ -37,6 +37,7 @@ describe('forEachGroup() function', function () {
             }
           }
         ],
+        outputType: 'string',
         joiningTransformer: StringJoiningTransformer.create(''),
         data
       }).transform();
@@ -79,6 +80,7 @@ describe('forEachGroup() function', function () {
             }
           }
         ],
+        outputType: 'string',
         joiningTransformer: StringJoiningTransformer.create(''),
         data
       }).transform();
@@ -124,6 +126,7 @@ describe('forEachGroup() function', function () {
             }
           }
         ],
+        outputType: 'string',
         joiningTransformer: StringJoiningTransformer.create(''),
         data
       }).transform();
@@ -167,6 +170,7 @@ describe('forEachGroup() function', function () {
             }
           }
         ],
+        outputType: 'string',
         joiningTransformer: StringJoiningTransformer.create(''),
         data
       }).transform();
@@ -214,6 +218,7 @@ describe('forEachGroup() function', function () {
             }
           }
         ],
+        outputType: 'string',
         joiningTransformer: StringJoiningTransformer.create(''),
         data
       }).transform();
@@ -501,6 +506,7 @@ describe('forEachGroup() function', function () {
             }
           }
         ],
+        outputType: 'string',
         joiningTransformer: StringJoiningTransformer.create(''),
         data
       }).transform();
@@ -551,6 +557,7 @@ describe('forEachGroup() function', function () {
             }
           }
         ],
+        outputType: 'string',
         joiningTransformer: StringJoiningTransformer.create(''),
         data
       }).transform();
@@ -604,6 +611,7 @@ describe('forEachGroup() function', function () {
             }
           }
         ],
+        outputType: 'string',
         joiningTransformer: StringJoiningTransformer.create(''),
         data
       }).transform();
@@ -654,6 +662,7 @@ describe('forEachGroup() function', function () {
               }
             }
           ],
+          outputType: 'string',
           joiningTransformer: StringJoiningTransformer.create(''),
           data
         }).transform();
@@ -835,6 +844,7 @@ describe('forEachGroup() function', function () {
             }
           }
         ],
+        outputType: 'string',
         joiningTransformer: StringJoiningTransformer.create(''),
         data
       }).transform();
@@ -888,6 +898,7 @@ describe('forEachGroup() function', function () {
             }
           }
         ],
+        outputType: 'string',
         joiningTransformer: StringJoiningTransformer.create(''),
         data
       }).transform();
@@ -937,6 +948,7 @@ describe('forEachGroup() function', function () {
             }
           }
         ],
+        outputType: 'string',
         joiningTransformer: StringJoiningTransformer.create(''),
         data
       }).transform();
@@ -1082,6 +1094,7 @@ describe('forEachGroup() function', function () {
             }
           }
         ],
+        outputType: 'string',
         joiningTransformer: StringJoiningTransformer.create(''),
         data
       }).transform();
@@ -1122,6 +1135,7 @@ describe('forEachGroup() function', function () {
             }
           }
         ],
+        outputType: 'string',
         joiningTransformer: StringJoiningTransformer.create(''),
         data
       }).transform();
@@ -1159,6 +1173,7 @@ describe('forEachGroup() function', function () {
             }
           }
         ],
+        outputType: 'string',
         joiningTransformer: StringJoiningTransformer.create(''),
         data
       }).transform();
@@ -1419,6 +1434,7 @@ describe('forEachGroup() function', function () {
             }
           }
         ],
+        outputType: 'string',
         joiningTransformer: StringJoiningTransformer.create(''),
         data
       }).transform();
@@ -1444,15 +1460,9 @@ describe('forEachGroup() function', function () {
             template () {
               this.forEach(
                 '$.items[*]',
-                /**
-                 * @this {import('../src/JSONPathTransformerContext.js').
-                 *   default}
-                 * @param {any} item
-                 * @returns {void}
-                 */
                 function (item) {
                   this.element('item', {}, [], () => {
-                    this.text(item.name);
+                    this.text(/** @type {{name: string}} */ (item).name);
                   });
                 },
                 {select: '$.value', order: 'ascending', type: 'text'}
@@ -1460,6 +1470,7 @@ describe('forEachGroup() function', function () {
             }
           }
         ],
+        outputType: 'string',
         joiningTransformer: StringJoiningTransformer.create(''),
         data
       }).transform();
@@ -1492,15 +1503,9 @@ describe('forEachGroup() function', function () {
             template () {
               this.forEach(
                 '$.items[*]',
-                /**
-                 * @this {import('../src/JSONPathTransformerContext.js').
-                 *   default}
-                 * @param {any} item
-                 * @returns {void}
-                 */
                 function (item) {
                   this.element('item', {}, [], () => {
-                    this.text(item.name);
+                    this.text(/** @type {{name: string}} */ (item).name);
                   });
                 },
                 {select: '$.value', order: 'ascending', type: 'text'}
@@ -1508,6 +1513,7 @@ describe('forEachGroup() function', function () {
             }
           }
         ],
+        outputType: 'string',
         joiningTransformer: StringJoiningTransformer.create(''),
         data
       }).transform();
@@ -1533,15 +1539,9 @@ describe('forEachGroup() function', function () {
             template () {
               this.forEach(
                 '$.items[*]',
-                /**
-                 * @this {import('../src/JSONPathTransformerContext.js').
-                 *   default}
-                 * @param {any} item
-                 * @returns {void}
-                 */
                 function (item) {
                   this.element('item', {}, [], () => {
-                    this.text(item.name);
+                    this.text(/** @type {{name: string}} */ (item).name);
                   });
                 },
                 {select: '$.value', order: 'ascending', type: 'text'}
@@ -1549,6 +1549,7 @@ describe('forEachGroup() function', function () {
             }
           }
         ],
+        outputType: 'string',
         joiningTransformer: StringJoiningTransformer.create(''),
         data
       }).transform();
@@ -1575,15 +1576,9 @@ describe('forEachGroup() function', function () {
               template () {
                 this.forEach(
                   '$.items[*]',
-                  /**
-                   * @this {import('../src/JSONPathTransformerContext.js').
-                   *   default}
-                   * @param {any} item
-                   * @returns {void}
-                   */
                   function (item) {
                     this.element('item', {}, [], () => {
-                      this.text(item.name);
+                      this.text(/** @type {{name: string}} */ (item).name);
                     });
                   },
                   {select: '$.value', order: 'ascending', type: 'text'}
@@ -1591,6 +1586,7 @@ describe('forEachGroup() function', function () {
               }
             }
           ],
+          outputType: 'string',
           joiningTransformer: StringJoiningTransformer.create(''),
           data
         }).transform();
@@ -1621,15 +1617,9 @@ describe('forEachGroup() function', function () {
             template () {
               this.forEach(
                 '$.items[*]',
-                /**
-                 * @this {import('../src/JSONPathTransformerContext.js').
-                 *   default}
-                 * @param {any} item
-                 * @returns {void}
-                 */
                 function (item) {
                   this.element('item', {}, [], () => {
-                    this.text(item.name);
+                    this.text(/** @type {{name: string}} */ (item).name);
                   });
                 },
                 {select: '$.value', order: 'ascending', type: 'text'}
@@ -1637,6 +1627,7 @@ describe('forEachGroup() function', function () {
             }
           }
         ],
+        outputType: 'string',
         joiningTransformer: StringJoiningTransformer.create(''),
         data
       }).transform();
@@ -1664,15 +1655,9 @@ describe('forEachGroup() function', function () {
               template () {
                 this.forEach(
                   '$.items[*]',
-                  /**
-                   * @this {import('../src/JSONPathTransformerContext.js').
-                   *   default}
-                   * @param {any} item
-                   * @returns {void}
-                   */
                   function (item) {
                     this.element('item', {}, [], () => {
-                      this.text(item.name);
+                      this.text(/** @type {{name: string}} */(item).name);
                     });
                   },
                   {select: '$.value', order: 'ascending', type: 'text'}
@@ -1680,6 +1665,7 @@ describe('forEachGroup() function', function () {
               }
             }
           ],
+          outputType: 'string',
           joiningTransformer: StringJoiningTransformer.create(''),
           data
         }).transform();

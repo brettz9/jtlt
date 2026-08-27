@@ -19,6 +19,7 @@ describe('format-number() function', function () {
             }
           }
         ],
+        outputType: 'string',
         joiningTransformer: StringJoiningTransformer.create(''),
         data
       }).transform();
@@ -36,6 +37,7 @@ describe('format-number() function', function () {
             }
           }
         ],
+        outputType: 'string',
         joiningTransformer: StringJoiningTransformer.create(''),
         data
       }).transform();
@@ -57,6 +59,7 @@ describe('format-number() function', function () {
             }
           }
         ],
+        outputType: 'string',
         joiningTransformer: StringJoiningTransformer.create(''),
         data
       }).transform();
@@ -74,6 +77,7 @@ describe('format-number() function', function () {
             }
           }
         ],
+        outputType: 'string',
         joiningTransformer: StringJoiningTransformer.create(''),
         data
       }).transform();
@@ -92,6 +96,7 @@ describe('format-number() function', function () {
             }
           }
         ],
+        outputType: 'string',
         joiningTransformer: StringJoiningTransformer.create(''),
         data
       }).transform();
@@ -114,6 +119,7 @@ describe('format-number() function', function () {
             }
           }
         ],
+        outputType: 'string',
         joiningTransformer: StringJoiningTransformer.create(''),
         data
       }).transform();
@@ -141,6 +147,7 @@ describe('format-number() function', function () {
               }
             }
           ],
+          outputType: 'string',
           joiningTransformer: StringJoiningTransformer.create(''),
           data
         }).transform();
@@ -162,6 +169,7 @@ describe('format-number() function', function () {
             }
           }
         ],
+        outputType: 'string',
         joiningTransformer: StringJoiningTransformer.create(''),
         data
       }).transform();
@@ -183,6 +191,7 @@ describe('format-number() function', function () {
             }
           }
         ],
+        outputType: 'string',
         joiningTransformer: StringJoiningTransformer.create(''),
         data
       }).transform();
@@ -204,6 +213,7 @@ describe('format-number() function', function () {
               }
             }
           ],
+          outputType: 'string',
           joiningTransformer: StringJoiningTransformer.create(''),
           data
         }).transform();
@@ -223,6 +233,7 @@ describe('format-number() function', function () {
             }
           }
         ],
+        outputType: 'string',
         joiningTransformer: StringJoiningTransformer.create(''),
         data
       }).transform();
@@ -241,6 +252,7 @@ describe('format-number() function', function () {
             }
           }
         ],
+        outputType: 'string',
         joiningTransformer: StringJoiningTransformer.create(''),
         data
       }).transform();
@@ -681,6 +693,7 @@ describe('format-number() function', function () {
             }
           }
         ],
+        outputType: 'string',
         joiningTransformer: StringJoiningTransformer.create(''),
         data
       }).transform();
@@ -698,6 +711,7 @@ describe('format-number() function', function () {
             }
           }
         ],
+        outputType: 'string',
         joiningTransformer: StringJoiningTransformer.create(''),
         data
       }).transform();
@@ -716,6 +730,7 @@ describe('format-number() function', function () {
             }
           }
         ],
+        outputType: 'string',
         joiningTransformer: StringJoiningTransformer.create(''),
         data
       }).transform();
@@ -735,6 +750,7 @@ describe('format-number() function', function () {
             }
           }
         ],
+        outputType: 'string',
         joiningTransformer: StringJoiningTransformer.create(''),
         data
       }).transform();
@@ -756,6 +772,7 @@ describe('format-number() function', function () {
               }
             }
           ],
+          outputType: 'string',
           joiningTransformer: StringJoiningTransformer.create(''),
           data
         }).transform();

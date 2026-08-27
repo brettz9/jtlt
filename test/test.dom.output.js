@@ -134,7 +134,7 @@ describe('DOMJoiningTransformer output', () => {
           const ul = doc.createElement('ul');
           this.forEach('$.items[*]', function (v) {
             const li = doc.createElement('li');
-            li.textContent = v;
+            li.textContent = /** @type {string} */ (v);
             ul.append(li);
           });
           return ul;

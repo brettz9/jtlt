@@ -57,7 +57,7 @@ interface TemplateObject {
   path?: string;        // JSONPath or XPath expression (required for pattern-matching)
   mode?: string;        // Optional mode segregation
   priority?: number;    // Numeric priority (higher wins); fallback uses specificity resolver
-  template(nodeValue, cfg): any; // Executed with `this` bound to context
+  template(nodeValue: any, cfg?: {mode?: string}): any; // Executed with `this` bound to context
 }
 ```
 

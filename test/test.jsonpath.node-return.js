@@ -25,6 +25,7 @@ describe('JSONPathTransformer transform - Node return', () => {
 
     const engine = new JSONPathTransformer({
       data: {x: 1},
+      outputType: 'dom',
       joiningTransformer: joiner,
       templates
     });

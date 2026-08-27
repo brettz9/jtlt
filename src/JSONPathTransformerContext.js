@@ -660,7 +660,7 @@ class JSONPathTransformerContext {
    * Sort parameter forms are the same as applyTemplates().
    * @param {string} select - JSONPath selector
    * @param {(this: JSONPathTransformerContext<T>,
-   *   value: any
+   *   value: unknown
    * ) => void} cb - Callback function
    * @param {SortSpec<V>} [sort] - Sort spec
    * @returns {this}

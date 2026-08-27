@@ -23,16 +23,20 @@ new JTLT({
     {
       path: '$',
       template () {
-        this.forEach('$.users[*]', function (user) {
-          this.callTemplate({
-            name: 'formatUser',
-            withParam: [
-              {name: 'userName', value: user.name},
-              {name: 'userRole', value: user.role},
-              {name: 'prefix', value: '> '}
-            ]
-          });
-        });
+        this.forEach(
+          '$.users[*]',
+          function (usr) {
+            const user = /** @type {{name: string, role: string}} */ (usr);
+            this.callTemplate({
+              name: 'formatUser',
+              withParam: [
+                {name: 'userName', value: user.name},
+                {name: 'userRole', value: user.role},
+                {name: 'prefix', value: '> '}
+              ]
+            });
+          }
+        );
       }
     },
     {

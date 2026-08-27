@@ -15,8 +15,8 @@ describe('JSONPathTransformer equal-priority root templates', () => {
         {name: 'r2', path: '$', template: noop}
       ],
       // minimal joiner to satisfy context
-      // @ts-expect-error testing
       joiningTransformer: {
+        // @ts-expect-error testing
         append () {
           // no-op for test
         },

@@ -22,6 +22,7 @@ describe('JSONPathTransformer return value handling', () => {
     const engine = new JSONPathTransformer({
       data: {x: 1},
       templates,
+      outputType: 'string',
       joiningTransformer: joiner
     });
     const out = engine.transform('');
@@ -49,6 +50,7 @@ describe('JSONPathTransformer return value handling', () => {
     const engine = new JSONPathTransformer({
       data: {x: 1},
       templates,
+      outputType: 'dom',
       joiningTransformer: joiner
     });
     const result = engine.transform('');
@@ -142,6 +144,7 @@ describe('JSONPathTransformer return value handling', () => {
     const engine = new JSONPathTransformer({
       data: {x: 1},
       templates,
+      outputType: 'string',
       joiningTransformer: joiner
     });
     const out = engine.transform('');

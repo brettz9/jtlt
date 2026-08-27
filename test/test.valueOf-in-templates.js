@@ -63,7 +63,7 @@ describe(
                 this.forEach('$.items[*]', function (item) {
                   this.string('- ');
                   // Currently works by using the item parameter
-                  this.string(item);
+                  this.string(/** @type {string} */ (item));
                   this.string('\n');
                 });
               }
