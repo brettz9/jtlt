@@ -327,10 +327,12 @@ describe('Coverage - additional edge cases', function () {
     });
     it('should throw when appending to scalar or empty value', function () {
       const jt = new JSONJoiningTransformer();
+      // @ts-expect-error Normally expects object or array
       jt._obj = 42; // Set to scalar
       assert.throws(() => {
         jt.append('fail');
       }, /You cannot append to a scalar or empty value/v);
+      // @ts-expect-error Normally expects object or array
       jt._obj = null; // Set to null
       assert.throws(() => {
         jt.append('fail');
@@ -397,7 +399,7 @@ describe('Coverage - additional edge cases', function () {
         this.array(() => {
           this.string('kept');
           this.text('ignored');
-          this.attribute('a', 1);
+          this.attribute('a', '1');
           this.plainText('ignored2');
         });
       }}];

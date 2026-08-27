@@ -166,7 +166,7 @@ class JSONJoiningTransformer extends AbstractJoiningTransformer {
 
   /* c8 ignore next 13 -- JSDoc block incorrectly counted as coverable by c8 */
   /**
-   * @param {Record<string, unknown>|ObjectCallback} [objOrCb]
+   * @param {null|Record<string, unknown>|ObjectCallback} [objOrCb]
    *   Seed object or callback.
    * @param {ObjectCallback|any[]} [cbOrUsePropertySets] Callback or sets.
    * @param {any[]|Record<string, unknown>} [usePropertySetsOrPropSets]

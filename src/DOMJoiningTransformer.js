@@ -93,7 +93,8 @@ class DOMJoiningTransformer extends AbstractJoiningTransformer {
 
   /**
    * @param {Record<string, unknown>} obj - Object to serialize
-   * @param {(this: DOMJoiningTransformer) => void} [cb] - Callback function.
+   * @param {((this: DOMJoiningTransformer) => void)|null} [cb] - Callback
+   *   function.
    * @param {any[]} [usePropertySets] - Property sets to use
    * @param {Record<string, unknown>} [propSets] - Additional property sets
    * @returns {DOMJoiningTransformer}
