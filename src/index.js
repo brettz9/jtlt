@@ -109,7 +109,7 @@ export const setWindow = (win) => {
  * @typedef {object} BaseJTLTOptions
  * @property {(
  *   result: ResultType<T, E>
- * ) => void} success A callback supplied
+ * ) => ResultType<T, E>|void} success A callback supplied
  *   with a single argument that is the result of this instance's
  *   transform() method. When used in TypeScript, this can be made
  *   generic as `success<T>(result: T): void`.
@@ -213,16 +213,20 @@ export const setWindow = (win) => {
  * transformer based on `outputType`, and invokes the JSONPath-based engine.
  * The result is returned to the required `success` callback and also returned
  * from transform().
+ * @template {"json"|"string"|"dom"} [T="json"]
+ * @template {boolean|undefined} [E=false]
  */
 class JTLT {
   /**
    * @template {"json"|"string"|"dom"} [T="json"]
    * @template {boolean|undefined} [E=false]
    * @param {JSONPathJTLTOptions<T, E> | XPathJTLTOptions<T, E>} config
-   * @returns {JTLT}
+   * @returns {JTLT<T, E>}
    */
   static create (config) {
-    return new JTLT(/** @type {any} */ (config));
+    return /** @type {JTLT<T, E>} */ (
+      new JTLT(/** @type {any} */ (config))
+    );
   }
 
   /**
@@ -533,12 +537,12 @@ class JTLT {
         return xsjpr.getPriorityBySpecificity(path);
       };
     }());
-    return this;
+    return /** @type {any} */ (this);
   }
 
   /**
    * @param {string} [mode] The mode of the transformation
-   * @returns {void}
+   * @returns {ResultType<T, E>}
    * @todo Allow for a success callback in case the jsonpath code is modified
    *     to work asynchronously (as with queries to access remote JSON
    *     stores)
@@ -582,7 +586,7 @@ class JTLT {
     const ret = this.config.success(
       /** @type {never} */ (result)
     );
-    return ret;
+    return /** @type {any} */ (ret);
   }
 }
 
