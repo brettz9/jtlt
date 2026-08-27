@@ -16,7 +16,7 @@ describe('stylesheet() and transform() methods', function () {
     it(
       'should exclude unused namespace with excludeResultPrefixes',
       function () {
-        const joiner = new StringJoiningTransformer('');
+        const joiner = StringJoiningTransformer.create('');
         joiner.stylesheet({excludeResultPrefixes: ['unused']});
         joiner.element('root', {}, [], function () {
           joiner.namespace('unused', 'https://example.com/unused');
@@ -33,7 +33,7 @@ describe('stylesheet() and transform() methods', function () {
     );
 
     it('should include excluded namespace if actually used', function () {
-      const joiner = new StringJoiningTransformer('');
+      const joiner = StringJoiningTransformer.create('');
       joiner.stylesheet({excludeResultPrefixes: ['ns']});
       joiner.element('root', {}, [], function () {
         joiner.namespace('ns', 'https://example.com/ns');
@@ -46,7 +46,7 @@ describe('stylesheet() and transform() methods', function () {
     });
 
     it('should work with multiple excluded prefixes', function () {
-      const joiner = new StringJoiningTransformer('');
+      const joiner = StringJoiningTransformer.create('');
       joiner.stylesheet({excludeResultPrefixes: ['a', 'b', 'c']});
       joiner.element('root', {}, [], function () {
         joiner.namespace('a', 'https://example.com/a');
@@ -64,7 +64,7 @@ describe('stylesheet() and transform() methods', function () {
     });
 
     it('should support transform() as alias to stylesheet()', function () {
-      const joiner = new StringJoiningTransformer('');
+      const joiner = StringJoiningTransformer.create('');
       joiner.transform({excludeResultPrefixes: ['unused']});
       joiner.element('root', {}, [], function () {
         joiner.namespace('unused', 'https://example.com/unused');
@@ -75,7 +75,7 @@ describe('stylesheet() and transform() methods', function () {
     });
 
     it('should return this for chaining', function () {
-      const joiner = new StringJoiningTransformer('');
+      const joiner = StringJoiningTransformer.create('');
       const result1 = joiner.stylesheet({excludeResultPrefixes: ['a']});
       const result2 = joiner.transform({excludeResultPrefixes: ['b']});
 
@@ -84,7 +84,7 @@ describe('stylesheet() and transform() methods', function () {
     });
 
     it('should handle empty excludeResultPrefixes array', function () {
-      const joiner = new StringJoiningTransformer('');
+      const joiner = StringJoiningTransformer.create('');
       joiner.stylesheet({excludeResultPrefixes: []});
       joiner.element('root', {}, [], function () {
         joiner.namespace('ns', 'https://example.com/ns');
@@ -96,7 +96,7 @@ describe('stylesheet() and transform() methods', function () {
     });
 
     it('should work without excludeResultPrefixes property', function () {
-      const joiner = new StringJoiningTransformer('');
+      const joiner = StringJoiningTransformer.create('');
       joiner.stylesheet({});
       joiner.element('root', {}, [], function () {
         joiner.namespace('ns', 'https://example.com/ns');
@@ -107,7 +107,7 @@ describe('stylesheet() and transform() methods', function () {
     });
 
     it('should handle default namespace (empty prefix)', function () {
-      const joiner = new StringJoiningTransformer('');
+      const joiner = StringJoiningTransformer.create('');
       joiner.stylesheet({excludeResultPrefixes: ['']});
       joiner.element('root', {}, [], function () {
         joiner.namespace('', 'https://example.com/default');
@@ -124,7 +124,7 @@ describe('stylesheet() and transform() methods', function () {
     it(
       'should exclude unused namespace with excludeResultPrefixes',
       function () {
-        const joiner = new DOMJoiningTransformer(
+        const joiner = DOMJoiningTransformer.create(
           document.createDocumentFragment(),
           {document}
         );
@@ -150,7 +150,7 @@ describe('stylesheet() and transform() methods', function () {
     );
 
     it('should include excluded namespace if actually used', function () {
-      const joiner = new DOMJoiningTransformer(
+      const joiner = DOMJoiningTransformer.create(
         document.createDocumentFragment(),
         {document}
       );
@@ -170,7 +170,7 @@ describe('stylesheet() and transform() methods', function () {
     });
 
     it('should support transform() as an alias', function () {
-      const joiner = new DOMJoiningTransformer(
+      const joiner = DOMJoiningTransformer.create(
         document.createDocumentFragment(),
         {document}
       );
@@ -188,7 +188,7 @@ describe('stylesheet() and transform() methods', function () {
     });
 
     it('should handle default namespace exclusion and usage', function () {
-      const joiner = new DOMJoiningTransformer(
+      const joiner = DOMJoiningTransformer.create(
         document.createDocumentFragment(),
         {document}
       );
@@ -213,7 +213,7 @@ describe('stylesheet() and transform() methods', function () {
     it(
       'should exclude unused namespace with excludeResultPrefixes',
       function () {
-        const joiner = new JSONJoiningTransformer([]);
+        const joiner = JSONJoiningTransformer.create([]);
         joiner.stylesheet({excludeResultPrefixes: ['unused']});
         joiner.element('root', {}, function () {
           joiner.namespace('unused', 'https://example.com/unused');
@@ -234,7 +234,7 @@ describe('stylesheet() and transform() methods', function () {
     );
 
     it('should include excluded namespace if actually used', function () {
-      const joiner = new JSONJoiningTransformer([]);
+      const joiner = JSONJoiningTransformer.create([]);
       joiner.stylesheet({excludeResultPrefixes: ['ns']});
       joiner.element('root', {}, function () {
         joiner.namespace('ns', 'https://example.com/ns');
@@ -250,7 +250,7 @@ describe('stylesheet() and transform() methods', function () {
     });
 
     it('should support transform() as an alias', function () {
-      const joiner = new JSONJoiningTransformer([]);
+      const joiner = JSONJoiningTransformer.create([]);
       joiner.transform({excludeResultPrefixes: ['unused']});
       joiner.element('root', {}, function () {
         joiner.namespace('unused', 'https://example.com/unused');
@@ -264,7 +264,7 @@ describe('stylesheet() and transform() methods', function () {
     });
 
     it('should work with multiple prefixes', function () {
-      const joiner = new JSONJoiningTransformer([]);
+      const joiner = JSONJoiningTransformer.create([]);
       joiner.stylesheet({excludeResultPrefixes: ['a', 'b']});
       joiner.element('root', {}, function () {
         joiner.namespace('a', 'https://example.com/a');
@@ -283,7 +283,7 @@ describe('stylesheet() and transform() methods', function () {
     });
 
     it('should handle default namespace (empty prefix)', function () {
-      const joiner = new JSONJoiningTransformer([]);
+      const joiner = JSONJoiningTransformer.create([]);
       joiner.stylesheet({excludeResultPrefixes: ['']});
       joiner.element('root', {}, function () {
         joiner.namespace('', 'https://example.com/default');
@@ -302,7 +302,7 @@ describe('stylesheet() and transform() methods', function () {
 
   describe('Integration with namespace tracking', function () {
     it('should track namespace usage in nested elements', function () {
-      const joiner = new StringJoiningTransformer('');
+      const joiner = StringJoiningTransformer.create('');
       joiner.stylesheet({excludeResultPrefixes: ['ns1', 'ns2']});
       joiner.element('root', {}, [], function () {
         joiner.namespace('ns1', 'https://example.com/ns1');
@@ -319,7 +319,7 @@ describe('stylesheet() and transform() methods', function () {
     });
 
     it('should accumulate excluded from multiple calls', function () {
-      const joiner = new StringJoiningTransformer('');
+      const joiner = StringJoiningTransformer.create('');
       joiner.stylesheet({excludeResultPrefixes: ['a']});
       joiner.stylesheet({excludeResultPrefixes: ['b']});
       joiner.element('root', {}, [], function () {
@@ -339,7 +339,7 @@ describe('stylesheet() and transform() methods', function () {
 
   describe('Edge cases', function () {
     it('should handle default namespace correctly', function () {
-      const joiner = new StringJoiningTransformer('');
+      const joiner = StringJoiningTransformer.create('');
       joiner.stylesheet({excludeResultPrefixes: ['']});
       joiner.element('root', {}, [], function () {
         joiner.namespace('', 'https://example.com/default');
@@ -352,7 +352,7 @@ describe('stylesheet() and transform() methods', function () {
     });
 
     it('should exclude unused default namespace', function () {
-      const joiner = new StringJoiningTransformer('');
+      const joiner = StringJoiningTransformer.create('');
       joiner.stylesheet({excludeResultPrefixes: ['']});
       joiner.element('root', {}, [], function () {
         joiner.namespace('', 'https://example.com/default');
@@ -365,7 +365,7 @@ describe('stylesheet() and transform() methods', function () {
     });
 
     it('should flush default namespace in DOM joiner', function () {
-      const joiner = new DOMJoiningTransformer(
+      const joiner = DOMJoiningTransformer.create(
         document.createDocumentFragment(),
         {document}
       );
@@ -386,7 +386,7 @@ describe('stylesheet() and transform() methods', function () {
     });
 
     it('should flush default namespace in JSON joiner', function () {
-      const joiner = new JSONJoiningTransformer([]);
+      const joiner = JSONJoiningTransformer.create([]);
       joiner.stylesheet({excludeResultPrefixes: ['']});
       joiner.element('root', {}, function () {
         joiner.namespace('', 'https://example.com/default');
@@ -403,7 +403,7 @@ describe('stylesheet() and transform() methods', function () {
     });
 
     it('should handle namespace aliasing with excluded', function () {
-      const joiner = new StringJoiningTransformer('');
+      const joiner = StringJoiningTransformer.create('');
       joiner.namespaceAlias('old', 'new');
       joiner.stylesheet({excludeResultPrefixes: ['new']});
       joiner.element('root', {}, [], function () {
@@ -419,7 +419,7 @@ describe('stylesheet() and transform() methods', function () {
     it(
       'should handle aliasing prefix to empty string (default ns)',
       function () {
-        const joiner = new StringJoiningTransformer('');
+        const joiner = StringJoiningTransformer.create('');
         // Alias 'temp' prefix to empty string (default namespace)
         joiner.namespaceAlias('temp', '');
         joiner.stylesheet({excludeResultPrefixes: ['']});
@@ -435,7 +435,7 @@ describe('stylesheet() and transform() methods', function () {
     );
 
     it('should handle aliasing to empty string in DOM joiner', function () {
-      const joiner = new DOMJoiningTransformer(
+      const joiner = DOMJoiningTransformer.create(
         document.createDocumentFragment(),
         {document}
       );
@@ -456,7 +456,7 @@ describe('stylesheet() and transform() methods', function () {
     });
 
     it('should handle aliasing to empty string in JSON joiner', function () {
-      const joiner = new JSONJoiningTransformer([]);
+      const joiner = JSONJoiningTransformer.create([]);
       joiner.namespaceAlias('temp', '');
       joiner.stylesheet({excludeResultPrefixes: ['']});
       joiner.element('root', {}, function () {
@@ -475,7 +475,7 @@ describe('stylesheet() and transform() methods', function () {
 
   describe('Context methods', function () {
     it('should work from JSONPathTransformerContext', function () {
-      const joiner = new JSONJoiningTransformer([]);
+      const joiner = JSONJoiningTransformer.create([]);
       const ctx = new JSONPathTransformerContext({
         data: {},
         joiningTransformer: joiner,
@@ -497,10 +497,10 @@ describe('stylesheet() and transform() methods', function () {
     it(
       'should work with transform() alias in XPathTransformerContext',
       function () {
-        const joiner = new StringJoiningTransformer('');
+        const joiner = StringJoiningTransformer.create('');
         const ctx = new XPathTransformerContext({
           data: document,
-          joiningTransformer: /** @type {any} */ (joiner)
+          joiningTransformer: joiner
         }, []);
 
         ctx.transform({excludeResultPrefixes: ['unused']});
@@ -516,10 +516,10 @@ describe('stylesheet() and transform() methods', function () {
     it(
       'should use transform() alias in JSONPathTransformerContext',
       function () {
-        const joiner = new StringJoiningTransformer('');
+        const joiner = StringJoiningTransformer.create('');
         const ctx = new JSONPathTransformerContext({
           data: {},
-          joiningTransformer: /** @type {any} */ (joiner),
+          joiningTransformer: joiner,
           templates: []
         }, []);
 
@@ -536,7 +536,7 @@ describe('stylesheet() and transform() methods', function () {
 
   describe('Attribute prefix tracking', function () {
     it('should track prefixed attributes and flush namespace', function () {
-      const joiner = new StringJoiningTransformer('');
+      const joiner = StringJoiningTransformer.create('');
       joiner.stylesheet({excludeResultPrefixes: ['ns']});
       joiner.element('root', {}, [], function () {
         joiner.namespace('ns', 'https://example.com/ns');
@@ -552,7 +552,7 @@ describe('stylesheet() and transform() methods', function () {
     });
 
     it('should not track xmlns attributes as prefix usage', function () {
-      const joiner = new StringJoiningTransformer('');
+      const joiner = StringJoiningTransformer.create('');
       joiner.stylesheet({excludeResultPrefixes: ['ns']});
       joiner.element('root', {}, [], function () {
         joiner.namespace('ns', 'https://example.com/ns');
@@ -568,7 +568,7 @@ describe('stylesheet() and transform() methods', function () {
     });
 
     it('should handle attributes without colons', function () {
-      const joiner = new StringJoiningTransformer('');
+      const joiner = StringJoiningTransformer.create('');
       joiner.stylesheet({excludeResultPrefixes: ['ns']});
       joiner.element('root', {}, [], function () {
         joiner.namespace('ns', 'https://example.com/ns');

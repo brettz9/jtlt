@@ -63,21 +63,21 @@ describe('Coverage - additional edge cases', function () {
     });
 
     it('should handle string() without callback (lines 280-281)', function () {
-      const jt = new StringJoiningTransformer('', {mode: 'JSON'});
+      const jt = StringJoiningTransformer.create('', {mode: 'JSON'});
       jt.string('hello');
       const out = jt.get();
       assert.include(out, 'hello');
     });
 
     it('should handle number() without Element conversion', function () {
-      const jt = new StringJoiningTransformer('', {mode: 'JSON'});
+      const jt = StringJoiningTransformer.create('', {mode: 'JSON'});
       jt.number(42);
       const out = jt.get();
       assert.include(out, '42');
     });
 
     it('should handle boolean() without Element conversion', function () {
-      const jt = new StringJoiningTransformer('', {mode: 'JSON'});
+      const jt = StringJoiningTransformer.create('', {mode: 'JSON'});
       jt.boolean(true);
       jt.boolean(false);
       const out = jt.get();
@@ -86,14 +86,14 @@ describe('Coverage - additional edge cases', function () {
     });
 
     it('should handle undefined() in JavaScript mode', function () {
-      const jt = new StringJoiningTransformer('', {mode: 'JavaScript'});
+      const jt = StringJoiningTransformer.create('', {mode: 'JavaScript'});
       jt.undefined();
       const out = jt.get();
       assert.include(out, 'undefined');
     });
 
     it('should handle nonfiniteNumber() in JavaScript mode', function () {
-      const jt = new StringJoiningTransformer('', {mode: 'JavaScript'});
+      const jt = StringJoiningTransformer.create('', {mode: 'JavaScript'});
       jt.nonfiniteNumber(Infinity);
       jt.nonfiniteNumber(NaN);
       const out = jt.get();
@@ -102,7 +102,7 @@ describe('Coverage - additional edge cases', function () {
     });
 
     it('should handle function() in JavaScript mode', function () {
-      const jt = new StringJoiningTransformer('', {mode: 'JavaScript'});
+      const jt = StringJoiningTransformer.create('', {mode: 'JavaScript'});
       jt.outputFunction(function testFunc () {
         return 42;
       });
@@ -111,7 +111,7 @@ describe('Coverage - additional edge cases', function () {
     });
 
     it('array() uses JSON.stringify in non-JavaScript mode (lines 249-250)', function () {
-      const jt = new StringJoiningTransformer('', {mode: 'JSON'});
+      const jt = StringJoiningTransformer.create('', {mode: 'JSON'});
       jt.array([1, 2, 3]);
       const out = jt.get();
       assert.include(out, '[1,2,3]');
@@ -119,7 +119,7 @@ describe('Coverage - additional edge cases', function () {
 
     it('string() handles JHTML element conversion', function () {
       const {document} = new JSDOM('').window;
-      const st = new StringJoiningTransformer('', {});
+      const st = StringJoiningTransformer.create('', {});
       // Use JHTML.toJHTMLDOM to create a properly formatted JHTML element for a string
       const elem = toJHTMLDOM('hello');
       st.string(elem);
@@ -129,7 +129,7 @@ describe('Coverage - additional edge cases', function () {
 
     it('number() handles JHTML element conversion', function () {
       const {document} = new JSDOM('').window;
-      const st = new StringJoiningTransformer('', {});
+      const st = StringJoiningTransformer.create('', {});
       // Use JHTML.toJHTMLDOM to create a properly formatted JHTML element for a number
       const elem = toJHTMLDOM(42);
       st.number(elem);
@@ -139,7 +139,7 @@ describe('Coverage - additional edge cases', function () {
 
     it('boolean() handles JHTML element conversion', function () {
       const {document} = new JSDOM('').window;
-      const st = new StringJoiningTransformer('', {});
+      const st = StringJoiningTransformer.create('', {});
       // Use JHTML.toJHTMLDOM to create a properly formatted JHTML element for a boolean
       const elem = toJHTMLDOM(true);
       st.boolean(elem);
@@ -149,7 +149,7 @@ describe('Coverage - additional edge cases', function () {
 
     it('nonfiniteNumber() handles JHTML element conversion (line 347)', function () {
       const {document} = new JSDOM('').window;
-      const st = new StringJoiningTransformer('', {mode: 'JavaScript'});
+      const st = StringJoiningTransformer.create('', {mode: 'JavaScript'});
       // Use JHTML.toJHTMLDOM to create a properly formatted JHTML element for Infinity
       const elem = toJHTMLDOM(Infinity, {mode: 'JavaScript'});
       st.nonfiniteNumber(elem);
@@ -159,7 +159,7 @@ describe('Coverage - additional edge cases', function () {
 
     it('function() handles JHTML element conversion (line 365)', function () {
       const {document} = new JSDOM('').window;
-      const st = new StringJoiningTransformer('', {mode: 'JavaScript'});
+      const st = StringJoiningTransformer.create('', {mode: 'JavaScript'});
       // Use JHTML.toJHTMLDOM to create a properly formatted JHTML element for a function
       const elem = toJHTMLDOM(function x () {}, {mode: 'JavaScript'});
       st.outputFunction(elem);
@@ -233,7 +233,7 @@ describe('Coverage - additional edge cases', function () {
 
     it('undefined()/nonfiniteNumber()/function() throw outside JS mode', function () {
       const {document} = new JSDOM('').window;
-      const jt = new DOMJoiningTransformer(document.createDocumentFragment(), {document});
+      const jt = DOMJoiningTransformer.create(document.createDocumentFragment(), {document});
       assert.throws(() => {
         jt.undefined();
       }, /not allowed unless added in JavaScript mode/v);
@@ -247,7 +247,7 @@ describe('Coverage - additional edge cases', function () {
 
     it('undefined()/nonfiniteNumber()/function() append in JS mode', function () {
       const {document} = new JSDOM('').window;
-      const jt = new DOMJoiningTransformer(document.createDocumentFragment(), {document, mode: 'JavaScript'});
+      const jt = DOMJoiningTransformer.create(document.createDocumentFragment(), {document, mode: 'JavaScript'});
       jt.element('div', {}, () => {
         jt.undefined();
         jt.nonfiniteNumber(Infinity);
@@ -264,7 +264,7 @@ describe('Coverage - additional edge cases', function () {
 
     it('emits number/boolean/null primitives', function () {
       const {document} = new JSDOM('').window;
-      const jt = new DOMJoiningTransformer(document.createDocumentFragment(), {document});
+      const jt = DOMJoiningTransformer.create(document.createDocumentFragment(), {document});
       jt.element('p', {}, () => {
         jt.number(7);
         jt.boolean(false);
@@ -278,7 +278,7 @@ describe('Coverage - additional edge cases', function () {
 
     it('emits boolean(true) for branch coverage', function () {
       const {document} = new JSDOM('').window;
-      const jt = new DOMJoiningTransformer(document.createDocumentFragment(), {document});
+      const jt = DOMJoiningTransformer.create(document.createDocumentFragment(), {document});
       jt.element('span', {}, () => {
         jt.boolean(true);
       });
@@ -311,7 +311,7 @@ describe('Coverage - additional edge cases', function () {
 
   describe('JSONJoiningTransformer', function () {
     it('should handle array(null, cb) with falsy seed array', function () {
-      const jt = new JSONJoiningTransformer([], {});
+      const jt = JSONJoiningTransformer.create([], {});
       jt.array(null, function () {
         this.number(7);
       });
@@ -319,7 +319,7 @@ describe('Coverage - additional edge cases', function () {
       assert.deepEqual(out[0], [7]);
     });
     it('should handle array(arr, cb) with seed array', function () {
-      const jt = new JSONJoiningTransformer([], {});
+      const jt = JSONJoiningTransformer.create([], {});
       jt.array([2, 3], function () {
         this.number(4);
       });
@@ -327,7 +327,7 @@ describe('Coverage - additional edge cases', function () {
       assert.deepEqual(out[0], [2, 3, 4]);
     });
     it('should handle array(cb) with no seed array', function () {
-      const jt = new JSONJoiningTransformer([], {});
+      const jt = JSONJoiningTransformer.create([], {});
       jt.array(function () {
         this.number(1);
         this.string('a');
@@ -336,7 +336,7 @@ describe('Coverage - additional edge cases', function () {
       assert.deepEqual(out[0], [1, 'a']);
     });
     it('should throw when appending to scalar or empty value', function () {
-      const jt = new JSONJoiningTransformer();
+      const jt = JSONJoiningTransformer.create();
       // @ts-expect-error Normally expects object or array
       jt._obj = 42; // Set to scalar
       assert.throws(() => {
@@ -350,7 +350,7 @@ describe('Coverage - additional edge cases', function () {
     });
 
     it('object() with falsy seed object (null) defaults to empty object', function () {
-      const jt = new JSONJoiningTransformer([], {});
+      const jt = JSONJoiningTransformer.create([], {});
       jt.object(null, () => {
         jt.propValue('test', 123);
       });
@@ -424,14 +424,14 @@ describe('Coverage - additional edge cases', function () {
     });
 
     it('_usePropertySets returns obj (coverage)', function () {
-      const jt = new JSONJoiningTransformer([], {});
+      const jt = JSONJoiningTransformer.create([], {});
       const obj = {x: 1};
       const result = jt._usePropertySets(obj, 'ps');
       assert.strictEqual(result, obj);
     });
 
     it('throws on undefined/nonfinite/function outside JS mode', function () {
-      const jt = new JSONJoiningTransformer([], {});
+      const jt = JSONJoiningTransformer.create([], {});
       assert.throws(() => {
         jt.undefined();
       }, /undefined is not allowed/v);
@@ -444,7 +444,7 @@ describe('Coverage - additional edge cases', function () {
     });
 
     it('appends undefined/nonfinite/function in JS mode', function () {
-      const jt = new JSONJoiningTransformer([], {mode: 'JavaScript', unwrapSingleResult: true});
+      const jt = JSONJoiningTransformer.create([], {mode: 'JavaScript', unwrapSingleResult: true});
       jt.array(() => {
         jt.undefined();
         jt.nonfiniteNumber(Infinity);
@@ -458,14 +458,14 @@ describe('Coverage - additional edge cases', function () {
     });
 
     it('constructor with no initial object defaults to empty array (line 19)', function () {
-      const jt = new JSONJoiningTransformer();
+      const jt = JSONJoiningTransformer.create();
       const out = jt.get();
       assert.isArray(out);
       assert.equal(out.length, 0);
     });
 
     it('object() with falsy seed object defaults to empty object (line 119)', function () {
-      const jt = new JSONJoiningTransformer([], {});
+      const jt = JSONJoiningTransformer.create([], {});
       jt.object(null, () => {
         jt.propValue('test', 123);
       });
@@ -495,7 +495,7 @@ describe('Coverage - additional edge cases', function () {
       assert.equal(r.getPriorityBySpecificity(['foo']), 0);
     });
     it('_usePropertySets returns obj (coverage)', function () {
-      const sj = new StringJoiningTransformer('', {});
+      const sj = StringJoiningTransformer.create('', {});
       const obj = {y: 2};
       const result = sj._usePropertySets(obj, 'ps');
       assert.strictEqual(result, obj);
@@ -506,7 +506,7 @@ describe('Coverage - additional edge cases', function () {
     it('_usePropertySets returns obj (coverage)', function () {
       const {window} = new JSDOM('<!doctype html><html><body></body></html>');
       const {document} = window;
-      const dj = new DOMJoiningTransformer(
+      const dj = DOMJoiningTransformer.create(
         document.createDocumentFragment(),
         {document}
       );
@@ -518,7 +518,7 @@ describe('Coverage - additional edge cases', function () {
     it('object() with usePropertySets parameter (coverage)', function () {
       const {window} = new JSDOM('<!doctype html><html><body></body></html>');
       const {document} = window;
-      const dj = new DOMJoiningTransformer(
+      const dj = DOMJoiningTransformer.create(
         document.createDocumentFragment(),
         {document}
       );
@@ -542,7 +542,7 @@ describe('Coverage - additional edge cases', function () {
     it('object() with propSets parameter (coverage line 90-91)', function () {
       const {window} = new JSDOM('<!doctype html><html><body></body></html>');
       const {document} = window;
-      const dj = new DOMJoiningTransformer(
+      const dj = DOMJoiningTransformer.create(
         document.createDocumentFragment(),
         {document}
       );
@@ -895,14 +895,14 @@ describe('Coverage - additional edge cases', function () {
 describe('DOMJoiningTransformer extra', function () {
   it('constructor fallback creates a DocumentFragment', function () {
     const {document} = new JSDOM('').window;
-    const jt = new DOMJoiningTransformer(undefined, {document});
+    const jt = DOMJoiningTransformer.create(undefined, {document});
     const frag = jt.get();
     assert.instanceOf(frag, document.defaultView.DocumentFragment);
   });
 
   it('object()/array() else branch (no JHTMLForJSON)', function () {
     const {document} = new JSDOM('').window;
-    const jt = new DOMJoiningTransformer(document.createDocumentFragment(), {document});
+    const jt = DOMJoiningTransformer.create(document.createDocumentFragment(), {document});
     jt.object({x: 1});
     jt.array([1]);
     // Two empty text nodes should have been appended
@@ -911,7 +911,7 @@ describe('DOMJoiningTransformer extra', function () {
 
   it('element without cb leaves restored _dom', function () {
     const {document} = new JSDOM('').window;
-    const jt = new DOMJoiningTransformer(document.createDocumentFragment(), {document});
+    const jt = DOMJoiningTransformer.create(document.createDocumentFragment(), {document});
     const beforeFrag = jt.get();
     jt.element('div', {id: 'x'});
     assert.strictEqual(jt.get(), beforeFrag); // Still fragment
@@ -920,7 +920,7 @@ describe('DOMJoiningTransformer extra', function () {
 
   it('rawAppend appends node to DOM', function () {
     const {document} = new JSDOM('').window;
-    const jt = new DOMJoiningTransformer(document.createDocumentFragment(), {document});
+    const jt = DOMJoiningTransformer.create(document.createDocumentFragment(), {document});
     const textNode = document.createTextNode('rawtext');
     jt.rawAppend(textNode);
     assert.equal(jt.get().textContent, 'rawtext');
@@ -929,7 +929,7 @@ describe('DOMJoiningTransformer extra', function () {
   it('propValue stub does nothing', function () {
     expect(() => {
       const {document} = new JSDOM('').window;
-      const jt = new DOMJoiningTransformer(document.createDocumentFragment(), {document});
+      const jt = DOMJoiningTransformer.create(document.createDocumentFragment(), {document});
       // propValue is a stub, just calling for coverage
       jt.propValue('key', 'value');
     }).to.not.throw();
@@ -938,7 +938,7 @@ describe('DOMJoiningTransformer extra', function () {
   it('attribute() sets attribute on element', function () {
     const {document} = new JSDOM('').window;
     const frag = document.createDocumentFragment();
-    const jt = new DOMJoiningTransformer(frag, {document});
+    const jt = DOMJoiningTransformer.create(frag, {document});
     jt.element('div', {}, function () {
       this.attribute('data-test', 'value');
     });
@@ -949,21 +949,21 @@ describe('DOMJoiningTransformer extra', function () {
 
 describe('JSONJoiningTransformer extra', function () {
   it('append throws on scalar root', function () {
-    const jt = new JSONJoiningTransformer(5, {});
+    const jt = JSONJoiningTransformer.create(5, {});
     assert.throws(() => {
       jt.append('x');
     }, /append to a scalar/v);
   });
 
   it('propValue throws when called without object state', function () {
-    const jt = new JSONJoiningTransformer([], {});
+    const jt = JSONJoiningTransformer.create([], {});
     assert.throws(() => {
       jt.propValue('x', 1);
     }, /propValue\(\) can only be called after an object state has been set up/v);
   });
 
   it('object with usePropertySets and propSets merges all', function () {
-    const jt = new JSONJoiningTransformer([], {});
+    const jt = JSONJoiningTransformer.create([], {});
     // Seed property sets via direct monkey patch for coverage
     jt.propertySets = {ps1: {a: 1}};
     jt.object({base: true}, function () {
@@ -974,7 +974,7 @@ describe('JSONJoiningTransformer extra', function () {
   });
 
   it('array callback populates and appends', function () {
-    const jt = new JSONJoiningTransformer([], {});
+    const jt = JSONJoiningTransformer.create([], {});
     jt.array(function (arr) {
       this.number(5);
       this.string('hi');
@@ -984,13 +984,13 @@ describe('JSONJoiningTransformer extra', function () {
   });
 
   it('rawAppend pushes to array', function () {
-    const jt = new JSONJoiningTransformer([1, 2], {});
+    const jt = JSONJoiningTransformer.create([1, 2], {});
     jt.rawAppend(3);
     assert.deepEqual(jt.get(), [1, 2, 3]);
   });
 
   it('element stub does nothing (JSON)', function () {
-    const jt = new JSONJoiningTransformer([], {});
+    const jt = JSONJoiningTransformer.create([], {});
     const result = jt.element('div', {id: 'test'}, function () {
       // Callback would be ignored in stub
     });
@@ -1022,7 +1022,7 @@ describe('StringJoiningTransformer xmlElements & attributes', function () {
   });
 
   it('attribute default branch with ignored object', function () {
-    const sj = new StringJoiningTransformer('', {});
+    const sj = StringJoiningTransformer.create('', {});
     sj.append('<p');
     sj._openTagState = true;
     sj.attribute('ignoredObj', {foo: 'bar'}); // Should do nothing
@@ -2138,7 +2138,7 @@ describe('StringJoiningTransformer - edge cases', function () {
     const {document} = (new JSDOM('')).window;
     const el = document.createElement('a');
     el.setAttribute('href', '/go');
-    const jt = new StringJoiningTransformer('');
+    const jt = StringJoiningTransformer.create('');
     jt.element(el, {title: 't'}, [], function () {
       jt.text('X');
     });
@@ -2149,7 +2149,7 @@ describe('StringJoiningTransformer - edge cases', function () {
   });
 
   it('should throw error when attribute called after tag closed', function () {
-    const jt = new StringJoiningTransformer('', {});
+    const jt = StringJoiningTransformer.create('', {});
     jt.element('div', {}, [], function () {
       jt.text('hi');
       assert.throws(() => {
@@ -2159,14 +2159,14 @@ describe('StringJoiningTransformer - edge cases', function () {
   });
 
   it('should handle string() with nested _strTemp state', function () {
-    const jt = new StringJoiningTransformer('', {});
+    const jt = StringJoiningTransformer.create('', {});
     jt._strTemp = 'foo';
     jt.string('bar');
     assert.equal(jt._strTemp, 'foobar');
   });
 
   it('should handle array() with callback in StringJoiningTransformer', function () {
-    const jt = new StringJoiningTransformer('', {mode: 'JavaScript'});
+    const jt = StringJoiningTransformer.create('', {mode: 'JavaScript'});
     jt.array(null, function () {
       this.number(1);
       this.number(2);
@@ -2176,7 +2176,7 @@ describe('StringJoiningTransformer - edge cases', function () {
   });
 
   it('should handle nested array() inside object() state', function () {
-    const jt = new StringJoiningTransformer('', {mode: 'JavaScript'});
+    const jt = StringJoiningTransformer.create('', {mode: 'JavaScript'});
     jt.object(null, function () {
       this.propOnly('items', function () {
         this.array([1, 2]);
@@ -2187,7 +2187,7 @@ describe('StringJoiningTransformer - edge cases', function () {
   });
 
   it('should handle element() with xmlElements mode', function () {
-    const jt = new StringJoiningTransformer('', {xmlElements: true});
+    const jt = StringJoiningTransformer.create('', {xmlElements: true});
     jt.element('div', {id: 'test'});
     const out = jt.get();
     assert.include(out, '<div');
@@ -2195,21 +2195,21 @@ describe('StringJoiningTransformer - edge cases', function () {
   });
 
   it('should handle undefined() without cfg mode', function () {
-    const jt = new StringJoiningTransformer('', {});
+    const jt = StringJoiningTransformer.create('', {});
     assert.throws(() => {
       jt.undefined();
     }, /undefined is not allowed unless added in JavaScript mode/v);
   });
 
   it('should handle outputFunction() without cfg mode', function () {
-    const jt = new StringJoiningTransformer('', {});
+    const jt = StringJoiningTransformer.create('', {});
     assert.throws(() => {
       jt.outputFunction(function f () {});
     }, /outputFunction is not allowed unless added in JavaScript mode/v);
   });
 
   it('should throw when propOnly not followed by value', function () {
-    const jt = new StringJoiningTransformer('', {mode: 'JavaScript'});
+    const jt = StringJoiningTransformer.create('', {mode: 'JavaScript'});
     jt.object(null, function () {
       assert.throws(() => {
         this.propOnly('test', function () {
@@ -2220,21 +2220,21 @@ describe('StringJoiningTransformer - edge cases', function () {
   });
 
   it('should handle object() with JHTMLForJSON mode at root', function () {
-    const jt = new StringJoiningTransformer('', {JHTMLForJSON: true});
+    const jt = StringJoiningTransformer.create('', {JHTMLForJSON: true});
     jt.object({a: 1});
     const out = jt.get();
     assert.include(out, '<dl');
   });
 
   it('should handle object() with non-JavaScript mode using Stringifier', function () {
-    const jt = new StringJoiningTransformer('', {mode: 'HTML'});
+    const jt = StringJoiningTransformer.create('', {mode: 'HTML'});
     jt.object({a: 1, b () {}});
     const out = jt.get();
     assert.include(out, '"a"');
   });
 
   it('should throw when appending directly in object state', function () {
-    const jt = new StringJoiningTransformer('', {mode: 'JavaScript'});
+    const jt = StringJoiningTransformer.create('', {mode: 'JavaScript'});
     jt.object(null, function () {
       jt._objPropState = true;
       assert.throws(() => {
@@ -2244,7 +2244,7 @@ describe('StringJoiningTransformer - edge cases', function () {
   });
 
   it('should throw when calling propOnly twice without setting value', function () {
-    const jt = new StringJoiningTransformer('', {mode: 'JavaScript'});
+    const jt = StringJoiningTransformer.create('', {mode: 'JavaScript'});
     jt.object(null, function () {
       jt.propOnly('a', function () {
         jt.string('value1');
@@ -2257,7 +2257,7 @@ describe('StringJoiningTransformer - edge cases', function () {
   });
 
   it('should handle nested object inside array state', function () {
-    const jt = new StringJoiningTransformer('', {mode: 'JavaScript'});
+    const jt = StringJoiningTransformer.create('', {mode: 'JavaScript'});
     jt.array(null, function () {
       jt.object({x: 1});
     });
@@ -2268,7 +2268,7 @@ describe('StringJoiningTransformer - edge cases', function () {
   it('should handle object() with Element input', function () {
     const {document} = (new JSDOM('')).window;
     const elem = toJHTMLDOM({a: 1}, {mode: 'JavaScript'});
-    const jt = new StringJoiningTransformer('', {document, mode: 'JavaScript'});
+    const jt = StringJoiningTransformer.create('', {document, mode: 'JavaScript'});
     jt.object(elem);
     const out = jt.get();
     assert.include(out, '"a"');
@@ -2277,14 +2277,14 @@ describe('StringJoiningTransformer - edge cases', function () {
   it('should handle array() with Element input', function () {
     const {document} = (new JSDOM('')).window;
     const elem = toJHTMLDOM([1, 2], {mode: 'JavaScript'});
-    const jt = new StringJoiningTransformer('', {document, mode: 'JavaScript'});
+    const jt = StringJoiningTransformer.create('', {document, mode: 'JavaScript'});
     jt.array(elem);
     const out = jt.get();
     assert.match(out, /\[.*1.*2.*\]/v);
   });
 
   it('should handle string() with _strTemp set', function () {
-    const st = new StringJoiningTransformer('', {});
+    const st = StringJoiningTransformer.create('', {});
     st._strTemp = 'PRE';
     st.string('POST');
     assert.include(st._strTemp, 'PREPOST');
@@ -2292,7 +2292,7 @@ describe('StringJoiningTransformer - edge cases', function () {
 
   it('should handle function() with element input', function () {
     // Simulate a JHTML element conversion result for a function
-    const st = new StringJoiningTransformer('', {mode: 'JavaScript'});
+    const st = StringJoiningTransformer.create('', {mode: 'JavaScript'});
     // Instead of a real element, use a string that would result from conversion
     st.outputFunction('function y() {}');
     const out = st.get();
@@ -2300,7 +2300,7 @@ describe('StringJoiningTransformer - edge cases', function () {
   });
 
   it('should merge property sets in _usePropertySets', function () {
-    const st = new StringJoiningTransformer('', {});
+    const st = StringJoiningTransformer.create('', {});
     st.propertySets = {ps: {x: 1}};
     const result = st._usePropertySets({y: 2}, 'ps');
     assert.deepEqual(result, {y: 2, x: 1});
@@ -2311,7 +2311,7 @@ describe('StringJoiningTransformer - edge cases', function () {
     el.dataset.x = 'y';
     el.setAttribute('title', 't');
     el.textContent = 'Z';
-    const st = new StringJoiningTransformer('');
+    const st = StringJoiningTransformer.create('');
     st.element(el, {id: 'test'}, [], function () {
       this.text('X');
     });
@@ -2324,7 +2324,7 @@ describe('StringJoiningTransformer - edge cases', function () {
   });
 
   it('should handle element with childNodes array', function () {
-    const st = new StringJoiningTransformer('', {});
+    const st = StringJoiningTransformer.create('', {});
     const {document} = (new JSDOM('')).window;
     const child = document.createElement('p');
     child.textContent = 'child';
@@ -2334,7 +2334,7 @@ describe('StringJoiningTransformer - edge cases', function () {
   });
 
   it('should throw error when attribute called with tag already closed', function () {
-    const st = new StringJoiningTransformer('', {});
+    const st = StringJoiningTransformer.create('', {});
     st.element('div', {}, [], function () {});
     st._openTagState = false;
     assert.throws(() => {
@@ -2342,7 +2342,7 @@ describe('StringJoiningTransformer - edge cases', function () {
     }, /An attribute cannot be added after an opening tag has been closed/v);
   });
   it('object() with callback adds properties', function () {
-    const st = new StringJoiningTransformer('', {mode: 'JavaScript'});
+    const st = StringJoiningTransformer.create('', {mode: 'JavaScript'});
     st.object({a: 1}, function () {
       this.propValue('b', 2);
     });
@@ -2352,7 +2352,7 @@ describe('StringJoiningTransformer - edge cases', function () {
   });
 
   it('array() with callback adds items', function () {
-    const st = new StringJoiningTransformer('', {mode: 'JavaScript'});
+    const st = StringJoiningTransformer.create('', {mode: 'JavaScript'});
     st.array([1, 2], function () {
       this.number(3);
     });
@@ -2363,14 +2363,14 @@ describe('StringJoiningTransformer - edge cases', function () {
   });
 
   it('object() with JHTMLForJSON', function () {
-    const st = new StringJoiningTransformer('', {JHTMLForJSON: true});
+    const st = StringJoiningTransformer.create('', {JHTMLForJSON: true});
     st.object({a: 1});
     const result = st.get();
     assert.isString(result);
   });
 
   it('array() with JHTMLForJSON', function () {
-    const st = new StringJoiningTransformer('', {JHTMLForJSON: true});
+    const st = StringJoiningTransformer.create('', {JHTMLForJSON: true});
     st.array([1, 2, 3]);
     const result = st.get();
     assert.isString(result);
@@ -2379,14 +2379,14 @@ describe('StringJoiningTransformer - edge cases', function () {
 
 describe('StringJoiningTransformer - defensive errors', function () {
   it('should throw when propValue called outside object state', function () {
-    const st = new StringJoiningTransformer('', {mode: 'JavaScript'});
+    const st = StringJoiningTransformer.create('', {mode: 'JavaScript'});
     assert.throws(() => {
       st.propValue('foo', 'bar');
     }, /propValue\(\) can only be called after an object state has been set up\./v);
   });
 
   it('should throw when propOnly called outside object state', function () {
-    const st = new StringJoiningTransformer('', {mode: 'JavaScript'});
+    const st = StringJoiningTransformer.create('', {mode: 'JavaScript'});
     assert.throws(() => {
       st.propOnly('foo', () => {});
     }, /propOnly\(\) can only be called after an object state has been set up\./v);
@@ -2395,7 +2395,7 @@ describe('StringJoiningTransformer - defensive errors', function () {
 
 describe('StringJoiningTransformer - property sets', function () {
   it('should assign properties from propSets', function () {
-    const st = new StringJoiningTransformer('', {mode: 'JavaScript'});
+    const st = StringJoiningTransformer.create('', {mode: 'JavaScript'});
     st.object({a: 1}, null, undefined, {b: 2, c: 3});
     const result = st.get();
     assert.include(result, '1');
@@ -2404,7 +2404,7 @@ describe('StringJoiningTransformer - property sets', function () {
   });
 
   it('should assign properties from propSets and usePropertySets together', function () {
-    const st = new StringJoiningTransformer('', {mode: 'JavaScript'});
+    const st = StringJoiningTransformer.create('', {mode: 'JavaScript'});
     st.propertySets = {ps1: {d: 4}};
     st.object({a: 1}, null, ['ps1'], {b: 2, c: 3});
     const result = st.get();

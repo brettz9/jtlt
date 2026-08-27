@@ -10,7 +10,7 @@ const {document} = window;
 describe('namespaceAlias edge cases', function () {
   describe('Default namespace (alias === "#default")', function () {
     it('StringJoiningTransformer uses xmlns without prefix', function () {
-      const joiner = new StringJoiningTransformer('');
+      const joiner = StringJoiningTransformer.create('');
       // Don't set any alias, so '#default' stays as '#default'
       joiner.element('root', {}, [], function () {
         joiner.namespace('', 'https://example.com');
@@ -22,7 +22,7 @@ describe('namespaceAlias edge cases', function () {
     });
 
     it('DOMJoiningTransformer uses xmlns without prefix', function () {
-      const joiner = new DOMJoiningTransformer(
+      const joiner = DOMJoiningTransformer.create(
         document.createDocumentFragment(),
         {document}
       );
@@ -41,7 +41,7 @@ describe('namespaceAlias edge cases', function () {
     });
 
     it('JSONJoiningTransformer uses empty string key', function () {
-      const joiner = new JSONJoiningTransformer([]);
+      const joiner = JSONJoiningTransformer.create([]);
       joiner.element('root', {}, function () {
         joiner.namespace('', 'https://example.com');
       });
@@ -54,7 +54,7 @@ describe('namespaceAlias edge cases', function () {
 
   describe('_replaceNamespaceAliasInElement with colon', function () {
     it('should handle prefixed element with alias to #default', function () {
-      const joiner = new StringJoiningTransformer('');
+      const joiner = StringJoiningTransformer.create('');
       // Map prefix 'foo' back to '#default' (remove prefix)
       joiner.namespaceAlias('foo', '#default');
       const result = joiner._replaceNamespaceAliasInElement('foo:bar');
@@ -64,7 +64,7 @@ describe('namespaceAlias edge cases', function () {
     });
 
     it('should handle unprefixed element with non-default alias', function () {
-      const joiner = new StringJoiningTransformer('');
+      const joiner = StringJoiningTransformer.create('');
       joiner.namespaceAlias('#default', 'ns');
       const result = joiner._replaceNamespaceAliasInElement('bar');
       // When element has no prefix but alias is 'ns',
@@ -73,7 +73,7 @@ describe('namespaceAlias edge cases', function () {
     });
 
     it('should handle unprefixed element with default alias', function () {
-      const joiner = new StringJoiningTransformer('');
+      const joiner = StringJoiningTransformer.create('');
       // No alias set, so '#default' stays '#default'
       const result = joiner._replaceNamespaceAliasInElement('bar');
       // When element has no prefix and alias is '#default',
@@ -84,14 +84,14 @@ describe('namespaceAlias edge cases', function () {
 
   describe('_replaceNamespaceAliasInNamespaceDeclaration', function () {
     it('should return non-xmlns attributes unchanged', function () {
-      const joiner = new StringJoiningTransformer('');
+      const joiner = StringJoiningTransformer.create('');
       const result =
         joiner._replaceNamespaceAliasInNamespaceDeclaration('class');
       expect(result).to.equal('class');
     });
 
     it('should handle xmlns: prefix with alias', function () {
-      const joiner = new StringJoiningTransformer('');
+      const joiner = StringJoiningTransformer.create('');
       joiner.namespaceAlias('foo', 'bar');
       const result =
         joiner._replaceNamespaceAliasInNamespaceDeclaration('xmlns:foo');
@@ -103,7 +103,7 @@ describe('namespaceAlias edge cases', function () {
     });
 
     it('should handle xmlns (default) with alias', function () {
-      const joiner = new StringJoiningTransformer('');
+      const joiner = StringJoiningTransformer.create('');
       joiner.namespaceAlias('#default', 'myns');
       const result =
         joiner._replaceNamespaceAliasInNamespaceDeclaration('xmlns');
@@ -112,7 +112,7 @@ describe('namespaceAlias edge cases', function () {
     });
 
     it('should handle xmlns (default) without alias', function () {
-      const joiner = new StringJoiningTransformer('');
+      const joiner = StringJoiningTransformer.create('');
       const result =
         joiner._replaceNamespaceAliasInNamespaceDeclaration('xmlns');
       // No alias, prefix is '#default', alias is also '#default'

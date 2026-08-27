@@ -11,7 +11,7 @@ describe('Additional branch coverage', () => {
     it('xmlDecl with only encoding, no version or standalone', () => {
       const {window} = new JSDOM('<!doctype html><html></html>');
       const {document} = window;
-      const joiner = new DOMJoiningTransformer(
+      const joiner = DOMJoiningTransformer.create(
         document.createDocumentFragment(),
         {document}
       );
@@ -19,7 +19,7 @@ describe('Additional branch coverage', () => {
       joiner.element('root', {}, () => {
         joiner.text('x');
       });
-      const doc = /** @type {XMLDocument} */ (joiner._docs[0]);
+      const doc = joiner._docs[0];
       const pi = doc.firstChild;
       expect(pi && pi.nodeType).to.equal(7);
       const val = pi && pi.nodeValue;
@@ -31,7 +31,7 @@ describe('Additional branch coverage', () => {
     it('xmlDecl with only standalone, no version or encoding', () => {
       const {window} = new JSDOM('<!doctype html><html></html>');
       const {document} = window;
-      const joiner = new DOMJoiningTransformer(
+      const joiner = DOMJoiningTransformer.create(
         document.createDocumentFragment(),
         {document}
       );
@@ -39,7 +39,7 @@ describe('Additional branch coverage', () => {
       joiner.element('root', {}, () => {
         joiner.text('x');
       });
-      const doc = /** @type {XMLDocument} */ (joiner._docs[0]);
+      const doc = joiner._docs[0];
       const pi = doc.firstChild;
       expect(pi && pi.nodeType).to.equal(7);
       const val = pi && pi.nodeValue;
@@ -51,7 +51,7 @@ describe('Additional branch coverage', () => {
     it('xmlns from atts with no prefix in element name', () => {
       const {window} = new JSDOM('<!doctype html><html></html>');
       const {document} = window;
-      const joiner = new DOMJoiningTransformer(
+      const joiner = DOMJoiningTransformer.create(
         document.createDocumentFragment(),
         {document}
       );
@@ -60,14 +60,14 @@ describe('Additional branch coverage', () => {
       joiner.element('root', {xmlns: 'https://test.com'}, () => {
         joiner.text('x');
       });
-      const doc = /** @type {XMLDocument} */ (joiner._docs[0]);
+      const doc = joiner._docs[0];
       expect(doc.documentElement.namespaceURI).to.equal('https://test.com');
     });
   });
 
   describe('JSONJoiningTransformer xmlDecl field permutations', () => {
     it('xmlDecl with only standalone, no version or encoding', () => {
-      const joiner = new JSONJoiningTransformer([], {exposeDocuments: true});
+      const joiner = JSONJoiningTransformer.create([], {exposeDocuments: true});
       joiner.output({method: 'xml', standalone: true});
       joiner.element('root', {}, [], () => {
         joiner.text('x');
@@ -81,7 +81,7 @@ describe('Additional branch coverage', () => {
     });
 
     it('xmlDecl with encoding but no version', () => {
-      const joiner = new JSONJoiningTransformer([], {exposeDocuments: true});
+      const joiner = JSONJoiningTransformer.create([], {exposeDocuments: true});
       joiner.output({method: 'xml', encoding: 'ascii'});
       joiner.element('root', {}, [], () => {
         joiner.text('x');
@@ -94,7 +94,7 @@ describe('Additional branch coverage', () => {
     });
 
     it('resultDocument with empty _obj array (line 682)', () => {
-      const joiner = new JSONJoiningTransformer([]);
+      const joiner = JSONJoiningTransformer.create([]);
       joiner.resultDocument('empty.xml', () => {
         joiner.output({method: 'xml'});
         joiner._obj = []; // Force empty array
@@ -108,7 +108,7 @@ describe('Additional branch coverage', () => {
     });
 
     it('resultDocument format uses callback outputConfig', () => {
-      const joiner = new JSONJoiningTransformer([]);
+      const joiner = JSONJoiningTransformer.create([]);
       joiner.resultDocument('doc.xml', () => {
         joiner.output({method: 'xhtml'});
         joiner.element('html', {}, [], () => {
@@ -123,7 +123,7 @@ describe('Additional branch coverage', () => {
 
   describe('StringJoiningTransformer xmlDecl and DOCTYPE permutations', () => {
     it('xmlDecl with only standalone', () => {
-      const joiner = new StringJoiningTransformer('');
+      const joiner = StringJoiningTransformer.create('');
       joiner.output({method: 'xml', standalone: true});
       joiner.element('root', {}, [], () => {
         joiner.text('x');
@@ -135,7 +135,7 @@ describe('Additional branch coverage', () => {
     });
 
     it('DOCTYPE with only publicId set (requires systemId)', () => {
-      const joiner = new StringJoiningTransformer('');
+      const joiner = StringJoiningTransformer.create('');
       joiner.output({
         method: 'xml',
         doctypePublic: '-//W3C//DTD XHTML 1.0//EN',
@@ -151,7 +151,7 @@ describe('Additional branch coverage', () => {
     });
 
     it('resultDocument format uses callback config', () => {
-      const joiner = new StringJoiningTransformer('');
+      const joiner = StringJoiningTransformer.create('');
       joiner.resultDocument('doc.html', () => {
         joiner.output({method: 'html'});
         joiner.element('div', {}, [], () => {
@@ -163,7 +163,7 @@ describe('Additional branch coverage', () => {
     });
 
     it('xmlDecl with version and encoding, no standalone', () => {
-      const joiner = new StringJoiningTransformer('');
+      const joiner = StringJoiningTransformer.create('');
       joiner.output({method: 'xml', version: '1.1', encoding: 'utf-16'});
       joiner.element('root', {}, [], () => {
         joiner.text('x');
@@ -179,7 +179,7 @@ describe('Additional branch coverage', () => {
     it('DOM: element without xmlns in atts uses null namespace', () => {
       const {window} = new JSDOM('<!doctype html><html></html>');
       const {document} = window;
-      const joiner = new DOMJoiningTransformer(
+      const joiner = DOMJoiningTransformer.create(
         document.createDocumentFragment(),
         {document}
       );
@@ -188,14 +188,14 @@ describe('Additional branch coverage', () => {
       joiner.element('root', {}, () => {
         joiner.text('content');
       });
-      const doc = /** @type {XMLDocument} */ (joiner._docs[0]);
+      const doc = joiner._docs[0];
       // Document created with null namespace when no xmlns provided
       expect(doc.documentElement.nodeName).to.equal('root');
       expect(doc.documentElement.namespaceURI).to.be.null;
     });
 
     it('JSON: elementData fallback when _obj is object not array', () => {
-      const joiner = new JSONJoiningTransformer({});
+      const joiner = JSONJoiningTransformer.create({});
       joiner.resultDocument('doc.xml', () => {
         joiner.output({method: 'xml'});
         // _obj starts as {}, not []
@@ -208,7 +208,7 @@ describe('Additional branch coverage', () => {
       // Should construct document with 'root' element
       const {childNodes} = res.document.$document;
       const el = childNodes.find(
-        (/** @type {any} */ n) => Array.isArray(n) && n[0] === 'root'
+        (/** @type {unknown} */ n) => Array.isArray(n) && n[0] === 'root'
       );
       expect(el).to.exist;
     });
@@ -216,7 +216,7 @@ describe('Additional branch coverage', () => {
     it('DOM: resultDocument without output() uses cfg format', () => {
       const {window} = new JSDOM('<!doctype html><html></html>');
       const {document} = window;
-      const joiner = new DOMJoiningTransformer(
+      const joiner = DOMJoiningTransformer.create(
         document.createDocumentFragment(),
         {document}
       );

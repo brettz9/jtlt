@@ -4,7 +4,7 @@ import {JSONJoiningTransformer} from '../src/index-node.js';
 
 describe('JSONJoiningTransformer element/attribute/text (Jamilih JSON)', () => {
   it('builds element with dataset, $a, text, nested element', () => {
-    const jt = new JSONJoiningTransformer([], {});
+    const jt = JSONJoiningTransformer.create([], {});
     jt.element(
       'div',
       {dataset: {fooBar: 'X'}, $a: [['id', 'test'], ['z', '1']]},
@@ -36,7 +36,7 @@ describe('JSONJoiningTransformer element/attribute/text (Jamilih JSON)', () => {
   });
 
   it('supports atts as function and childNodes as function signatures', () => {
-    const jt = new JSONJoiningTransformer([], {});
+    const jt = JSONJoiningTransformer.create([], {});
     // atts as function
     jt.element('div', function () {
       this.text('a');
@@ -56,7 +56,7 @@ describe('JSONJoiningTransformer element/attribute/text (Jamilih JSON)', () => {
     el.setAttribute('href', '#');
     el.dataset.x = 'y';
 
-    const jt = new JSONJoiningTransformer([], {});
+    const jt = JSONJoiningTransformer.create([], {});
     jt.element(el, {role: 'note'}, [], () => { /* no children */ });
 
     const out = /** @type {import('jamilih').JamilihArray[]} */ (jt.get());

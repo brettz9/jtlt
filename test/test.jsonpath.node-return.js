@@ -6,7 +6,7 @@ import {DOMJoiningTransformer} from '../src/index-node.js';
 describe('JSONPathTransformer transform - Node return', () => {
   it('appends returned DOM Node via joiner.append', () => {
     const {document} = (new JSDOM('')).window;
-    const joiner = new DOMJoiningTransformer(
+    const joiner = DOMJoiningTransformer.create(
       document.createDocumentFragment(),
       {document}
     );
@@ -30,7 +30,7 @@ describe('JSONPathTransformer transform - Node return', () => {
     });
 
     engine.transform();
-    const frag = /** @type {DocumentFragment} */ (joiner.get());
+    const frag = joiner.get();
     const span = frag.querySelector('span#node-ret');
     expect(span).to.exist;
     expect(span && span.textContent).to.equal('Hi');

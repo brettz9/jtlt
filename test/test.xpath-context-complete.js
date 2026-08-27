@@ -9,7 +9,7 @@ describe('XPathTransformerContext complete coverage', () => {
     it('throws error when config.data is missing', () => {
       const {window} = new JSDOM('<root></root>');
       const {document} = window;
-      const joiner = new DOMJoiningTransformer(
+      const joiner = DOMJoiningTransformer.create(
         document.createDocumentFragment(),
         {document}
       );
@@ -28,7 +28,7 @@ describe('XPathTransformerContext complete coverage', () => {
         url: 'http://localhost'
       });
       const {document} = window;
-      const joiner = new DOMJoiningTransformer(
+      const joiner = DOMJoiningTransformer.create(
         document.createDocumentFragment(),
         {document}
       );
@@ -44,14 +44,14 @@ describe('XPathTransformerContext complete coverage', () => {
       expect(result).to.equal(ctx);
 
       // Check that the parameter value was appended
-      const output = /** @type {Element} */ (joiner.get());
+      const output = joiner.get();
       expect(output.textContent).to.equal('parameter-value');
     });
 
     it('falls back to XPath when parameter not found (lines 378-383)', () => {
       const {window} = new JSDOM('<root><item>Test</item></root>');
       const {document} = window;
-      const joiner = new DOMJoiningTransformer(
+      const joiner = DOMJoiningTransformer.create(
         document.createDocumentFragment(),
         {document}
       );
@@ -73,7 +73,7 @@ describe('XPathTransformerContext complete coverage', () => {
     it('evaluates $ reference as XPath when no params set', () => {
       const {window} = new JSDOM('<root><item>123</item></root>');
       const {document} = window;
-      const joiner = new DOMJoiningTransformer(
+      const joiner = DOMJoiningTransformer.create(
         document.createDocumentFragment(),
         {document}
       );
@@ -94,7 +94,7 @@ describe('XPathTransformerContext complete coverage', () => {
     it('returns scalar when XPath fallback returns non-node', () => {
       const {window} = new JSDOM('<root><item>123</item></root>');
       const {document} = window;
-      const joiner = new DOMJoiningTransformer(
+      const joiner = DOMJoiningTransformer.create(
         document.createDocumentFragment(),
         {document}
       );
@@ -117,7 +117,7 @@ describe('XPathTransformerContext complete coverage', () => {
     it('appends scalar value when not a node', () => {
       const {window} = new JSDOM('<root><item>Test</item></root>');
       const {document} = window;
-      const joiner = new DOMJoiningTransformer(
+      const joiner = DOMJoiningTransformer.create(
         document.createDocumentFragment(),
         {document}
       );
@@ -131,14 +131,14 @@ describe('XPathTransformerContext complete coverage', () => {
       // @ts-expect-error - testing scalar value handling
       ctx.text(42);
 
-      const result = /** @type {Element} */ (joiner.get());
+      const result = joiner.get();
       expect(result.textContent).to.include('42');
     });
 
     it('appends string scalar', () => {
       const {window} = new JSDOM('<root></root>');
       const {document} = window;
-      const joiner = new DOMJoiningTransformer(
+      const joiner = DOMJoiningTransformer.create(
         document.createDocumentFragment(),
         {document}
       );
@@ -150,14 +150,14 @@ describe('XPathTransformerContext complete coverage', () => {
 
       ctx.text('hello');
 
-      const result = /** @type {Element} */ (joiner.get());
+      const result = joiner.get();
       expect(result.textContent).to.equal('hello');
     });
 
     it('appends boolean scalar', () => {
       const {window} = new JSDOM('<root></root>');
       const {document} = window;
-      const joiner = new DOMJoiningTransformer(
+      const joiner = DOMJoiningTransformer.create(
         document.createDocumentFragment(),
         {document}
       );
@@ -170,7 +170,7 @@ describe('XPathTransformerContext complete coverage', () => {
       // @ts-expect-error - testing boolean scalar handling
       ctx.text(true);
 
-      const result = /** @type {Element} */ (joiner.get());
+      const result = joiner.get();
       expect(result.textContent).to.equal('true');
     });
   });
@@ -179,7 +179,7 @@ describe('XPathTransformerContext complete coverage', () => {
     it('calls output on joining transformer', () => {
       const {window} = new JSDOM('<root></root>');
       const {document} = window;
-      const joiner = new DOMJoiningTransformer(
+      const joiner = DOMJoiningTransformer.create(
         document.createDocumentFragment(),
         {document, exposeDocuments: true}
       );
@@ -203,7 +203,7 @@ describe('XPathTransformerContext complete coverage', () => {
     it('output() returns context for chaining', () => {
       const {window} = new JSDOM('<root></root>');
       const {document} = window;
-      const joiner = new DOMJoiningTransformer(
+      const joiner = DOMJoiningTransformer.create(
         document.createDocumentFragment(),
         {document}
       );
@@ -222,13 +222,13 @@ describe('XPathTransformerContext complete coverage', () => {
     it('calls a named template with parameters', () => {
       const {window} = new JSDOM('<root><item>Test</item></root>');
       const {document} = window;
-      const joiner = new DOMJoiningTransformer(
+      const joiner = DOMJoiningTransformer.create(
         document.createDocumentFragment(),
         {document}
       );
 
-      // eslint-disable-next-line @stylistic/max-len -- Long
-      const templates = /** @type {import('../src/index.js').XPathTemplateObject<any>[]} */ ([
+      /** @type {import('../src/index.js').XPathTemplateObject<any>[]} */
+      const templates = [
         {
           name: 'myTemplate',
           template () {
@@ -237,7 +237,7 @@ describe('XPathTransformerContext complete coverage', () => {
             this.text(' - processed');
           }
         }
-      ]);
+      ];
 
       const ctx = new XPathTransformerContext({
         data: document.documentElement,
@@ -249,7 +249,7 @@ describe('XPathTransformerContext complete coverage', () => {
         {name: 'testParam', value: 'param-value'}
       ]);
 
-      const output = /** @type {Element} */ (joiner.get());
+      const output = joiner.get();
       expect(output.textContent).to.include('param-value');
       expect(output.textContent).to.include(' - processed');
     });
@@ -257,20 +257,20 @@ describe('XPathTransformerContext complete coverage', () => {
     it('calls template with object syntax', () => {
       const {window} = new JSDOM('<root></root>');
       const {document} = window;
-      const joiner = new DOMJoiningTransformer(
+      const joiner = DOMJoiningTransformer.create(
         document.createDocumentFragment(),
         {document}
       );
 
-      // eslint-disable-next-line @stylistic/max-len -- Long
-      const templates = /** @type {import('../src/index.js').XPathTemplateObject<any>[]} */ ([
+      /** @type {import('../src/index.js').XPathTemplateObject<any>[]} */
+      const templates = [
         {
           name: 'test',
           template () {
             this.text('called');
           }
         }
-      ]);
+      ];
 
       const ctx = new XPathTransformerContext({
         data: document.documentElement,
@@ -282,27 +282,27 @@ describe('XPathTransformerContext complete coverage', () => {
         withParam: [{name: 'p1', value: 'v1'}]
       });
 
-      const output = /** @type {Element} */ (joiner.get());
+      const output = joiner.get();
       expect(output.textContent).to.equal('called');
     });
 
     it('calls template with object syntax without withParam', () => {
       const {window} = new JSDOM('<root></root>');
       const {document} = window;
-      const joiner = new DOMJoiningTransformer(
+      const joiner = DOMJoiningTransformer.create(
         document.createDocumentFragment(),
         {document}
       );
 
-      // eslint-disable-next-line @stylistic/max-len -- Long
-      const templates = /** @type {import('../src/index.js').XPathTemplateObject<any>[]} */ ([
+      /** @type {import('../src/index.js').XPathTemplateObject<any>[]} */
+      const templates = [
         {
           name: 'noParams',
           template () {
             this.text('no-params');
           }
         }
-      ]);
+      ];
 
       const ctx = new XPathTransformerContext({
         data: document.documentElement,
@@ -312,14 +312,14 @@ describe('XPathTransformerContext complete coverage', () => {
       // Call with object but no withParam property
       ctx.callTemplate({name: 'noParams'});
 
-      const output = /** @type {Element} */ (joiner.get());
+      const output = joiner.get();
       expect(output.textContent).to.equal('no-params');
     });
 
     it('throws when template not found', () => {
       const {window} = new JSDOM('<root></root>');
       const {document} = window;
-      const joiner = new DOMJoiningTransformer(
+      const joiner = DOMJoiningTransformer.create(
         document.createDocumentFragment(),
         {document}
       );
@@ -338,13 +338,13 @@ describe('XPathTransformerContext complete coverage', () => {
     it('uses select for parameter values', () => {
       const {window} = new JSDOM('<root><value>123</value></root>');
       const {document} = window;
-      const joiner = new DOMJoiningTransformer(
+      const joiner = DOMJoiningTransformer.create(
         document.createDocumentFragment(),
         {document}
       );
 
-      // eslint-disable-next-line @stylistic/max-len -- Long
-      const templates = /** @type {import('../src/index.js').XPathTemplateObject<any>[]} */ ([
+      /** @type {import('../src/index.js').XPathTemplateObject<any>[]} */
+      const templates = [
         {
           name: 'withSelect',
           template () {
@@ -352,7 +352,7 @@ describe('XPathTransformerContext complete coverage', () => {
             this.text(String(this._params?.selectedValue || ''));
           }
         }
-      ]);
+      ];
 
       const ctx = new XPathTransformerContext({
         data: document.documentElement,
@@ -363,27 +363,27 @@ describe('XPathTransformerContext complete coverage', () => {
         {name: 'selectedValue', select: 'string(//value)'}
       ]);
 
-      const output = /** @type {Element} */ (joiner.get());
+      const output = joiner.get();
       expect(output.textContent).to.equal('123');
     });
 
     it('stores parameters by index when name not provided', () => {
       const {window} = new JSDOM('<root></root>');
       const {document} = window;
-      const joiner = new DOMJoiningTransformer(
+      const joiner = DOMJoiningTransformer.create(
         document.createDocumentFragment(),
         {document}
       );
 
-      // eslint-disable-next-line @stylistic/max-len -- Long
-      const templates = /** @type {import('../src/index.js').XPathTemplateObject<any>[]} */ ([
+      /** @type {import('../src/index.js').XPathTemplateObject<any>[]} */
+      const templates = [
         {
           name: 'indexed',
           template () {
             this.valueOf('$0');
           }
         }
-      ]);
+      ];
 
       const ctx = new XPathTransformerContext({
         data: document.documentElement,
@@ -394,27 +394,27 @@ describe('XPathTransformerContext complete coverage', () => {
         {value: 'index-zero'}
       ]);
 
-      const output = /** @type {Element} */ (joiner.get());
+      const output = joiner.get();
       expect(output.textContent).to.equal('index-zero');
     });
 
     it('restores previous parameter context after call', () => {
       const {window} = new JSDOM('<root></root>');
       const {document} = window;
-      const joiner = new DOMJoiningTransformer(
+      const joiner = DOMJoiningTransformer.create(
         document.createDocumentFragment(),
         {document}
       );
 
-      // eslint-disable-next-line @stylistic/max-len -- Long
-      const templates = /** @type {import('../src/index.js').XPathTemplateObject<any>[]} */ ([
+      /** @type {import('../src/index.js').XPathTemplateObject<any>[]} */
+      const templates = [
         {
           name: 'inner',
           template () {
             this.valueOf('$innerParam');
           }
         }
-      ]);
+      ];
 
       const ctx = new XPathTransformerContext({
         data: document.documentElement,
@@ -435,7 +435,7 @@ describe('XPathTransformerContext complete coverage', () => {
     it('appends template return value when defined', () => {
       const {window} = new JSDOM('<root></root>');
       const {document} = window;
-      const joiner = new DOMJoiningTransformer(
+      const joiner = DOMJoiningTransformer.create(
         document.createDocumentFragment(),
         {document}
       );
@@ -457,7 +457,7 @@ describe('XPathTransformerContext complete coverage', () => {
 
       ctx.callTemplate('returnsValue');
 
-      const output = /** @type {Element} */ (joiner.get());
+      const output = joiner.get();
       expect(output.textContent).to.equal('returned-value');
     });
   });
@@ -466,7 +466,7 @@ describe('XPathTransformerContext complete coverage', () => {
     it('appends scalar result from XPath evaluation', () => {
       const {window} = new JSDOM('<root><num>42</num></root>');
       const {document} = window;
-      const joiner = new DOMJoiningTransformer(
+      const joiner = DOMJoiningTransformer.create(
         document.createDocumentFragment(),
         {document}
       );
@@ -479,14 +479,14 @@ describe('XPathTransformerContext complete coverage', () => {
       // copyOf with an XPath that returns a scalar (number)
       ctx.copyOf('count(//num)');
 
-      const output = /** @type {Element} */ (joiner.get());
+      const output = joiner.get();
       expect(output.textContent).to.include('1');
     });
 
     it('handles scalar string result', () => {
       const {window} = new JSDOM('<root><text>hello</text></root>');
       const {document} = window;
-      const joiner = new DOMJoiningTransformer(
+      const joiner = DOMJoiningTransformer.create(
         document.createDocumentFragment(),
         {document}
       );
@@ -499,7 +499,7 @@ describe('XPathTransformerContext complete coverage', () => {
       // Use string() function to get scalar
       ctx.copyOf('string(//text)');
 
-      const output = /** @type {Element} */ (joiner.get());
+      const output = joiner.get();
       expect(output.textContent).to.equal('hello');
     });
   });
@@ -508,13 +508,13 @@ describe('XPathTransformerContext complete coverage', () => {
     it('filters out templates without path during matching', () => {
       const {window} = new JSDOM('<root><item>Test</item></root>');
       const {document} = window;
-      const joiner = new DOMJoiningTransformer(
+      const joiner = DOMJoiningTransformer.create(
         document.createDocumentFragment(),
         {document}
       );
 
-      // eslint-disable-next-line @stylistic/max-len -- Long
-      const templates = /** @type {import('../src/index.js').XPathTemplateObject<any>[]} */ ([
+      /** @type {import('../src/index.js').XPathTemplateObject<any>[]} */
+      const templates = [
         {
           name: 'namedOnly',
           // No path property - this is a named-only template
@@ -528,7 +528,7 @@ describe('XPathTransformerContext complete coverage', () => {
             this.text('path-template');
           }
         }
-      ]);
+      ];
 
       const ctx = new XPathTransformerContext({
         data: document.documentElement,
@@ -541,20 +541,20 @@ describe('XPathTransformerContext complete coverage', () => {
         this.text(' matched');
       });
 
-      const output = /** @type {Element} */ (joiner.get());
+      const output = joiner.get();
       expect(output.textContent).to.include(' matched');
     });
 
     it('filters templates by mode', () => {
       const {window} = new JSDOM('<root><item>Test</item></root>');
       const {document} = window;
-      const joiner = new DOMJoiningTransformer(
+      const joiner = DOMJoiningTransformer.create(
         document.createDocumentFragment(),
         {document}
       );
 
-      // eslint-disable-next-line @stylistic/max-len -- Long
-      const templates = /** @type {import('../src/index.js').XPathTemplateObject<any>[]} */ ([
+      /** @type {import('../src/index.js').XPathTemplateObject<any>[]} */
+      const templates = [
         {
           path: '//item',
           mode: 'special',
@@ -568,7 +568,7 @@ describe('XPathTransformerContext complete coverage', () => {
             this.text('default-mode');
           }
         }
-      ]);
+      ];
 
       const ctx = new XPathTransformerContext({
         data: document.documentElement,
@@ -578,7 +578,7 @@ describe('XPathTransformerContext complete coverage', () => {
       // Apply templates with mode - should only match special mode template
       ctx.applyTemplates('//item', 'special');
 
-      const output = /** @type {Element} */ (joiner.get());
+      const output = joiner.get();
       expect(output.textContent).to.include('special-mode');
       expect(output.textContent).to.not.include('default-mode');
     });
@@ -586,13 +586,13 @@ describe('XPathTransformerContext complete coverage', () => {
     it('excludes templates with name but no path', () => {
       const {window} = new JSDOM('<root><item>Test</item></root>');
       const {document} = window;
-      const joiner = new DOMJoiningTransformer(
+      const joiner = DOMJoiningTransformer.create(
         document.createDocumentFragment(),
         {document}
       );
 
-      // eslint-disable-next-line @stylistic/max-len -- Long
-      const templates = /** @type {import('../src/index.js').XPathTemplateObject<any>[]} */ ([
+      /** @type {import('../src/index.js').XPathTemplateObject<any>[]} */
+      const templates = [
         {
           name: 'namedTemplate',
           // No path - should be excluded from applyTemplates
@@ -606,7 +606,7 @@ describe('XPathTransformerContext complete coverage', () => {
             this.text('path-template');
           }
         }
-      ]);
+      ];
 
       const ctx = new XPathTransformerContext({
         data: document.documentElement,
@@ -616,7 +616,7 @@ describe('XPathTransformerContext complete coverage', () => {
       // Apply templates - should NOT use named-only template
       ctx.applyTemplates('//item');
 
-      const output = /** @type {Element} */ (joiner.get());
+      const output = joiner.get();
       expect(output.textContent).to.include('path-template');
       expect(output.textContent).to.not.include('named-template');
     });
@@ -624,13 +624,13 @@ describe('XPathTransformerContext complete coverage', () => {
     it('handles template with neither name nor path', () => {
       const {window} = new JSDOM('<root><item>Test</item></root>');
       const {document} = window;
-      const joiner = new DOMJoiningTransformer(
+      const joiner = DOMJoiningTransformer.create(
         document.createDocumentFragment(),
         {document}
       );
 
-      // eslint-disable-next-line @stylistic/max-len -- Long
-      const templates = /** @type {import('../src/index.js').XPathTemplateObject<any>[]} */ ([
+      /** @type {import('../src/index.js').XPathTemplateObject<any>[]} */
+      const templates = [
         {
           // No name, no path - edge case
           template () {
@@ -643,7 +643,7 @@ describe('XPathTransformerContext complete coverage', () => {
             this.text('with-path');
           }
         }
-      ]);
+      ];
 
       const ctx = new XPathTransformerContext({
         data: document.documentElement,
@@ -653,7 +653,7 @@ describe('XPathTransformerContext complete coverage', () => {
       // Apply templates - template without path should be filtered out
       ctx.applyTemplates('//item');
 
-      const output = /** @type {Element} */ (joiner.get());
+      const output = joiner.get();
       expect(output.textContent).to.include('with-path');
       // Template without path shouldn't be applied
       expect(output.textContent).to.not.include('no-path-no-name');

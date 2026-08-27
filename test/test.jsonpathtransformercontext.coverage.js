@@ -6,7 +6,7 @@ describe('JSONPathTransformerContext branch coverage', () => {
   it('copyOf: fallback for structuredClone error and shallow clone', () => {
     const ctx = new JSONPathTransformerContext({
       data: {},
-      joiningTransformer: new JSONJoiningTransformer(),
+      joiningTransformer: JSONJoiningTransformer.create(),
       templates: []
     }, []);
     // Simulate structuredClone throwing and shallow fallback
@@ -33,7 +33,7 @@ describe('JSONPathTransformerContext branch coverage', () => {
   it('copy: primitive branch', () => {
     const ctx = new JSONPathTransformerContext({
       data: {},
-      joiningTransformer: new JSONJoiningTransformer(),
+      joiningTransformer: JSONJoiningTransformer.create(),
       templates: []
     }, []);
     ctx._contextObj = 42;
@@ -44,7 +44,7 @@ describe('JSONPathTransformerContext branch coverage', () => {
   it('variable and message methods', () => {
     const ctx = new JSONPathTransformerContext({
       data: {foo: 'bar'},
-      joiningTransformer: new JSONJoiningTransformer(),
+      joiningTransformer: JSONJoiningTransformer.create(),
       templates: []
     }, []);
     ctx.variable('myVar', '$.foo');
@@ -57,7 +57,7 @@ describe('JSONPathTransformerContext branch coverage', () => {
   it('_passesIf: fallback non-array branch', () => {
     const ctx = new JSONPathTransformerContext({
       data: {},
-      joiningTransformer: new JSONJoiningTransformer(),
+      joiningTransformer: JSONJoiningTransformer.create(),
       templates: []
     }, []);
     // Monkey-patch get to return a non-array
@@ -68,7 +68,7 @@ describe('JSONPathTransformerContext branch coverage', () => {
   it('calculatePosition: empty result returns 0', () => {
     const ctx = new JSONPathTransformerContext({
       data: {},
-      joiningTransformer: new JSONJoiningTransformer(),
+      joiningTransformer: JSONJoiningTransformer.create(),
       templates: []
     }, []);
     // Simulate empty result
@@ -82,7 +82,7 @@ describe('JSONPathTransformerContext branch coverage', () => {
   it('calculatePosition: first item is array returns its length', () => {
     const ctx = new JSONPathTransformerContext({
       data: {arr: [[1, 2, 3]]},
-      joiningTransformer: new JSONJoiningTransformer(),
+      joiningTransformer: JSONJoiningTransformer.create(),
       templates: []
     }, []);
     // Use $.arr[0] so result is [1,2,3] and length is 3
@@ -92,7 +92,7 @@ describe('JSONPathTransformerContext branch coverage', () => {
   it('calculatePosition: result with multiple matches returns length', () => {
     const ctx = new JSONPathTransformerContext({
       data: {arr: [1, 2, 3]},
-      joiningTransformer: new JSONJoiningTransformer(),
+      joiningTransformer: JSONJoiningTransformer.create(),
       templates: []
     }, []);
     // Multiple matches (not array as first item)
@@ -102,7 +102,7 @@ describe('JSONPathTransformerContext branch coverage', () => {
   it('formatNumber: NaN input returns "NaN"', () => {
     const ctx = new JSONPathTransformerContext({
       data: {},
-      joiningTransformer: new JSONJoiningTransformer(),
+      joiningTransformer: JSONJoiningTransformer.create(),
       templates: []
     }, []);
     expect(ctx._formatNumber(NaN, '1')).to.equal('NaN');
@@ -113,7 +113,7 @@ describe('JSONPathTransformerContext branch coverage', () => {
     () => {
       const ctx = new JSONPathTransformerContext({
         data: {},
-        joiningTransformer: new JSONJoiningTransformer(),
+        joiningTransformer: JSONJoiningTransformer.create(),
         templates: []
       }, []);
       // Should use grouping and replace separator
@@ -124,7 +124,7 @@ describe('JSONPathTransformerContext branch coverage', () => {
   it('formatNumber: catch block fallback for Intl.NumberFormat', () => {
     const ctx = new JSONPathTransformerContext({
       data: {},
-      joiningTransformer: new JSONJoiningTransformer(),
+      joiningTransformer: JSONJoiningTransformer.create(),
       templates: []
     }, []);
     // Pass a symbol to force Intl.NumberFormat to throw
@@ -135,7 +135,7 @@ describe('JSONPathTransformerContext branch coverage', () => {
   it('applyTemplates: defensive fallback for templateObj.path', () => {
     const ctx = new JSONPathTransformerContext({
       data: {},
-      joiningTransformer: new JSONJoiningTransformer(),
+      joiningTransformer: JSONJoiningTransformer.create(),
       templates: [
         {
           name: 'foo',
@@ -161,7 +161,7 @@ describe('JSONPathTransformerContext branch coverage', () => {
   it('applyTemplates: defensive fallback for priority resolver', () => {
     const ctx = new JSONPathTransformerContext({
       data: {},
-      joiningTransformer: new JSONJoiningTransformer(),
+      joiningTransformer: JSONJoiningTransformer.create(),
       templates: [
         {
           template () {
@@ -186,7 +186,7 @@ describe('JSONPathTransformerContext branch coverage', () => {
   it('forEach: defensive fallback for comparator', () => {
     const ctx = new JSONPathTransformerContext({
       data: {},
-      joiningTransformer: new JSONJoiningTransformer(),
+      joiningTransformer: JSONJoiningTransformer.create(),
       templates: []
     }, []);
     let called = false;
@@ -203,7 +203,7 @@ describe('JSONPathTransformerContext branch coverage', () => {
   it('_passesIf: defensive non-array fallback', () => {
     const ctx = new JSONPathTransformerContext({
       data: {},
-      joiningTransformer: new JSONJoiningTransformer(),
+      joiningTransformer: JSONJoiningTransformer.create(),
       templates: []
     }, []);
     // Patch get to return non-array (defensive branch)
@@ -214,7 +214,7 @@ describe('JSONPathTransformerContext branch coverage', () => {
   it('choose: defensive fallback for otherwiseCb', () => {
     const ctx = new JSONPathTransformerContext({
       data: {},
-      joiningTransformer: new JSONJoiningTransformer(),
+      joiningTransformer: JSONJoiningTransformer.create(),
       templates: []
     }, []);
     ctx._passesIf = () => false;
@@ -230,7 +230,7 @@ describe('JSONPathTransformerContext branch coverage', () => {
   it('number: letterValue alphabetic with format a', () => {
     const ctx = new JSONPathTransformerContext({
       data: {},
-      joiningTransformer: new JSONJoiningTransformer(),
+      joiningTransformer: JSONJoiningTransformer.create(),
       templates: []
     }, []);
     ctx.number({value: 1, letterValue: 'alphabetic', format: 'a'});
@@ -240,7 +240,7 @@ describe('JSONPathTransformerContext branch coverage', () => {
   it('number: letterValue alphabetic with format A', () => {
     const ctx = new JSONPathTransformerContext({
       data: {},
-      joiningTransformer: new JSONJoiningTransformer(),
+      joiningTransformer: JSONJoiningTransformer.create(),
       templates: []
     }, []);
     ctx.number({value: 1, letterValue: 'alphabetic', format: 'A'});
@@ -250,7 +250,7 @@ describe('JSONPathTransformerContext branch coverage', () => {
   it('number: letterValue alphabetic with non-a/A format', () => {
     const ctx = new JSONPathTransformerContext({
       data: {},
-      joiningTransformer: new JSONJoiningTransformer(),
+      joiningTransformer: JSONJoiningTransformer.create(),
       templates: []
     }, []);
     ctx.number({value: 1, letterValue: 'alphabetic', format: '1'});
@@ -260,7 +260,7 @@ describe('JSONPathTransformerContext branch coverage', () => {
   it('number: format 0 for zero-padded numbers', () => {
     const ctx = new JSONPathTransformerContext({
       data: {},
-      joiningTransformer: new JSONJoiningTransformer(),
+      joiningTransformer: JSONJoiningTransformer.create(),
       templates: []
     }, []);
     ctx.number({value: 5, format: '000'});
@@ -270,7 +270,7 @@ describe('JSONPathTransformerContext branch coverage', () => {
   it('calculatePosition: return 0 for empty result', () => {
     const ctx = new JSONPathTransformerContext({
       data: {},
-      joiningTransformer: new JSONJoiningTransformer(),
+      joiningTransformer: JSONJoiningTransformer.create(),
       templates: []
     }, []);
     expect(ctx.calculatePosition('$.nonexistent')).to.equal(0);
@@ -279,7 +279,7 @@ describe('JSONPathTransformerContext branch coverage', () => {
   it('number: value undefined fallback to opts.value', () => {
     const ctx = new JSONPathTransformerContext({
       data: {},
-      joiningTransformer: new JSONJoiningTransformer(),
+      joiningTransformer: JSONJoiningTransformer.create(),
       templates: []
     }, []);
     ctx.number({value: undefined, format: '1'});
@@ -289,7 +289,7 @@ describe('JSONPathTransformerContext branch coverage', () => {
   it('number: string value converted to number', () => {
     const ctx = new JSONPathTransformerContext({
       data: {},
-      joiningTransformer: new JSONJoiningTransformer(),
+      joiningTransformer: JSONJoiningTransformer.create(),
       templates: []
     }, []);
     ctx.number({value: '42', format: '1'});
@@ -299,7 +299,7 @@ describe('JSONPathTransformerContext branch coverage', () => {
   it('number: format equals 1 outputs as number', () => {
     const ctx = new JSONPathTransformerContext({
       data: {},
-      joiningTransformer: new JSONJoiningTransformer(),
+      joiningTransformer: JSONJoiningTransformer.create(),
       templates: []
     }, []);
     ctx.number({value: 42, format: '1'});
@@ -309,7 +309,7 @@ describe('JSONPathTransformerContext branch coverage', () => {
   it('number: simple position() call', () => {
     const ctx = new JSONPathTransformerContext({
       data: {},
-      joiningTransformer: new JSONJoiningTransformer(),
+      joiningTransformer: JSONJoiningTransformer.create(),
       templates: []
     }, []);
     ctx.number('position()');
@@ -319,7 +319,7 @@ describe('JSONPathTransformerContext branch coverage', () => {
   it('number: simple string number', () => {
     const ctx = new JSONPathTransformerContext({
       data: {},
-      joiningTransformer: new JSONJoiningTransformer(),
+      joiningTransformer: JSONJoiningTransformer.create(),
       templates: []
     }, []);
     ctx.number('42');
@@ -329,7 +329,7 @@ describe('JSONPathTransformerContext branch coverage', () => {
   it('calculatePosition: return 0 when count result is empty', () => {
     const ctx = new JSONPathTransformerContext({
       data: {},
-      joiningTransformer: new JSONJoiningTransformer(),
+      joiningTransformer: JSONJoiningTransformer.create(),
       templates: []
     }, []);
     const result = ctx.calculatePosition('$.nothing');
@@ -339,7 +339,7 @@ describe('JSONPathTransformerContext branch coverage', () => {
   it('number: level any with count', () => {
     const ctx = new JSONPathTransformerContext({
       data: {items: [1, 2, 3]},
-      joiningTransformer: new JSONJoiningTransformer(),
+      joiningTransformer: JSONJoiningTransformer.create(),
       templates: []
     }, []);
     // @ts-expect-error level not in type definition but used in implementation
@@ -350,7 +350,7 @@ describe('JSONPathTransformerContext branch coverage', () => {
   it('number: value undefined with no opts.value defaults to 1', () => {
     const ctx = new JSONPathTransformerContext({
       data: {},
-      joiningTransformer: new JSONJoiningTransformer(),
+      joiningTransformer: JSONJoiningTransformer.create(),
       templates: []
     }, []);
     ctx.number({format: 'i'});
@@ -360,7 +360,7 @@ describe('JSONPathTransformerContext branch coverage', () => {
   it('calculatePosition: return 0 for non-array non-empty result', () => {
     const ctx = new JSONPathTransformerContext({
       data: {},
-      joiningTransformer: new JSONJoiningTransformer(),
+      joiningTransformer: JSONJoiningTransformer.create(),
       templates: []
     }, []);
     // When jsonpath returns a non-array result wrapped in array
@@ -371,7 +371,7 @@ describe('JSONPathTransformerContext branch coverage', () => {
   it('number: level multiple with count', () => {
     const ctx = new JSONPathTransformerContext({
       data: {items: [1, 2, 3]},
-      joiningTransformer: new JSONJoiningTransformer(),
+      joiningTransformer: JSONJoiningTransformer.create(),
       templates: [],
       // @ts-expect-error iterationState not in type definition but used
       iterationState: {index: 0}
@@ -390,7 +390,7 @@ describe('JSONPathTransformerContext branch coverage', () => {
     };
     const ctx = new JSONPathTransformerContext({
       data: {},
-      joiningTransformer: new JSONJoiningTransformer(),
+      joiningTransformer: JSONJoiningTransformer.create(),
       templates: [],
       // @ts-expect-error iterationState not in type definition but used
       iterationState
@@ -404,7 +404,7 @@ describe('JSONPathTransformerContext branch coverage', () => {
   it('number: value string converted when undefined', () => {
     const ctx = new JSONPathTransformerContext({
       data: {},
-      joiningTransformer: new JSONJoiningTransformer(),
+      joiningTransformer: JSONJoiningTransformer.create(),
       templates: []
     }, []);
     ctx.number({value: '10', format: 'i'});
@@ -414,7 +414,7 @@ describe('JSONPathTransformerContext branch coverage', () => {
   it('number: value and opts.value both undefined (line 832-833)', () => {
     const ctx = new JSONPathTransformerContext({
       data: {},
-      joiningTransformer: new JSONJoiningTransformer(),
+      joiningTransformer: JSONJoiningTransformer.create(),
       templates: []
     }, []);
     // Call number with undefined value and unsupported level
@@ -428,7 +428,7 @@ describe('JSONPathTransformerContext branch coverage', () => {
   it('number: level single with count (lines 778-782)', () => {
     const ctx = new JSONPathTransformerContext({
       data: {items: [1, 2, 3, 4, 5]},
-      joiningTransformer: new JSONJoiningTransformer(),
+      joiningTransformer: JSONJoiningTransformer.create(),
       templates: [],
       // @ts-expect-error iterationState not in type definition but used
       iterationState: {index: 2}
@@ -444,7 +444,7 @@ describe('JSONPathTransformerContext branch coverage', () => {
   it('calculatePosition: returns count of non-array matches (line 888)', () => {
     const ctx = new JSONPathTransformerContext({
       data: {items: [{id: 1}, {id: 2}, {id: 3}]},
-      joiningTransformer: new JSONJoiningTransformer(),
+      joiningTransformer: JSONJoiningTransformer.create(),
       templates: []
     }, []);
     // Use a JSONPath that returns multiple objects (not an array of arrays)

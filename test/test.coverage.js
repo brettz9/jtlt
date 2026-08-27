@@ -288,9 +288,7 @@ describe('Coverage: uncovered functionality', () => {
       templates: [{
         path: '$',
         template () {
-          const doc = /** @type {Document} */ (
-            this._config.joiningTransformer._cfg.document
-          );
+          const doc = this._config.joiningTransformer._cfg.document;
           const el = doc.createElement('span');
           el.setAttribute('class', 'test');
           return el;

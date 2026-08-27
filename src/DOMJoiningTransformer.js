@@ -25,7 +25,26 @@ class DOMJoiningTransformer extends AbstractJoiningTransformer {
    * @param {import('./AbstractJoiningTransformer.js').
    *   DOMJoiningTransformerConfig} cfg - Configuration object
    */
+
+  /* eslint-disable @stylistic/max-len -- Long */
+  /**
+   * @template {import('./AbstractJoiningTransformer.js').DOMJoiningTransformerConfig} T
+   * @param {DocumentFragment|Element} dom - DOM element or fragment
+   * @param {T} cfg - Configuration options
+   * @returns {DOMJoiningTransformer<T>}
+   */
+  static create (dom, cfg) {
+    /* eslint-enable @stylistic/max-len -- Long */
+    return new DOMJoiningTransformer(dom, cfg);
+  }
+
+  /* eslint-disable @stylistic/max-len -- Long */
+  /**
+   * @param {DocumentFragment|Element} o - DOM element or fragment
+   * @param {import('./AbstractJoiningTransformer.js').DOMJoiningTransformerConfig} cfg - Configuration options
+   */
   constructor (o, cfg) {
+    /* eslint-enable @stylistic/max-len -- Long */
     super(cfg);
     this._dom = o || cfg.document.createDocumentFragment();
     /** @type {any} */
@@ -347,12 +366,10 @@ class DOMJoiningTransformer extends AbstractJoiningTransformer {
         ({xmlns} = atts ?? {});
       }
 
-      const doc = /** @type {XMLDocument} */ (
-        this._cfg.document.implementation.createDocument(
-          xmlns ?? null,
-          elementName,
-          dtd
-        )
+      const doc = this._cfg.document.implementation.createDocument(
+        xmlns ?? null,
+        elementName,
+        dtd
       );
       /* c8 ignore stop */
 
@@ -685,9 +702,7 @@ class DOMJoiningTransformer extends AbstractJoiningTransformer {
     // or extract from the current DOM state
     const resultDoc = this._docs.length > 0
       ? /** @type {XMLDocument} */ (this._docs.at(-1))
-      : /** @type {XMLDocument} */ (
-        this._cfg.document.implementation.createDocument(null, 'root', null)
-      );
+      : this._cfg.document.implementation.createDocument(null, 'root', null);
 
     // Store with metadata, using the output config that was set during callback
     this._resultDocuments.push({

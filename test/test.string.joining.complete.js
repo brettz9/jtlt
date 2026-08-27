@@ -4,7 +4,7 @@ import {StringJoiningTransformer} from '../src/index-node.js';
 describe('StringJoiningTransformer complete coverage', () => {
   describe('standalone attribute edge cases (line 484)', () => {
     it('includes standalone="yes" when standalone is true', () => {
-      const joiner = new StringJoiningTransformer('');
+      const joiner = StringJoiningTransformer.create('');
       joiner.output({
         method: 'xml',
         version: '1.0',
@@ -18,7 +18,7 @@ describe('StringJoiningTransformer complete coverage', () => {
     });
 
     it('omits standalone attribute when standalone is false', () => {
-      const joiner = new StringJoiningTransformer('');
+      const joiner = StringJoiningTransformer.create('');
       joiner.output({
         method: 'xml',
         version: '1.0',
@@ -32,7 +32,7 @@ describe('StringJoiningTransformer complete coverage', () => {
     });
 
     it('omits standalone attribute when standalone is undefined', () => {
-      const joiner = new StringJoiningTransformer('');
+      const joiner = StringJoiningTransformer.create('');
       joiner.output({
         method: 'xml',
         version: '1.0'
@@ -48,7 +48,7 @@ describe('StringJoiningTransformer complete coverage', () => {
 
   describe('DOCTYPE SYSTEM without PUBLIC (line 495)', () => {
     it('outputs SYSTEM DOCTYPE when only systemId provided', () => {
-      const joiner = new StringJoiningTransformer('');
+      const joiner = StringJoiningTransformer.create('');
       joiner.output({
         method: 'xml',
         doctypeSystem: 'https://example.com/custom.dtd'
@@ -63,7 +63,7 @@ describe('StringJoiningTransformer complete coverage', () => {
     });
 
     it('outputs PUBLIC DOCTYPE when both provided', () => {
-      const joiner = new StringJoiningTransformer('');
+      const joiner = StringJoiningTransformer.create('');
       joiner.output({
         method: 'xml',
         doctypePublic: '-//TEST//DTD Test 1.0//EN',
@@ -80,7 +80,7 @@ describe('StringJoiningTransformer complete coverage', () => {
     });
 
     it('omits DOCTYPE when neither PUBLIC nor SYSTEM provided', () => {
-      const joiner = new StringJoiningTransformer('');
+      const joiner = StringJoiningTransformer.create('');
       joiner.output({
         method: 'xml',
         version: '1.0'
@@ -98,7 +98,7 @@ describe('StringJoiningTransformer complete coverage', () => {
       'outputs bare DOCTYPE with bareDoctype when no ' +
       'systemId or publicId provided',
       () => {
-        const joiner = new StringJoiningTransformer('');
+        const joiner = StringJoiningTransformer.create('');
         joiner.output({
           method: 'xml',
           bareDoctype: true
@@ -114,7 +114,7 @@ describe('StringJoiningTransformer complete coverage', () => {
     );
 
     it('outputs PUBLIC DOCTYPE when both provided', () => {
-      const joiner = new StringJoiningTransformer('');
+      const joiner = StringJoiningTransformer.create('');
       joiner.output({
         method: 'xml',
         doctypePublic: '-//TEST//DTD Test 1.0//EN',
@@ -131,7 +131,7 @@ describe('StringJoiningTransformer complete coverage', () => {
     });
 
     it('omits DOCTYPE when neither PUBLIC nor SYSTEM provided', () => {
-      const joiner = new StringJoiningTransformer('');
+      const joiner = StringJoiningTransformer.create('');
       joiner.output({
         method: 'xml',
         version: '1.0'
@@ -150,7 +150,7 @@ describe('StringJoiningTransformer complete coverage', () => {
       it(
         'includes xmlDecl when method=html and omitXmlDeclaration=false',
         () => {
-          const joiner = new StringJoiningTransformer('');
+          const joiner = StringJoiningTransformer.create('');
           joiner.output({
             method: 'html',
             omitXmlDeclaration: false,
@@ -165,7 +165,7 @@ describe('StringJoiningTransformer complete coverage', () => {
       );
 
       it('omits xmlDecl when method=html by default', () => {
-        const joiner = new StringJoiningTransformer('');
+        const joiner = StringJoiningTransformer.create('');
         joiner.output({
           method: 'html',
           version: '1.0'
@@ -181,7 +181,7 @@ describe('StringJoiningTransformer complete coverage', () => {
 
   describe('resultDocument with cfg.method fallback (line 808)', () => {
     it('uses cfg.method when output() has no method', () => {
-      const joiner = new StringJoiningTransformer('');
+      const joiner = StringJoiningTransformer.create('');
 
       joiner.resultDocument('test.xml', () => {
         joiner.output({version: '1.0'}); // No method
@@ -195,7 +195,7 @@ describe('StringJoiningTransformer complete coverage', () => {
     });
 
     it('uses cfg.method when no output() is called', () => {
-      const joiner = new StringJoiningTransformer('');
+      const joiner = StringJoiningTransformer.create('');
 
       joiner.resultDocument('test.html', () => {
         joiner.element('div', {}, [], () => {
@@ -208,7 +208,7 @@ describe('StringJoiningTransformer complete coverage', () => {
     });
 
     it('prefers output().method over cfg.method', () => {
-      const joiner = new StringJoiningTransformer('');
+      const joiner = StringJoiningTransformer.create('');
 
       joiner.resultDocument('test.xml', () => {
         joiner.output({method: 'xhtml'});

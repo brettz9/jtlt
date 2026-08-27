@@ -7,15 +7,16 @@ describe('valueOf in element callbacks', function () {
     'inside element callback (JSONPath)',
     function () {
       const data = {name: 'World & Friends'};
-      // eslint-disable-next-line @stylistic/max-len -- Long
-      const templates = /** @type {import('../src/index.js').JSONPathTemplateArray<"string">[]} */ ([{
+
+      /** @type {import('../src/index.js').JSONPathTemplateArray<"string">[]} */
+      const templates = [{
         path: '$',
         template () {
           this.element('div', {class: 'test'}, [], function () {
             this.valueOf('$.name');
           });
         }
-      }]);
+      }];
 
       let result;
       new JTLT({
@@ -33,15 +34,16 @@ describe('valueOf in element callbacks', function () {
 
   it('should escape < characters in valueOf output (JSONPath)', function () {
     const data = {content: '<script>alert(1)</script>'};
-    // eslint-disable-next-line @stylistic/max-len -- Long
-    const templates = /** @type {import('../src/index.js').JSONPathTemplateArray<"string">[]} */ ([{
+
+    /** @type {import('../src/index.js').JSONPathTemplateArray<"string">[]} */
+    const templates = [{
       path: '$',
       template () {
         this.element('p', {}, [], function () {
           this.valueOf('$.content');
         });
       }
-    }]);
+    }];
 
     let result;
     new JTLT({
@@ -60,13 +62,14 @@ describe('valueOf in element callbacks', function () {
     'should work correctly when valueOf is called outside element (JSONPath)',
     function () {
       const data = {name: 'Test'};
-      // eslint-disable-next-line @stylistic/max-len -- Long
-      const templates = /** @type {import('../src/index.js').JSONPathTemplateArray<"string">[]} */ ([{
+
+      /** @type {import('../src/index.js').JSONPathTemplateArray<"string">[]} */
+      const templates = [{
         path: '$',
         template () {
           this.valueOf('$.name');
         }
-      }]);
+      }];
 
       let result;
       new JTLT({

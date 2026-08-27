@@ -9,7 +9,7 @@ import StringJoiningTransformer from '../src/StringJoiningTransformer.js';
 describe('namespace() method', () => {
   describe('JSONJoiningTransformer', () => {
     it('adds namespace declaration to element attributes', () => {
-      const joiner = new JSONJoiningTransformer([]);
+      const joiner = JSONJoiningTransformer.create([]);
       joiner.element('root', {}, function () {
         joiner.namespace('ns', 'https://example.com/ns');
       });
@@ -28,7 +28,7 @@ describe('namespace() method', () => {
     });
 
     it('adds multiple namespace declarations to same element', () => {
-      const joiner = new JSONJoiningTransformer([]);
+      const joiner = JSONJoiningTransformer.create([]);
       joiner.element('root', {}, function () {
         joiner.namespace('ns1', 'https://example.com/ns1');
         joiner.namespace('ns2', 'https://example.com/ns2');
@@ -47,7 +47,7 @@ describe('namespace() method', () => {
     });
 
     it('adds namespace to nested element', () => {
-      const joiner = new JSONJoiningTransformer([]);
+      const joiner = JSONJoiningTransformer.create([]);
       joiner.element('root', {}, function () {
         joiner.element('child', {}, function () {
           joiner.namespace('ns', 'https://example.com/child-ns');
@@ -69,14 +69,14 @@ describe('namespace() method', () => {
     });
 
     it('is no-op when called outside element context', () => {
-      const joiner = new JSONJoiningTransformer([]);
+      const joiner = JSONJoiningTransformer.create([]);
       joiner.namespace('ns', 'https://example.com/ns');
       const result = joiner.get();
       expect(result).to.deep.equal([]);
     });
 
     it('applies character maps to namespace URI', () => {
-      const joiner = new JSONJoiningTransformer([]);
+      const joiner = JSONJoiningTransformer.create([]);
       joiner.characterMap('amp-map', [
         {character: '&', string: '&amp;'}
       ]);
@@ -92,7 +92,7 @@ describe('namespace() method', () => {
     });
 
     it('returns this for chaining', () => {
-      const joiner = new JSONJoiningTransformer([]);
+      const joiner = JSONJoiningTransformer.create([]);
       joiner.element('root', {}, function () {
         const result = joiner.namespace('ns', 'https://example.com/ns');
         expect(result).to.equal(joiner);
@@ -104,7 +104,7 @@ describe('namespace() method', () => {
     it('adds namespace declaration using setAttributeNS', () => {
       const {window} = new JSDOM('<!doctype html><html><body></body></html>');
       const {document} = window;
-      const joiner = new DOMJoiningTransformer(
+      const joiner = DOMJoiningTransformer.create(
         document.createDocumentFragment(),
         {document}
       );
@@ -112,16 +112,14 @@ describe('namespace() method', () => {
         joiner.namespace('ns', 'https://example.com/ns');
       });
       const frag = joiner.get();
-      const rootEl = /** @type {Element} */ (
-        /** @type {DocumentFragment} */ (frag).firstChild
-      );
+      const rootEl = /** @type {Element} */ (frag.firstChild);
       expect(rootEl.getAttribute('xmlns:ns')).to.equal('https://example.com/ns');
     });
 
     it('adds multiple namespace declarations', () => {
       const {window} = new JSDOM('<!doctype html><html><body></body></html>');
       const {document} = window;
-      const joiner = new DOMJoiningTransformer(
+      const joiner = DOMJoiningTransformer.create(
         document.createDocumentFragment(),
         {document}
       );
@@ -130,9 +128,7 @@ describe('namespace() method', () => {
         joiner.namespace('ns2', 'https://example.com/ns2');
       });
       const frag = joiner.get();
-      const rootEl = /** @type {Element} */ (
-        /** @type {DocumentFragment} */ (frag).firstChild
-      );
+      const rootEl = /** @type {Element} */ (frag.firstChild);
       expect(rootEl.getAttribute('xmlns:ns1')).to.equal('https://example.com/ns1');
       expect(rootEl.getAttribute('xmlns:ns2')).to.equal('https://example.com/ns2');
     });
@@ -140,7 +136,7 @@ describe('namespace() method', () => {
     it('returns this for chaining', () => {
       const {window} = new JSDOM('<!doctype html><html><body></body></html>');
       const {document} = window;
-      const joiner = new DOMJoiningTransformer(
+      const joiner = DOMJoiningTransformer.create(
         document.createDocumentFragment(),
         {document}
       );
@@ -153,7 +149,7 @@ describe('namespace() method', () => {
 
   describe('StringJoiningTransformer', () => {
     it('appends namespace declaration as attribute', () => {
-      const joiner = new StringJoiningTransformer('');
+      const joiner = StringJoiningTransformer.create('');
       joiner.element('root', {}, [], function () {
         joiner.namespace('ns', 'https://example.com/ns');
       });
@@ -162,7 +158,7 @@ describe('namespace() method', () => {
     });
 
     it('adds multiple namespace declarations', () => {
-      const joiner = new StringJoiningTransformer('');
+      const joiner = StringJoiningTransformer.create('');
       joiner.element('root', {}, [], function () {
         joiner.namespace('ns1', 'https://example.com/ns1');
         joiner.namespace('ns2', 'https://example.com/ns2');
@@ -173,7 +169,7 @@ describe('namespace() method', () => {
     });
 
     it('applies character maps to namespace URI', () => {
-      const joiner = new StringJoiningTransformer('');
+      const joiner = StringJoiningTransformer.create('');
       joiner.characterMap('amp-map', [
         {character: '&', string: '&amp;'}
       ]);
@@ -186,7 +182,7 @@ describe('namespace() method', () => {
     });
 
     it('returns this for chaining', () => {
-      const joiner = new StringJoiningTransformer('');
+      const joiner = StringJoiningTransformer.create('');
       joiner.element('root', {}, [], function () {
         const result = joiner.namespace('ns', 'https://example.com/ns');
         expect(result).to.equal(joiner);
@@ -196,7 +192,7 @@ describe('namespace() method', () => {
 
   describe('JSONPathTransformerContext', () => {
     it('delegates to joining transformer', () => {
-      const joiner = new JSONJoiningTransformer([]);
+      const joiner = JSONJoiningTransformer.create([]);
       const ctx = new JSONPathTransformerContext({
         data: {},
         joiningTransformer: joiner,
@@ -221,7 +217,7 @@ describe('namespace() method', () => {
     });
 
     it('returns this for chaining', () => {
-      const joiner = new JSONJoiningTransformer([]);
+      const joiner = JSONJoiningTransformer.create([]);
       const ctx = new JSONPathTransformerContext({
         data: {},
         joiningTransformer: joiner,
@@ -235,10 +231,10 @@ describe('namespace() method', () => {
     });
 
     it('works with StringJoiningTransformer', () => {
-      const joiner = new StringJoiningTransformer('');
+      const joiner = StringJoiningTransformer.create('');
       const ctx = new JSONPathTransformerContext({
         data: {},
-        joiningTransformer: /** @type {any} */ (joiner),
+        joiningTransformer: joiner,
         templates: []
       }, []);
 
@@ -255,7 +251,7 @@ describe('namespace() method', () => {
     it('delegates to joining transformer (DOM)', () => {
       const {window} = new JSDOM('<!doctype html><html><body></body></html>');
       const {document} = window;
-      const joiner = new DOMJoiningTransformer(
+      const joiner = DOMJoiningTransformer.create(
         document.createDocumentFragment(),
         {document}
       );
@@ -277,7 +273,7 @@ describe('namespace() method', () => {
     it('returns this for chaining', () => {
       const {window} = new JSDOM('<!doctype html><html><body></body></html>');
       const {document} = window;
-      const joiner = new DOMJoiningTransformer(
+      const joiner = DOMJoiningTransformer.create(
         document.createDocumentFragment(),
         {document}
       );
@@ -295,10 +291,10 @@ describe('namespace() method', () => {
     it('works with StringJoiningTransformer', () => {
       const {window} = new JSDOM('<!doctype html><html><body></body></html>');
       const {document} = window;
-      const joiner = new StringJoiningTransformer('');
+      const joiner = StringJoiningTransformer.create('');
       const ctx = new XPathTransformerContext({
         data: document,
-        joiningTransformer: /** @type {any} */ (joiner)
+        joiningTransformer: joiner
       }, []);
 
       ctx.element('root', {}, [], function () {

@@ -1233,7 +1233,13 @@ describe('function() - XSLT-like stylesheet functions', function () {
           }],
           success (result) {
             try {
-              const typedResult = /** @type {any[]} */ (result);
+              const typedResult =
+                /**
+                 * @type {{
+                 *   restored: boolean,
+                 *   result: number[]
+                 * }[]}
+                 */ (result);
               expect(typedResult[0].restored).to.equal(true);
               expect(typedResult[0].result).to.deep.equal([1, 2, 3]);
               done();

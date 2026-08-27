@@ -13,7 +13,7 @@ describe('JSONPathTransformerContext copy/copyOf', () => {
    * }}
    */
   function makeCtx (data, propertySets) {
-    const joiner = new JSONJoiningTransformer([]);
+    const joiner = JSONJoiningTransformer.create([]);
     const ctx = new JSONPathTransformerContext({
       data,
       joiningTransformer: joiner,

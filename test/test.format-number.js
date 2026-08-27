@@ -19,7 +19,7 @@ describe('format-number() function', function () {
             }
           }
         ],
-        joiningTransformer: new StringJoiningTransformer(''),
+        joiningTransformer: StringJoiningTransformer.create(''),
         data
       }).transform();
       expect(result).to.equal('1,234.56');
@@ -36,7 +36,7 @@ describe('format-number() function', function () {
             }
           }
         ],
-        joiningTransformer: new StringJoiningTransformer(''),
+        joiningTransformer: StringJoiningTransformer.create(''),
         data
       }).transform();
       expect(result).to.equal('0042');
@@ -57,7 +57,7 @@ describe('format-number() function', function () {
             }
           }
         ],
-        joiningTransformer: new StringJoiningTransformer(''),
+        joiningTransformer: StringJoiningTransformer.create(''),
         data
       }).transform();
       expect(result).to.equal('1.234,56');
@@ -74,7 +74,7 @@ describe('format-number() function', function () {
             }
           }
         ],
-        joiningTransformer: new StringJoiningTransformer(''),
+        joiningTransformer: StringJoiningTransformer.create(''),
         data
       }).transform();
       expect(result).to.equal('9,876');
@@ -92,7 +92,7 @@ describe('format-number() function', function () {
             }
           }
         ],
-        joiningTransformer: new StringJoiningTransformer(''),
+        joiningTransformer: StringJoiningTransformer.create(''),
         data
       }).transform();
       expect(result).to.equal('0');
@@ -114,7 +114,7 @@ describe('format-number() function', function () {
             }
           }
         ],
-        joiningTransformer: new StringJoiningTransformer(''),
+        joiningTransformer: StringJoiningTransformer.create(''),
         data
       }).transform();
       expect(result).to.equal('1 234,56');
@@ -141,7 +141,7 @@ describe('format-number() function', function () {
               }
             }
           ],
-          joiningTransformer: new StringJoiningTransformer(''),
+          joiningTransformer: StringJoiningTransformer.create(''),
           data
         }).transform();
         expect(result).to.include('NOT_A_NUMBER');
@@ -162,7 +162,7 @@ describe('format-number() function', function () {
             }
           }
         ],
-        joiningTransformer: new StringJoiningTransformer(''),
+        joiningTransformer: StringJoiningTransformer.create(''),
         data
       }).transform();
       expect(result).to.equal('٠٠42');
@@ -183,7 +183,7 @@ describe('format-number() function', function () {
             }
           }
         ],
-        joiningTransformer: new StringJoiningTransformer(''),
+        joiningTransformer: StringJoiningTransformer.create(''),
         data
       }).transform();
       expect(result).to.equal('1 234.56');
@@ -204,7 +204,7 @@ describe('format-number() function', function () {
               }
             }
           ],
-          joiningTransformer: new StringJoiningTransformer(''),
+          joiningTransformer: StringJoiningTransformer.create(''),
           data
         }).transform();
         expect(result).to.equal('123');
@@ -223,7 +223,7 @@ describe('format-number() function', function () {
             }
           }
         ],
-        joiningTransformer: new StringJoiningTransformer(''),
+        joiningTransformer: StringJoiningTransformer.create(''),
         data
       }).transform();
       expect(result).to.equal('0456');
@@ -241,7 +241,7 @@ describe('format-number() function', function () {
             }
           }
         ],
-        joiningTransformer: new StringJoiningTransformer(''),
+        joiningTransformer: StringJoiningTransformer.create(''),
         data
       }).transform();
       expect(result).to.equal('789');
@@ -261,7 +261,7 @@ describe('format-number() function', function () {
             }
           }
         ],
-        joiningTransformer: new StringJoiningTransformer(''),
+        joiningTransformer: StringJoiningTransformer.create(''),
         data: doc
       }).transform();
       expect(result).to.equal('1,234.56');
@@ -279,7 +279,7 @@ describe('format-number() function', function () {
             }
           }
         ],
-        joiningTransformer: new StringJoiningTransformer(''),
+        joiningTransformer: StringJoiningTransformer.create(''),
         data: doc
       }).transform();
       expect(result).to.equal('0042');
@@ -301,7 +301,7 @@ describe('format-number() function', function () {
             }
           }
         ],
-        joiningTransformer: new StringJoiningTransformer(''),
+        joiningTransformer: StringJoiningTransformer.create(''),
         data: doc
       }).transform();
       expect(result).to.equal('1.234,56');
@@ -319,7 +319,7 @@ describe('format-number() function', function () {
             }
           }
         ],
-        joiningTransformer: new StringJoiningTransformer(''),
+        joiningTransformer: StringJoiningTransformer.create(''),
         data: doc
       }).transform();
       expect(result).to.equal('XLII');
@@ -337,7 +337,7 @@ describe('format-number() function', function () {
             }
           }
         ],
-        joiningTransformer: new StringJoiningTransformer(''),
+        joiningTransformer: StringJoiningTransformer.create(''),
         data: doc
       }).transform();
       expect(result).to.equal('c');
@@ -356,7 +356,7 @@ describe('format-number() function', function () {
             }
           }
         ],
-        joiningTransformer: new StringJoiningTransformer(''),
+        joiningTransformer: StringJoiningTransformer.create(''),
         data: doc
       }).transform();
       expect(result).to.equal('0');
@@ -379,7 +379,7 @@ describe('format-number() function', function () {
             }
           }
         ],
-        joiningTransformer: new StringJoiningTransformer(''),
+        joiningTransformer: StringJoiningTransformer.create(''),
         data: doc
       }).transform();
       expect(result).to.equal('1 234,56');
@@ -406,7 +406,7 @@ describe('format-number() function', function () {
               }
             }
           ],
-          joiningTransformer: new StringJoiningTransformer(''),
+          joiningTransformer: StringJoiningTransformer.create(''),
           data: doc
         }).transform();
         // Should fall back to String(num)
@@ -431,7 +431,7 @@ describe('format-number() function', function () {
             }
           }
         ],
-        joiningTransformer: new StringJoiningTransformer(''),
+        joiningTransformer: StringJoiningTransformer.create(''),
         data: doc
       }).transform();
       expect(result).to.equal('٠٠42');
@@ -453,7 +453,7 @@ describe('format-number() function', function () {
             }
           }
         ],
-        joiningTransformer: new StringJoiningTransformer(''),
+        joiningTransformer: StringJoiningTransformer.create(''),
         data: doc
       }).transform();
       expect(result).to.match(/1 234/v);
@@ -473,7 +473,7 @@ describe('format-number() function', function () {
             }
           }
         ],
-        joiningTransformer: new StringJoiningTransformer(''),
+        joiningTransformer: StringJoiningTransformer.create(''),
         data: doc
       }).transform();
       expect(result).to.equal('0999');
@@ -492,7 +492,7 @@ describe('format-number() function', function () {
             }
           }
         ],
-        joiningTransformer: new StringJoiningTransformer(''),
+        joiningTransformer: StringJoiningTransformer.create(''),
         data: doc
       }).transform();
       expect(result).to.equal('789');
@@ -510,7 +510,7 @@ describe('format-number() function', function () {
             }
           }
         ],
-        joiningTransformer: new StringJoiningTransformer(''),
+        joiningTransformer: StringJoiningTransformer.create(''),
         data: doc
       }).transform();
       expect(result).to.equal('3');
@@ -528,7 +528,7 @@ describe('format-number() function', function () {
             }
           }
         ],
-        joiningTransformer: new StringJoiningTransformer(''),
+        joiningTransformer: StringJoiningTransformer.create(''),
         data: doc
       }).transform();
       expect(result).to.equal('1,234.56');
@@ -550,7 +550,7 @@ describe('format-number() function', function () {
             }
           }
         ],
-        joiningTransformer: new StringJoiningTransformer(''),
+        joiningTransformer: StringJoiningTransformer.create(''),
         data: doc
       }).transform();
       expect(result).to.equal('1 234,56');
@@ -572,7 +572,7 @@ describe('format-number() function', function () {
             }
           }
         ],
-        joiningTransformer: new StringJoiningTransformer(''),
+        joiningTransformer: StringJoiningTransformer.create(''),
         data: doc
       }).transform();
       expect(result).to.equal('1,234,56');
@@ -591,7 +591,7 @@ describe('format-number() function', function () {
             }
           }
         ],
-        joiningTransformer: new StringJoiningTransformer(''),
+        joiningTransformer: StringJoiningTransformer.create(''),
         data: doc
       }).transform();
       expect(result).to.equal('0123');
@@ -612,7 +612,7 @@ describe('format-number() function', function () {
               }
             }
           ],
-          joiningTransformer: new StringJoiningTransformer(''),
+          joiningTransformer: StringJoiningTransformer.create(''),
           data: doc
         }).transform();
         expect(result).to.equal('1,234.56');
@@ -637,7 +637,7 @@ describe('format-number() function', function () {
             }
           }
         ],
-        joiningTransformer: new DOMJoiningTransformer(frag, {document: doc}),
+        joiningTransformer: DOMJoiningTransformer.create(frag, {document: doc}),
         data: doc
       }).transform();
 
@@ -663,7 +663,7 @@ describe('format-number() function', function () {
             }
           }
         ],
-        joiningTransformer: new JSONJoiningTransformer([]),
+        joiningTransformer: JSONJoiningTransformer.create([]),
         data
       }).transform();
       // valueOf returns undefined, so we need to test differently
@@ -681,7 +681,7 @@ describe('format-number() function', function () {
             }
           }
         ],
-        joiningTransformer: new StringJoiningTransformer(''),
+        joiningTransformer: StringJoiningTransformer.create(''),
         data
       }).transform();
       expect(result).to.equal('100');
@@ -698,7 +698,7 @@ describe('format-number() function', function () {
             }
           }
         ],
-        joiningTransformer: new StringJoiningTransformer(''),
+        joiningTransformer: StringJoiningTransformer.create(''),
         data
       }).transform();
       expect(result).to.equal('0099');
@@ -716,7 +716,7 @@ describe('format-number() function', function () {
             }
           }
         ],
-        joiningTransformer: new StringJoiningTransformer(''),
+        joiningTransformer: StringJoiningTransformer.create(''),
         data
       }).transform();
       expect(result).to.equal('0999');
@@ -735,7 +735,7 @@ describe('format-number() function', function () {
             }
           }
         ],
-        joiningTransformer: new StringJoiningTransformer(''),
+        joiningTransformer: StringJoiningTransformer.create(''),
         data
       }).transform();
       expect(result).to.equal('0');
@@ -756,7 +756,7 @@ describe('format-number() function', function () {
               }
             }
           ],
-          joiningTransformer: new StringJoiningTransformer(''),
+          joiningTransformer: StringJoiningTransformer.create(''),
           data
         }).transform();
         expect(result).to.equal('0777');

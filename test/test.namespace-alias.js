@@ -11,7 +11,7 @@ const {document} = window;
 describe('namespaceAlias() method', function () {
   describe('StringJoiningTransformer', function () {
     it('should use namespaceAlias with default prefix', function () {
-      const joiner = new StringJoiningTransformer('');
+      const joiner = StringJoiningTransformer.create('');
       // Empty string prefix is automatically converted to '#default' internally
       joiner.namespaceAlias('', 'ns1');
       joiner.element('root', {}, [], function () {
@@ -23,7 +23,7 @@ describe('namespaceAlias() method', function () {
     });
 
     it('should use namespaceAlias with prefixed namespace', function () {
-      const joiner = new StringJoiningTransformer('');
+      const joiner = StringJoiningTransformer.create('');
       joiner.namespaceAlias('old', 'new');
       joiner.element('root', {}, [], function () {
         joiner.namespace('old', 'https://example.com/ns');
@@ -34,7 +34,7 @@ describe('namespaceAlias() method', function () {
     });
 
     it('should handle multiple namespace aliases', function () {
-      const joiner = new StringJoiningTransformer('');
+      const joiner = StringJoiningTransformer.create('');
       joiner.namespaceAlias('a', 'x');
       joiner.namespaceAlias('b', 'y');
       joiner.element('root', {}, [], function () {
@@ -49,7 +49,7 @@ describe('namespaceAlias() method', function () {
 
   describe('DOMJoiningTransformer', function () {
     it('should use namespaceAlias with default prefix', function () {
-      const joiner = new DOMJoiningTransformer(
+      const joiner = DOMJoiningTransformer.create(
         document.createDocumentFragment(),
         {document}
       );
@@ -69,7 +69,7 @@ describe('namespaceAlias() method', function () {
     });
 
     it('should use namespaceAlias with prefixed namespace', function () {
-      const joiner = new DOMJoiningTransformer(
+      const joiner = DOMJoiningTransformer.create(
         document.createDocumentFragment(),
         {document}
       );
@@ -89,7 +89,7 @@ describe('namespaceAlias() method', function () {
     });
 
     it('should handle multiple namespace aliases', function () {
-      const joiner = new DOMJoiningTransformer(
+      const joiner = DOMJoiningTransformer.create(
         document.createDocumentFragment(),
         {document}
       );
@@ -115,7 +115,7 @@ describe('namespaceAlias() method', function () {
 
   describe('JSONJoiningTransformer', function () {
     it('should use namespaceAlias with default prefix', function () {
-      const joiner = new JSONJoiningTransformer([]);
+      const joiner = JSONJoiningTransformer.create([]);
       joiner.namespaceAlias('', 'myns');
       joiner.element('root', {}, function () {
         joiner.namespace('', 'https://example.com');
@@ -126,7 +126,7 @@ describe('namespaceAlias() method', function () {
     });
 
     it('should use namespaceAlias with prefixed namespace', function () {
-      const joiner = new JSONJoiningTransformer([]);
+      const joiner = JSONJoiningTransformer.create([]);
       joiner.namespaceAlias('foo', 'bar');
       joiner.element('root', {}, function () {
         joiner.namespace('foo', 'https://example.com/foo');
@@ -137,7 +137,7 @@ describe('namespaceAlias() method', function () {
     });
 
     it('should handle multiple namespace aliases', function () {
-      const joiner = new JSONJoiningTransformer([]);
+      const joiner = JSONJoiningTransformer.create([]);
       joiner.namespaceAlias('a', 'x');
       joiner.namespaceAlias('b', 'y');
       joiner.element('root', {}, function () {

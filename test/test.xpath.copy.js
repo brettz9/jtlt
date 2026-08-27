@@ -19,7 +19,7 @@ describe('XPathTransformerContext copy / copyOf', () => {
       '<root><item id="a">A</item><item id="b"><child>C</child></item></root>'
     );
     const {document} = (new JSDOM('')).window;
-    const joiner = new DOMJoiningTransformer(
+    const joiner = DOMJoiningTransformer.create(
       document.createDocumentFragment(),
       {document}
     );
@@ -37,9 +37,7 @@ describe('XPathTransformerContext copy / copyOf', () => {
 
     const frag = joiner.get();
     // eslint-disable-next-line prefer-destructuring -- TS
-    const childNodes = /** @type {DocumentFragment} */ (
-      frag
-    ).childNodes;
+    const childNodes = frag.childNodes;
     expect(childNodes).to.have.lengthOf(2);
     const shallowClone = childNodes[0];
     const deepClone = childNodes[1];
@@ -57,7 +55,7 @@ describe('XPathTransformerContext copy / copyOf', () => {
       '<root><item id="a">A</item><item id="b">B</item></root>'
     );
     const {document} = (new JSDOM('')).window;
-    const joiner = new DOMJoiningTransformer(
+    const joiner = DOMJoiningTransformer.create(
       document.createDocumentFragment(),
       {document}
     );
@@ -69,9 +67,7 @@ describe('XPathTransformerContext copy / copyOf', () => {
     ctx.copyOf('//item');
     const frag = joiner.get();
     // eslint-disable-next-line prefer-destructuring -- TS
-    const childNodes = /** @type {DocumentFragment} */ (
-      frag
-    ).childNodes;
+    const childNodes = frag.childNodes;
     expect(childNodes).to.have.lengthOf(2);
     expect(childNodes[0].textContent).to.equal('A');
     expect(childNodes[1].textContent).to.equal('B');
@@ -80,7 +76,7 @@ describe('XPathTransformerContext copy / copyOf', () => {
   it('copyOf with scalar XPath appends scalar value', () => {
     const doc = makeDoc('<root><item>A</item></root>');
     const {document} = (new JSDOM('')).window;
-    const joiner = new DOMJoiningTransformer(
+    const joiner = DOMJoiningTransformer.create(
       document.createDocumentFragment(),
       {document}
     );
@@ -92,9 +88,7 @@ describe('XPathTransformerContext copy / copyOf', () => {
     ctx.copyOf('string(//item)');
     const frag = joiner.get();
     // eslint-disable-next-line prefer-destructuring -- TS
-    const textContent = /** @type {DocumentFragment} */ (
-      frag
-    ).textContent;
+    const textContent = frag.textContent;
     // StringJoiningTransformer would wrap differently; DOM joiner adds text
     expect(textContent).to.equal('A');
   });

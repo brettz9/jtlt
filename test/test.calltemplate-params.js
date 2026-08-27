@@ -140,10 +140,10 @@ describe('callTemplate with valueOf parameter access', function () {
         {
           name: 'outer',
           template () {
-            /** @type {any} */ (this).string('Outer:');
-            /** @type {any} */ (this).valueOf({select: '$outerParam'});
-            /** @type {any} */ (this).string('|');
-            /** @type {any} */ (this).callTemplate({
+            this.string('Outer:');
+            this.valueOf({select: '$outerParam'});
+            this.string('|');
+            this.callTemplate({
               name: 'inner',
               withParam: [{name: 'innerParam', value: 'inner-value'}]
             });

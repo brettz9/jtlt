@@ -16,11 +16,9 @@ function makeDoc (xml) {
 describe('XPathTransformer additional coverage', () => {
   it('maps array shorthand templates', () => {
     const doc = makeDoc('<root><item>a</item><item>b</item></root>');
-    const joiner = new StringJoiningTransformer('');
+    const joiner = StringJoiningTransformer.create('');
 
-    const engine = new (/** @type {typeof XPathTransformer<"string">} */ (
-      XPathTransformer
-    ))({
+    const engine = new XPathTransformer({
       data: doc,
       templates: [
         ['//item', function itemTpl (n) {
@@ -37,7 +35,7 @@ describe('XPathTransformer additional coverage', () => {
 
   it('uses last of multiple root templates when not erroring', () => {
     const doc = makeDoc('<root/>');
-    const joiner = new StringJoiningTransformer('');
+    const joiner = StringJoiningTransformer.create('');
 
     const engine = new XPathTransformer({
       data: doc,
@@ -65,11 +63,9 @@ describe('XPathTransformer additional coverage', () => {
 
   it('falls back to default root rule when no root template present', () => {
     const doc = makeDoc('<root><item>a</item></root>');
-    const joiner = new StringJoiningTransformer('');
+    const joiner = StringJoiningTransformer.create('');
 
-    const engine = new (/** @type {typeof XPathTransformer<"string">} */ (
-      XPathTransformer
-    ))({
+    const engine = new XPathTransformer({
       data: doc,
       templates: [
         {
@@ -89,7 +85,7 @@ describe('XPathTransformer additional coverage', () => {
 
   it('splits root vs non-root templates in constructor', () => {
     const doc = makeDoc('<root><item>a</item></root>');
-    const joiner = new StringJoiningTransformer('');
+    const joiner = StringJoiningTransformer.create('');
     const engine = new XPathTransformer({
       data: doc,
       templates: [
@@ -113,7 +109,7 @@ describe('XPathTransformer additional coverage', () => {
 
   it('filters root and non-root templates distinctly', () => {
     const doc = makeDoc('<root><item>x</item><item>y</item></root>');
-    const joiner = new StringJoiningTransformer('');
+    const joiner = StringJoiningTransformer.create('');
 
     // First engine: mix of root (/) and non-root paths to hit both filters
     const cfg1 = {
@@ -146,7 +142,7 @@ describe('XPathTransformer additional coverage', () => {
     expect(engine1.templates).to.have.lengthOf(2);
 
     // Second engine: only non-root to ensure filter returns empty for root
-    const joiner2 = new StringJoiningTransformer('');
+    const joiner2 = StringJoiningTransformer.create('');
     const cfg2 = {
       data: doc,
       templates: [
@@ -171,10 +167,8 @@ describe('XPathTransformer additional coverage', () => {
     expect(engine2.templates).to.have.lengthOf(2);
 
     // Verify functional behavior with the first engine
-    const joiner3 = new StringJoiningTransformer('');
-    const engine3 = new (/** @type {typeof XPathTransformer<"string">} */ (
-      XPathTransformer
-    ))({
+    const joiner3 = StringJoiningTransformer.create('');
+    const engine3 = new XPathTransformer({
       data: doc,
       templates: [
         {
@@ -199,7 +193,7 @@ describe('XPathTransformer additional coverage', () => {
 
   it('throws on duplicate template names', () => {
     const doc = makeDoc('<root/>');
-    const joiner = new StringJoiningTransformer('');
+    const joiner = StringJoiningTransformer.create('');
     const cfg = {
       data: doc,
       templates: [

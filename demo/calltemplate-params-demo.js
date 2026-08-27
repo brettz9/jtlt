@@ -115,7 +115,7 @@ new JTLT({
         this.string('\n');
 
         // Call another template from within
-        /** @type {any} */ (this).callTemplate({
+        this.callTemplate({
           name: 'inner',
           withParam: [
             {name: 'message', value: 'Nested template call'}

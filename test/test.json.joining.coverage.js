@@ -3,7 +3,7 @@ import {JSONJoiningTransformer} from '../src/index-node.js';
 
 describe('JSONJoiningTransformer coverage additions', () => {
   it('element() with childNodes array and no atts/cb', () => {
-    const jt = new JSONJoiningTransformer([], {});
+    const jt = JSONJoiningTransformer.create([], {});
     // Call with just name and childNodes array (no atts object provided)
     jt.element('ul', ['x', ['li', {}, 'y']]);
     const out = /** @type {import('jamilih').JamilihArray[]} */ (jt.get());
@@ -13,7 +13,7 @@ describe('JSONJoiningTransformer coverage additions', () => {
   });
 
   it('attribute() no-op outside callback (dataset/$a)', () => {
-    const jt = new JSONJoiningTransformer([], {});
+    const jt = JSONJoiningTransformer.create([], {});
     // Outside of element callback: should silently return
     jt.attribute('dataset', {fooBar: 'v'});
     jt.attribute('$a', [['id', 'x']]);
@@ -28,7 +28,7 @@ describe('JSONJoiningTransformer coverage additions', () => {
   });
 
   it('text() no-op outside callback', () => {
-    const jt = new JSONJoiningTransformer([], {});
+    const jt = JSONJoiningTransformer.create([], {});
     jt.text('ignored');
     jt.element('p', {}, [], () => jt.text('kept'));
     const out = /** @type {import('jamilih').JamilihArray[]} */ (jt.get());
@@ -40,7 +40,7 @@ describe('JSONJoiningTransformer coverage additions', () => {
   });
 
   it('element() with empty atts and no children', () => {
-    const jt = new JSONJoiningTransformer([], {});
+    const jt = JSONJoiningTransformer.create([], {});
     jt.element('span');
     const out = /** @type {import('jamilih').JamilihArray[]} */ (jt.get());
     expect(out[0]).to.deep.equal(['span', []]);

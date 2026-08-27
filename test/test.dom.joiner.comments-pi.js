@@ -10,7 +10,7 @@ function makeJoiner () {
   const {window} = new JSDOM('<!doctype html><html><body></body></html>');
   const doc = window.document;
   const frag = doc.createDocumentFragment();
-  const joiner = new DOMJoiningTransformer(
+  const joiner = DOMJoiningTransformer.create(
     frag,
     {document: doc}
   );
@@ -78,10 +78,8 @@ describe('DOMJoiningTransformer comment() and processingInstruction()', () => {
     });
     const pi = /** @type {ProcessingInstruction} */ (
       /** @type {Element} */ (
-        /** @type {DocumentFragment} */
-        (
-          joiner.get()
-        ).querySelector('root')).childNodes[0]
+        joiner.get().querySelector('root')
+      ).childNodes[0]
     );
     expect(pi.nodeType).to.equal(7);
     expect(pi.target).to.equal('xml-stylesheet');

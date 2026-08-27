@@ -3,7 +3,7 @@ import {JSONJoiningTransformer} from '../src/index-node.js';
 
 describe('JSONJoiningTransformer comment() and processingInstruction()', () => {
   it('emits markers inside element callback and no-ops outside', () => {
-    const jt = new JSONJoiningTransformer([], {});
+    const jt = JSONJoiningTransformer.create([], {});
     jt.element('root', {}, [], () => {
       jt.comment('c1');
       jt.text('t1');

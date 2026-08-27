@@ -59,13 +59,24 @@ function _makeDatasetAttribute (n0) {
  * @template {import('./AbstractJoiningTransformer.js').JSONJoiningTransformerConfig} [TConfig=import('./AbstractJoiningTransformer.js').JSONJoiningTransformerConfig]
  */
 class JSONJoiningTransformer extends AbstractJoiningTransformer {
-  /* eslint-enable @stylistic/max-len -- Long */
   /**
-   * @param {any[]|Record<string, unknown>} [o] - Initial object or array
-   * @param {import('./AbstractJoiningTransformer.js').
-   *   JSONJoiningTransformerConfig} [cfg] - Configuration object
+   * @template {import('./AbstractJoiningTransformer.js').JSONJoiningTransformerConfig} T
+   * @param {any[]|Record<string, unknown>} [o] - Initial JSON object or array
+   * @param {T} [cfg] - Configuration options
+   * @returns {JSONJoiningTransformer<T>}
+   */
+  static create (o, cfg) {
+    /* eslint-enable @stylistic/max-len -- Long */
+    return new JSONJoiningTransformer(o, cfg);
+  }
+
+  /* eslint-disable @stylistic/max-len -- Long */
+  /**
+   * @param {any[]|Record<string, unknown>} [o] - Initial JSON object or array
+   * @param {import('./AbstractJoiningTransformer.js').JSONJoiningTransformerConfig} [cfg] - Configuration options
    */
   constructor (o, cfg) {
+    /* eslint-enable @stylistic/max-len -- Long */
     super(cfg);
     /** @type {any[]|Record<string, unknown>} */
     this._obj = o || [];

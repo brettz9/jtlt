@@ -306,7 +306,7 @@ class JTLT {
         domConfig.exposeDocuments = true;
       }
       const initial = (docForJoiner || _win.document).createDocumentFragment();
-      return new DOMJoiningTransformer(initial, domConfig);
+      return DOMJoiningTransformer.create(initial, domConfig);
     }
     case 'json': {
       /**
@@ -324,7 +324,7 @@ class JTLT {
       if (this.config.exposeDocuments) {
         jsonConfig.exposeDocuments = true;
       }
-      return new JSONJoiningTransformer([], jsonConfig);
+      return JSONJoiningTransformer.create([], jsonConfig);
     }
     case 'string': default: {
       /**
@@ -337,7 +337,7 @@ class JTLT {
       if (this.config.exposeDocuments) {
         stringConfig.exposeDocuments = true;
       }
-      return new StringJoiningTransformer('', stringConfig);
+      return StringJoiningTransformer.create('', stringConfig);
     }
     }
   }

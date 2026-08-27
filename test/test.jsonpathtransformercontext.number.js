@@ -12,7 +12,7 @@ describe('JSONPathTransformerContext number() formatting', () => {
   function getOutputForNumber (opts) {
     const ctx = new JSONPathTransformerContext({
       data: {},
-      joiningTransformer: new JSONJoiningTransformer(),
+      joiningTransformer: JSONJoiningTransformer.create(),
       templates: []
     }, []);
     ctx.number(opts);
@@ -71,7 +71,7 @@ describe('JSONPathTransformerContext number() formatting', () => {
     // Setup context with root data containing array of arrays
     const ctx = new JSONPathTransformerContext({
       data: {arr: [[1, 2, 3], [4, 5]]},
-      joiningTransformer: new JSONJoiningTransformer(),
+      joiningTransformer: JSONJoiningTransformer.create(),
       templates: []
     }, []);
     // count selects arr, which is [[1,2,3],[4,5]]
@@ -83,7 +83,7 @@ describe('JSONPathTransformerContext number() formatting', () => {
   it('calculatePosition returns 1 if no iterationState and no count', () => {
     const ctx = new JSONPathTransformerContext({
       data: {},
-      joiningTransformer: new JSONJoiningTransformer(),
+      joiningTransformer: JSONJoiningTransformer.create(),
       templates: []
     }, []);
     expect(ctx.calculatePosition()).to.equal(1);
@@ -93,7 +93,7 @@ describe('JSONPathTransformerContext number() formatting', () => {
     // Should use Intl.NumberFormat with grouping
     const ctx = new JSONPathTransformerContext({
       data: {},
-      joiningTransformer: new JSONJoiningTransformer(),
+      joiningTransformer: JSONJoiningTransformer.create(),
       templates: []
     }, []);
     ctx.number({
@@ -110,7 +110,7 @@ describe('JSONPathTransformerContext number() formatting', () => {
     // Use an invalid locale to trigger Intl.NumberFormat error
     const ctx = new JSONPathTransformerContext({
       data: {},
-      joiningTransformer: new JSONJoiningTransformer(),
+      joiningTransformer: JSONJoiningTransformer.create(),
       templates: []
     }, []);
     ctx.number({value: 'not-a-number', format: '1'});

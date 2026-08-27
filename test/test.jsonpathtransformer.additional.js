@@ -162,10 +162,10 @@ describe('JSONPathTransformer additional coverage', function () {
     };
     const jpt = new JSONPathTransformer(({
       data: {a: 1, b: 2},
-      templates: /** @type {any} */ ([
+      templates: [
         ['$.a', noop],
         ['$.b', noop]
-      ]),
+      ],
       // @ts-expect-error testing
       joiningTransformer: (function () {
         return {
@@ -197,13 +197,12 @@ describe('JSONPathTransformer additional coverage', function () {
 
   it('default function rule returns function result', function () {
     const data = {fn: () => 'OK'};
-    const templates =
-      /** @type {import('../src/index.js').JSONPathTemplateArray<"string">[]} */
-      ([
-        ['$', function () {
-          this.applyTemplates('$.fn');
-        }]
-      ]);
+    /** @type {import('../src/index.js').JSONPathTemplateArray<"string">[]} */
+    const templates = [
+      ['$', function () {
+        this.applyTemplates('$.fn');
+      }]
+    ];
     const out = runStringTransform(data, templates);
     expect(out).to.equal('OK');
   });
@@ -223,20 +222,22 @@ describe('JSONPathTransformer additional coverage', function () {
 
   it('set() modifies parent object', function () {
     const data = {items: [{value: 10}, {value: 20}]};
-    const templates =
+
     /** @type {import('../src/index.js').JSONPathTemplateArray<"string">[]} */
-      ([
-        ['$', function () {
-          this.applyTemplates('$.items[*]');
-          // After templates run, check if items were modified
-          this.plainText(JSON.stringify(data.items));
-        }],
-        ['$.items[*]',
-          function (/** @type {{value: number}} */ item) {
-            // Use set() to modify the value in parent array
-            this.set({value: item.value * 2, modified: true});
-          }]
-      ]);
+    const templates = [
+      ['$', function () {
+        this.applyTemplates('$.items[*]');
+        // After templates run, check if items were modified
+        this.plainText(JSON.stringify(data.items));
+      }],
+      ['$.items[*]',
+        function (item) {
+          // Use set() to modify the value in parent array
+          this.set({value: /** @type {{value: number}} */ (
+            item
+          ).value * 2, modified: true});
+        }]
+    ];
     const out = runStringTransform(data, templates);
     // Check that the data was modified by set()
     expect(out).to.include('"modified":true');

@@ -7,7 +7,7 @@ describe('DOMJoiningTransformer complete coverage', () => {
     it('handles prefixed element names with namespace', () => {
       const {window} = new JSDOM('<!doctype html><html><body></body></html>');
       const {document} = window;
-      const joiner = new DOMJoiningTransformer(
+      const joiner = DOMJoiningTransformer.create(
         document.createDocumentFragment(),
         {document, exposeDocuments: true}
       );
@@ -17,7 +17,7 @@ describe('DOMJoiningTransformer complete coverage', () => {
         joiner.element('svg:circle', {svg: 'http://www.w3.org/2000/svg'});
       });
 
-      const docs = /** @type {XMLDocument[]} */ (joiner.get());
+      const docs = joiner.get();
       expect(docs).to.have.lengthOf(1);
       const doc = docs[0];
       expect(doc.documentElement.nodeName).to.equal('svg:svg');
@@ -26,7 +26,7 @@ describe('DOMJoiningTransformer complete coverage', () => {
     it('handles unprefixed element names with xmlns', () => {
       const {window} = new JSDOM('<!doctype html><html><body></body></html>');
       const {document} = window;
-      const joiner = new DOMJoiningTransformer(
+      const joiner = DOMJoiningTransformer.create(
         document.createDocumentFragment(),
         {document, exposeDocuments: true}
       );
@@ -36,7 +36,7 @@ describe('DOMJoiningTransformer complete coverage', () => {
         joiner.element('body');
       });
 
-      const docs = /** @type {XMLDocument[]} */ (joiner.get());
+      const docs = joiner.get();
       const doc = docs[0];
       expect(doc.documentElement.nodeName).to.equal('html');
       expect(doc.documentElement.namespaceURI).to.equal(
@@ -47,7 +47,7 @@ describe('DOMJoiningTransformer complete coverage', () => {
     it('creates document without namespace when no xmlns provided', () => {
       const {window} = new JSDOM('<!doctype html><html><body></body></html>');
       const {document} = window;
-      const joiner = new DOMJoiningTransformer(
+      const joiner = DOMJoiningTransformer.create(
         document.createDocumentFragment(),
         {document, exposeDocuments: true}
       );
@@ -57,7 +57,7 @@ describe('DOMJoiningTransformer complete coverage', () => {
         joiner.text('Content');
       });
 
-      const docs = /** @type {XMLDocument[]} */ (joiner.get());
+      const docs = joiner.get();
       const doc = docs[0];
       expect(doc.documentElement.nodeName).to.equal('root');
       expect(doc.documentElement.getAttribute('id')).to.equal('test');
@@ -75,7 +75,7 @@ describe('DOMJoiningTransformer complete coverage', () => {
             '<!doctype html><html><body></body></html>'
           );
           const {document} = window;
-          const joiner = new DOMJoiningTransformer(
+          const joiner = DOMJoiningTransformer.create(
             document.createDocumentFragment(),
             {document, exposeDocuments: true}
           );
@@ -89,7 +89,7 @@ describe('DOMJoiningTransformer complete coverage', () => {
             joiner.text('HTML with XML declaration');
           });
 
-          const docs = /** @type {XMLDocument[]} */ (joiner.get());
+          const docs = joiner.get();
           const doc = docs[0];
           // Check for processing instruction
           const {firstChild} = doc;
@@ -104,7 +104,7 @@ describe('DOMJoiningTransformer complete coverage', () => {
           '<!doctype html><html><body></body></html>'
         );
         const {document} = window;
-        const joiner = new DOMJoiningTransformer(
+        const joiner = DOMJoiningTransformer.create(
           document.createDocumentFragment(),
           {document, exposeDocuments: true}
         );
@@ -119,7 +119,7 @@ describe('DOMJoiningTransformer complete coverage', () => {
           joiner.text('Standalone');
         });
 
-        const docs = /** @type {XMLDocument[]} */ (joiner.get());
+        const docs = joiner.get();
         const doc = docs[0];
         const {firstChild} = doc;
         expect(firstChild?.nodeType).to.equal(7);
@@ -132,7 +132,7 @@ describe('DOMJoiningTransformer complete coverage', () => {
     it('accepts existing element as root with output config (line 216)', () => {
       const {window} = new JSDOM('<!doctype html><html><body></body></html>');
       const {document} = window;
-      const joiner = new DOMJoiningTransformer(
+      const joiner = DOMJoiningTransformer.create(
         document.createDocumentFragment(),
         {document, exposeDocuments: true}
       );
@@ -146,7 +146,7 @@ describe('DOMJoiningTransformer complete coverage', () => {
       // Attributes passed in second parameter ARE applied to the new doc root
       joiner.element(existingEl, {id: 'main', class: 'root-element'});
 
-      const docs = /** @type {XMLDocument[]} */ (joiner.get());
+      const docs = joiner.get();
       expect(docs).to.have.lengthOf(1);
       const doc = docs[0];
       // When an element is passed as root, its localName is used
@@ -161,7 +161,7 @@ describe('DOMJoiningTransformer complete coverage', () => {
     it('accepts existing element instead of element name', () => {
       const {window} = new JSDOM('<!doctype html><html><body></body></html>');
       const {document} = window;
-      const joiner = new DOMJoiningTransformer(
+      const joiner = DOMJoiningTransformer.create(
         document.createDocumentFragment(),
         {document}
       );
@@ -174,7 +174,7 @@ describe('DOMJoiningTransformer complete coverage', () => {
       // Pass element as first argument
       joiner.element(existingEl, {class: 'added'});
 
-      const result = /** @type {Element} */ (joiner.get());
+      const result = joiner.get();
       expect(result.childNodes).to.have.lengthOf(1);
       const el = /** @type {HTMLElement} */ (result.childNodes[0]);
       expect(el.nodeName).to.equal('DIV');
@@ -186,7 +186,7 @@ describe('DOMJoiningTransformer complete coverage', () => {
     it('works with element object in callback form', () => {
       const {window} = new JSDOM('<!doctype html><html><body></body></html>');
       const {document} = window;
-      const joiner = new DOMJoiningTransformer(
+      const joiner = DOMJoiningTransformer.create(
         document.createDocumentFragment(),
         {document}
       );
@@ -198,7 +198,7 @@ describe('DOMJoiningTransformer complete coverage', () => {
         });
       });
 
-      const result = /** @type {Element} */ (joiner.get());
+      const result = joiner.get();
       const section = result.childNodes[0];
       expect(section.nodeName).to.equal('SECTION');
       expect(/** @type {Element} */ (
@@ -213,7 +213,7 @@ describe('DOMJoiningTransformer complete coverage', () => {
     it('uses cfg.method when output() has no method', () => {
       const {window} = new JSDOM('<!doctype html><html><body></body></html>');
       const {document} = window;
-      const joiner = new DOMJoiningTransformer(
+      const joiner = DOMJoiningTransformer.create(
         document.createDocumentFragment(),
         {document}
       );
@@ -232,7 +232,7 @@ describe('DOMJoiningTransformer complete coverage', () => {
     it('uses cfg.method when no output() is called', () => {
       const {window} = new JSDOM('<!doctype html><html><body></body></html>');
       const {document} = window;
-      const joiner = new DOMJoiningTransformer(
+      const joiner = DOMJoiningTransformer.create(
         document.createDocumentFragment(),
         {document}
       );
@@ -250,7 +250,7 @@ describe('DOMJoiningTransformer complete coverage', () => {
     it('prefers output().method over cfg.method', () => {
       const {window} = new JSDOM('<!doctype html><html><body></body></html>');
       const {document} = window;
-      const joiner = new DOMJoiningTransformer(
+      const joiner = DOMJoiningTransformer.create(
         document.createDocumentFragment(),
         {document}
       );

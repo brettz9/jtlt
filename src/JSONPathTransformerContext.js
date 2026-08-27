@@ -71,7 +71,8 @@ const escapeRegexReplacement = (string) => {
  *   JSONPath
  * @property {(path: string) => number} [specificityPriorityResolver]
  *   Priority resolver function
- * @property {import('./index.js').JSONPathTemplateObject<T>[]} [templates]
+ * @property {import('./index.js').JSONPathTemplateObject<T>[]|
+ *   import('./index.js').JSONPathTemplateArray<T>[]} [templates]
  */
 
 /**

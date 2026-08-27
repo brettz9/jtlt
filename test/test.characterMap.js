@@ -8,7 +8,7 @@ import {
 
 describe('characterMap - StringJoiningTransformer', () => {
   it('replaces characters in text() when useCharacterMaps is set', () => {
-    const joiner = new StringJoiningTransformer('');
+    const joiner = StringJoiningTransformer.create('');
     joiner.characterMap('special-chars', [
       {character: '©', string: '(C)'},
       {character: '®', string: '(R)'}
@@ -24,7 +24,7 @@ describe('characterMap - StringJoiningTransformer', () => {
   });
 
   it('replaces characters in attribute() when useCharacterMaps is set', () => {
-    const joiner = new StringJoiningTransformer('');
+    const joiner = StringJoiningTransformer.create('');
     joiner.characterMap('special-chars', [
       {character: '©', string: '(C)'},
       {character: '®', string: '(R)'}
@@ -39,7 +39,7 @@ describe('characterMap - StringJoiningTransformer', () => {
   });
 
   it('replaces characters in element() attributes object', () => {
-    const joiner = new StringJoiningTransformer('');
+    const joiner = StringJoiningTransformer.create('');
     joiner.characterMap('euro', [
       {character: '€', string: 'EUR'}
     ]);
@@ -53,7 +53,7 @@ describe('characterMap - StringJoiningTransformer', () => {
   });
 
   it('applies multiple character maps in order', () => {
-    const joiner = new StringJoiningTransformer('');
+    const joiner = StringJoiningTransformer.create('');
     joiner.characterMap('symbols', [
       {character: '©', string: '(C)'}
     ]);
@@ -70,7 +70,7 @@ describe('characterMap - StringJoiningTransformer', () => {
   });
 
   it('does not replace characters when useCharacterMaps is not set', () => {
-    const joiner = new StringJoiningTransformer('');
+    const joiner = StringJoiningTransformer.create('');
     joiner.characterMap('special-chars', [
       {character: '©', string: '(C)'}
     ]);
@@ -85,7 +85,7 @@ describe('characterMap - StringJoiningTransformer', () => {
   it(
     'does not replace characters when output() without useCharacterMaps',
     () => {
-      const joiner = new StringJoiningTransformer('');
+      const joiner = StringJoiningTransformer.create('');
       joiner.characterMap('special-chars', [
         {character: '©', string: '(C)'}
       ]);
@@ -99,7 +99,7 @@ describe('characterMap - StringJoiningTransformer', () => {
   );
 
   it('handles empty character map array', () => {
-    const joiner = new StringJoiningTransformer('');
+    const joiner = StringJoiningTransformer.create('');
     joiner.characterMap('empty', []);
     joiner.output({useCharacterMaps: ['empty']});
     joiner.element('div', {}, [], () => {
@@ -110,7 +110,7 @@ describe('characterMap - StringJoiningTransformer', () => {
   });
 
   it('replaces all occurrences of a character', () => {
-    const joiner = new StringJoiningTransformer('');
+    const joiner = StringJoiningTransformer.create('');
     joiner.characterMap('replace-a', [
       {character: 'a', string: 'X'}
     ]);
@@ -125,7 +125,7 @@ describe('characterMap - StringJoiningTransformer', () => {
   it(
     'character map works with special XML characters after escaping',
     () => {
-      const joiner = new StringJoiningTransformer('');
+      const joiner = StringJoiningTransformer.create('');
       joiner.characterMap('custom', [
         {character: 'X', string: '<tag>'}
       ]);
@@ -141,7 +141,7 @@ describe('characterMap - StringJoiningTransformer', () => {
   );
 
   it('applies character maps with dataset attributes', () => {
-    const joiner = new StringJoiningTransformer('');
+    const joiner = StringJoiningTransformer.create('');
     joiner.characterMap('special', [
       {character: '©', string: '(C)'}
     ]);
@@ -154,7 +154,7 @@ describe('characterMap - StringJoiningTransformer', () => {
   });
 
   it('applies character maps with ordered attributes ($a)', () => {
-    const joiner = new StringJoiningTransformer('');
+    const joiner = StringJoiningTransformer.create('');
     joiner.characterMap('special', [
       {character: '©', string: '(C)'}
     ]);
@@ -171,7 +171,7 @@ describe('characterMap - DOMJoiningTransformer', () => {
   it('replaces characters in text() when useCharacterMaps is set', () => {
     const {window} = new JSDOM('<!doctype html><html><body></body></html>');
     const {document} = window;
-    const joiner = new DOMJoiningTransformer(
+    const joiner = DOMJoiningTransformer.create(
       document.createDocumentFragment(),
       {document}
     );
@@ -184,7 +184,7 @@ describe('characterMap - DOMJoiningTransformer', () => {
       joiner.text('Copyright \u{A9} 2024, Registered \u{AE}');
     });
     // With output() and root element, result goes to _docs
-    const doc = /** @type {XMLDocument} */ (joiner._docs[0]);
+    const doc = joiner._docs[0];
     const root = doc.documentElement;
     expect(root.textContent).to.include('Copyright (C) 2024, Registered (R)');
     expect(root.textContent).to.not.include('\u{A9}');
@@ -194,7 +194,7 @@ describe('characterMap - DOMJoiningTransformer', () => {
   it('replaces characters in attribute() when useCharacterMaps is set', () => {
     const {window} = new JSDOM('<!doctype html><html><body></body></html>');
     const {document} = window;
-    const joiner = new DOMJoiningTransformer(
+    const joiner = DOMJoiningTransformer.create(
       document.createDocumentFragment(),
       {document}
     );
@@ -205,7 +205,7 @@ describe('characterMap - DOMJoiningTransformer', () => {
     joiner.element('div', {}, () => {
       joiner.attribute('title', 'Copyright \u{A9}');
     });
-    const doc = /** @type {XMLDocument} */ (joiner._docs[0]);
+    const doc = joiner._docs[0];
     const div = doc.documentElement;
     expect(div.getAttribute('title')).to.equal('Copyright (C)');
   });
@@ -213,7 +213,7 @@ describe('characterMap - DOMJoiningTransformer', () => {
   it('replaces characters in element() attributes object', () => {
     const {window} = new JSDOM('<!doctype html><html><body></body></html>');
     const {document} = window;
-    const joiner = new DOMJoiningTransformer(
+    const joiner = DOMJoiningTransformer.create(
       document.createDocumentFragment(),
       {document}
     );
@@ -224,7 +224,7 @@ describe('characterMap - DOMJoiningTransformer', () => {
     joiner.element('div', {price: 'Price: 100\u{20AC}'}, () => {
       joiner.text('Item costs 100\u{20AC}');
     });
-    const doc = /** @type {XMLDocument} */ (joiner._docs[0]);
+    const doc = joiner._docs[0];
     const div = doc.documentElement;
     expect(div.getAttribute('price')).to.equal('Price: 100EUR');
     expect(div.textContent).to.equal('Item costs 100EUR');
@@ -233,7 +233,7 @@ describe('characterMap - DOMJoiningTransformer', () => {
   it('applies multiple character maps in order', () => {
     const {window} = new JSDOM('<!doctype html><html><body></body></html>');
     const {document} = window;
-    const joiner = new DOMJoiningTransformer(
+    const joiner = DOMJoiningTransformer.create(
       document.createDocumentFragment(),
       {document}
     );
@@ -248,14 +248,14 @@ describe('characterMap - DOMJoiningTransformer', () => {
     joiner.element('div', {}, () => {
       joiner.text('\u{A9} \u{AE} \u{2122}');
     });
-    const doc = /** @type {XMLDocument} */ (joiner._docs[0]);
+    const doc = joiner._docs[0];
     expect(doc.documentElement.textContent).to.equal('(C) (R) (TM)');
   });
 
   it('does not replace characters when useCharacterMaps is not set', () => {
     const {window} = new JSDOM('<!doctype html><html><body></body></html>');
     const {document} = window;
-    const joiner = new DOMJoiningTransformer(
+    const joiner = DOMJoiningTransformer.create(
       document.createDocumentFragment(),
       {document}
     );
@@ -266,15 +266,14 @@ describe('characterMap - DOMJoiningTransformer', () => {
     joiner.element('div', {}, () => {
       joiner.text('Copyright \u{A9}');
     });
-    const result = joiner.get();
-    const frag = /** @type {DocumentFragment} */ (result);
+    const frag = joiner.get();
     expect(frag.textContent).to.include('Copyright \u{A9}');
   });
 
   it('handles empty character map array', () => {
     const {window} = new JSDOM('<!doctype html><html><body></body></html>');
     const {document} = window;
-    const joiner = new DOMJoiningTransformer(
+    const joiner = DOMJoiningTransformer.create(
       document.createDocumentFragment(),
       {document}
     );
@@ -283,14 +282,14 @@ describe('characterMap - DOMJoiningTransformer', () => {
     joiner.element('div', {}, () => {
       joiner.text('No changes');
     });
-    const doc = /** @type {XMLDocument} */ (joiner._docs[0]);
+    const doc = joiner._docs[0];
     expect(doc.documentElement.textContent).to.equal('No changes');
   });
 
   it('replaces all occurrences of a character', () => {
     const {window} = new JSDOM('<!doctype html><html><body></body></html>');
     const {document} = window;
-    const joiner = new DOMJoiningTransformer(
+    const joiner = DOMJoiningTransformer.create(
       document.createDocumentFragment(),
       {document}
     );
@@ -301,14 +300,14 @@ describe('characterMap - DOMJoiningTransformer', () => {
     joiner.element('div', {}, () => {
       joiner.text('banana');
     });
-    const doc = /** @type {XMLDocument} */ (joiner._docs[0]);
+    const doc = joiner._docs[0];
     expect(doc.documentElement.textContent).to.equal('bXnXnX');
   });
 });
 
 describe('characterMap - JSONJoiningTransformer', () => {
   it('replaces characters in text() when useCharacterMaps is set', () => {
-    const joiner = new JSONJoiningTransformer([]);
+    const joiner = JSONJoiningTransformer.create([]);
     joiner.characterMap('special-chars', [
       {character: '©', string: '(C)'},
       {character: '®', string: '(R)'}
@@ -326,7 +325,7 @@ describe('characterMap - JSONJoiningTransformer', () => {
   });
 
   it('replaces characters in element() attributes object', () => {
-    const joiner = new JSONJoiningTransformer([]);
+    const joiner = JSONJoiningTransformer.create([]);
     joiner.characterMap('euro', [
       {character: '€', string: 'EUR'}
     ]);
@@ -343,7 +342,7 @@ describe('characterMap - JSONJoiningTransformer', () => {
   });
 
   it('applies multiple character maps in order', () => {
-    const joiner = new JSONJoiningTransformer([]);
+    const joiner = JSONJoiningTransformer.create([]);
     joiner.characterMap('symbols', [
       {character: '©', string: '(C)'}
     ]);
@@ -361,7 +360,7 @@ describe('characterMap - JSONJoiningTransformer', () => {
   });
 
   it('does not replace characters when useCharacterMaps is not set', () => {
-    const joiner = new JSONJoiningTransformer([]);
+    const joiner = JSONJoiningTransformer.create([]);
     joiner.characterMap('special-chars', [
       {character: '©', string: '(C)'}
     ]);
@@ -375,7 +374,7 @@ describe('characterMap - JSONJoiningTransformer', () => {
   });
 
   it('handles empty character map array', () => {
-    const joiner = new JSONJoiningTransformer([]);
+    const joiner = JSONJoiningTransformer.create([]);
     joiner.characterMap('empty', []);
     joiner.output({useCharacterMaps: ['empty']});
     joiner.element('div', {}, [], () => {
@@ -387,7 +386,7 @@ describe('characterMap - JSONJoiningTransformer', () => {
   });
 
   it('replaces all occurrences of a character', () => {
-    const joiner = new JSONJoiningTransformer([]);
+    const joiner = JSONJoiningTransformer.create([]);
     joiner.characterMap('replace-a', [
       {character: 'a', string: 'X'}
     ]);
@@ -401,7 +400,7 @@ describe('characterMap - JSONJoiningTransformer', () => {
   });
 
   it('applies character maps with dataset attributes', () => {
-    const joiner = new JSONJoiningTransformer([]);
+    const joiner = JSONJoiningTransformer.create([]);
     joiner.characterMap('special', [
       {character: '©', string: '(C)'}
     ]);
@@ -416,7 +415,7 @@ describe('characterMap - JSONJoiningTransformer', () => {
   });
 
   it('applies character maps with ordered attributes ($a)', () => {
-    const joiner = new JSONJoiningTransformer([]);
+    const joiner = JSONJoiningTransformer.create([]);
     joiner.characterMap('special', [
       {character: '©', string: '(C)'}
     ]);
@@ -431,7 +430,7 @@ describe('characterMap - JSONJoiningTransformer', () => {
   });
 
   it('character map with childNodes array containing strings', () => {
-    const joiner = new JSONJoiningTransformer([]);
+    const joiner = JSONJoiningTransformer.create([]);
     joiner.characterMap('special', [
       {character: '©', string: '(C)'}
     ]);

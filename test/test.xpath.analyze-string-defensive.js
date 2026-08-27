@@ -23,9 +23,9 @@ describe('XPathTransformerContext analyzeString defensive code', () => {
     // Lookahead (?=.) doesn't match empty string (passes test(''))
     // but creates zero-length matches in actual strings
     const {document} = buildDom('<root>abc</root>');
-    const joiner = new StringJoiningTransformer('');
-    // eslint-disable-next-line @stylistic/max-len -- Long
-    const templates = /** @type {import('../src/index.js').XPathTemplateObject<any>[]} */ ([{
+    const joiner = StringJoiningTransformer.create('');
+    /** @type {import('../src/index.js').XPathTemplateObject<any>[]} */
+    const templates = [{
       path: '/root',
       template () {
         const text = this._contextNode.textContent || '';
@@ -39,7 +39,7 @@ describe('XPathTransformerContext analyzeString defensive code', () => {
           }
         });
       }
-    }]);
+    }];
     const transformer = new XPathTransformer({
       data: document,
       templates,
@@ -52,9 +52,10 @@ describe('XPathTransformerContext analyzeString defensive code', () => {
 
   it('covers string regex with g flag already present (line 1162)', () => {
     const {document} = buildDom('<root>a1b2c3</root>');
-    const joiner = new StringJoiningTransformer('');
-    // eslint-disable-next-line @stylistic/max-len -- Long
-    const templates = /** @type {import('../src/index.js').XPathTemplateObject<any>[]} */ ([{
+    const joiner = StringJoiningTransformer.create('');
+
+    /** @type {import('../src/index.js').XPathTemplateObject<any>[]} */
+    const templates = [{
       path: '/root',
       template () {
         const text = this._contextNode.textContent || '';
@@ -69,7 +70,7 @@ describe('XPathTransformerContext analyzeString defensive code', () => {
           }
         });
       }
-    }]);
+    }];
     const transformer = new XPathTransformer({
       data: document,
       templates,
@@ -81,9 +82,10 @@ describe('XPathTransformerContext analyzeString defensive code', () => {
 
   it('covers missing matchingSubstring callback (line 1207)', () => {
     const {document} = buildDom('<root>a1b2</root>');
-    const joiner = new StringJoiningTransformer('');
-    // eslint-disable-next-line @stylistic/max-len -- Long
-    const templates = /** @type {import('../src/index.js').XPathTemplateObject<any>[]} */ ([{
+    const joiner = StringJoiningTransformer.create('');
+
+    /** @type {import('../src/index.js').XPathTemplateObject<any>[]} */
+    const templates = [{
       path: '/root',
       template () {
         const text = this._contextNode.textContent || '';
@@ -94,7 +96,7 @@ describe('XPathTransformerContext analyzeString defensive code', () => {
           }
         });
       }
-    }]);
+    }];
     const transformer = new XPathTransformer({
       data: document,
       templates,
@@ -106,9 +108,9 @@ describe('XPathTransformerContext analyzeString defensive code', () => {
 
   it('covers missing nonMatchingSubstring callback (line 1209)', () => {
     const {document} = buildDom('<root>a1b2</root>');
-    const joiner = new StringJoiningTransformer('');
-    // eslint-disable-next-line @stylistic/max-len -- Long
-    const templates = /** @type {import('../src/index.js').XPathTemplateObject<any>[]} */ ([{
+    const joiner = StringJoiningTransformer.create('');
+    /** @type {import('../src/index.js').XPathTemplateObject<any>[]} */
+    const templates = [{
       path: '/root',
       template () {
         const text = this._contextNode.textContent || '';
@@ -119,7 +121,7 @@ describe('XPathTransformerContext analyzeString defensive code', () => {
           }
         });
       }
-    }]);
+    }];
     const transformer = new XPathTransformer({
       data: document,
       templates,
@@ -131,9 +133,10 @@ describe('XPathTransformerContext analyzeString defensive code', () => {
 
   it('covers optional group fallback (line 1197)', () => {
     const {document} = buildDom('<root>test  space</root>');
-    const joiner = new StringJoiningTransformer('');
-    // eslint-disable-next-line @stylistic/max-len -- Long
-    const templates = /** @type {import('../src/index.js').XPathTemplateObject<any>[]} */ ([{
+    const joiner = StringJoiningTransformer.create('');
+
+    /** @type {import('../src/index.js').XPathTemplateObject<any>[]} */
+    const templates = [{
       path: '/root',
       template () {
         const text = this._contextNode.textContent || '';
@@ -147,7 +150,7 @@ describe('XPathTransformerContext analyzeString defensive code', () => {
           }
         });
       }
-    }]);
+    }];
     const transformer = new XPathTransformer({
       data: document,
       templates,

@@ -7,7 +7,7 @@ describe('JSONPathTransformerContext _calculatePosition with count', () => {
     const data = {items: [1, 2, 3, 4]};
     const ctx = new JSONPathTransformerContext({
       data,
-      joiningTransformer: new JSONJoiningTransformer(),
+      joiningTransformer: JSONJoiningTransformer.create(),
       templates: []
     }, []);
     ctx.iterationState = {index: 2};
@@ -19,7 +19,7 @@ describe('JSONPathTransformerContext _calculatePosition with count', () => {
     const data = {items: []};
     const ctx = new JSONPathTransformerContext({
       data,
-      joiningTransformer: new JSONJoiningTransformer(),
+      joiningTransformer: JSONJoiningTransformer.create(),
       templates: []
     }, []);
     ctx.iterationState = {index: 0};
@@ -31,7 +31,7 @@ describe('JSONPathTransformerContext _calculatePosition with count', () => {
     const data = {items: [1, 2, 3]};
     const ctx = new JSONPathTransformerContext({
       data,
-      joiningTransformer: new JSONJoiningTransformer(),
+      joiningTransformer: JSONJoiningTransformer.create(),
       templates: []
     }, []);
     ctx.iterationState = {index: 1};
@@ -43,7 +43,7 @@ describe('JSONPathTransformerContext _calculatePosition with count', () => {
     const data = {items: [1, 2, 3]};
     const ctx = new JSONPathTransformerContext({
       data,
-      joiningTransformer: new JSONJoiningTransformer(),
+      joiningTransformer: JSONJoiningTransformer.create(),
       templates: []
     }, []);
     expect(ctx.calculatePosition()).to.equal(1);

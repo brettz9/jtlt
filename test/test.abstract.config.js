@@ -8,7 +8,7 @@ describe('AbstractJoiningTransformer config() without callback', () => {
   it('persists config when no callback supplied', () => {
     const {window} = new JSDOM('<!doctype html><html><body></body></html>');
     const {document} = window;
-    const joiner = new DOMJoiningTransformer(
+    const joiner = DOMJoiningTransformer.create(
       document.createDocumentFragment(),
       {document}
     );

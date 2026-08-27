@@ -16,7 +16,7 @@ function runTest (done, expected, templates, replace) {
      */ ({
       autostart: true,
       ajaxData: import.meta.dirname + '/data/jsonpath-sample.json',
-      outputType: /** @type {const} */ ('string'), // string is default
+      outputType: 'string', // string is default
       templates: [
         {
           // We could instead try a root template which applied on

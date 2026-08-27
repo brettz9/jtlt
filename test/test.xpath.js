@@ -23,7 +23,7 @@ function buildDom () {
 describe('XPathTransformer basics', () => {
   it('renders simple elements using templates (2)', () => {
     const {document} = buildDom();
-    const joiner = new StringJoiningTransformer('');
+    const joiner = StringJoiningTransformer.create('');
     const templates =
       /**
        * @type {import('../src/index.js').XPathTemplateArray<"string">}
@@ -64,7 +64,7 @@ describe('XPathTransformer basics', () => {
 
   it('renders simple elements using templates (3.1)', () => {
     const {document} = buildDom();
-    const joiner = new StringJoiningTransformer('');
+    const joiner = StringJoiningTransformer.create('');
     const templates =
       /**
        * @type {import('../src/index.js').XPathTemplateArray<"string">}
@@ -105,7 +105,7 @@ describe('XPathTransformer basics', () => {
 
   it('throws on equal-priority root templates when configured', () => {
     const {document} = buildDom();
-    const joiner = new StringJoiningTransformer('');
+    const joiner = StringJoiningTransformer.create('');
     const templates = [
       {name: 'root1', path: '/', template () { /* no-op */ }},
       {name: 'root2', path: '/', template () { /* no-op */ }}
@@ -125,7 +125,7 @@ describe('XPathTransformer basics', () => {
 describe('XPathTransformerContext core methods', () => {
   it('supports get/forEach/valueOf/variable/key', () => {
     const {document} = buildDom();
-    const joiner = new StringJoiningTransformer('');
+    const joiner = StringJoiningTransformer.create('');
     const ctx = new XPathTransformerContext({
       data: document,
       joiningTransformer: joiner
@@ -169,7 +169,7 @@ describe('XPathTransformerContext core methods', () => {
 describe('XPathTransformer basics (version 1)', () => {
   it('renders items via native XPathEvaluator', () => {
     const {document} = buildDom();
-    const joiner = new StringJoiningTransformer('');
+    const joiner = StringJoiningTransformer.create('');
     const templates =
       /**
        * @type {import('../src/index.js').XPathTemplateArray<"string">}

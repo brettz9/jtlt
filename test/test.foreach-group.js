@@ -37,7 +37,7 @@ describe('forEachGroup() function', function () {
             }
           }
         ],
-        joiningTransformer: new StringJoiningTransformer(''),
+        joiningTransformer: StringJoiningTransformer.create(''),
         data
       }).transform();
 
@@ -64,7 +64,7 @@ describe('forEachGroup() function', function () {
           {
             path: '$',
             template () {
-              /** @type {Array<{key: any, count: number}>} */
+              /** @type {{key: any, count: number}[]} */
               const groups = [];
               this.forEachGroup(
                 '$.items[*]',
@@ -79,7 +79,7 @@ describe('forEachGroup() function', function () {
             }
           }
         ],
-        joiningTransformer: new StringJoiningTransformer(''),
+        joiningTransformer: StringJoiningTransformer.create(''),
         data
       }).transform();
 
@@ -124,7 +124,7 @@ describe('forEachGroup() function', function () {
             }
           }
         ],
-        joiningTransformer: new StringJoiningTransformer(''),
+        joiningTransformer: StringJoiningTransformer.create(''),
         data
       }).transform();
 
@@ -167,7 +167,7 @@ describe('forEachGroup() function', function () {
             }
           }
         ],
-        joiningTransformer: new StringJoiningTransformer(''),
+        joiningTransformer: StringJoiningTransformer.create(''),
         data
       }).transform();
 
@@ -214,7 +214,7 @@ describe('forEachGroup() function', function () {
             }
           }
         ],
-        joiningTransformer: new StringJoiningTransformer(''),
+        joiningTransformer: StringJoiningTransformer.create(''),
         data
       }).transform();
 
@@ -259,7 +259,7 @@ describe('forEachGroup() function', function () {
             }
           }
         ],
-        joiningTransformer: new StringJoiningTransformer(''),
+        joiningTransformer: StringJoiningTransformer.create(''),
         data: doc,
         xpathVersion: 2
       }).transform();
@@ -309,7 +309,7 @@ describe('forEachGroup() function', function () {
             }
           }
         ],
-        joiningTransformer: new StringJoiningTransformer(''),
+        joiningTransformer: StringJoiningTransformer.create(''),
         data: doc,
         xpathVersion: 2
       }).transform();
@@ -357,7 +357,7 @@ describe('forEachGroup() function', function () {
             }
           }
         ],
-        joiningTransformer: new StringJoiningTransformer(''),
+        joiningTransformer: StringJoiningTransformer.create(''),
         data: doc,
         xpathVersion: 2
       }).transform();
@@ -404,7 +404,7 @@ describe('forEachGroup() function', function () {
             }
           }
         ],
-        joiningTransformer: new StringJoiningTransformer(''),
+        joiningTransformer: StringJoiningTransformer.create(''),
         data: doc,
         xpathVersion: 2
       }).transform();
@@ -452,7 +452,7 @@ describe('forEachGroup() function', function () {
             }
           }
         ],
-        joiningTransformer: new StringJoiningTransformer(''),
+        joiningTransformer: StringJoiningTransformer.create(''),
         data: doc,
         xpathVersion: 2
       }).transform();
@@ -501,7 +501,7 @@ describe('forEachGroup() function', function () {
             }
           }
         ],
-        joiningTransformer: new StringJoiningTransformer(''),
+        joiningTransformer: StringJoiningTransformer.create(''),
         data
       }).transform();
 
@@ -551,7 +551,7 @@ describe('forEachGroup() function', function () {
             }
           }
         ],
-        joiningTransformer: new StringJoiningTransformer(''),
+        joiningTransformer: StringJoiningTransformer.create(''),
         data
       }).transform();
 
@@ -604,7 +604,7 @@ describe('forEachGroup() function', function () {
             }
           }
         ],
-        joiningTransformer: new StringJoiningTransformer(''),
+        joiningTransformer: StringJoiningTransformer.create(''),
         data
       }).transform();
 
@@ -654,7 +654,7 @@ describe('forEachGroup() function', function () {
               }
             }
           ],
-          joiningTransformer: new StringJoiningTransformer(''),
+          joiningTransformer: StringJoiningTransformer.create(''),
           data
         }).transform();
 
@@ -703,7 +703,7 @@ describe('forEachGroup() function', function () {
               }
             }
           ],
-          joiningTransformer: new StringJoiningTransformer(''),
+          joiningTransformer: StringJoiningTransformer.create(''),
           data: doc,
           xpathVersion: 2
         }).transform();
@@ -747,7 +747,7 @@ describe('forEachGroup() function', function () {
             }
           }
         ],
-        joiningTransformer: new StringJoiningTransformer(''),
+        joiningTransformer: StringJoiningTransformer.create(''),
         data: doc,
         xpathVersion: 2
       }).transform();
@@ -789,7 +789,7 @@ describe('forEachGroup() function', function () {
             }
           }
         ],
-        joiningTransformer: new StringJoiningTransformer(''),
+        joiningTransformer: StringJoiningTransformer.create(''),
         data: doc,
         xpathVersion: 2
       }).transform();
@@ -835,7 +835,7 @@ describe('forEachGroup() function', function () {
             }
           }
         ],
-        joiningTransformer: new StringJoiningTransformer(''),
+        joiningTransformer: StringJoiningTransformer.create(''),
         data
       }).transform();
 
@@ -888,7 +888,7 @@ describe('forEachGroup() function', function () {
             }
           }
         ],
-        joiningTransformer: new StringJoiningTransformer(''),
+        joiningTransformer: StringJoiningTransformer.create(''),
         data
       }).transform();
 
@@ -937,7 +937,7 @@ describe('forEachGroup() function', function () {
             }
           }
         ],
-        joiningTransformer: new StringJoiningTransformer(''),
+        joiningTransformer: StringJoiningTransformer.create(''),
         data
       }).transform();
 
@@ -988,7 +988,7 @@ describe('forEachGroup() function', function () {
             }
           }
         ],
-        joiningTransformer: new StringJoiningTransformer(''),
+        joiningTransformer: StringJoiningTransformer.create(''),
         data: doc,
         xpathVersion: 2
       }).transform();
@@ -1037,7 +1037,7 @@ describe('forEachGroup() function', function () {
             }
           }
         ],
-        joiningTransformer: new StringJoiningTransformer(''),
+        joiningTransformer: StringJoiningTransformer.create(''),
         data: doc,
         xpathVersion: 2
       }).transform();
@@ -1082,7 +1082,7 @@ describe('forEachGroup() function', function () {
             }
           }
         ],
-        joiningTransformer: new StringJoiningTransformer(''),
+        joiningTransformer: StringJoiningTransformer.create(''),
         data
       }).transform();
 
@@ -1122,7 +1122,7 @@ describe('forEachGroup() function', function () {
             }
           }
         ],
-        joiningTransformer: new StringJoiningTransformer(''),
+        joiningTransformer: StringJoiningTransformer.create(''),
         data
       }).transform();
 
@@ -1159,7 +1159,7 @@ describe('forEachGroup() function', function () {
             }
           }
         ],
-        joiningTransformer: new StringJoiningTransformer(''),
+        joiningTransformer: StringJoiningTransformer.create(''),
         data
       }).transform();
 
@@ -1203,7 +1203,7 @@ describe('forEachGroup() function', function () {
             }
           }
         ],
-        joiningTransformer: new StringJoiningTransformer(''),
+        joiningTransformer: StringJoiningTransformer.create(''),
         data: doc,
         xpathVersion: 2
       }).transform();
@@ -1247,7 +1247,7 @@ describe('forEachGroup() function', function () {
             }
           }
         ],
-        joiningTransformer: new StringJoiningTransformer(''),
+        joiningTransformer: StringJoiningTransformer.create(''),
         data: doc,
         xpathVersion: 2
       }).transform();
@@ -1289,7 +1289,7 @@ describe('forEachGroup() function', function () {
             }
           }
         ],
-        joiningTransformer: new StringJoiningTransformer(''),
+        joiningTransformer: StringJoiningTransformer.create(''),
         data: doc,
         xpathVersion: 2
       }).transform();
@@ -1332,7 +1332,7 @@ describe('forEachGroup() function', function () {
             }
           }
         ],
-        joiningTransformer: new StringJoiningTransformer(''),
+        joiningTransformer: StringJoiningTransformer.create(''),
         data: doc,
         xpathVersion: 2
       }).transform();
@@ -1375,7 +1375,7 @@ describe('forEachGroup() function', function () {
             }
           }
         ],
-        joiningTransformer: new StringJoiningTransformer(''),
+        joiningTransformer: StringJoiningTransformer.create(''),
         data: doc,
         xpathVersion: 2
       }).transform();
@@ -1419,7 +1419,7 @@ describe('forEachGroup() function', function () {
             }
           }
         ],
-        joiningTransformer: new StringJoiningTransformer(''),
+        joiningTransformer: StringJoiningTransformer.create(''),
         data
       }).transform();
 
@@ -1460,7 +1460,7 @@ describe('forEachGroup() function', function () {
             }
           }
         ],
-        joiningTransformer: new StringJoiningTransformer(''),
+        joiningTransformer: StringJoiningTransformer.create(''),
         data
       }).transform();
 
@@ -1508,7 +1508,7 @@ describe('forEachGroup() function', function () {
             }
           }
         ],
-        joiningTransformer: new StringJoiningTransformer(''),
+        joiningTransformer: StringJoiningTransformer.create(''),
         data
       }).transform();
 
@@ -1549,7 +1549,7 @@ describe('forEachGroup() function', function () {
             }
           }
         ],
-        joiningTransformer: new StringJoiningTransformer(''),
+        joiningTransformer: StringJoiningTransformer.create(''),
         data
       }).transform();
 
@@ -1591,7 +1591,7 @@ describe('forEachGroup() function', function () {
               }
             }
           ],
-          joiningTransformer: new StringJoiningTransformer(''),
+          joiningTransformer: StringJoiningTransformer.create(''),
           data
         }).transform();
 
@@ -1637,7 +1637,7 @@ describe('forEachGroup() function', function () {
             }
           }
         ],
-        joiningTransformer: new StringJoiningTransformer(''),
+        joiningTransformer: StringJoiningTransformer.create(''),
         data
       }).transform();
 
@@ -1680,7 +1680,7 @@ describe('forEachGroup() function', function () {
               }
             }
           ],
-          joiningTransformer: new StringJoiningTransformer(''),
+          joiningTransformer: StringJoiningTransformer.create(''),
           data
         }).transform();
 

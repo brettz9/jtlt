@@ -11,7 +11,7 @@ describe('Branch coverage edge cases', () => {
     it('xmlns fallback when no prefix in element name (line 233)', () => {
       const {window} = new JSDOM('<!doctype html><html></html>');
       const {document} = window;
-      const joiner = new DOMJoiningTransformer(
+      const joiner = DOMJoiningTransformer.create(
         document.createDocumentFragment(),
         {document}
       );
@@ -20,14 +20,14 @@ describe('Branch coverage edge cases', () => {
       joiner.element('root', {xmlns: 'https://example.com/ns'}, () => {
         joiner.text('x');
       });
-      const doc = /** @type {XMLDocument} */ (joiner._docs[0]);
+      const doc = joiner._docs[0];
       expect(doc.documentElement.namespaceURI).to.equal('https://example.com/ns');
     });
 
     it('omitXmlDeclaration undefined with html method (line 220)', () => {
       const {window} = new JSDOM('<!doctype html><html></html>');
       const {document} = window;
-      const joiner = new DOMJoiningTransformer(
+      const joiner = DOMJoiningTransformer.create(
         document.createDocumentFragment(),
         {document}
       );
@@ -35,7 +35,7 @@ describe('Branch coverage edge cases', () => {
       joiner.element('html', {}, () => {
         joiner.text('x');
       });
-      const doc = /** @type {XMLDocument} */ (joiner._docs[0]);
+      const doc = joiner._docs[0];
       // No xmlDecl for html when omitXmlDeclaration is undefined
       const first = doc.firstChild;
       expect(first && first.nodeType).to.not.equal(7);
@@ -44,7 +44,7 @@ describe('Branch coverage edge cases', () => {
     it('xmlDecl with no version (line 247-254)', () => {
       const {window} = new JSDOM('<!doctype html><html></html>');
       const {document} = window;
-      const joiner = new DOMJoiningTransformer(
+      const joiner = DOMJoiningTransformer.create(
         document.createDocumentFragment(),
         {document}
       );
@@ -52,7 +52,7 @@ describe('Branch coverage edge cases', () => {
       joiner.element('root', {}, () => {
         joiner.text('x');
       });
-      const doc = /** @type {XMLDocument} */ (joiner._docs[0]);
+      const doc = joiner._docs[0];
       const pi = doc.firstChild;
       expect(pi && pi.nodeType).to.equal(7);
       const val = pi && pi.nodeValue;
@@ -63,7 +63,7 @@ describe('Branch coverage edge cases', () => {
     it('xmlDecl with standalone false omits attribute (line 254)', () => {
       const {window} = new JSDOM('<!doctype html><html></html>');
       const {document} = window;
-      const joiner = new DOMJoiningTransformer(
+      const joiner = DOMJoiningTransformer.create(
         document.createDocumentFragment(),
         {document}
       );
@@ -71,7 +71,7 @@ describe('Branch coverage edge cases', () => {
       joiner.element('root', {}, () => {
         joiner.text('x');
       });
-      const doc = /** @type {XMLDocument} */ (joiner._docs[0]);
+      const doc = joiner._docs[0];
       const pi = doc.firstChild;
       expect(pi && pi.nodeType).to.equal(7);
       const val = pi && pi.nodeValue;
@@ -82,7 +82,7 @@ describe('Branch coverage edge cases', () => {
     it('non-object elName path (line 291)', () => {
       const {window} = new JSDOM('<!doctype html><html></html>');
       const {document} = window;
-      const joiner = new DOMJoiningTransformer(
+      const joiner = DOMJoiningTransformer.create(
         document.createDocumentFragment(),
         {document}
       );
@@ -94,7 +94,7 @@ describe('Branch coverage edge cases', () => {
           joiner.text('c');
         });
       });
-      const doc = /** @type {XMLDocument} */ (joiner._docs[0]);
+      const doc = joiner._docs[0];
       const child = doc.querySelector('child');
       expect(child).to.exist;
       expect(child && child.getAttribute('id')).to.equal('x');
@@ -103,7 +103,7 @@ describe('Branch coverage edge cases', () => {
     it('resultDocument format fallback to cfg (line 466)', () => {
       const {window} = new JSDOM('<!doctype html><html></html>');
       const {document} = window;
-      const joiner = new DOMJoiningTransformer(
+      const joiner = DOMJoiningTransformer.create(
         document.createDocumentFragment(),
         {document}
       );
@@ -121,7 +121,7 @@ describe('Branch coverage edge cases', () => {
 
   describe('JSONJoiningTransformer branches', () => {
     it('xmlDecl without version (line 458)', () => {
-      const joiner = new JSONJoiningTransformer([], {exposeDocuments: true});
+      const joiner = JSONJoiningTransformer.create([], {exposeDocuments: true});
       joiner.output({
         method: 'xhtml', encoding: 'utf16', omitXmlDeclaration: false
       });
@@ -136,7 +136,7 @@ describe('Branch coverage edge cases', () => {
     });
 
     it('elementData fallback when _obj not array (line 682-684)', () => {
-      const joiner = new JSONJoiningTransformer({});
+      const joiner = JSONJoiningTransformer.create({});
       joiner.resultDocument('x.xml', () => {
         joiner.output({method: 'xml'});
         // _obj is {} not []; elementData = this._obj
@@ -153,7 +153,7 @@ describe('Branch coverage edge cases', () => {
     });
 
     it('resultDocument format fallback to cfg (line 720)', () => {
-      const joiner = new JSONJoiningTransformer([]);
+      const joiner = JSONJoiningTransformer.create([]);
       joiner.resultDocument('x.json', () => {
         joiner.element('x', {}, [], () => {
           joiner.text('y');
@@ -167,7 +167,7 @@ describe('Branch coverage edge cases', () => {
 
   describe('StringJoiningTransformer branches', () => {
     it('xmlDecl without encoding (line 478-484)', () => {
-      const joiner = new StringJoiningTransformer('');
+      const joiner = StringJoiningTransformer.create('');
       joiner.output({method: 'xml', version: '1.1'});
       joiner.element('root', {}, [], () => {
         joiner.text('x');
@@ -178,7 +178,7 @@ describe('Branch coverage edge cases', () => {
     });
 
     it('DOCTYPE SYSTEM without PUBLIC (line 495)', () => {
-      const joiner = new StringJoiningTransformer('');
+      const joiner = StringJoiningTransformer.create('');
       joiner.output({method: 'xml', doctypeSystem: 'system.dtd'});
       joiner.element('root', {}, [], () => {
         joiner.text('x');
@@ -189,7 +189,7 @@ describe('Branch coverage edge cases', () => {
     });
 
     it('resultDocument format fallback to cfg (line 808)', () => {
-      const joiner = new StringJoiningTransformer('');
+      const joiner = StringJoiningTransformer.create('');
       joiner.resultDocument('x.xml', () => {
         joiner.element('x', {}, [], () => {
           joiner.text('y');

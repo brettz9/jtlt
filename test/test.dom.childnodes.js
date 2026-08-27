@@ -6,7 +6,7 @@ describe('DOMJoiningTransformer childNodes argument', () => {
   it('supports childNodes array with string children', () => {
     const {window} = new JSDOM('<!doctype html><html><body></body></html>');
     const {document} = window;
-    const joiner = new DOMJoiningTransformer(
+    const joiner = DOMJoiningTransformer.create(
       document.createDocumentFragment(),
       {document}
     );
@@ -23,7 +23,7 @@ describe('DOMJoiningTransformer childNodes argument', () => {
   it('supports childNodes array with DOM nodes', () => {
     const {window} = new JSDOM('<!doctype html><html><body></body></html>');
     const {document} = window;
-    const joiner = new DOMJoiningTransformer(
+    const joiner = DOMJoiningTransformer.create(
       document.createDocumentFragment(),
       {document}
     );
@@ -42,7 +42,7 @@ describe('DOMJoiningTransformer childNodes argument', () => {
   it('supports childNodes array with mixed content', () => {
     const {window} = new JSDOM('<!doctype html><html><body></body></html>');
     const {document} = window;
-    const joiner = new DOMJoiningTransformer(
+    const joiner = DOMJoiningTransformer.create(
       document.createDocumentFragment(),
       {document}
     );
@@ -61,7 +61,7 @@ describe('DOMJoiningTransformer childNodes argument', () => {
   it('combines childNodes array with callback', () => {
     const {window} = new JSDOM('<!doctype html><html><body></body></html>');
     const {document} = window;
-    const joiner = new DOMJoiningTransformer(
+    const joiner = DOMJoiningTransformer.create(
       document.createDocumentFragment(),
       {document}
     );
@@ -79,7 +79,7 @@ describe('DOMJoiningTransformer childNodes argument', () => {
   it('applies character maps to childNodes strings', () => {
     const {window} = new JSDOM('<!doctype html><html><body></body></html>');
     const {document} = window;
-    const joiner = new DOMJoiningTransformer(
+    const joiner = DOMJoiningTransformer.create(
       document.createDocumentFragment(),
       {document, exposeDocuments: true}
     );
@@ -88,11 +88,7 @@ describe('DOMJoiningTransformer childNodes argument', () => {
     joiner.output({useCharacterMaps: ['test']});
     joiner.element('div', {}, ['Copyright ©']);
 
-    const docsRaw = joiner.get();
-    /** @type {XMLDocument[]} */
-    const docs = /** @type {XMLDocument[]} */ (
-      /** @type {unknown} */ (docsRaw)
-    );
+    const docs = joiner.get();
     expect(Array.isArray(docs)).to.be.true;
     expect(docs).to.have.lengthOf(1);
 
@@ -105,7 +101,7 @@ describe('DOMJoiningTransformer childNodes argument', () => {
   it('supports argument overloading - atts as array', () => {
     const {window} = new JSDOM('<!doctype html><html><body></body></html>');
     const {document} = window;
-    const joiner = new DOMJoiningTransformer(
+    const joiner = DOMJoiningTransformer.create(
       document.createDocumentFragment(),
       {document}
     );
@@ -122,7 +118,7 @@ describe('DOMJoiningTransformer childNodes argument', () => {
   it('supports argument overloading - atts as function', () => {
     const {window} = new JSDOM('<!doctype html><html><body></body></html>');
     const {document} = window;
-    const joiner = new DOMJoiningTransformer(
+    const joiner = DOMJoiningTransformer.create(
       document.createDocumentFragment(),
       {document}
     );
@@ -141,7 +137,7 @@ describe('DOMJoiningTransformer childNodes argument', () => {
   it('supports argument overloading - childNodes as function', () => {
     const {window} = new JSDOM('<!doctype html><html><body></body></html>');
     const {document} = window;
-    const joiner = new DOMJoiningTransformer(
+    const joiner = DOMJoiningTransformer.create(
       document.createDocumentFragment(),
       {document}
     );
@@ -161,7 +157,7 @@ describe('DOMJoiningTransformer childNodes argument', () => {
   it('handles empty childNodes array', () => {
     const {window} = new JSDOM('<!doctype html><html><body></body></html>');
     const {document} = window;
-    const joiner = new DOMJoiningTransformer(
+    const joiner = DOMJoiningTransformer.create(
       document.createDocumentFragment(),
       {document}
     );
@@ -177,7 +173,7 @@ describe('DOMJoiningTransformer childNodes argument', () => {
   it('supports Node childNodes in root element with output()', () => {
     const {window} = new JSDOM('<!doctype html><html><body></body></html>');
     const {document} = window;
-    const joiner = new DOMJoiningTransformer(
+    const joiner = DOMJoiningTransformer.create(
       document.createDocumentFragment(),
       {document, exposeDocuments: true}
     );
@@ -188,11 +184,7 @@ describe('DOMJoiningTransformer childNodes argument', () => {
     joiner.output({method: 'xml'});
     joiner.element('root', {}, [span]);
 
-    const docsRaw = joiner.get();
-    /** @type {XMLDocument[]} */
-    const docs = /** @type {XMLDocument[]} */ (
-      /** @type {unknown} */ (docsRaw)
-    );
+    const docs = joiner.get();
 
     expect(Array.isArray(docs)).to.be.true;
     expect(docs).to.have.lengthOf(1);

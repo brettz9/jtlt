@@ -11,7 +11,7 @@ describe('Final branch coverage for nested conditionals', () => {
     it('xmlDecl with all three fields set', () => {
       const {window} = new JSDOM('<!doctype html><html></html>');
       const {document} = window;
-      const joiner = new DOMJoiningTransformer(
+      const joiner = DOMJoiningTransformer.create(
         document.createDocumentFragment(),
         {document}
       );
@@ -24,7 +24,7 @@ describe('Final branch coverage for nested conditionals', () => {
       joiner.element('root', {}, () => {
         joiner.text('x');
       });
-      const doc = /** @type {XMLDocument} */ (joiner._docs[0]);
+      const doc = joiner._docs[0];
       const pi = doc.firstChild;
       const val = pi && pi.nodeValue;
       expect(val && val.includes('version="1.0"')).to.equal(true);
@@ -35,7 +35,7 @@ describe('Final branch coverage for nested conditionals', () => {
     it('xmlDecl version and standalone, no encoding', () => {
       const {window} = new JSDOM('<!doctype html><html></html>');
       const {document} = window;
-      const joiner = new DOMJoiningTransformer(
+      const joiner = DOMJoiningTransformer.create(
         document.createDocumentFragment(),
         {document}
       );
@@ -43,7 +43,7 @@ describe('Final branch coverage for nested conditionals', () => {
       joiner.element('root', {}, () => {
         joiner.text('x');
       });
-      const doc = /** @type {XMLDocument} */ (joiner._docs[0]);
+      const doc = joiner._docs[0];
       const pi = doc.firstChild;
       const val = pi && pi.nodeValue;
       expect(val && val.includes('version="1.1"')).to.equal(true);
@@ -54,7 +54,7 @@ describe('Final branch coverage for nested conditionals', () => {
     it('xmlDecl encoding and standalone, no version', () => {
       const {window} = new JSDOM('<!doctype html><html></html>');
       const {document} = window;
-      const joiner = new DOMJoiningTransformer(
+      const joiner = DOMJoiningTransformer.create(
         document.createDocumentFragment(),
         {document}
       );
@@ -64,7 +64,7 @@ describe('Final branch coverage for nested conditionals', () => {
       joiner.element('root', {}, () => {
         joiner.text('x');
       });
-      const doc = /** @type {XMLDocument} */ (joiner._docs[0]);
+      const doc = joiner._docs[0];
       const pi = doc.firstChild;
       const val = pi && pi.nodeValue;
       expect(val && val.includes('encoding="utf16"')).to.equal(true);
@@ -75,7 +75,7 @@ describe('Final branch coverage for nested conditionals', () => {
 
   describe('JSONJoiningTransformer nested field branches', () => {
     it('xmlDecl with all three fields', () => {
-      const joiner = new JSONJoiningTransformer([], {exposeDocuments: true});
+      const joiner = JSONJoiningTransformer.create([], {exposeDocuments: true});
       joiner.output({
         method: 'xml',
         version: '1.0',
@@ -93,7 +93,7 @@ describe('Final branch coverage for nested conditionals', () => {
     });
 
     it('xmlDecl version and standalone', () => {
-      const joiner = new JSONJoiningTransformer([], {exposeDocuments: true});
+      const joiner = JSONJoiningTransformer.create([], {exposeDocuments: true});
       joiner.output({method: 'xml', version: '1.1', standalone: true});
       joiner.element('root', {}, [], () => {
         joiner.text('x');
@@ -106,7 +106,7 @@ describe('Final branch coverage for nested conditionals', () => {
     });
 
     it('xmlDecl encoding and standalone', () => {
-      const joiner = new JSONJoiningTransformer([], {exposeDocuments: true});
+      const joiner = JSONJoiningTransformer.create([], {exposeDocuments: true});
       joiner.output({method: 'xml', encoding: 'ascii', standalone: true});
       joiner.element('root', {}, [], () => {
         joiner.text('x');
@@ -119,7 +119,7 @@ describe('Final branch coverage for nested conditionals', () => {
     });
 
     it('resultDocument elementData from non-array _obj', () => {
-      const joiner = new JSONJoiningTransformer({x: 1});
+      const joiner = JSONJoiningTransformer.create({x: 1});
       joiner.resultDocument('doc.xml', () => {
         joiner.output({method: 'xml'});
         // Initial _obj is object, not array
@@ -133,7 +133,7 @@ describe('Final branch coverage for nested conditionals', () => {
 
   describe('StringJoiningTransformer nested branches', () => {
     it('xmlDecl with all three fields', () => {
-      const joiner = new StringJoiningTransformer('');
+      const joiner = StringJoiningTransformer.create('');
       joiner.output({
         method: 'xml',
         version: '1.0',
@@ -150,7 +150,7 @@ describe('Final branch coverage for nested conditionals', () => {
     });
 
     it('xmlDecl version and standalone', () => {
-      const joiner = new StringJoiningTransformer('');
+      const joiner = StringJoiningTransformer.create('');
       joiner.output({method: 'xml', version: '1.1', standalone: true});
       joiner.element('root', {}, [], () => {
         joiner.text('x');
@@ -162,7 +162,7 @@ describe('Final branch coverage for nested conditionals', () => {
     });
 
     it('xmlDecl encoding and standalone', () => {
-      const joiner = new StringJoiningTransformer('');
+      const joiner = StringJoiningTransformer.create('');
       joiner.output({
         method: 'xml', encoding: 'utf16', standalone: true
       });
@@ -176,7 +176,7 @@ describe('Final branch coverage for nested conditionals', () => {
     });
 
     it('xmlDecl version and encoding, no standalone', () => {
-      const joiner = new StringJoiningTransformer('');
+      const joiner = StringJoiningTransformer.create('');
       joiner.output({method: 'xml', version: '1.0', encoding: 'utf8'});
       joiner.element('root', {}, [], () => {
         joiner.text('x');
@@ -192,7 +192,7 @@ describe('Final branch coverage for nested conditionals', () => {
     it('DOM omitXmlDeclaration false with xhtml includes xmlDecl', () => {
       const {window} = new JSDOM('<!doctype html><html></html>');
       const {document} = window;
-      const joiner = new DOMJoiningTransformer(
+      const joiner = DOMJoiningTransformer.create(
         document.createDocumentFragment(),
         {document}
       );
@@ -200,13 +200,13 @@ describe('Final branch coverage for nested conditionals', () => {
       joiner.element('html', {}, () => {
         joiner.text('x');
       });
-      const doc = /** @type {XMLDocument} */ (joiner._docs[0]);
+      const doc = joiner._docs[0];
       const pi = doc.firstChild;
       expect(pi && pi.nodeType).to.equal(7);
     });
 
     it('JSON omitXmlDeclaration false with html includes xmlDecl', () => {
-      const joiner = new JSONJoiningTransformer([], {exposeDocuments: true});
+      const joiner = JSONJoiningTransformer.create([], {exposeDocuments: true});
       joiner.output({method: 'html', omitXmlDeclaration: false});
       joiner.element('div', {}, [], () => {
         joiner.text('x');
@@ -216,7 +216,7 @@ describe('Final branch coverage for nested conditionals', () => {
     });
 
     it('String omitXmlDeclaration false with html includes xmlDecl', () => {
-      const joiner = new StringJoiningTransformer('');
+      const joiner = StringJoiningTransformer.create('');
       joiner.output({method: 'html', omitXmlDeclaration: false});
       joiner.element('div', {}, [], () => {
         joiner.text('x');
@@ -309,7 +309,7 @@ describe('JSONJoiningTransformer final missing coverage', function () {
   it(
     'should ignore invalid pairs in $a attribute tracking (lines 646-647)',
     function () {
-      const transformer = new JSONJoiningTransformer(
+      const transformer = JSONJoiningTransformer.create(
         [],
         {exposeDocuments: true}
       );

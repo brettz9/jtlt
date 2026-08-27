@@ -11,7 +11,7 @@ const {document} = window;
 describe('namespaceAlias() via context', function () {
   describe('JSONPathTransformerContext', function () {
     it('should call namespaceAlias on joiner', function () {
-      const joiner = new StringJoiningTransformer('');
+      const joiner = StringJoiningTransformer.create('');
       /** @type {JSONPathTransformerContext<"string">} */
       const ctx = new JSONPathTransformerContext({
         data: {test: 'value'},
@@ -28,7 +28,7 @@ describe('namespaceAlias() via context', function () {
     });
 
     it('should return this for chaining', function () {
-      const joiner = new StringJoiningTransformer('');
+      const joiner = StringJoiningTransformer.create('');
       /** @type {JSONPathTransformerContext<"string">} */
       const ctx = new JSONPathTransformerContext({
         data: {test: 'value'},
@@ -42,7 +42,7 @@ describe('namespaceAlias() via context', function () {
 
   describe('XPathTransformerContext', function () {
     it('should call namespaceAlias on joiner', function () {
-      const joiner = new DOMJoiningTransformer(
+      const joiner = DOMJoiningTransformer.create(
         document.createDocumentFragment(),
         {document}
       );
@@ -62,7 +62,7 @@ describe('namespaceAlias() via context', function () {
     });
 
     it('should return this for chaining', function () {
-      const joiner = new DOMJoiningTransformer(
+      const joiner = DOMJoiningTransformer.create(
         document.createDocumentFragment(),
         {document}
       );

@@ -42,7 +42,7 @@ describe('JSONJoiningTransformer output', () => {
       data,
       outputType: 'json',
       unwrapSingleResult: true,
-      joiningTransformer: new JSONJoiningTransformer(
+      joiningTransformer: JSONJoiningTransformer.create(
         {}, {unwrapSingleResult: true}
       ),
       templates: [
@@ -89,7 +89,7 @@ describe('JSONJoiningTransformer output', () => {
   it(
     'returns plain array when output() is called without exposeDocuments',
     (done) => {
-      const joiner = new JSONJoiningTransformer([]);
+      const joiner = JSONJoiningTransformer.create([]);
       joiner.output({
         method: 'xml',
         version: '1.0',
@@ -118,7 +118,7 @@ describe('JSONJoiningTransformer output', () => {
   it(
     'returns array of document wrappers when exposeDocuments is true',
     (done) => {
-      const joiner = new JSONJoiningTransformer([], {exposeDocuments: true});
+      const joiner = JSONJoiningTransformer.create([], {exposeDocuments: true});
       joiner.element('root', {id: 'test'}, [], () => {
         joiner.text('Content');
       });
@@ -145,7 +145,7 @@ describe('JSONJoiningTransformer output', () => {
   it(
     'includes xmlDecl when omitXmlDeclaration=false for html (element path)',
     () => {
-      const joiner = new JSONJoiningTransformer([], {exposeDocuments: true});
+      const joiner = JSONJoiningTransformer.create([], {exposeDocuments: true});
       joiner.output({
         method: 'html', omitXmlDeclaration: false, version: '1.2'
       });
@@ -168,7 +168,7 @@ describe('JSONJoiningTransformer output', () => {
   );
 
   it('includes DTD for xhtml in element path with exposeDocuments', () => {
-    const joiner = new JSONJoiningTransformer([], {exposeDocuments: true});
+    const joiner = JSONJoiningTransformer.create([], {exposeDocuments: true});
     joiner.output({method: 'xhtml'});
     joiner.element('html', {}, [], () => {
       joiner.element('body', {}, [], () => {
@@ -186,7 +186,7 @@ describe('JSONJoiningTransformer output', () => {
   });
 
   it('skips DTD for xhtml with bareDoctype set to false', () => {
-    const joiner = new JSONJoiningTransformer([], {exposeDocuments: true});
+    const joiner = JSONJoiningTransformer.create([], {exposeDocuments: true});
     joiner.output({method: 'xhtml', bareDoctype: false});
     joiner.element('html', {}, [], () => {
       joiner.element('body', {}, [], () => {
@@ -201,7 +201,7 @@ describe('JSONJoiningTransformer output', () => {
   });
 
   it('includes xmlDecl and DTD for xml in element path', () => {
-    const joiner = new JSONJoiningTransformer([], {exposeDocuments: true});
+    const joiner = JSONJoiningTransformer.create([], {exposeDocuments: true});
     joiner.output({method: 'xml', version: '1.0'});
     joiner.element('root', {}, [], () => {
       joiner.text('Z');
@@ -218,7 +218,7 @@ describe('JSONJoiningTransformer output', () => {
   });
 
   it('resultDocument uses cfg.method when no output() is set', () => {
-    const joiner = new JSONJoiningTransformer([]);
+    const joiner = JSONJoiningTransformer.create([]);
     joiner.resultDocument('raw.json', () => {
       // no output() inside; build an element
       joiner.element('root', {}, [], () => {
@@ -241,7 +241,7 @@ describe('JSONJoiningTransformer output', () => {
   it(
     'returns plain element array when neither output() nor exposeDocument',
     (done) => {
-      const joiner = new JSONJoiningTransformer([]);
+      const joiner = JSONJoiningTransformer.create([]);
       joiner.element('root', {}, [], () => {
         joiner.text('Simple');
       });

@@ -89,7 +89,26 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
    * @param {string} s - Initial string
    * @param {T} [cfg] - Configuration object
    */
+
+  /* eslint-disable @stylistic/max-len -- Long */
+  /**
+   * @template {import('./AbstractJoiningTransformer.js').StringJoiningTransformerConfig} U
+   * @param {string} s - Initial string
+   * @param {U} [cfg] - Configuration options
+   * @returns {StringJoiningTransformer<U>}
+   */
+  static create (s, cfg) {
+    /* eslint-enable @stylistic/max-len -- Long */
+    return new StringJoiningTransformer(s, cfg);
+  }
+
+  /* eslint-disable @stylistic/max-len -- Long */
+  /**
+   * @param {string} s - Initial string
+   * @param {import('./AbstractJoiningTransformer.js').StringJoiningTransformerConfig} [cfg] - Configuration options
+   */
   constructor (s, cfg) {
+    /* eslint-enable @stylistic/max-len -- Long */
     super(cfg); // Include this in any subclass of AbstractJoiningTransformer
 
     this._str = s || '';

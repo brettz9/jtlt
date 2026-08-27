@@ -14,46 +14,46 @@ describe('XPathTransformerContext function coverage', () => {
       const doc = window.document;
       // Stub joiner capturing all calls
       const joiner = /** @type {any} */ ({
-        /** @type {any[]} */ _out: [],
-        append (/** @type {any} */ v) {
+        /** @type {unknown[]} */ _out: [],
+        append (/** @type {unknown} */ v) {
           this._out.push(v);
         },
         get () {
           return this._out;
         },
-        string (/** @type {any} */ s) {
+        string (/** @type {unknown} */ s) {
           this._out.push(s);
         },
-        number (/** @type {any} */ n) {
+        number (/** @type {unknown} */ n) {
           this._out.push(n);
         },
-        plainText (/** @type {any} */ t) {
+        plainText (/** @type {unknown} */ t) {
           this._out.push(t);
         },
-        propValue (/** @type {any} */ p, /** @type {any} */ v) {
+        propValue (/** @type {unknown} */ p, /** @type {unknown} */ v) {
           this._out.push({prop: p, val: v});
         },
-        object (/** @type {any[]} */ ...args) {
+        object (/** @type {unknown[]} */ ...args) {
           this._out.push({objectArgs: args});
         },
-        array (/** @type {any[]} */ ...args) {
+        array (/** @type {unknown[]} */ ...args) {
           this._out.push({arrayArgs: args});
         },
         element (
-          /** @type {any} */ name,
-          /** @type {any} */ atts,
-          /** @type {any} */ children
+          /** @type {unknown} */ name,
+          /** @type {unknown} */ atts,
+          /** @type {unknown} */ children
         ) {
           this._out.push({el: name, atts, children});
         },
         attribute (
-          /** @type {any} */ name,
-          /** @type {any} */ val,
-          /** @type {any} */ avoid
+          /** @type {unknown} */ name,
+          /** @type {unknown} */ val,
+          /** @type {unknown} */ avoid
         ) {
           this._out.push({att: name, val, avoid});
         },
-        text (/** @type {any} */ txt) {
+        text (/** @type {unknown} */ txt) {
           this._out.push({text: txt});
         }
       });
@@ -105,7 +105,8 @@ describe('XPathTransformerContext function coverage', () => {
       expect(ctx.valueOf({select: '.'})).to.equal(ctx);
 
       // forEach over nodes
-      /** @type {string[]} */ const collected = [];
+      /** @type {string[]} */
+      const collected = [];
       expect(
         ctx.forEach('//child', function (node) {
           collected.push(node.nodeName);

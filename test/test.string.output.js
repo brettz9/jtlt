@@ -3,7 +3,7 @@ import {StringJoiningTransformer} from '../src/index-node.js';
 
 describe('StringJoiningTransformer output', () => {
   it('builds a string document when output() is called', () => {
-    const joiner = new StringJoiningTransformer('');
+    const joiner = StringJoiningTransformer.create('');
     joiner.output({
       method: 'xml',
       version: '1.0',
@@ -26,7 +26,7 @@ describe('StringJoiningTransformer output', () => {
   });
 
   it('includes DOCTYPE when configured', () => {
-    const joiner = new StringJoiningTransformer('');
+    const joiner = StringJoiningTransformer.create('');
     joiner.output({
       method: 'xml',
       version: '1.0',
@@ -50,7 +50,7 @@ describe('StringJoiningTransformer output', () => {
   });
 
   it('includes SYSTEM DOCTYPE when only systemId is set', () => {
-    const joiner = new StringJoiningTransformer('');
+    const joiner = StringJoiningTransformer.create('');
     joiner.output({
       method: 'xml',
       doctypeSystem: 'https://example.com/sys.dtd'
@@ -66,7 +66,7 @@ describe('StringJoiningTransformer output', () => {
   });
 
   it('exposeDocuments pushes built string on get()', () => {
-    const joiner = new StringJoiningTransformer('', {exposeDocuments: true});
+    const joiner = StringJoiningTransformer.create('', {exposeDocuments: true});
     joiner.output({method: 'xml'});
     joiner.element('doc', {}, [], () => {
       joiner.text('Body');
@@ -80,7 +80,7 @@ describe('StringJoiningTransformer output', () => {
   it(
     'builds a plain string when output() is not called',
     () => {
-      const joiner = new StringJoiningTransformer('');
+      const joiner = StringJoiningTransformer.create('');
       joiner.element('div', {class: 'test'}, [], () => {
         joiner.text('Content');
       });
@@ -95,7 +95,7 @@ describe('StringJoiningTransformer output', () => {
   it(
     'includes XML declaration when omitXmlDeclaration=false (html method)',
     () => {
-      const joiner = new StringJoiningTransformer('');
+      const joiner = StringJoiningTransformer.create('');
       joiner.output({
         method: 'html', omitXmlDeclaration: false, version: '1.0'
       });
@@ -110,7 +110,7 @@ describe('StringJoiningTransformer output', () => {
   );
 
   it('xhtml default adds xml declaration (no DOCTYPE)', () => {
-    const joiner = new StringJoiningTransformer('');
+    const joiner = StringJoiningTransformer.create('');
     joiner.output({method: 'xhtml', version: '1.1'});
     joiner.element('html', {}, [], () => {
       joiner.element('body', {}, [], () => {
@@ -125,7 +125,7 @@ describe('StringJoiningTransformer output', () => {
 
   it('xml xmlDecl includes standalone yes when true', () => {
     // standalone true
-    const jt = new StringJoiningTransformer('');
+    const jt = StringJoiningTransformer.create('');
     jt.output({method: 'xml', version: '1.0', standalone: true});
     jt.element('root', {}, [], () => {
       // no content needed
@@ -135,7 +135,7 @@ describe('StringJoiningTransformer output', () => {
   });
 
   it('xml xmlDecl omits standalone when false', () => {
-    const jt = new StringJoiningTransformer('');
+    const jt = StringJoiningTransformer.create('');
     jt.output({method: 'xml', version: '1.0', standalone: false});
     jt.element('root', {}, [], () => {
       // no content needed

@@ -5,7 +5,7 @@ describe('DOMJoiningTransformer', () => {
   it('exposes array of documents when exposeDocuments is set', () => {
     const {window} = new JSDOM('<!doctype html><html><body></body></html>');
     const {document} = window;
-    const joiner = new DOMJoiningTransformer(
+    const joiner = DOMJoiningTransformer.create(
       document.createDocumentFragment(),
       {document, exposeDocuments: true}
     );
@@ -31,11 +31,7 @@ describe('DOMJoiningTransformer', () => {
         joiner.text('Second doc');
       });
     });
-    const docsRaw = joiner.get();
-    /** @type {XMLDocument[]} */
-    const docs = /** @type {XMLDocument[]} */ (
-      /** @type {unknown} */ (docsRaw)
-    );
+    const docs = joiner.get();
     expect(Array.isArray(docs)).to.be.true;
     expect(docs).to.have.lengthOf(2);
     docs.forEach((doc, i) => {
@@ -55,7 +51,7 @@ describe('DOMJoiningTransformer output', () => {
   it('adds xml decl for html when omit=false', () => {
     const {window} = new JSDOM('<!doctype html><html><body></body></html>');
     const {document} = window;
-    const joiner = new DOMJoiningTransformer(
+    const joiner = DOMJoiningTransformer.create(
       document.createDocumentFragment(),
       {document}
     );
@@ -65,7 +61,7 @@ describe('DOMJoiningTransformer output', () => {
     joiner.element('div', {}, () => {
       joiner.text('Body');
     });
-    const doc = /** @type {XMLDocument} */ (joiner._docs[0]);
+    const doc = joiner._docs[0];
     const pi = doc.firstChild;
     expect(pi && pi.nodeType).to.equal(7);
     expect(pi && pi.nodeName).to.equal('xml');
@@ -75,7 +71,7 @@ describe('DOMJoiningTransformer output', () => {
   it('adds xml decl for xhtml by default', () => {
     const {window} = new JSDOM('<!doctype html><html><body></body></html>');
     const {document} = window;
-    const joiner = new DOMJoiningTransformer(
+    const joiner = DOMJoiningTransformer.create(
       document.createDocumentFragment(),
       {document}
     );
@@ -85,7 +81,7 @@ describe('DOMJoiningTransformer output', () => {
         joiner.text('X');
       });
     });
-    const doc = /** @type {XMLDocument} */ (joiner._docs[0]);
+    const doc = joiner._docs[0];
     const pi = doc.firstChild;
     expect(pi && pi.nodeType).to.equal(7);
     expect(pi && pi.nodeName).to.equal('xml');
@@ -95,7 +91,7 @@ describe('DOMJoiningTransformer output', () => {
   it('omits xml decl when omitXmlDeclaration=true (xml)', () => {
     const {window} = new JSDOM('<!doctype html><html><body></body></html>');
     const {document} = window;
-    const joiner = new DOMJoiningTransformer(
+    const joiner = DOMJoiningTransformer.create(
       document.createDocumentFragment(),
       {document}
     );
@@ -103,7 +99,7 @@ describe('DOMJoiningTransformer output', () => {
     joiner.element('root', {}, () => {
       joiner.text('x');
     });
-    const doc = /** @type {XMLDocument} */ (joiner._docs[0]);
+    const doc = joiner._docs[0];
     const first = /** @type {ChildNode|null} */ (doc.firstChild);
     // Either element root or doctype comes first; ensure not PI
     expect(first && first.nodeType).to.not.equal(7);
@@ -111,7 +107,7 @@ describe('DOMJoiningTransformer output', () => {
   it('object()/array() else path appends empty strings', () => {
     const {window} = new JSDOM('<!doctype html><html><body></body></html>');
     const {document} = window;
-    const joiner = new DOMJoiningTransformer(
+    const joiner = DOMJoiningTransformer.create(
       document.createDocumentFragment(),
       {document}
     );
@@ -160,7 +156,7 @@ describe('DOMJoiningTransformer output', () => {
   it('accepts output() configuration', () => {
     const {window} = new JSDOM('<!doctype html><html><body></body></html>');
     const {document} = window;
-    const joiner = new DOMJoiningTransformer(
+    const joiner = DOMJoiningTransformer.create(
       document.createDocumentFragment(),
       {document}
     );
@@ -184,7 +180,7 @@ describe('DOMJoiningTransformer output', () => {
     () => {
       const {window} = new JSDOM('<!doctype html><html><body></body></html>');
       const {document} = window;
-      const joiner = new DOMJoiningTransformer(
+      const joiner = DOMJoiningTransformer.create(
         document.createDocumentFragment(),
         {document}
       );
@@ -210,7 +206,7 @@ describe('DOMJoiningTransformer output', () => {
     () => {
       const {window} = new JSDOM('<!doctype html><html><body></body></html>');
       const {document} = window;
-      const joiner = new DOMJoiningTransformer(
+      const joiner = DOMJoiningTransformer.create(
         document.createDocumentFragment(),
         {document}
       );
@@ -231,7 +227,7 @@ describe('DOMJoiningTransformer output', () => {
       });
 
       // Access the created document
-      const doc = /** @type {XMLDocument} */ (joiner._docs[0]);
+      const doc = joiner._docs[0];
       expect(doc).to.exist;
       expect(doc.nodeType).to.equal(9); // DOCUMENT_NODE
 
@@ -277,7 +273,7 @@ describe('DOMJoiningTransformer output', () => {
       joiner.element('x:root', {x: 'https://example.com/ns'}, () => {
         joiner.text('ns');
       });
-      const xmlDoc2 = /** @type {XMLDocument} */ (joiner._docs[1]);
+      const xmlDoc2 = joiner._docs[1];
       expect(xmlDoc2.documentElement.prefix).to.equal('x');
       expect(xmlDoc2.documentElement.namespaceURI).to.equal('https://example.com/ns');
     }

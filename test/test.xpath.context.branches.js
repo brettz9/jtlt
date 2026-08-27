@@ -17,7 +17,7 @@ function makeDoc (xml) {
 describe('XPathTransformerContext branch coverage', () => {
   it('v2 asNodes true branch returns array for node set', () => {
     const doc = makeDoc('<root><child>a</child><child>b</child></root>');
-    const joiner = new StringJoiningTransformer('');
+    const joiner = StringJoiningTransformer.create('');
     const ctx = new XPathTransformerContext({
       data: doc,
       joiningTransformer: joiner,
@@ -30,7 +30,7 @@ describe('XPathTransformerContext branch coverage', () => {
 
   it('applyTemplates first call falls back to dot when select missing', () => {
     const doc = makeDoc('<root><n>t</n></root>');
-    const joiner = new StringJoiningTransformer('');
+    const joiner = StringJoiningTransformer.create('');
     const templates =
       /**
        * @type {import('../src/index.js').XPathTemplateObject<"string">[]}
@@ -56,7 +56,7 @@ describe('XPathTransformerContext branch coverage', () => {
 
   it('filters templates by mode when provided', () => {
     const doc = makeDoc('<root><n>t</n></root>');
-    const joiner = new StringJoiningTransformer('');
+    const joiner = StringJoiningTransformer.create('');
     const templates =
       /**
        * @type {import('../src/index.js').XPathTemplateObject<"string">[]}
@@ -89,7 +89,7 @@ describe('XPathTransformerContext branch coverage', () => {
 
   it('sorts without resolver (falls back to 0 for both aPr/bPr)', () => {
     const doc = makeDoc('<root><child>a</child></root>');
-    const joiner = new StringJoiningTransformer('');
+    const joiner = StringJoiningTransformer.create('');
     const templates =
       /**
        * @type {import('../src/index.js').XPathTemplateObject<"string">[]}
@@ -120,7 +120,7 @@ describe('XPathTransformerContext branch coverage', () => {
 
   it('valueOf covers element textContent and scalar first branches', () => {
     const doc = makeDoc('<root><child>3</child></root>');
-    const joiner = new StringJoiningTransformer('');
+    const joiner = StringJoiningTransformer.create('');
     const ctx = new XPathTransformerContext({
       data: doc.documentElement,
       joiningTransformer: joiner,
@@ -129,7 +129,7 @@ describe('XPathTransformerContext branch coverage', () => {
     // element context -> textContent
     ctx.valueOf('.');
     // scalar selection via valueOf -> first is non-node (number)
-    const joiner2 = new StringJoiningTransformer('');
+    const joiner2 = StringJoiningTransformer.create('');
     const ctx2 = new XPathTransformerContext({
       data: doc.documentElement,
       joiningTransformer: joiner2,
@@ -142,7 +142,7 @@ describe('XPathTransformerContext branch coverage', () => {
 
   it('valueOf covers text node branch', () => {
     const doc = makeDoc('<root><child>hi</child></root>');
-    const joiner = new StringJoiningTransformer('');
+    const joiner = StringJoiningTransformer.create('');
     const ctx = new XPathTransformerContext({
       data: doc.documentElement,
       joiningTransformer: joiner,

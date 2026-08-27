@@ -9,7 +9,7 @@ describe('AbstractJoiningTransformer setConfig()', () => {
     const {window} = new JSDOM('<!doctype html><html><body></body></html>');
     const {document} = window;
     // Start with requireSameChildren=true so object() would throw
-    const joiner = new DOMJoiningTransformer(
+    const joiner = DOMJoiningTransformer.create(
       document.createDocumentFragment(),
       {document, requireSameChildren: true}
     );

@@ -11,7 +11,7 @@ describe('resultDocument() method', () => {
     it('creates default root when no element built in resultDocument', () => {
       const {window} = new JSDOM('<!doctype html><html><body></body></html>');
       const {document} = window;
-      const joiner = new DOMJoiningTransformer(
+      const joiner = DOMJoiningTransformer.create(
         document.createDocumentFragment(),
         {document}
       );
@@ -26,7 +26,7 @@ describe('resultDocument() method', () => {
     it('creates result documents with href metadata', () => {
       const {window} = new JSDOM('<!doctype html><html><body></body></html>');
       const {document} = window;
-      const joiner = new DOMJoiningTransformer(
+      const joiner = DOMJoiningTransformer.create(
         document.createDocumentFragment(),
         {document}
       );
@@ -81,7 +81,7 @@ describe('resultDocument() method', () => {
     it('supports different output formats via config', () => {
       const {window} = new JSDOM('<!doctype html><html><body></body></html>');
       const {document} = window;
-      const joiner = new DOMJoiningTransformer(
+      const joiner = DOMJoiningTransformer.create(
         document.createDocumentFragment(),
         {document}
       );
@@ -103,7 +103,7 @@ describe('resultDocument() method', () => {
     it('supports xhtml output format via config', () => {
       const {window} = new JSDOM('<!doctype html><html><body></body></html>');
       const {document} = window;
-      const joiner = new DOMJoiningTransformer(
+      const joiner = DOMJoiningTransformer.create(
         document.createDocumentFragment(),
         {document}
       );
@@ -125,7 +125,7 @@ describe('resultDocument() method', () => {
     it('xhtml resultDocument includes xmlDecl and DTD details', () => {
       const {window} = new JSDOM('<!doctype html><html><body></body></html>');
       const {document} = window;
-      const joiner = new DOMJoiningTransformer(
+      const joiner = DOMJoiningTransformer.create(
         document.createDocumentFragment(),
         {document}
       );
@@ -144,7 +144,7 @@ describe('resultDocument() method', () => {
       expect(res.format).to.equal('xhtml');
       const doc = res.document;
       // xmlDecl should exist
-      const pi = /** @type {ChildNode|null} */ (doc.firstChild);
+      const pi = doc.firstChild;
       expect(pi && pi.nodeType).to.equal(7);
       // DTD should exist for xhtml/xml; check doctype
       expect(doc.doctype).to.exist;
@@ -154,7 +154,7 @@ describe('resultDocument() method', () => {
     it('supports format via cfg.method without output()', () => {
       const {window} = new JSDOM('<!doctype html><html><body></body></html>');
       const {document} = window;
-      const joiner = new DOMJoiningTransformer(
+      const joiner = DOMJoiningTransformer.create(
         document.createDocumentFragment(),
         {document}
       );
@@ -179,7 +179,7 @@ describe('resultDocument() method', () => {
     it('preserves state after resultDocument() callback', () => {
       const {window} = new JSDOM('<!doctype html><html><body></body></html>');
       const {document} = window;
-      const joiner = new DOMJoiningTransformer(
+      const joiner = DOMJoiningTransformer.create(
         document.createDocumentFragment(),
         {document}
       );
@@ -218,7 +218,7 @@ describe('resultDocument() method', () => {
     it('supports nested elements in result documents', () => {
       const {window} = new JSDOM('<!doctype html><html><body></body></html>');
       const {document} = window;
-      const joiner = new DOMJoiningTransformer(
+      const joiner = DOMJoiningTransformer.create(
         document.createDocumentFragment(),
         {document}
       );
@@ -247,7 +247,7 @@ describe('resultDocument() method', () => {
 
   describe('JSONJoiningTransformer', () => {
     it('creates result documents with href metadata', () => {
-      const joiner = new JSONJoiningTransformer([]);
+      const joiner = JSONJoiningTransformer.create([]);
 
       // Create first result document
       joiner.resultDocument('output/doc1.json', () => {
@@ -286,7 +286,7 @@ describe('resultDocument() method', () => {
     it(
       'creates result documents with no doctype with bareDoctype false',
       () => {
-        const joiner = new JSONJoiningTransformer([]);
+        const joiner = JSONJoiningTransformer.create([]);
 
         // Create first result document
         joiner.resultDocument('output/doc1.json', () => {
@@ -313,7 +313,7 @@ describe('resultDocument() method', () => {
     );
 
     it('supports different output formats', () => {
-      const joiner = new JSONJoiningTransformer([]);
+      const joiner = JSONJoiningTransformer.create([]);
 
       joiner.resultDocument('data.json', () => {
         joiner.output({method: 'json'});
@@ -328,7 +328,7 @@ describe('resultDocument() method', () => {
     });
 
     it('supports xhtml output format', () => {
-      const joiner = new JSONJoiningTransformer([]);
+      const joiner = JSONJoiningTransformer.create([]);
 
       joiner.resultDocument('page.xhtml', () => {
         joiner.output({method: 'xhtml'});
@@ -354,7 +354,7 @@ describe('resultDocument() method', () => {
     });
 
     it('preserves state after resultDocument() callback', () => {
-      const joiner = new JSONJoiningTransformer([]);
+      const joiner = JSONJoiningTransformer.create([]);
 
       // Build main structure
       joiner.element('main', {}, [], () => {
@@ -383,7 +383,7 @@ describe('resultDocument() method', () => {
     });
 
     it('captures nested elements in result documents', () => {
-      const joiner = new JSONJoiningTransformer([]);
+      const joiner = JSONJoiningTransformer.create([]);
 
       joiner.resultDocument('nested.json', () => {
         joiner.output({method: 'xml'});
@@ -411,7 +411,7 @@ describe('resultDocument() method', () => {
     });
 
     it('handles result documents without output config', () => {
-      const joiner = new JSONJoiningTransformer([]);
+      const joiner = JSONJoiningTransformer.create([]);
       joiner.resultDocument('simple.json', () => {
         // No output() call here
         joiner.element('simple', {}, [], () => {
@@ -430,7 +430,7 @@ describe('resultDocument() method', () => {
     });
 
     it('includes xmlDeclaration when omitXmlDeclaration=false for html', () => {
-      const joiner = new JSONJoiningTransformer([]);
+      const joiner = JSONJoiningTransformer.create([]);
       joiner.resultDocument('doc.html', () => {
         joiner.output({
           method: 'html', omitXmlDeclaration: false, version: '1.1'
@@ -454,7 +454,7 @@ describe('resultDocument() method', () => {
     });
 
     it('xmlDecl fields with standalone in resultDocument (xhtml)', () => {
-      const joiner = new JSONJoiningTransformer([]);
+      const joiner = JSONJoiningTransformer.create([]);
       joiner.resultDocument('doc.xhtml', () => {
         joiner.output({
           method: 'xhtml', version: '1.2', encoding: 'utf8', standalone: true
@@ -476,7 +476,7 @@ describe('resultDocument() method', () => {
     });
 
     it('uses _docs when exposeDocuments is true during resultDocument', () => {
-      const joiner = new JSONJoiningTransformer([], {exposeDocuments: true});
+      const joiner = JSONJoiningTransformer.create([], {exposeDocuments: true});
       joiner.resultDocument('doc.xml', () => {
         joiner.output({method: 'xml'});
         joiner.element('root', {a: '1'}, [], () => {
@@ -500,7 +500,7 @@ describe('resultDocument() method', () => {
 
   describe('StringJoiningTransformer', () => {
     it('creates result documents with href metadata', () => {
-      const joiner = new StringJoiningTransformer('');
+      const joiner = StringJoiningTransformer.create('');
 
       // Create first result document
       joiner.resultDocument('output/doc1.xml', () => {
@@ -549,7 +549,7 @@ describe('resultDocument() method', () => {
     });
 
     it('supports different output formats', () => {
-      const joiner = new StringJoiningTransformer('');
+      const joiner = StringJoiningTransformer.create('');
 
       joiner.resultDocument('page.html', () => {
         joiner.output({method: 'html'});
@@ -568,7 +568,7 @@ describe('resultDocument() method', () => {
     });
 
     it('preserves state after resultDocument() callback', () => {
-      const joiner = new StringJoiningTransformer('');
+      const joiner = StringJoiningTransformer.create('');
 
       // Build main content
       joiner.element('main', {}, [], () => {
@@ -600,7 +600,7 @@ describe('resultDocument() method', () => {
     });
 
     it('supports nested elements in result documents', () => {
-      const joiner = new StringJoiningTransformer('');
+      const joiner = StringJoiningTransformer.create('');
 
       joiner.resultDocument('nested.xml', () => {
         joiner.output({method: 'xml'});
@@ -624,7 +624,7 @@ describe('resultDocument() method', () => {
     });
 
     it('handles result documents without output config', () => {
-      const joiner = new StringJoiningTransformer('');
+      const joiner = StringJoiningTransformer.create('');
 
       joiner.resultDocument('simple.xml', () => {
         joiner.element('simple', {}, [], () => {
@@ -641,7 +641,7 @@ describe('resultDocument() method', () => {
     });
 
     it('supports multiple result documents with different hrefs', () => {
-      const joiner = new StringJoiningTransformer('');
+      const joiner = StringJoiningTransformer.create('');
 
       const hrefs = [
         'output/page1.html',
@@ -671,7 +671,7 @@ describe('resultDocument() method', () => {
 
   describe('Interoperability with document() method', () => {
     it('resultDocument() and document() can be used together', () => {
-      const joiner = new StringJoiningTransformer('', {
+      const joiner = StringJoiningTransformer.create('', {
         exposeDocuments: true
       });
 

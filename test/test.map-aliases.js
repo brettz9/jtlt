@@ -67,7 +67,7 @@ describe('map() and mapEntry() aliases', function () {
     });
 
     it('should call map() and mapEntry() directly on joiner', function () {
-      const jt = new JSONJoiningTransformer([], {});
+      const jt = JSONJoiningTransformer.create([], {});
       jt.map(function () {
         this.mapEntry('x', 1);
       });
@@ -119,7 +119,7 @@ describe('map() and mapEntry() aliases', function () {
     });
 
     it('should call map() and mapEntry() directly on joiner', function () {
-      const jt = new StringJoiningTransformer('', {mode: 'JavaScript'});
+      const jt = StringJoiningTransformer.create('', {mode: 'JavaScript'});
       jt.map({}, function () {
         this.mapEntry('k', 'v');
       });
@@ -172,7 +172,7 @@ describe('map() and mapEntry() aliases', function () {
 
     it('should call map() and mapEntry() directly on joiner', function () {
       const {document} = new JSDOM('').window;
-      const jt = new DOMJoiningTransformer(
+      const jt = DOMJoiningTransformer.create(
         document.createDocumentFragment(),
         {document}
       );

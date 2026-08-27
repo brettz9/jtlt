@@ -9,7 +9,7 @@ import JTLT, {
 
 describe('JSONPathTransformer return value handling', () => {
   it('appends string return value from root template (line 82-83)', () => {
-    const joiner = new StringJoiningTransformer('');
+    const joiner = StringJoiningTransformer.create('');
     const templates = [
       {
         path: '$',
@@ -31,7 +31,7 @@ describe('JSONPathTransformer return value handling', () => {
   it('appends Node return value from root template (line 82-83)', () => {
     const {window} = new JSDOM('<!doctype html><html><body></body></html>');
     const {document} = window;
-    const joiner = new DOMJoiningTransformer(
+    const joiner = DOMJoiningTransformer.create(
       document.createDocumentFragment(),
       {document}
     );
@@ -60,7 +60,7 @@ describe('JSONPathTransformer return value handling', () => {
   });
 
   it('appends object return value from root template (line 84-86)', () => {
-    const joiner = new JSONJoiningTransformer([]);
+    const joiner = JSONJoiningTransformer.create([]);
     const templates = [
       {
         path: '$',
@@ -84,7 +84,7 @@ describe('JSONPathTransformer return value handling', () => {
   });
 
   it('appends array return value from root template (line 84-86)', () => {
-    const joiner = new JSONJoiningTransformer([]);
+    const joiner = JSONJoiningTransformer.create([]);
     const templates = [
       {
         path: '$',
@@ -107,7 +107,7 @@ describe('JSONPathTransformer return value handling', () => {
   });
 
   it('appends number return value from root template (line 84-86)', () => {
-    const joiner = new JSONJoiningTransformer([]);
+    const joiner = JSONJoiningTransformer.create([]);
     const templates = [
       {
         path: '$',
@@ -129,7 +129,7 @@ describe('JSONPathTransformer return value handling', () => {
   });
 
   it('handles undefined return (no append, line 77)', () => {
-    const joiner = new StringJoiningTransformer('');
+    const joiner = StringJoiningTransformer.create('');
     const templates = [
       {
         path: '$',

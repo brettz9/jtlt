@@ -11,7 +11,7 @@ describe('document() method', () => {
     it('creates multiple documents with document()', () => {
       const {window} = new JSDOM('<!doctype html><html><body></body></html>');
       const {document} = window;
-      const joiner = new DOMJoiningTransformer(
+      const joiner = DOMJoiningTransformer.create(
         document.createDocumentFragment(),
         {document, exposeDocuments: true}
       );
@@ -39,10 +39,7 @@ describe('document() method', () => {
         });
       });
 
-      const docsRaw = joiner.get();
-      const docs = /** @type {XMLDocument[]} */ (
-        /** @type {unknown} */ (docsRaw)
-      );
+      const docs = joiner.get();
 
       expect(Array.isArray(docs)).to.be.true;
       expect(docs).to.have.lengthOf(2);
@@ -61,7 +58,7 @@ describe('document() method', () => {
     it('allows nested elements within document()', () => {
       const {window} = new JSDOM('<!doctype html><html><body></body></html>');
       const {document} = window;
-      const joiner = new DOMJoiningTransformer(
+      const joiner = DOMJoiningTransformer.create(
         document.createDocumentFragment(),
         {document, exposeDocuments: true}
       );
@@ -78,9 +75,7 @@ describe('document() method', () => {
         });
       });
 
-      const docs = /** @type {XMLDocument[]} */ (
-        /** @type {unknown} */ (joiner.get())
-      );
+      const docs = joiner.get();
 
       expect(docs).to.have.lengthOf(1);
       const root = docs[0].documentElement;
@@ -93,7 +88,7 @@ describe('document() method', () => {
     it('preserves state after document() callback', () => {
       const {window} = new JSDOM('<!doctype html><html><body></body></html>');
       const {document} = window;
-      const joiner = new DOMJoiningTransformer(
+      const joiner = DOMJoiningTransformer.create(
         document.createDocumentFragment(),
         {document, exposeDocuments: true}
       );
@@ -113,9 +108,7 @@ describe('document() method', () => {
       });
 
       // Verify main document state is preserved
-      const docs = /** @type {XMLDocument[]} */ (
-        /** @type {unknown} */ (joiner.get())
-      );
+      const docs = joiner.get();
 
       expect(docs).to.have.lengthOf(2);
       expect(docs[0].documentElement.nodeName).to.equal('mainDoc');
@@ -125,7 +118,7 @@ describe('document() method', () => {
 
   describe('JSONJoiningTransformer', () => {
     it('creates multiple documents with document()', () => {
-      const joiner = new JSONJoiningTransformer([], {exposeDocuments: true});
+      const joiner = JSONJoiningTransformer.create([], {exposeDocuments: true});
 
       // Create first document
       joiner.document(() => {
@@ -164,7 +157,7 @@ describe('document() method', () => {
     });
 
     it('allows nested elements within document()', () => {
-      const joiner = new JSONJoiningTransformer([], {exposeDocuments: true});
+      const joiner = JSONJoiningTransformer.create([], {exposeDocuments: true});
 
       joiner.document(() => {
         joiner.output({method: 'xml'});
@@ -197,7 +190,7 @@ describe('document() method', () => {
     });
 
     it('preserves state after document() callback', () => {
-      const joiner = new JSONJoiningTransformer([], {exposeDocuments: true});
+      const joiner = JSONJoiningTransformer.create([], {exposeDocuments: true});
 
       // Create main document
       joiner.output({method: 'xml'});
@@ -235,7 +228,7 @@ describe('document() method', () => {
 
   describe('StringJoiningTransformer', () => {
     it('creates multiple documents with document()', () => {
-      const joiner = new StringJoiningTransformer('', {
+      const joiner = StringJoiningTransformer.create('', {
         exposeDocuments: true
       });
 
@@ -262,7 +255,7 @@ describe('document() method', () => {
       });
 
       const docsRaw = joiner.get();
-      const docs = /** @type {string[]} */ (docsRaw);
+      const docs = docsRaw;
 
       expect(Array.isArray(docs)).to.be.true;
       expect(docs).to.have.lengthOf(2);
@@ -282,7 +275,7 @@ describe('document() method', () => {
     });
 
     it('allows nested elements within document()', () => {
-      const joiner = new StringJoiningTransformer('', {
+      const joiner = StringJoiningTransformer.create('', {
         exposeDocuments: true
       });
 
@@ -298,7 +291,7 @@ describe('document() method', () => {
         });
       });
 
-      const docs = /** @type {string[]} */ (joiner.get());
+      const docs = joiner.get();
 
       expect(docs).to.have.lengthOf(1);
       expect(docs[0]).to.include('<root id="test">');
@@ -310,7 +303,7 @@ describe('document() method', () => {
     });
 
     it('preserves state after document() callback', () => {
-      const joiner = new StringJoiningTransformer('', {
+      const joiner = StringJoiningTransformer.create('', {
         exposeDocuments: true
       });
 
@@ -328,7 +321,7 @@ describe('document() method', () => {
         });
       });
 
-      const docs = /** @type {string[]} */ (joiner.get());
+      const docs = joiner.get();
 
       expect(docs).to.have.lengthOf(2);
       expect(docs[0]).to.include('<mainDoc>');
@@ -338,7 +331,7 @@ describe('document() method', () => {
     });
 
     it('handles document() without output config', () => {
-      const joiner = new StringJoiningTransformer('', {
+      const joiner = StringJoiningTransformer.create('', {
         exposeDocuments: true
       });
 
@@ -348,7 +341,7 @@ describe('document() method', () => {
         });
       });
 
-      const docs = /** @type {string[]} */ (joiner.get());
+      const docs = joiner.get();
 
       expect(docs).to.have.lengthOf(1);
       expect(docs[0]).to.include('<simpleDoc>');

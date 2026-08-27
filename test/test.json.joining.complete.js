@@ -9,7 +9,7 @@ describe('JSONJoiningTransformer complete coverage', () => {
         'includes xmlDeclaration when method=html and ' +
         'omitXmlDeclaration=false',
         () => {
-          const joiner = new JSONJoiningTransformer([], {
+          const joiner = JSONJoiningTransformer.create([], {
             exposeDocuments: true
           });
           joiner.document(() => {
@@ -43,7 +43,7 @@ describe('JSONJoiningTransformer complete coverage', () => {
       );
 
       it('includes xmlDeclaration with standalone for html', () => {
-        const joiner = new JSONJoiningTransformer([], {
+        const joiner = JSONJoiningTransformer.create([], {
           exposeDocuments: true
         });
         joiner.document(() => {
@@ -73,7 +73,7 @@ describe('JSONJoiningTransformer complete coverage', () => {
     'resultDocument() with cfg.method but no output() (line 720)',
     () => {
       it('uses cfg.method as format when no output() is called', () => {
-        const joiner = new JSONJoiningTransformer([]);
+        const joiner = JSONJoiningTransformer.create([]);
 
         joiner.resultDocument('test.html', () => {
           // No output() call - just build content
@@ -92,7 +92,7 @@ describe('JSONJoiningTransformer complete coverage', () => {
       });
 
       it('uses cfg.method as format for multiple result documents', () => {
-        const joiner = new JSONJoiningTransformer([]);
+        const joiner = JSONJoiningTransformer.create([]);
 
         joiner.resultDocument('one.xml', () => {
           joiner.element('item', {id: '1'}, [], () => {
@@ -112,7 +112,7 @@ describe('JSONJoiningTransformer complete coverage', () => {
       it(
         'prefers output() method over cfg.method when both present',
         () => {
-          const joiner = new JSONJoiningTransformer([]);
+          const joiner = JSONJoiningTransformer.create([]);
 
           joiner.resultDocument('test.html', () => {
             // output() method should take precedence
@@ -129,7 +129,7 @@ describe('JSONJoiningTransformer complete coverage', () => {
       );
 
       it('handles resultDocument with cfg.method and no content', () => {
-        const joiner = new JSONJoiningTransformer([]);
+        const joiner = JSONJoiningTransformer.create([]);
 
         joiner.resultDocument('empty.txt', () => {
           // Empty callback - no output() or content
@@ -143,7 +143,7 @@ describe('JSONJoiningTransformer complete coverage', () => {
       });
 
       it('uses cfg.method when output() has no method property', () => {
-        const joiner = new JSONJoiningTransformer([]);
+        const joiner = JSONJoiningTransformer.create([]);
 
         joiner.resultDocument('test.xml', () => {
           // output() without method, should fall back to cfg.method

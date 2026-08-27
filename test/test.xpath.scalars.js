@@ -20,7 +20,7 @@ function makeDoc (xml) {
 describe('XPathTransformerContext scalar return types (v1)', () => {
   it('handles BOOLEAN_TYPE result from XPath evaluation', () => {
     const doc = makeDoc('<root><item>test</item></root>');
-    const joiner = new StringJoiningTransformer('');
+    const joiner = StringJoiningTransformer.create('');
     const templates =
       /**
        * @type {import('../src/index.js').XPathTemplateArray<"string">}
@@ -48,7 +48,7 @@ describe('XPathTransformerContext scalar return types (v1)', () => {
 
   it('handles default case for unsupported XPathResult types', () => {
     const doc = makeDoc('<root><item>test</item></root>');
-    const joiner = new StringJoiningTransformer('');
+    const joiner = StringJoiningTransformer.create('');
     const templates =
       /**
        * @type {import('../src/index.js').XPathTemplateArray<"string">}
@@ -76,7 +76,7 @@ describe('XPathTransformerContext scalar return types (v1)', () => {
 
   it('handles invalid XPath expression gracefully', () => {
     const doc = makeDoc('<root><item>test</item></root>');
-    const joiner = new StringJoiningTransformer('');
+    const joiner = StringJoiningTransformer.create('');
     const templates =
       /**
        * @type {import('../src/index.js').XPathTemplateArray<"string">}
@@ -118,7 +118,7 @@ describe('XPathTransformerContext scalar return types (v1)', () => {
 
   it('calls message() for logging', () => {
     const doc = makeDoc('<root/>');
-    const joiner = new StringJoiningTransformer('');
+    const joiner = StringJoiningTransformer.create('');
     // Spy on console.log
     /* eslint-disable no-console -- Testing console output */
     const originalLog = console.log;
@@ -151,7 +151,7 @@ describe('XPathTransformerContext scalar return types (v1)', () => {
 
   it('uses default transformRoot rule', () => {
     const doc = makeDoc('<root><item>x</item></root>');
-    const joiner = new StringJoiningTransformer('');
+    const joiner = StringJoiningTransformer.create('');
     const templates =
       /**
        * @type {import('../src/index.js').XPathTemplateArray<"string">}
@@ -179,7 +179,7 @@ describe('XPathTransformerContext scalar return types (v1)', () => {
 
   it('uses default transformTextNodes rule', () => {
     const doc = makeDoc('<root>plain text</root>');
-    const joiner = new StringJoiningTransformer('');
+    const joiner = StringJoiningTransformer.create('');
     const templates =
       /**
        * @type {import('../src/index.js').XPathTemplateArray<"string">}
@@ -208,7 +208,7 @@ describe('XPathTransformerContext scalar return types (v1)', () => {
 
   it('uses set() to modify context node', () => {
     const doc = makeDoc('<root><item>test</item></root>');
-    const joiner = new StringJoiningTransformer('');
+    const joiner = StringJoiningTransformer.create('');
     const templates =
       /**
        * @type {import('../src/index.js').XPathTemplateArray<"string">}
@@ -238,7 +238,7 @@ describe('XPathTransformerContext scalar return types (v1)', () => {
 
   it('handles templates without priority or resolver', () => {
     const doc = makeDoc('<root><item>a</item></root>');
-    const joiner = new StringJoiningTransformer('');
+    const joiner = StringJoiningTransformer.create('');
     const templates =
       /**
        * @type {import('../src/index.js').XPathTemplateArray<"string">}
@@ -273,7 +273,7 @@ describe('XPathTransformerContext scalar return types (v1)', () => {
 
   it('uses specificityPriorityResolver for template sorting', () => {
     const doc = makeDoc('<root><item>test</item></root>');
-    const joiner = new StringJoiningTransformer('');
+    const joiner = StringJoiningTransformer.create('');
     let resolverCalled = false;
     const templates =
       /**
@@ -323,7 +323,7 @@ describe('XPathTransformerContext scalar return types (v1)', () => {
 
   it('throws on equal priority templates when configured', () => {
     const doc = makeDoc('<root><item>test</item></root>');
-    const joiner = new StringJoiningTransformer('');
+    const joiner = StringJoiningTransformer.create('');
     const templates =
       /**
        * @type {import('../src/index.js').XPathTemplateArray<"string">}
@@ -364,7 +364,7 @@ describe('XPathTransformerContext scalar return types (v1)', () => {
 
   it('wraps non-array result in xpath2 (v2)', () => {
     const doc = makeDoc('<root><item>test</item></root>');
-    const joiner = new StringJoiningTransformer('');
+    const joiner = StringJoiningTransformer.create('');
 
     const engine = new XPathTransformer({
       data: doc,

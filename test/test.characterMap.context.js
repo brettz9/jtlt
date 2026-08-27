@@ -44,8 +44,7 @@ describe('characterMap - XPath context', () => {
         },
         {
           path: '/root/item',
-          template (node) {
-            const el = /** @type {Element} */ (node);
+          template (el) {
             this.element('processed', {}, [], () => {
               this.text(el.textContent);
             });
@@ -147,18 +146,14 @@ describe('characterMap - XPath context', () => {
         },
         {
           path: '/root/text',
-          template (node) {
-            const el = /** @type {Element} */ (node);
+          template (el) {
             this.text(el.textContent);
           }
         }
       ],
-      success (result) {
+      success (docs) {
         try {
           // Result is an array of XMLDocuments when exposeDocuments is true
-          const docs = /** @type {XMLDocument[]} */ (
-            /** @type {unknown} */ (result)
-          );
           expect(docs).to.be.an('array');
           expect(docs).to.have.lengthOf(1);
           const el = docs[0].documentElement;
@@ -202,8 +197,7 @@ describe('characterMap - XPath context', () => {
         },
         {
           path: '/root/text',
-          template (node) {
-            const el = /** @type {Element} */ (node);
+          template (el) {
             this.text(el.textContent);
           }
         }

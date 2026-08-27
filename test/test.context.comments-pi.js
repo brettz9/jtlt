@@ -12,11 +12,9 @@ import {JSONJoiningTransformer, DOMJoiningTransformer} from
  * @returns {{out: unknown}} Object containing JSON joiner output
  */
 function makeJSONCtx () {
-  const joiner = new JSONJoiningTransformer([], {});
+  const joiner = JSONJoiningTransformer.create([], {});
   // Cast config to any; constructor JSDoc doesn't list joiningTransformer.
-  const engine = new (/** @type {typeof JSONPathTransformer<"json">} */ (
-    JSONPathTransformer
-  ))({
+  const engine = new JSONPathTransformer({
     data: {a: 1},
     templates: [{
       path: '$',
@@ -43,13 +41,11 @@ function makeJSONCtx () {
 function makeXPathCtx () {
   const {window} = new JSDOM('<root/>');
   const doc = window.document;
-  const joiner = new DOMJoiningTransformer(
+  const joiner = DOMJoiningTransformer.create(
     doc.createDocumentFragment(), {document: doc}
   );
 
-  const engine = new (/** @type {typeof XPathTransformer<"dom">} */ (
-    XPathTransformer
-  ))({
+  const engine = new XPathTransformer({
     data: doc,
     templates: [{
       path: '/',

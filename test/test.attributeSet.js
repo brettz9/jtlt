@@ -9,7 +9,7 @@ import JTLT, {
 
 describe('attributeSet - StringJoiningTransformer', () => {
   it('applies single attribute set to element', () => {
-    const joiner = new StringJoiningTransformer('');
+    const joiner = StringJoiningTransformer.create('');
     joiner.attributeSet('common-styles', {
       class: 'button',
       role: 'button'
@@ -21,7 +21,7 @@ describe('attributeSet - StringJoiningTransformer', () => {
   });
 
   it('overrides attribute set with element attributes', () => {
-    const joiner = new StringJoiningTransformer('');
+    const joiner = StringJoiningTransformer.create('');
     joiner.attributeSet('defaults', {
       class: 'default',
       id: 'default-id'
@@ -33,7 +33,7 @@ describe('attributeSet - StringJoiningTransformer', () => {
   });
 
   it('applies multiple attribute sets', () => {
-    const joiner = new StringJoiningTransformer('');
+    const joiner = StringJoiningTransformer.create('');
     joiner.attributeSet('style1', {
       class: 'btn',
       'data-role': 'button'
@@ -51,7 +51,7 @@ describe('attributeSet - StringJoiningTransformer', () => {
   });
 
   it('multiple sets with override precedence', () => {
-    const joiner = new StringJoiningTransformer('');
+    const joiner = StringJoiningTransformer.create('');
     joiner.attributeSet('set1', {
       class: 'first',
       id: 'id1'
@@ -69,7 +69,7 @@ describe('attributeSet - StringJoiningTransformer', () => {
   });
 
   it('works without useAttributeSets parameter', () => {
-    const joiner = new StringJoiningTransformer('');
+    const joiner = StringJoiningTransformer.create('');
     joiner.attributeSet('unused', {
       class: 'unused'
     });
@@ -80,14 +80,14 @@ describe('attributeSet - StringJoiningTransformer', () => {
   });
 
   it('ignores non-existent attribute set names', () => {
-    const joiner = new StringJoiningTransformer('');
+    const joiner = StringJoiningTransformer.create('');
     joiner.element('div', {id: 'test'}, [], () => {}, ['non-existent']);
     const result = joiner.get();
     expect(result).to.include('id="test"');
   });
 
   it('works with callback-based element building', () => {
-    const joiner = new StringJoiningTransformer('');
+    const joiner = StringJoiningTransformer.create('');
     joiner.attributeSet('layout', {
       'data-layout': 'flex'
     });
@@ -100,7 +100,7 @@ describe('attributeSet - StringJoiningTransformer', () => {
   });
 
   it('applies to root element with output config', () => {
-    const joiner = new StringJoiningTransformer('');
+    const joiner = StringJoiningTransformer.create('');
     joiner.attributeSet('root-attrs', {
       lang: 'en',
       dir: 'ltr'
@@ -119,7 +119,7 @@ describe('attributeSet - DOMJoiningTransformer', () => {
   it('applies single attribute set to element', () => {
     const {window} = new JSDOM('<!doctype html><html><body></body></html>');
     const {document} = window;
-    const joiner = new DOMJoiningTransformer(
+    const joiner = DOMJoiningTransformer.create(
       document.createDocumentFragment(),
       {document}
     );
@@ -129,9 +129,7 @@ describe('attributeSet - DOMJoiningTransformer', () => {
     });
     joiner.element('div', {}, [], () => {}, ['common-styles']);
     const result = joiner.get();
-    const div = /** @type {Element} */ (
-      /** @type {DocumentFragment} */ (result).firstChild
-    );
+    const div = /** @type {Element} */ (result.firstChild);
     expect(div.getAttribute('class')).to.equal('button');
     expect(div.getAttribute('role')).to.equal('button');
   });
@@ -139,7 +137,7 @@ describe('attributeSet - DOMJoiningTransformer', () => {
   it('overrides attribute set with element attributes', () => {
     const {window} = new JSDOM('<!doctype html><html><body></body></html>');
     const {document} = window;
-    const joiner = new DOMJoiningTransformer(
+    const joiner = DOMJoiningTransformer.create(
       document.createDocumentFragment(),
       {document}
     );
@@ -149,9 +147,7 @@ describe('attributeSet - DOMJoiningTransformer', () => {
     });
     joiner.element('div', {class: 'override'}, [], () => {}, ['defaults']);
     const result = joiner.get();
-    const div = /** @type {Element} */ (
-      /** @type {DocumentFragment} */ (result).firstChild
-    );
+    const div = /** @type {Element} */ (result.firstChild);
     expect(div.getAttribute('class')).to.equal('override');
     expect(div.getAttribute('id')).to.equal('default-id');
   });
@@ -159,7 +155,7 @@ describe('attributeSet - DOMJoiningTransformer', () => {
   it('applies multiple attribute sets', () => {
     const {window} = new JSDOM('<!doctype html><html><body></body></html>');
     const {document} = window;
-    const joiner = new DOMJoiningTransformer(
+    const joiner = DOMJoiningTransformer.create(
       document.createDocumentFragment(),
       {document}
     );
@@ -173,9 +169,7 @@ describe('attributeSet - DOMJoiningTransformer', () => {
     });
     joiner.element('button', {}, [], () => {}, ['style1', 'style2']);
     const result = joiner.get();
-    const btn = /** @type {HTMLElement} */ (
-      /** @type {DocumentFragment} */ (result).firstChild
-    );
+    const btn = /** @type {HTMLElement} */ (result.firstChild);
     expect(btn.getAttribute('class')).to.equal('btn');
     expect(btn.dataset.role).to.equal('button');
     expect(btn.getAttribute('aria-label')).to.equal('Click me');
@@ -185,7 +179,7 @@ describe('attributeSet - DOMJoiningTransformer', () => {
   it('applies to root element with output config', () => {
     const {window} = new JSDOM('<!doctype html><html><body></body></html>');
     const {document} = window;
-    const joiner = new DOMJoiningTransformer(
+    const joiner = DOMJoiningTransformer.create(
       document.createDocumentFragment(),
       {document}
     );
@@ -197,7 +191,7 @@ describe('attributeSet - DOMJoiningTransformer', () => {
     joiner.element('html', {}, [], () => {
       joiner.text('Test');
     }, ['root-attrs']);
-    const doc = /** @type {XMLDocument} */ (joiner._docs[0]);
+    const doc = joiner._docs[0];
     const root = doc.documentElement;
     expect(root.getAttribute('lang')).to.equal('en');
     expect(root.getAttribute('dir')).to.equal('ltr');
@@ -206,7 +200,7 @@ describe('attributeSet - DOMJoiningTransformer', () => {
   it('works without useAttributeSets parameter', () => {
     const {window} = new JSDOM('<!doctype html><html><body></body></html>');
     const {document} = window;
-    const joiner = new DOMJoiningTransformer(
+    const joiner = DOMJoiningTransformer.create(
       document.createDocumentFragment(),
       {document}
     );
@@ -215,9 +209,7 @@ describe('attributeSet - DOMJoiningTransformer', () => {
     });
     joiner.element('div', {id: 'test'}, [], () => {});
     const result = joiner.get();
-    const div = /** @type {Element} */ (
-      /** @type {DocumentFragment} */ (result).firstChild
-    );
+    const div = /** @type {Element} */ (result.firstChild);
     expect(div.getAttribute('id')).to.equal('test');
     expect(div.getAttribute('class')).to.be.null;
   });
@@ -225,7 +217,7 @@ describe('attributeSet - DOMJoiningTransformer', () => {
 
 describe('attributeSet - JSONJoiningTransformer', () => {
   it('applies single attribute set to element', () => {
-    const joiner = new JSONJoiningTransformer([]);
+    const joiner = JSONJoiningTransformer.create([]);
     joiner.attributeSet('common-styles', {
       class: 'button',
       role: 'button'
@@ -239,7 +231,7 @@ describe('attributeSet - JSONJoiningTransformer', () => {
   });
 
   it('overrides attribute set with element attributes', () => {
-    const joiner = new JSONJoiningTransformer([]);
+    const joiner = JSONJoiningTransformer.create([]);
     joiner.attributeSet('defaults', {
       class: 'default',
       id: 'default-id'
@@ -252,7 +244,7 @@ describe('attributeSet - JSONJoiningTransformer', () => {
   });
 
   it('applies multiple attribute sets', () => {
-    const joiner = new JSONJoiningTransformer([]);
+    const joiner = JSONJoiningTransformer.create([]);
     joiner.attributeSet('style1', {
       class: 'btn',
       'data-role': 'button'
@@ -271,7 +263,7 @@ describe('attributeSet - JSONJoiningTransformer', () => {
   });
 
   it('works with callback-based element building', () => {
-    const joiner = new JSONJoiningTransformer([]);
+    const joiner = JSONJoiningTransformer.create([]);
     joiner.attributeSet('layout', {
       'data-layout': 'flex'
     });
@@ -286,7 +278,7 @@ describe('attributeSet - JSONJoiningTransformer', () => {
   });
 
   it('works without useAttributeSets parameter', () => {
-    const joiner = new JSONJoiningTransformer([]);
+    const joiner = JSONJoiningTransformer.create([]);
     joiner.attributeSet('unused', {
       class: 'unused'
     });
@@ -298,7 +290,7 @@ describe('attributeSet - JSONJoiningTransformer', () => {
   });
 
   it('applies to root element with output config', () => {
-    const joiner = new JSONJoiningTransformer([]);
+    const joiner = JSONJoiningTransformer.create([]);
     joiner.attributeSet('root-attrs', {
       lang: 'en',
       xmlns: 'http://www.w3.org/1999/xhtml'
@@ -314,7 +306,7 @@ describe('attributeSet - JSONJoiningTransformer', () => {
   });
 
   it('combines with dataset attribute helper', () => {
-    const joiner = new JSONJoiningTransformer([]);
+    const joiner = JSONJoiningTransformer.create([]);
     joiner.attributeSet('base', {
       class: 'widget'
     });
@@ -332,7 +324,7 @@ describe('attributeSet - JSONJoiningTransformer', () => {
   });
 
   it('combines with $a ordered attributes', () => {
-    const joiner = new JSONJoiningTransformer([]);
+    const joiner = JSONJoiningTransformer.create([]);
     joiner.attributeSet('base', {
       class: 'component'
     });

@@ -14,7 +14,7 @@ describe('XPathTransformerContext number formatting coverage', () => {
       </root>
     `);
     const {document} = window;
-    const joiner = new DOMJoiningTransformer(
+    const joiner = DOMJoiningTransformer.create(
       document.createDocumentFragment(),
       {document}
     );
@@ -41,7 +41,7 @@ describe('XPathTransformerContext number formatting coverage', () => {
       </root>
     `);
     const {document} = window;
-    const joiner = new DOMJoiningTransformer(
+    const joiner = DOMJoiningTransformer.create(
       document.createDocumentFragment(),
       {document}
     );
@@ -70,7 +70,7 @@ describe('XPathTransformerContext number formatting coverage', () => {
       </root>
     `);
     const {document} = window;
-    const joiner = new DOMJoiningTransformer(
+    const joiner = DOMJoiningTransformer.create(
       document.createDocumentFragment(),
       {document}
     );
@@ -99,7 +99,7 @@ describe('XPathTransformerContext number formatting coverage', () => {
       </root>
     `);
     const {document} = window;
-    const joiner = new DOMJoiningTransformer(
+    const joiner = DOMJoiningTransformer.create(
       document.createDocumentFragment(),
       {document}
     );
@@ -127,7 +127,7 @@ describe('XPathTransformerContext number formatting coverage', () => {
       </root>
     `);
     const {document} = window;
-    const joiner = new DOMJoiningTransformer(
+    const joiner = DOMJoiningTransformer.create(
       document.createDocumentFragment(),
       {document}
     );
@@ -149,7 +149,7 @@ describe('XPathTransformerContext number formatting coverage', () => {
   it('_formatNumber roman lowercase (730-733)', () => {
     const {window} = new JSDOM('<root/>');
     const {document} = window;
-    const joiner = new DOMJoiningTransformer(
+    const joiner = DOMJoiningTransformer.create(
       document.createDocumentFragment(),
       {document}
     );
@@ -167,7 +167,7 @@ describe('XPathTransformerContext number formatting coverage', () => {
   it('_formatNumber roman uppercase (735-738)', () => {
     const {window} = new JSDOM('<root/>');
     const {document} = window;
-    const joiner = new DOMJoiningTransformer(
+    const joiner = DOMJoiningTransformer.create(
       document.createDocumentFragment(),
       {document}
     );
@@ -185,7 +185,7 @@ describe('XPathTransformerContext number formatting coverage', () => {
   it('_formatNumber alphabetic lowercase (740-743)', () => {
     const {window} = new JSDOM('<root/>');
     const {document} = window;
-    const joiner = new DOMJoiningTransformer(
+    const joiner = DOMJoiningTransformer.create(
       document.createDocumentFragment(),
       {document}
     );
@@ -203,7 +203,7 @@ describe('XPathTransformerContext number formatting coverage', () => {
   it('_formatNumber alphabetic uppercase (745-748)', () => {
     const {window} = new JSDOM('<root/>');
     const {document} = window;
-    const joiner = new DOMJoiningTransformer(
+    const joiner = DOMJoiningTransformer.create(
       document.createDocumentFragment(),
       {document}
     );
@@ -221,7 +221,7 @@ describe('XPathTransformerContext number formatting coverage', () => {
   it('_formatNumber zero padding (750-754)', () => {
     const {window} = new JSDOM('<root/>');
     const {document} = window;
-    const joiner = new DOMJoiningTransformer(
+    const joiner = DOMJoiningTransformer.create(
       document.createDocumentFragment(),
       {document}
     );
@@ -239,7 +239,7 @@ describe('XPathTransformerContext number formatting coverage', () => {
   it('_formatNumber grouping separator (756-774)', () => {
     const {window} = new JSDOM('<root/>');
     const {document} = window;
-    const joiner = new DOMJoiningTransformer(
+    const joiner = DOMJoiningTransformer.create(
       document.createDocumentFragment(),
       {document}
     );
@@ -257,7 +257,7 @@ describe('XPathTransformerContext number formatting coverage', () => {
   it('_formatNumber error fallback (771-773)', () => {
     const {window} = new JSDOM('<root/>');
     const {document} = window;
-    const joiner = new DOMJoiningTransformer(
+    const joiner = DOMJoiningTransformer.create(
       document.createDocumentFragment(),
       {document}
     );
@@ -275,7 +275,7 @@ describe('XPathTransformerContext number formatting coverage', () => {
   it('_toRoman out of range (786-788)', () => {
     const {window} = new JSDOM('<root/>');
     const {document} = window;
-    const joiner = new DOMJoiningTransformer(
+    const joiner = DOMJoiningTransformer.create(
       document.createDocumentFragment(),
       {document}
     );
@@ -293,7 +293,7 @@ describe('XPathTransformerContext number formatting coverage', () => {
   it('_toRoman conversion loop (790-803)', () => {
     const {window} = new JSDOM('<root/>');
     const {document} = window;
-    const joiner = new DOMJoiningTransformer(
+    const joiner = DOMJoiningTransformer.create(
       document.createDocumentFragment(),
       {document}
     );
@@ -311,7 +311,7 @@ describe('XPathTransformerContext number formatting coverage', () => {
   it('_toAlphabetic out of range (814-816)', () => {
     const {window} = new JSDOM('<root/>');
     const {document} = window;
-    const joiner = new DOMJoiningTransformer(
+    const joiner = DOMJoiningTransformer.create(
       document.createDocumentFragment(),
       {document}
     );
@@ -329,7 +329,7 @@ describe('XPathTransformerContext number formatting coverage', () => {
   it('_toAlphabetic conversion loop (818-828)', () => {
     const {window} = new JSDOM('<root/>');
     const {document} = window;
-    const joiner = new DOMJoiningTransformer(
+    const joiner = DOMJoiningTransformer.create(
       document.createDocumentFragment(),
       {document}
     );
@@ -347,7 +347,7 @@ describe('XPathTransformerContext number formatting coverage', () => {
   it('_formatNumber NaN handling (723)', () => {
     const {window} = new JSDOM('<root/>');
     const {document} = window;
-    const joiner = new DOMJoiningTransformer(
+    const joiner = DOMJoiningTransformer.create(
       document.createDocumentFragment(),
       {document}
     );
@@ -365,7 +365,7 @@ describe('XPathTransformerContext number formatting coverage', () => {
   it('_calculatePosition no currentNode (628-630)', () => {
     const {window} = new JSDOM('<root/>');
     const {document} = window;
-    const joiner = new DOMJoiningTransformer(
+    const joiner = DOMJoiningTransformer.create(
       document.createDocumentFragment(),
       {document}
     );
@@ -383,7 +383,7 @@ describe('XPathTransformerContext number formatting coverage', () => {
   it('_calculatePosition no parent (633-636)', () => {
     const {window} = new JSDOM('<root/>');
     const {document} = window;
-    const joiner = new DOMJoiningTransformer(
+    const joiner = DOMJoiningTransformer.create(
       document.createDocumentFragment(),
       {document}
     );
@@ -406,7 +406,7 @@ describe('XPathTransformerContext number formatting coverage', () => {
   it('_calculatePositionAny no currentNode (680-682)', () => {
     const {window} = new JSDOM('<root/>');
     const {document} = window;
-    const joiner = new DOMJoiningTransformer(
+    const joiner = DOMJoiningTransformer.create(
       document.createDocumentFragment(),
       {document}
     );
@@ -428,7 +428,7 @@ describe('XPathTransformerContext number formatting coverage', () => {
       </root>
     `);
     const {document} = window;
-    const joiner = new DOMJoiningTransformer(
+    const joiner = DOMJoiningTransformer.create(
       document.createDocumentFragment(),
       {document}
     );
@@ -449,7 +449,7 @@ describe('XPathTransformerContext number formatting coverage', () => {
     const {window} = new JSDOM('<root/>');
     const {document} = window;
     const fragment = document.createDocumentFragment();
-    const joiner = new DOMJoiningTransformer(fragment, {document});
+    const joiner = DOMJoiningTransformer.create(fragment, {document});
 
     const ctx = new XPathTransformerContext({
       data: document.documentElement,
@@ -464,7 +464,7 @@ describe('XPathTransformerContext number formatting coverage', () => {
     const {window} = new JSDOM('<root/>');
     const {document} = window;
     const fragment = document.createDocumentFragment();
-    const joiner = new DOMJoiningTransformer(fragment, {document});
+    const joiner = DOMJoiningTransformer.create(fragment, {document});
 
     const ctx = new XPathTransformerContext({
       data: document.documentElement,
@@ -485,7 +485,7 @@ describe('XPathTransformerContext number formatting coverage', () => {
       </root>
     `);
     const {document} = window;
-    const joiner = new DOMJoiningTransformer(
+    const joiner = DOMJoiningTransformer.create(
       document.createDocumentFragment(),
       {document}
     );
@@ -513,7 +513,7 @@ describe('XPathTransformerContext number formatting coverage', () => {
       </root>
     `);
     const {document} = window;
-    const joiner = new DOMJoiningTransformer(
+    const joiner = DOMJoiningTransformer.create(
       document.createDocumentFragment(),
       {document}
     );
@@ -545,7 +545,7 @@ describe('XPathTransformerContext number formatting coverage', () => {
     `);
     const {document} = window;
     const fragment = document.createDocumentFragment();
-    const joiner = new DOMJoiningTransformer(fragment, {document});
+    const joiner = DOMJoiningTransformer.create(fragment, {document});
 
     const items = document.querySelectorAll('item');
     const ctx = new XPathTransformerContext({
@@ -569,7 +569,7 @@ describe('XPathTransformerContext number formatting coverage', () => {
     `);
     const {document} = window;
     const fragment = document.createDocumentFragment();
-    const joiner = new DOMJoiningTransformer(fragment, {document});
+    const joiner = DOMJoiningTransformer.create(fragment, {document});
 
     const item = document.querySelector('item');
     const ctx = new XPathTransformerContext({
@@ -596,7 +596,7 @@ describe('XPathTransformerContext number formatting coverage', () => {
     `);
     const {document} = window;
     const fragment = document.createDocumentFragment();
-    const joiner = new DOMJoiningTransformer(fragment, {document});
+    const joiner = DOMJoiningTransformer.create(fragment, {document});
 
     const item = document.querySelector('item');
     const ctx = new XPathTransformerContext({
@@ -621,7 +621,7 @@ describe('XPathTransformerContext number formatting coverage', () => {
     `);
     const {document} = window;
     const fragment = document.createDocumentFragment();
-    const joiner = new DOMJoiningTransformer(fragment, {document});
+    const joiner = DOMJoiningTransformer.create(fragment, {document});
 
     const item = document.querySelector('section item');
     const ctx = new XPathTransformerContext({
@@ -639,7 +639,7 @@ describe('XPathTransformerContext number formatting coverage', () => {
     const {window} = new JSDOM('<root><item>x</item></root>');
     const {document} = window;
     const fragment = document.createDocumentFragment();
-    const joiner = new DOMJoiningTransformer(fragment, {document});
+    const joiner = DOMJoiningTransformer.create(fragment, {document});
 
     const item = document.querySelector('item');
     const ctx = new XPathTransformerContext({
@@ -658,7 +658,7 @@ describe('XPathTransformerContext number formatting coverage', () => {
     const {window} = new JSDOM('<root><item>x</item></root>');
     const {document} = window;
     const fragment = document.createDocumentFragment();
-    const joiner = new DOMJoiningTransformer(fragment, {document});
+    const joiner = DOMJoiningTransformer.create(fragment, {document});
 
     const item = document.querySelector('item');
     const ctx = new XPathTransformerContext({
@@ -677,7 +677,7 @@ describe('XPathTransformerContext number formatting coverage', () => {
     const {window} = new JSDOM('<root/>');
     const {document} = window;
     const fragment = document.createDocumentFragment();
-    const joiner = new DOMJoiningTransformer(fragment, {document});
+    const joiner = DOMJoiningTransformer.create(fragment, {document});
 
     const ctx = new XPathTransformerContext({
       data: document.documentElement,
@@ -699,7 +699,7 @@ describe('XPathTransformerContext number formatting coverage', () => {
     const {window} = new JSDOM('<root/>');
     const {document} = window;
     const fragment = document.createDocumentFragment();
-    const joiner = new DOMJoiningTransformer(fragment, {document});
+    const joiner = DOMJoiningTransformer.create(fragment, {document});
 
     const ctx = new XPathTransformerContext({
       data: document.documentElement,
@@ -720,7 +720,7 @@ describe('XPathTransformerContext number formatting coverage', () => {
     `);
     const {document} = window;
     const fragment = document.createDocumentFragment();
-    const joiner = new DOMJoiningTransformer(fragment, {document});
+    const joiner = DOMJoiningTransformer.create(fragment, {document});
 
     const items = document.querySelectorAll('item');
     const ctx = new XPathTransformerContext({
@@ -738,7 +738,7 @@ describe('XPathTransformerContext number formatting coverage', () => {
     const {window} = new JSDOM('<root/>');
     const {document} = window;
     const fragment = document.createDocumentFragment();
-    const joiner = new DOMJoiningTransformer(fragment, {document});
+    const joiner = DOMJoiningTransformer.create(fragment, {document});
 
     const ctx = new XPathTransformerContext({
       data: document.documentElement,
@@ -756,7 +756,7 @@ describe('XPathTransformerContext number formatting coverage', () => {
       </root>
     `);
     const {document} = window;
-    const joiner = new DOMJoiningTransformer(
+    const joiner = DOMJoiningTransformer.create(
       document.createDocumentFragment(),
       {document}
     );
@@ -783,7 +783,7 @@ describe('XPathTransformerContext number formatting coverage', () => {
       </root>
     `);
     const {document} = window;
-    const joiner = new DOMJoiningTransformer(
+    const joiner = DOMJoiningTransformer.create(
       document.createDocumentFragment(),
       {document}
     );

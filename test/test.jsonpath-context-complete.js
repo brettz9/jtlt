@@ -8,11 +8,8 @@ import JTLT, {
 describe('JSONPathTransformerContext complete coverage', () => {
   describe('copy() with primitives (line 799-801)', () => {
     it('copy handles string primitive', () => {
-      const joiner = new StringJoiningTransformer('');
-      // eslint-disable-next-line @stylistic/max-len -- Long
-      const ctx = new (/** @type {typeof JSONPathTransformerContext<"string">} */ (
-        JSONPathTransformerContext
-      ))({
+      const joiner = StringJoiningTransformer.create('');
+      const ctx = new JSONPathTransformerContext({
         data: 'hello',
         joiningTransformer: joiner,
         templates: []
@@ -22,7 +19,7 @@ describe('JSONPathTransformerContext complete coverage', () => {
     });
 
     it('copy handles number primitive', () => {
-      const joiner = new JSONJoiningTransformer([]);
+      const joiner = JSONJoiningTransformer.create([]);
       const ctx = new JSONPathTransformerContext({
         data: 123,
         joiningTransformer: joiner,
@@ -34,7 +31,7 @@ describe('JSONPathTransformerContext complete coverage', () => {
     });
 
     it('copy handles boolean primitive', () => {
-      const joiner = new JSONJoiningTransformer([]);
+      const joiner = JSONJoiningTransformer.create([]);
       const ctx = new JSONPathTransformerContext({
         data: true,
         joiningTransformer: joiner,
@@ -46,7 +43,7 @@ describe('JSONPathTransformerContext complete coverage', () => {
     });
 
     it('copy handles null', () => {
-      const joiner = new JSONJoiningTransformer([]);
+      const joiner = JSONJoiningTransformer.create([]);
       const ctx = new JSONPathTransformerContext({
         data: null,
         joiningTransformer: joiner,
@@ -58,7 +55,7 @@ describe('JSONPathTransformerContext complete coverage', () => {
     });
 
     it('copy handles undefined', () => {
-      const joiner = new JSONJoiningTransformer([]);
+      const joiner = JSONJoiningTransformer.create([]);
       const ctx = new JSONPathTransformerContext({
         // @ts-expect-error - Testing undefined context
         data: undefined,
@@ -226,7 +223,7 @@ describe('JSONPathTransformerContext complete coverage', () => {
     });
 
     it('copy with property sets on primitive falls through', () => {
-      const joiner = new JSONJoiningTransformer([]);
+      const joiner = JSONJoiningTransformer.create([]);
       const ctx = new JSONPathTransformerContext({
         data: 42,
         joiningTransformer: joiner,
