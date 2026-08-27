@@ -599,6 +599,8 @@ describe('Coverage - additional edge cases', function () {
       const {document} = new JSDOM('').window;
       const el = document.createElement('a');
       el.setAttribute('href', '/go');
+
+      /** @type {string|undefined} */
       let out;
 
       /** @type {import('../src/index.js').JSONPathTemplateObject<"string">[]} */
@@ -615,7 +617,7 @@ describe('Coverage - additional edge cases', function () {
       });
       assert.include(out, 'href="/go"');
       assert.include(out, 'title="t"');
-      assert.match(out, />x<\/a>/vi);
+      assert.match(out ?? '', />x<\/a>/vi);
     });
   });
 
@@ -642,6 +644,7 @@ describe('Coverage - additional edge cases', function () {
 
     it('copyOf/copy are chainable and append output', function () {
       const data = {a: 1};
+      /** @type {string|undefined} */
       let out;
 
       /** @type {import('../src/index.js').JSONPathTemplateObject<"string">[]} */
@@ -657,7 +660,7 @@ describe('Coverage - additional edge cases', function () {
         }
       });
       // Expect the numeric deep copy, then shallow copy object, then marker
-      assert.match(out, /^1\[object Object\]ok$/v);
+      assert.match(out ?? '', /^1\[object Object\]ok$/v);
     });
 
     it('propertySet merging with usePropertySets', function () {
@@ -681,6 +684,7 @@ describe('Coverage - additional edge cases', function () {
 
     it('appendOutput appends item directly to joiner (lines 73-75)', function () {
       const data = {};
+      /** @type {({x: number}|{y: number})[]|undefined} */
       let out;
 
       /** @type {import('../src/index.js').JSONPathTemplateObject<"json">[]} */
@@ -692,13 +696,13 @@ describe('Coverage - additional edge cases', function () {
       JTLT.create({
         data, templates, outputType: 'json',
         success (result) {
-          out = result; return result;
+          out = /** @type {({x: number}|{y: number})[]} */ (result); return result;
         }
       });
       assert.isArray(out);
-      assert.equal(out.length, 2);
-      assert.deepEqual(out[0], {x: 1});
-      assert.deepEqual(out[1], {y: 2});
+      assert.equal(out?.length, 2);
+      assert.deepEqual(out?.[0], {x: 1});
+      assert.deepEqual(out?.[1], {y: 2});
     });
   });
 
@@ -712,7 +716,9 @@ describe('Coverage - additional edge cases', function () {
         outputType: 'string',
         success () {}
       });
-      const score = jtlt.config.specificityPriorityResolver('$.a.b');
+      const score = jtlt.config.specificityPriorityResolver
+        ? jtlt.config.specificityPriorityResolver('$.a.b')
+        : -Infinity;
       assert.isAbove(score, -1);
     });
   });
@@ -747,6 +753,7 @@ describe('Coverage - additional edge cases', function () {
         data: {}, templates: [{path: '$', template () {}}], autostart: false,
         success () {}
       });
+      // @ts-expect-error Bad value
       jtlt.config.success = null;
       assert.throws(() => {
         jtlt.transform();
@@ -755,6 +762,7 @@ describe('Coverage - additional edge cases', function () {
 
     it('should throw on construction if neither ajaxData nor data provided', function () {
       assert.throws(() => {
+        // @ts-expect-error Bad argument
         JTLT.create({templates: [{path: '$', template () {}}]});
       }, /You must supply either config.ajaxData or config.data/v);
     });
@@ -763,6 +771,7 @@ describe('Coverage - additional edge cases', function () {
       // This tests the config || {} branch in constructor
       // Pass undefined explicitly, but this will fail validation, so catch it
       assert.throws(() => {
+        // @ts-expect-error -- Bad argument
         JTLT.create(undefined);
       }, /You must supply either config.ajaxData or config.data/v);
       // The branch was still covered even though it threw
@@ -840,7 +849,7 @@ describe('Coverage - additional edge cases', function () {
           this.applyTemplates({select: '$.people[*]', mode: 'person'}, undefined, {select: '$.age', type: 'number', order: 'descending'});
         }},
         {path: '$.people[*]', mode: 'person', template (p) {
-          this.string((/** @type {TestData} */ (p)).name);
+          this.string((/** @type {TestData} */ (p)).name ?? '');
         }}
       ];
       JTLT.create({
@@ -866,14 +875,14 @@ describe('Coverage - additional edge cases', function () {
         {path: '$', template () {
           // Function comparator: by n descending
           this.forEach('$.items[*]', function (v) {
-            this.string(String(v.n));
+            this.string(String(/** @type {{n: number}} */ (v).n));
           }, function (a, b) {
-            return b.n - a.n;
+            return /** @type {{n: number}} */ (b).n - /** @type {{n: number}} */ (a).n;
           });
           this.string('|');
           // Multi-key: group asc, then n asc
           this.forEach('$.items[*]', function (v) {
-            this.string(v.name);
+            this.string(/** @type {{name: string}} */ (v).name);
           }, [
             {select: '$.group', type: 'text', order: 'ascending'},
             {select: '$.n', type: 'number', order: 'ascending'}
@@ -896,8 +905,10 @@ describe('DOMJoiningTransformer extra', function () {
   it('constructor fallback creates a DocumentFragment', function () {
     const {document} = new JSDOM('').window;
     const jt = DOMJoiningTransformer.create(undefined, {document});
-    const frag = jt.get();
-    assert.instanceOf(frag, document.defaultView.DocumentFragment);
+    const frag = /** @type {DocumentFragment} */ (jt.get());
+    assert.instanceOf(frag, /** @type {typeof DocumentFragment} */ (
+      document.defaultView?.DocumentFragment
+    ));
   });
 
   it('object()/array() else branch (no JHTMLForJSON)', function () {
@@ -915,7 +926,7 @@ describe('DOMJoiningTransformer extra', function () {
     const beforeFrag = jt.get();
     jt.element('div', {id: 'x'});
     assert.strictEqual(jt.get(), beforeFrag); // Still fragment
-    assert.equal(beforeFrag.querySelector('div').getAttribute('id'), 'x');
+    assert.equal(beforeFrag.querySelector('div')?.getAttribute('id'), 'x');
   });
 
   it('rawAppend appends node to DOM', function () {
@@ -943,12 +954,13 @@ describe('DOMJoiningTransformer extra', function () {
       this.attribute('data-test', 'value');
     });
     const div = frag.querySelector('div');
-    assert.equal(div.dataset.test, 'value');
+    assert.equal(div?.dataset?.test, 'value');
   });
 });
 
 describe('JSONJoiningTransformer extra', function () {
   it('append throws on scalar root', function () {
+    // @ts-expect-error -- Deliberately bad argument
     const jt = JSONJoiningTransformer.create(5, {});
     assert.throws(() => {
       jt.append('x');
@@ -1002,6 +1014,8 @@ describe('JSONJoiningTransformer extra', function () {
 describe('StringJoiningTransformer xmlElements & attributes', function () {
   it('xmlElements falls back to HTML when no window', function () {
     const data = {};
+
+    /** @type {string|undefined} */
     let out;
 
     /** @type {import('../src/index.js').JSONPathTemplateObject<"string">[]} */
@@ -1018,7 +1032,7 @@ describe('StringJoiningTransformer xmlElements & attributes', function () {
       }
     });
     assert.include(out, '<br');
-    assert.include(out.toLowerCase(), '<div');
+    assert.include(out?.toLowerCase(), '<div');
   });
 
   it('attribute default branch with ignored object', function () {
@@ -1103,6 +1117,7 @@ describe('index.js additional branches', function () {
 describe('StringJoiningTransformer - additional branches', function () {
   it('should handle element() with atts as array (childNodes)', function () {
     const data = {};
+    /** @type {string|undefined} */
     let out;
 
     /** @type {import('../src/index.js').JSONPathTemplateObject<"string">[]} */
@@ -1122,6 +1137,8 @@ describe('StringJoiningTransformer - additional branches', function () {
 
   it('should handle element() with atts as function (callback)', function () {
     const data = {};
+
+    /** @type {string|undefined} */
     let out;
 
     /** @type {import('../src/index.js').JSONPathTemplateObject<"string">[]} */
@@ -1143,6 +1160,7 @@ describe('StringJoiningTransformer - additional branches', function () {
 
   it('should handle element() with childNodes as function', function () {
     const data = {};
+    /** @type {string|undefined} */
     let out;
 
     /** @type {import('../src/index.js').JSONPathTemplateObject<"string">[]} */
@@ -1164,6 +1182,7 @@ describe('StringJoiningTransformer - additional branches', function () {
 
   it('should close tag when childNodes present in element()', function () {
     const data = {};
+    /** @type {string|undefined} */
     let out;
 
     /** @type {import('../src/index.js').JSONPathTemplateObject<"string">[]} */
@@ -1187,6 +1206,7 @@ describe('StringJoiningTransformer - additional branches', function () {
 
   it('should not add closing bracket when tag still open', function () {
     const data = {};
+    /** @type {string|undefined} */
     let out;
 
     /** @type {import('../src/index.js').JSONPathTemplateObject<"string">[]} */
@@ -1208,6 +1228,7 @@ describe('StringJoiningTransformer - additional branches', function () {
 
   it('should handle string() with nested _strTemp state', function () {
     const data = {};
+    /** @type {string|undefined} */
     let out;
 
     /** @type {import('../src/index.js').JSONPathTemplateObject<"string">[]} */
@@ -1228,6 +1249,7 @@ describe('StringJoiningTransformer - additional branches', function () {
 
   it('should use avoidAttEscape parameter in attribute()', function () {
     const data = {};
+    /** @type {string|undefined} */
     let out;
 
     /** @type {import('../src/index.js').JSONPathTemplateObject<"string">[]} */
@@ -1254,7 +1276,7 @@ describe('index.js - additional configuration branches', function () {
       data,
       outputType: 'string',
       forQuery: ['$.items[*]', function (arg) {
-        this.string((/** @type {TestData} */ (arg)).x);
+        this.string(String((/** @type {TestData} */ (arg)).x));
       }],
       success (result) {
         out = result; return result;
@@ -1275,7 +1297,7 @@ describe('index.js - additional configuration branches', function () {
       outputType: 'string',
       engineType: 'xpath',
       forQuery: ['//item/text()', function (arg) {
-        this.string(arg.nodeValue);
+        this.string(arg.nodeValue ?? '');
       }],
       success (result) {
         out = result; return result;
@@ -1287,6 +1309,7 @@ describe('index.js - additional configuration branches', function () {
 
   it('should use query function configuration', function () {
     const data = {test: 'value'};
+    /** @type {string|undefined} */
     let out;
     JTLT.create({
       data,
@@ -1303,6 +1326,7 @@ describe('index.js - additional configuration branches', function () {
 
   it('should use templates function configuration', function () {
     const data = {};
+    /** @type {string|undefined} */
     let out;
     JTLT.create({
       data,
@@ -1320,6 +1344,7 @@ describe('index.js - additional configuration branches', function () {
 
   it('should use template function configuration', function () {
     const data = {};
+    /** @type {string|undefined} */
     let out;
     JTLT.create({
       data,
@@ -1338,12 +1363,13 @@ describe('index.js - additional configuration branches', function () {
 describe('JSONPathTransformerContext - sorting edge cases', function () {
   it('should handle locale-based string sorting', function () {
     const data = {items: [{name: 'Zebra'}, {name: 'apple'}, {name: 'Banana'}]};
+    /** @type {string|undefined} */
     let out;
 
     /** @type {import('../src/index.js').JSONPathTemplateObject<"string">[]} */
     const templates = [{path: '$', template () {
       this.forEach('$.items[*]', function (item) {
-        this.string((/** @type {TestData} */ (item)).name);
+        this.string((/** @type {TestData} */ (item)).name ?? '');
         this.string(',');
       }, [{
         select: '$.name',
@@ -1386,12 +1412,13 @@ describe('JSONPathTransformerContext - sorting edge cases', function () {
 
   it('should handle string comparison with greater than', function () {
     const data = {items: [{name: 'zebra'}, {name: 'apple'}]};
+    /** @type {string|undefined} */
     let out;
 
     /** @type {import('../src/index.js').JSONPathTemplateObject<"string">[]} */
     const templates = [{path: '$', template () {
       this.forEach('$.items[*]', function (item) {
-        this.string((/** @type {TestData} */ (item)).name);
+        this.string((/** @type {TestData} */ (item)).name ?? '');
         this.string(',');
       }, [{select: '$.name', type: 'text', order: 'ascending'}]);
     }}];
@@ -1407,6 +1434,8 @@ describe('JSONPathTransformerContext - sorting edge cases', function () {
 
   it('should handle string sortSpec in forEach', function () {
     const data = {items: [{val: 3}, {val: 1}, {val: 2}]};
+
+    /** @type {string|undefined} */
     let out;
 
     /** @type {import('../src/index.js').JSONPathTemplateObject<"string">[]} */
@@ -1427,6 +1456,7 @@ describe('JSONPathTransformerContext - sorting edge cases', function () {
 
   it('should handle no sortSpec in applyTemplates', function () {
     const data = {items: [{n: 3}, {n: 1}, {n: 2}]};
+    /** @type {string|undefined} */
     let out;
 
     /** @type {import('../src/index.js').JSONPathTemplateObject<"string">[]} */
@@ -1450,6 +1480,7 @@ describe('JSONPathTransformerContext - sorting edge cases', function () {
 
   it('should handle forEach with string sortSpec', function () {
     const data = {items: [{n: 3}, {n: 1}, {n: 2}]};
+    /** @type {string|undefined} */
     let out;
 
     /** @type {import('../src/index.js').JSONPathTemplateObject<"string">[]} */
@@ -1491,6 +1522,7 @@ describe('JSONPathTransformerContext - sorting edge cases', function () {
 
   it('should handle null values in text sorting', function () {
     const data = {items: [{name: 'apple'}, {name: null}, {name: 'banana'}]};
+    /** @type {string|undefined} */
     let out;
 
     /** @type {import('../src/index.js').JSONPathTemplateObject<"string">[]} */
@@ -1517,7 +1549,7 @@ describe('JSONPathTransformerContext - sorting edge cases', function () {
     /** @type {import('../src/index.js').JSONPathTemplateObject<"string">[]} */
     const templates = [{path: '$', template () {
       this.forEach('$.items[*]', function (item) {
-        this.string((/** @type {TestData} */ (item)).name);
+        this.string((/** @type {TestData} */ (item))?.name ?? '');
         this.string(',');
       }, {select: '$.name', type: 'text'});
     }}];
@@ -1534,12 +1566,13 @@ describe('JSONPathTransformerContext - sorting edge cases', function () {
 
   it('should handle descending text sort', function () {
     const data = {items: [{name: 'apple'}, {name: 'zebra'}, {name: 'banana'}]};
+    /** @type {string|undefined} */
     let out;
 
     /** @type {import('../src/index.js').JSONPathTemplateObject<"string">[]} */
     const templates = [{path: '$', template () {
       this.forEach('$.items[*]', function (item) {
-        this.string((/** @type {TestData} */ (item)).name);
+        this.string((/** @type {TestData} */ (item)).name ?? '');
         this.string(',');
       }, {select: '$.name', type: 'text', order: 'descending'});
     }}];
@@ -1550,8 +1583,8 @@ describe('JSONPathTransformerContext - sorting edge cases', function () {
       }
     }).transform();
     // Descending: zebra should come before apple
-    const zebraIdx = out.indexOf('zebra');
-    const appleIdx = out.indexOf('apple');
+    const zebraIdx = out?.indexOf('zebra') ?? -1;
+    const appleIdx = out?.indexOf('apple') ?? -1;
     assert.isTrue(zebraIdx < appleIdx, 'zebra should come before apple in descending order');
   });
 
@@ -1565,7 +1598,8 @@ describe('JSONPathTransformerContext - sorting edge cases', function () {
       this.forEach('$.items[*]', function (item) {
         this.string(String((/** @type {TestData} */ (item)).n));
       }, (a, b) => {
-        return (/** @type {TestData} */ (a)).n - (/** @type {TestData} */ (b)).n;
+        return ((/** @type {TestData} */ (a))?.n ?? 0) -
+          ((/** @type {TestData} */ (b))?.n ?? 0);
       });
     }}];
     JTLT.create({
@@ -1579,12 +1613,14 @@ describe('JSONPathTransformerContext - sorting edge cases', function () {
 
   it('should handle multi-spec sort with equal values', function () {
     const data = {items: [{a: 1, b: 2}, {a: 1, b: 1}, {a: 1, b: 1}]};
+    /** @type {string|undefined} */
     let out;
 
     /** @type {import('../src/index.js').JSONPathTemplateObject<"string">[]} */
     const templates = [{path: '$', template () {
       // Multi-spec sort where some items are completely equal
-      this.forEach('$.items[*]', function (item) {
+      this.forEach('$.items[*]', function (itm) {
+        const item = /** @type {{a: number, b: number}} */ (itm);
         this.string(`${item.a},${item.b};`);
       }, [
         {select: '$.a', type: 'number'},
@@ -1603,12 +1639,14 @@ describe('JSONPathTransformerContext - sorting edge cases', function () {
 
   it('should handle array of string sortSpecs', function () {
     const data = {items: [{a: 2, b: 'y'}, {a: 1, b: 'z'}, {a: 1, b: 'x'}]};
+    /** @type {string|undefined} */
     let out;
 
     /** @type {import('../src/index.js').JSONPathTemplateObject<"string">[]} */
     const templates = [{path: '$', template () {
       // Array with string sortSpecs (not objects)
-      this.forEach('$.items[*]', function (item) {
+      this.forEach('$.items[*]', function (itm) {
+        const item = /** @type {{a: number, b: string}} */ (itm);
         this.string(`${item.a}${item.b}`);
       }, ['$.a', '$.b']); // String paths instead of objects
     }}];
@@ -1625,13 +1663,14 @@ describe('JSONPathTransformerContext - sorting edge cases', function () {
 
   it('should handle locale-based sorting', function () {
     const data = {items: [{name: 'ä'}, {name: 'z'}, {name: 'a'}]};
+    /** @type {string|undefined} */
     let out;
 
     /** @type {import('../src/index.js').JSONPathTemplateObject<"string">[]} */
     const templates = [{path: '$', template () {
       // Sorting with locale
       this.forEach('$.items[*]', function (item) {
-        this.string((/** @type {TestData} */ (item)).name);
+        this.string((/** @type {TestData} */ (item)).name ?? '');
         this.string(',');
       }, {select: '$.name', type: 'text', locale: 'de', order: 'ascending'});
     }}];
@@ -1647,13 +1686,14 @@ describe('JSONPathTransformerContext - sorting edge cases', function () {
 
   it('should handle locale sorting with localeOptions', function () {
     const data = {items: [{name: 'ä'}, {name: 'z'}, {name: 'a'}]};
+    /** @type {string|undefined} */
     let out;
 
     /** @type {import('../src/index.js').JSONPathTemplateObject<"string">[]} */
     const templates = [{path: '$', template () {
       // Sorting with locale and options
       this.forEach('$.items[*]', function (item) {
-        this.string((/** @type {TestData} */ (item)).name);
+        this.string((/** @type {TestData} */ (item)).name ?? '');
       }, {
         select: '$.name',
         type: 'text',
@@ -1668,13 +1708,14 @@ describe('JSONPathTransformerContext - sorting edge cases', function () {
         out = result; return result;
       }
     }).transform();
-    assert.ok(out.length > 0);
+    assert.ok((out?.length ?? 0) > 0);
   });
 
   it('should sort with string comparison aStr > bStr branch (line 210)', function () {
     // Test the (aStr > bStr ? 1 : 0) branch in compareBySpec
     // Use applyTemplates instead of forEach to hit buildComparator in applyTemplates
     const data = {items: [{name: 'zebra'}, {name: 'apple'}, {name: 'mango'}]};
+    /** @type {string|undefined} */
     let out;
 
     /** @type {import('../src/index.js').JSONPathTemplateObject<"string">[]} */
@@ -1691,13 +1732,14 @@ describe('JSONPathTransformerContext - sorting edge cases', function () {
     }).transform();
     // descending: zebra > mango > apple (tests aStr > bStr returning 1)
     assert.include(out, 'zebra');
-    assert.ok(out.indexOf('zebra') < out.indexOf('apple'));
+    assert.ok((out?.indexOf('zebra') ?? -1) < (out?.indexOf('apple') ?? -1));
   });
 
   it('should handle all equal sort values returning 0 (line 236)', function () {
     // Test the final return 0 when all sort specs return equal
     // Use applyTemplates to ensure buildComparator in applyTemplates is used
     const data = {items: [{x: 1, name: 'same'}, {x: 2, name: 'same'}, {x: 3, name: 'same'}]};
+    /** @type {string|undefined} */
     let out;
 
     /** @type {import('../src/index.js').JSONPathTemplateObject<"string">[]} */
@@ -1720,6 +1762,7 @@ describe('JSONPathTransformerContext - sorting edge cases', function () {
   it('should handle locale comparison with localeOptions (lines 208-209)', function () {
     // Test localeCompare with localeOptions more explicitly
     const data = {items: [{name: 'ñ'}, {name: 'n'}, {name: 'o'}]};
+    /** @type {string|undefined} */
     let out;
 
     /** @type {import('../src/index.js').JSONPathTemplateObject<"string">[]} */
@@ -1732,7 +1775,7 @@ describe('JSONPathTransformerContext - sorting edge cases', function () {
         order: 'ascending'
       });
     }}, {path: '$.items[*]', mode: 'sorted', template (item) {
-      this.string((/** @type {TestData} */ (item)).name);
+      this.string((/** @type {TestData} */ (item))?.name ?? '');
     }}];
     JTLT.create({
       data, templates, outputType: 'string',
@@ -1740,13 +1783,14 @@ describe('JSONPathTransformerContext - sorting edge cases', function () {
         out = result; return result;
       }
     }).transform();
-    assert.ok(out.length > 0);
+    assert.ok((out?.length ?? 0) > 0);
   });
 
   it('should handle equal strings in text comparison (lines 219-220)', function () {
     // Test the case where aStr === bStr (returns 0) in the ternary
     // This requires a multi-level sort where first level is equal, second level differs
     const data = {items: [{group: 'A', name: 'x'}, {group: 'A', name: 'y'}, {group: 'B', name: 'z'}]};
+    /** @type {string|undefined} */
     let out;
 
     /** @type {import('../src/index.js').JSONPathTemplateObject<"string">[]} */
@@ -1756,7 +1800,10 @@ describe('JSONPathTransformerContext - sorting edge cases', function () {
         {select: '$.name', type: 'text'}
       ]);
     }}, {path: '$.items[*]', mode: 'sorted', template (item) {
-      this.string((/** @type {TestData} */ (item)).group + (/** @type {TestData} */ (item)).name + ',');
+      this.string(
+        ((/** @type {TestData} */ (item))?.group ?? '') +
+        (/** @type {TestData} */ (item)).name + ','
+      );
     }}];
     JTLT.create({
       data, templates, outputType: 'string',
@@ -1771,13 +1818,16 @@ describe('JSONPathTransformerContext - sorting edge cases', function () {
   it('should handle function comparator in applyTemplates (lines 219-220)', function () {
     // Test sorting with a function comparator to hit the function branch in buildComparator
     const data = {items: [{val: 3}, {val: 1}, {val: 2}]};
+    /** @type {string|undefined} */
     let out;
 
     /** @type {import('../src/index.js').JSONPathTemplateObject<"string">[]} */
     const templates = [{path: '$', template () {
       // Use a function comparator
       this.applyTemplates('$.items[*]', 'sorted', function (aVal, bVal) {
-        return (/** @type {TestData} */ (aVal)).val - (/** @type {TestData} */ (bVal)).val; // Ascending by val
+        return (
+          (/** @type {TestData} */ (aVal))?.val ?? 0) -
+          ((/** @type {TestData} */ (bVal))?.val ?? 0); // Ascending by val
       });
     }}, {path: '$.items[*]', mode: 'sorted', template (item) {
       this.string((/** @type {TestData} */ (item)).val + ',');
@@ -1794,6 +1844,7 @@ describe('JSONPathTransformerContext - sorting edge cases', function () {
 
   it('should use terminal patterns in XSLTStyleJSONPathResolver', function () {
     const data = {items: [1, 2, 3]};
+    /** @type {string|undefined} */
     let out;
 
     /** @type {import('../src/index.js').JSONPathTemplateObject<"string">[]} */
@@ -1813,13 +1864,14 @@ describe('JSONPathTransformerContext - sorting edge cases', function () {
       }
     }).transform();
     // The @number() pattern should match with priority
-    assert.ok(out.length > 0);
+    assert.ok((out?.length ?? 0) > 0);
   });
 });
 
 describe('JSONPathTransformerContext - Branch Coverage', function () {
   it('should handle applyTemplates with empty sort select (line 178)', function () {
     const data = {items: [3, 1, 2]};
+    /** @type {number[]|undefined} */
     let out;
 
     /** @type {import('../src/index.js').JSONPathTemplateObject<"json">[]} */
@@ -1833,23 +1885,24 @@ describe('JSONPathTransformerContext - Branch Coverage', function () {
       path: '$.items[*]',
       mode: 'item',
       template (value) {
-        this.number(value);
+        this.number(/** @type {number} */ (value));
       }
     }];
     JTLT.create({
       data, templates, outputType: 'json',
       success (result) {
-        out = result;
+        out = /** @type {number[]} */ (result);
         return result;
       }
     }).transform();
     // With empty select, sorting will use undefined values
     assert.isArray(out);
-    assert.equal(out.length, 3);
+    assert.equal(out?.length, 3);
   });
 
   it('should handle callTemplate with name object missing properties (lines 348-349)', function () {
     const data = {x: 10};
+    /** @type {number|undefined} */
     let out;
 
     /** @type {import('../src/index.js').JSONPathTemplateObject<"json">[]} */
@@ -1868,7 +1921,7 @@ describe('JSONPathTransformerContext - Branch Coverage', function () {
     JTLT.create({
       data, templates, outputType: 'json',
       success (result) {
-        out = result;
+        out = /** @type {number} */ (result);
         return result;
       }
     }).transform();
@@ -1879,7 +1932,6 @@ describe('JSONPathTransformerContext - Branch Coverage', function () {
 
   it('should handle callTemplate with undefined name property (line 349)', function () {
     const data = {x: 10};
-    let out;
 
     /** @type {import('../src/index.js').JSONPathTemplateObject<"json">[]} */
     const templates = [{
@@ -1888,6 +1940,7 @@ describe('JSONPathTransformerContext - Branch Coverage', function () {
         // Pass object with undefined name - this triggers the ?? fallback
         // When name is an object and nameObj.name is undefined, it falls back to the object itself
         // But that would fail template lookup. So instead, let's use null
+        // @ts-expect-error -- Bad argument
         this.callTemplate({name: null});
       }
     }];
@@ -1896,7 +1949,6 @@ describe('JSONPathTransformerContext - Branch Coverage', function () {
       JTLT.create({
         data, templates, outputType: 'json',
         success (result) {
-          out = result;
           return result;
         }
       }).transform();
@@ -1905,6 +1957,7 @@ describe('JSONPathTransformerContext - Branch Coverage', function () {
 
   it('should handle forEach with empty sort select (line 397)', function () {
     const data = {items: [3, 1, 2]};
+    /** @type {number[]|undefined} */
     let out;
 
     /** @type {import('../src/index.js').JSONPathTemplateObject<"json">[]} */
@@ -1913,19 +1966,19 @@ describe('JSONPathTransformerContext - Branch Coverage', function () {
       template () {
         // forEach with empty sort select
         this.forEach('$.items[*]', (value) => {
-          this.number(value);
+          this.number(/** @type {number} */ (value));
         }, {select: ''});
       }
     }];
     JTLT.create({
       data, templates, outputType: 'json',
       success (result) {
-        out = result;
+        out = /** @type {number[]} */ (result);
         return result;
       }
     }).transform();
     assert.isArray(out);
-    assert.equal(out.length, 3);
+    assert.equal(out?.length, 3);
   });
 
   it('should handle applyTemplates with @ sort select (line 179)', function () {
@@ -1943,7 +1996,7 @@ describe('JSONPathTransformerContext - Branch Coverage', function () {
       path: '$.items[*]',
       mode: 'item',
       template (value) {
-        this.number(value);
+        this.number(/** @type {number} */ (value));
       }
     }];
     JTLT.create({
@@ -1965,7 +2018,7 @@ describe('JSONPathTransformerContext - Branch Coverage', function () {
       path: '$',
       template () {
         this.forEach('$.items[*]', (value) => {
-          this.number(value);
+          this.number(/** @type {number} */ (value));
         }, {select: '@'});
       }
     }];
@@ -2039,7 +2092,7 @@ describe('JSONPathTransformerContext - Branch Coverage', function () {
       path: '$.items[*]',
       mode: 'item',
       template (value) {
-        this.number((/** @type {TestData} */ (value)).val);
+        this.number(/** @type {number} */ ((/** @type {TestData} */ (value))?.val));
       }
     }];
     JTLT.create({
@@ -2066,7 +2119,7 @@ describe('JSONPathTransformerContext - Branch Coverage', function () {
       path: '$.items[*]',
       mode: 'item',
       template (value) {
-        this.number((/** @type {TestData} */ (value)).val);
+        this.number(/** @type {number} */ ((/** @type {TestData} */ (value))?.val));
       }
     }];
     JTLT.create({
@@ -2121,7 +2174,7 @@ describe('JSONPathTransformerContext - Branch Coverage', function () {
       path: '$[*]',
       mode: 'test',
       template (value) {
-        this.number(value);
+        this.number(/** @type {number} */ (value));
       }
     }];
     JTLT.create({
@@ -2227,7 +2280,7 @@ describe('StringJoiningTransformer - edge cases', function () {
   });
 
   it('should handle object() with non-JavaScript mode using Stringifier', function () {
-    const jt = StringJoiningTransformer.create('', {mode: 'HTML'});
+    const jt = StringJoiningTransformer.create('', {mode: 'JSON'});
     jt.object({a: 1, b () {}});
     const out = jt.get();
     assert.include(out, '"a"');

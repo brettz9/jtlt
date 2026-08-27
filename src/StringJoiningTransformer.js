@@ -315,7 +315,7 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
   }
 
   /**
-   * @param {any[]|Element} [arr] - Array to serialize
+   * @param {null|any[]|Element} [arr] - Array to serialize
    * @param {(this: StringJoiningTransformer) => void} [cb] - Callback function
    * @returns {StringJoiningTransformer}
    */
@@ -473,7 +473,8 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
   }
 
   /**
-   * @param {((...args: any[]) => any)|Element} func - Function to stringify
+   * @param {string|
+   *   ((...args: any[]) => any)|Element} func - Function to stringify
    * @returns {StringJoiningTransformer}
    */
   outputFunction (func) {

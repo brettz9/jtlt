@@ -137,7 +137,9 @@ export const setWindow = (win) => {
  * same config as passed to this instance. Defaults to a transforming
  * function based on JSONPath and with its own set of priorities for
  * processing templates.
- * @property {(path: string) => 0 | 0.5 | -0.5} [specificityPriorityResolver]
+ * @property {null|(
+ *   (path: string) => 0 | 0.5 | -0.5
+ * )} [specificityPriorityResolver]
  * Callback for getting the priority by specificity
  * @property {JoiningTransformer} [joiningTransformer]
  * A concrete joining transformer instance (or custom subclass) responsible
@@ -382,12 +384,12 @@ class JTLT {
   }
 
   /**
-   * @param {JTLTOptions} config
+   * @param {null|JTLTOptions} config
    * @returns {JTLT}
    */
   setDefaults (config) {
     /** @type {JTLTOptions} */
-    this.config = config || {};
+    this.config = config || /** @type {JTLTOptions} */ ({});
     const cfg = this.config;
     const query = cfg.forQuery
       // eslint-disable-next-line @stylistic/operator-linebreak -- TS

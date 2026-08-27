@@ -63,6 +63,20 @@ const escapeRegexReplacement = (string) => {
  */
 
 /**
+ * @typedef {object} AppendItemMap
+ * @property {unknown} json
+ * @property {string|unknown} string
+ * @property {string|Node} dom
+ */
+
+/**
+ * @typedef {object} ElementAttsMap
+ * @property {import('./JSONJoiningTransformer.js').ElementAttributes} json
+ * @property {import('./StringJoiningTransformer.js').ElementAttributes} string
+ * @property {Record<string, string>} dom
+ */
+
+/**
  * @template {"json"|"string"|"dom"} [T="json"]
  * @typedef {object} JSONPathTransformerContextConfig
  * @property {null|boolean|number|string|object} data - Data to transform
@@ -171,11 +185,11 @@ class JSONPathTransformerContext {
   }
 
   /**
-   * @param {string | Node} item - Item to append to output
+   * @param {AppendItemMap[T]} item - Item to append to output
    * @returns {this}
    */
   appendOutput (item) {
-    this._getJoiningTransformer().append(item);
+    /** @type {any} */ (this._getJoiningTransformer()).append(item);
     return this;
   }
 
@@ -2075,8 +2089,8 @@ class JSONPathTransformerContext {
   /**
    * Create an element. Mirrors the joining transformer API so templates can
    * call `this.element()`.
-   * @param {string} name - Element name
-   * @param {Record<string, string>|any[]|
+   * @param {string|Node} name - Element name or Node (if DOM)
+   * @param {ElementAttsMap[T]|any[]|
    *   ((this: JSONPathTransformerContext<T>) => void)} [atts] -
    *   Attributes object or children or callback
    * @param {any[]|

@@ -29,7 +29,7 @@ class DOMJoiningTransformer extends AbstractJoiningTransformer {
   /* eslint-disable @stylistic/max-len -- Long */
   /**
    * @template {import('./AbstractJoiningTransformer.js').DOMJoiningTransformerConfig} T
-   * @param {DocumentFragment|Element} dom - DOM element or fragment
+   * @param {DocumentFragment|Element|undefined} dom - DOM element or fragment
    * @param {T} cfg - Configuration options
    * @returns {DOMJoiningTransformer<T>}
    */
@@ -40,7 +40,7 @@ class DOMJoiningTransformer extends AbstractJoiningTransformer {
 
   /* eslint-disable @stylistic/max-len -- Long */
   /**
-   * @param {DocumentFragment|Element} o - DOM element or fragment
+   * @param {DocumentFragment|Element|undefined} o - DOM element or fragment
    * @param {import('./AbstractJoiningTransformer.js').DOMJoiningTransformerConfig} cfg - Configuration options
    */
   constructor (o, cfg) {
