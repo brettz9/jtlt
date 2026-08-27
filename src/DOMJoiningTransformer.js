@@ -234,6 +234,7 @@ class DOMJoiningTransformer extends AbstractJoiningTransformer {
    * @param {Record<string, string>} atts
    * @param {(Node|string)[]} childNodes
    * @param {(this: DOMJoiningTransformer) => void} cb
+   * @param {string[]} [useAttributeSets] - Attribute set names to apply
    * @returns {DOMJoiningTransformer}
    */
   /**

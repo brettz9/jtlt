@@ -1,6 +1,5 @@
 /* eslint-disable @stylistic/max-len, no-empty-function, no-new
   -- Coverage tests for edge cases */
-// @ts-nocheck
 import {assert, expect} from 'chai';
 import XSLTStyleJSONPathResolver from '../src/XSLTStyleJSONPathResolver.js';
 import {JSDOM} from 'jsdom';
@@ -13,10 +12,15 @@ describe('Coverage - additional edge cases', function () {
   describe('StringJoiningTransformer', function () {
     it('should normalize className/htmlFor in HTML mode', function () {
       const data = {};
+      /** @type {string|undefined} */
       let out;
-      const templates = [{path: '$', template () {
-        this.element('div', {className: 'test', htmlFor: 'id1'}, [], () => {});
-      }}];
+
+      /** @type {import('../src/index.js').JSONPathTemplateArray<"string">[]} */
+      const templates = [
+        {path: '$', template () {
+          this.element('div', {className: 'test', htmlFor: 'id1'}, [], () => {});
+        }}
+      ];
       new JTLT({
         data, templates, outputType: 'string',
         success (result) {
@@ -29,7 +33,11 @@ describe('Coverage - additional edge cases', function () {
 
     it('should handle attribute unknown object key (default case)', function () {
       const data = {};
+
+      /** @type {string|undefined} */
       let out;
+
+      /** @type {import('../src/index.js').JSONPathTemplateArray<"string">[]} */
       const templates = [{path: '$', template () {
         this.element('div', {}, [], () => {
           this.attribute('other', {x: 1});
@@ -45,21 +53,21 @@ describe('Coverage - additional edge cases', function () {
     });
 
     it('should handle string() without callback (lines 280-281)', function () {
-      const jt = new StringJoiningTransformer('', {mode: 'string'});
+      const jt = new StringJoiningTransformer('', {mode: 'JSON'});
       jt.string('hello');
       const out = jt.get();
       assert.include(out, 'hello');
     });
 
     it('should handle number() without Element conversion', function () {
-      const jt = new StringJoiningTransformer('', {mode: 'string'});
+      const jt = new StringJoiningTransformer('', {mode: 'JSON'});
       jt.number(42);
       const out = jt.get();
       assert.include(out, '42');
     });
 
     it('should handle boolean() without Element conversion', function () {
-      const jt = new StringJoiningTransformer('', {mode: 'string'});
+      const jt = new StringJoiningTransformer('', {mode: 'JSON'});
       jt.boolean(true);
       jt.boolean(false);
       const out = jt.get();
@@ -88,12 +96,12 @@ describe('Coverage - additional edge cases', function () {
       jt.outputFunction(function testFunc () {
         return 42;
       });
-      const out = jt.get();
+      const out = /** @type {string} */ (jt.get());
       assert.match(out, /function testFunc/v);
     });
 
     it('array() uses JSON.stringify in non-JavaScript mode (lines 249-250)', function () {
-      const jt = new StringJoiningTransformer('', {mode: 'string'});
+      const jt = new StringJoiningTransformer('', {mode: 'JSON'});
       jt.array([1, 2, 3]);
       const out = jt.get();
       assert.include(out, '[1,2,3]');

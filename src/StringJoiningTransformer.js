@@ -54,9 +54,6 @@ function _makeDatasetAttribute (n0) {
  */
 
 /**
- *
- */
-/**
  * Joining transformer that builds a string result.
  *
  * This transformer provides a fluent API to compose strings while supporting

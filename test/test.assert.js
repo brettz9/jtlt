@@ -1,4 +1,3 @@
-// @ts-nocheck
 import {expect} from 'chai';
 import JTLT from '../src/index-node.js';
 import {JSDOM} from 'jsdom';

@@ -1,6 +1,5 @@
 /* eslint-disable @stylistic/max-len, no-new, no-empty-function
   -- Test file for preserveSpace/stripSpace */
-// @ts-nocheck
 import {assert} from 'chai';
 import {JSDOM} from 'jsdom';
 import JTLT from '../src/index-node.js';
@@ -10,6 +9,8 @@ describe('preserveSpace() and stripSpace()', function () {
     it('should declare elements for preserve-space', function () {
       const data = {root: {}};
       let out;
+
+      /** @type {import('../src/index.js').JSONPathTemplateArray<"string">[]} */
       const templates = [{path: '$', template () {
         this.preserveSpace('pre');
         this.preserveSpace(['code', 'textarea']);
@@ -27,6 +28,8 @@ describe('preserveSpace() and stripSpace()', function () {
     it('should declare elements for strip-space', function () {
       const data = {root: {}};
       let out;
+
+      /** @type {import('../src/index.js').JSONPathTemplateArray<"string">[]} */
       const templates = [{path: '$', template () {
         this.stripSpace('div');
         this.stripSpace(['span', 'p']);
@@ -44,6 +47,8 @@ describe('preserveSpace() and stripSpace()', function () {
     it('should support wildcard pattern', function () {
       const data = {root: {}};
       let out;
+
+      /** @type {import('../src/index.js').JSONPathTemplateArray<"string">[]} */
       const templates = [{path: '$', template () {
         this.stripSpace('*');
         this.string('test');
@@ -59,6 +64,8 @@ describe('preserveSpace() and stripSpace()', function () {
 
     it('_shouldStripSpace returns false for preserve-space elements', function () {
       const data = {root: {}};
+
+      /** @type {import('../src/index.js').JSONPathTemplateArray<"string">[]} */
       const templates = [{path: '$', template () {
         this.preserveSpace('pre');
         this.stripSpace('div');
@@ -74,6 +81,8 @@ describe('preserveSpace() and stripSpace()', function () {
 
     it('_shouldStripSpace handles wildcard in preserve', function () {
       const data = {root: {}};
+
+      /** @type {import('../src/index.js').JSONPathTemplateArray<"string">[]} */
       const templates = [{path: '$', template () {
         this.preserveSpace('*');
         this.stripSpace('div');
@@ -88,6 +97,8 @@ describe('preserveSpace() and stripSpace()', function () {
 
     it('_shouldStripSpace handles wildcard in strip', function () {
       const data = {root: {}};
+
+      /** @type {import('../src/index.js').JSONPathTemplateArray<"string">[]} */
       const templates = [{path: '$', template () {
         this.stripSpace('*');
         assert.isTrue(this._shouldStripSpace('div'));
@@ -101,6 +112,8 @@ describe('preserveSpace() and stripSpace()', function () {
 
     it('should return this for chaining', function () {
       const data = {root: {}};
+
+      /** @type {import('../src/index.js').JSONPathTemplateArray<"string">[]} */
       const templates = [{path: '$', template () {
         const result1 = this.preserveSpace('pre');
         const result2 = this.stripSpace('div');
@@ -119,6 +132,8 @@ describe('preserveSpace() and stripSpace()', function () {
       const {window} = new JSDOM('<root><item>test</item></root>');
       const data = window.document;
       let out;
+
+      /** @type {import('../src/index.js').XPathTemplateObject<"string">[]} */
       const templates = [{
         path: '/',
         template () {
@@ -140,6 +155,8 @@ describe('preserveSpace() and stripSpace()', function () {
       const {window} = new JSDOM('<root><item>test</item></root>');
       const data = window.document;
       let out;
+
+      /** @type {import('../src/index.js').XPathTemplateObject<"string">[]} */
       const templates = [{
         path: '/',
         template () {
@@ -160,11 +177,13 @@ describe('preserveSpace() and stripSpace()', function () {
     it('_shouldStripSpace returns false for non-element nodes', function () {
       const {window} = new JSDOM('<root>text</root>');
       const data = window.document;
+
+      /** @type {import('../src/index.js').XPathTemplateObject<"string">[]} */
       const templates = [{
         path: '/',
         template () {
           this.stripSpace('div');
-          const textNode = data.documentElement.firstChild;
+          const textNode = /** @type {ChildNode} */ (data.documentElement.firstChild);
           const docNode = data;
           // Text nodes should return false (only element nodes are checked)
           assert.isFalse(this._shouldStripSpace(textNode));
@@ -185,12 +204,14 @@ describe('preserveSpace() and stripSpace()', function () {
     it('_shouldStripSpace handles element nodes correctly', function () {
       const {window} = new JSDOM('<root><div>test</div></root>');
       const data = window.document;
+
+      /** @type {import('../src/index.js').XPathTemplateObject<"string">[]} */
       const templates = [{
         path: '/',
         template () {
           this.preserveSpace('pre');
           this.stripSpace('div');
-          const divNode = data.querySelector('div');
+          const divNode = /** @type {HTMLElement} */ (data.querySelector('div'));
           assert.isTrue(this._shouldStripSpace(divNode));
         }
       }];
@@ -203,12 +224,14 @@ describe('preserveSpace() and stripSpace()', function () {
     it('_shouldStripSpace preserveSpace takes precedence', function () {
       const {window} = new JSDOM('<root><div>test</div></root>');
       const data = window.document;
+
+      /** @type {import('../src/index.js').XPathTemplateObject<"string">[]} */
       const templates = [{
         path: '/',
         template () {
           this.preserveSpace('div');
           this.stripSpace('div');
-          const divNode = data.querySelector('div');
+          const divNode = /** @type {HTMLDivElement} */ (data.querySelector('div'));
           // preserve-space takes precedence
           assert.isFalse(this._shouldStripSpace(divNode));
         }
@@ -222,12 +245,14 @@ describe('preserveSpace() and stripSpace()', function () {
     it('_shouldStripSpace handles wildcard', function () {
       const {window} = new JSDOM('<root><div>test</div><span>x</span></root>');
       const data = window.document;
+
+      /** @type {import('../src/index.js').XPathTemplateObject<"string">[]} */
       const templates = [{
         path: '/',
         template () {
           this.stripSpace('*');
-          const divNode = data.querySelector('div');
-          const spanNode = data.querySelector('span');
+          const divNode = /** @type {HTMLDivElement} */ (data.querySelector('div'));
+          const spanNode = /** @type {HTMLSpanElement} */ (data.querySelector('span'));
           assert.isTrue(this._shouldStripSpace(divNode));
           assert.isTrue(this._shouldStripSpace(spanNode));
         }
@@ -241,6 +266,8 @@ describe('preserveSpace() and stripSpace()', function () {
     it('should return this for chaining', function () {
       const {window} = new JSDOM('<root><item>test</item></root>');
       const data = window.document;
+
+      /** @type {import('../src/index.js').XPathTemplateObject<"string">[]} */
       const templates = [{
         path: '/',
         template () {
@@ -261,6 +288,8 @@ describe('preserveSpace() and stripSpace()', function () {
     it('should work with JSON data and string output', function () {
       const data = {elements: ['pre', 'code', 'div']};
       let out;
+
+      /** @type {import('../src/index.js').JSONPathTemplateObject<"string">[]} */
       const templates = [{path: '$', template () {
         this.preserveSpace('pre');
         this.stripSpace(['div', 'span']);
@@ -281,6 +310,7 @@ describe('preserveSpace() and stripSpace()', function () {
       const {window} = new JSDOM('<root><pre>  keep  </pre><div>  strip  </div></root>');
       const data = window.document;
       let out;
+      /** @type {import('../src/index.js').XPathTemplateObject<"dom">[]} */
       const templates = [{
         path: '/',
         template () {
@@ -291,7 +321,7 @@ describe('preserveSpace() and stripSpace()', function () {
       }, {
         path: '//text()',
         template (node) {
-          this.text(node.nodeValue);
+          this.text(/** @type {string} */ (node.nodeValue));
         }
       }];
       new JTLT({
@@ -312,7 +342,11 @@ describe('preserveSpace() and stripSpace()', function () {
         </root>
       `);
       const data = window.document;
+
+      /** @type {string[]} */
       const textNodes = [];
+
+      /** @type {import('../src/index.js').XPathTemplateObject<"string">[]} */
       const templates = [{
         path: '/',
         template () {
@@ -322,7 +356,7 @@ describe('preserveSpace() and stripSpace()', function () {
       }, {
         path: '//text()',
         template (node) {
-          textNodes.push(node.nodeValue);
+          textNodes.push(/** @type {string} */ (node.nodeValue));
         }
       }];
       new JTLT({
@@ -345,6 +379,8 @@ describe('preserveSpace() and stripSpace()', function () {
       `);
       const data = window.document;
       let textContent = '';
+
+      /** @type {import('../src/index.js').XPathTemplateObject<"string">[]} */
       const templates = [{
         path: '/',
         template () {
@@ -382,7 +418,18 @@ describe('preserveSpace() and stripSpace()', function () {
         </root>
       `);
       const data = window.document;
+
+      /**
+       * @typedef {"div"|"span"|"p"} Elements
+       */
+      /**
+       * @typedef {`${Elements}_texts`} Texts
+       */
+
+      /** @type {Partial<Record<Texts|Elements, number>>} */
       const elementCounts = {};
+
+      /** @type {import('../src/index.js').XPathTemplateObject<"string">[]} */
       const templates = [{
         path: '/',
         template () {
@@ -392,7 +439,7 @@ describe('preserveSpace() and stripSpace()', function () {
       }, {
         path: '//*',
         template (node) {
-          const name = node.nodeName.toLowerCase();
+          const name = /** @type {Elements} */ (node.nodeName.toLowerCase());
           elementCounts[name] = (elementCounts[name] || 0) + 1;
           // Count text node children
           let textNodeCount = 0;
@@ -401,7 +448,7 @@ describe('preserveSpace() and stripSpace()', function () {
               textNodeCount++;
             }
           }
-          elementCounts[name + '_texts'] = textNodeCount;
+          elementCounts[/** @type {Texts} */ (name + '_texts')] = textNodeCount;
         }
       }];
       new JTLT({
@@ -422,7 +469,11 @@ describe('preserveSpace() and stripSpace()', function () {
         </root>
       `);
       const data = window.document;
+
+      /** @type {string[]} */
       const textNodes = [];
+
+      /** @type {import('../src/index.js').XPathTemplateObject<"string">[]} */
       const templates = [{
         path: '/',
         template () {
@@ -433,7 +484,7 @@ describe('preserveSpace() and stripSpace()', function () {
       }, {
         path: '//text()',
         template (node) {
-          textNodes.push(node.nodeValue);
+          textNodes.push(/** @type {string} */ (node.nodeValue));
         }
       }];
       new JTLT({
@@ -453,9 +504,10 @@ describe('preserveSpace() and stripSpace()', function () {
         </root>
       `);
       const data = window.document;
-      const originalDiv = data.querySelector('div');
+      const originalDiv = /** @type {HTMLDivElement} */ (data.querySelector('div'));
       const originalChildCount = originalDiv.childNodes.length;
 
+      /** @type {import('../src/index.js').XPathTemplateObject<"string">[]} */
       const templates = [{
         path: '/',
         template () {
@@ -475,6 +527,8 @@ describe('preserveSpace() and stripSpace()', function () {
     it('should work with mixed preserve and strip declarations', function () {
       const data = {root: {}};
       let out;
+
+      /** @type {import('../src/index.js').JSONPathTemplateObject<"string">[]} */
       const templates = [{path: '$', template () {
         // Declare multiple times
         this.preserveSpace('pre');
@@ -505,6 +559,8 @@ describe('preserveSpace() and stripSpace()', function () {
     it('should handle _cloneAndStripWhitespace with no strip declarations', function () {
       const {window} = new JSDOM('<root><div>test</div></root>');
       const data = window.document;
+
+      /** @type {import('../src/index.js').XPathTemplateObject<"string">[]} */
       const templates = [{
         path: '/',
         template () {
@@ -524,12 +580,14 @@ describe('preserveSpace() and stripSpace()', function () {
     it('should cover all pattern matching branches in _shouldStripSpace', function () {
       const {window} = new JSDOM('<root><div>test</div><span>test</span><pre>code</pre></root>');
       const data = window.document;
+
+      /** @type {import('../src/index.js').XPathTemplateObject<"string">[]} */
       const templates = [{
         path: '/',
         template () {
-          const divNode = data.querySelector('div');
-          const spanNode = data.querySelector('span');
-          const preNode = data.querySelector('pre');
+          const divNode = /** @type {HTMLDivElement} */ (data.querySelector('div'));
+          const spanNode = /** @type {HTMLSpanElement} */ (data.querySelector('span'));
+          const preNode = /** @type {HTMLPreElement} */ (data.querySelector('pre'));
 
           // Test with specific element names to ensure both sides of OR are evaluated
           // This ensures line 80-81 (the return statement with OR) is fully covered

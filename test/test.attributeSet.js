@@ -1,5 +1,4 @@
 /* eslint-disable no-empty-function -- Using many for tests */
-// @ts-nocheck - Testing new useAttributeSets parameter
 import {expect} from 'chai';
 import {JSDOM} from 'jsdom';
 import JTLT, {
@@ -174,7 +173,7 @@ describe('attributeSet - DOMJoiningTransformer', () => {
     });
     joiner.element('button', {}, [], () => {}, ['style1', 'style2']);
     const result = joiner.get();
-    const btn = /** @type {Element} */ (
+    const btn = /** @type {HTMLElement} */ (
       /** @type {DocumentFragment} */ (result).firstChild
     );
     expect(btn.getAttribute('class')).to.equal('btn');
@@ -368,7 +367,7 @@ describe('attributeSet - JSONPath Context API', () => {
             type: 'button'
           });
           this.element('button', {id: 'test'}, [], () => {
-            this.text(val);
+            this.text(/** @type {string} */ (val));
           }, ['btn-attrs']);
         }
       }],

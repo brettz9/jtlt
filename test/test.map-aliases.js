@@ -1,7 +1,6 @@
 /* eslint-disable @stylistic/max-len, no-new, array-callback-return
   -- Test file for map/mapEntry aliases */
 /* eslint-disable unicorn/no-unused-array-method-return -- Different `map` */
-// @ts-nocheck
 import {assert} from 'chai';
 import {JSDOM} from 'jsdom';
 import JTLT, {
@@ -13,6 +12,7 @@ describe('map() and mapEntry() aliases', function () {
     it('should support map() as alias for object()', function () {
       const data = {root: {}};
       let out;
+      /** @type {import('../src/index.js').JSONPathTemplateArray<"json">[]} */
       const templates = [{path: '$', template () {
         this.map(() => {
           this.mapEntry('key1', 'value1');
@@ -31,6 +31,7 @@ describe('map() and mapEntry() aliases', function () {
     it('should support map() with seed object', function () {
       const data = {root: {}};
       let out;
+      /** @type {import('../src/index.js').JSONPathTemplateArray<"json">[]} */
       const templates = [{path: '$', template () {
         this.map({base: 'val'}, () => {
           this.mapEntry('extra', 'added');
@@ -48,6 +49,7 @@ describe('map() and mapEntry() aliases', function () {
     it('should support mapEntry() for setting properties', function () {
       const data = {root: {}};
       let out;
+      /** @type {import('../src/index.js').JSONPathTemplateArray<"json">[]} */
       const templates = [{path: '$', template () {
         this.map(() => {
           this.mapEntry('a', 1);
@@ -77,7 +79,9 @@ describe('map() and mapEntry() aliases', function () {
   describe('StringJoiningTransformer', function () {
     it('should support map() alias in string output', function () {
       const data = {root: {}};
+      /** @type {string|undefined} */
       let out;
+      /** @type {import('../src/index.js').JSONPathTemplateArray<"string">[]} */
       const templates = [{path: '$', template () {
         this.map({}, () => {
           this.mapEntry('name', 'test');
@@ -98,7 +102,9 @@ describe('map() and mapEntry() aliases', function () {
 
     it('should support map() without callback', function () {
       const data = {root: {}};
+      /** @type {string|undefined} */
       let out;
+      /** @type {import('../src/index.js').JSONPathTemplateArray<"string">[]} */
       const templates = [{path: '$', template () {
         this.map({x: 1, y: 2});
       }}];
@@ -126,7 +132,9 @@ describe('map() and mapEntry() aliases', function () {
   describe('DOMJoiningTransformer', function () {
     it('should support map() alias in DOM output', function () {
       const data = {root: {}};
+      /** @type {Element|DocumentFragment|undefined} */
       let out;
+      /** @type {import('../src/index.js').JSONPathTemplateArray<"dom">[]} */
       const templates = [{path: '$', template () {
         this.element('div', {}, () => {
           this.map({a: 1});
@@ -138,12 +146,14 @@ describe('map() and mapEntry() aliases', function () {
           out = result; return result;
         }
       });
-      assert.ok(out.querySelector('div'));
+      assert.ok(out?.querySelector('div'));
     });
 
     it('should support mapEntry() as no-op in DOM', function () {
       const data = {root: {}};
+      /** @type {DocumentFragment|Element|undefined} */
       let out;
+      /** @type {import('../src/index.js').JSONPathTemplateArray<"dom">[]} */
       const templates = [{path: '$', template () {
         this.element('div', {}, () => {
           this.mapEntry('key', 'val'); // No-op in DOM
@@ -156,8 +166,8 @@ describe('map() and mapEntry() aliases', function () {
           out = result; return result;
         }
       });
-      const div = out.querySelector('div');
-      assert.equal(div.textContent, 'content');
+      const div = out?.querySelector('div');
+      assert.equal(div?.textContent, 'content');
     });
 
     it('should call map() and mapEntry() directly on joiner', function () {
@@ -177,6 +187,7 @@ describe('map() and mapEntry() aliases', function () {
       const {window} = new JSDOM('<root><item>test</item></root>');
       const data = window.document;
       let out;
+      /** @type {import('../src/index.js').XPathTemplateObject<"json">[]} */
       const templates = [{
         path: '/',
         template () {
@@ -200,7 +211,10 @@ describe('map() and mapEntry() aliases', function () {
   describe('Nested usage', function () {
     it('should support nested map() calls', function () {
       const data = {root: {}};
+
+      /** @type {{outer: string}[]|undefined} */
       let out;
+      /** @type {import('../src/index.js').JSONPathTemplateArray<"json">[]} */
       const templates = [{path: '$', template () {
         this.map(() => {
           this.mapEntry('outer', 'value');
@@ -212,16 +226,20 @@ describe('map() and mapEntry() aliases', function () {
       new JTLT({
         data, templates, outputType: 'json',
         success (result) {
-          out = result; return result;
+          out = /** @type {{outer: string}[]} */ (result); return result;
         }
       });
       assert.isArray(out);
-      assert.ok(out[0].outer);
+      assert.ok(out?.[0].outer);
     });
 
     it('should mix map/mapEntry with object/propValue', function () {
       const data = {root: {}};
+
+      /** @type {{a?: number, b?: number, c?: number, d?: number}[]|undefined} */
       let out;
+
+      /** @type {import('../src/index.js').JSONPathTemplateArray<"json">[]} */
       const templates = [{path: '$', template () {
         this.map(() => {
           this.mapEntry('a', 1);
@@ -235,12 +253,15 @@ describe('map() and mapEntry() aliases', function () {
       new JTLT({
         data, templates, outputType: 'json',
         success (result) {
-          out = result; return result;
+          out = /** @type {{a?: number, b?: number, c?: number, d?: number}[]|undefined} */ (
+            result
+          );
+          return result;
         }
       });
-      assert.equal(out.length, 2);
-      assert.deepEqual(out[0], {a: 1, b: 2});
-      assert.deepEqual(out[1], {c: 3, d: 4});
+      assert.equal(out?.length, 2);
+      assert.deepEqual(out?.[0], {a: 1, b: 2});
+      assert.deepEqual(out?.[1], {c: 3, d: 4});
     });
   });
 });
