@@ -1,7 +1,8 @@
 # jtlt CHANGES
 
-## ?
+## 0.13.0
 
+- fix(types): more precise typing
 - chore: update deps and devDeps
 
 ## 0.12.0

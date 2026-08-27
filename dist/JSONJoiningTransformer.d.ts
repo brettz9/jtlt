@@ -57,8 +57,9 @@ export type ElementInfo = {
  * boolean/null add primitives accordingly. It does not perform HTML escaping
  * or string serialization; it builds real JS values.
  * @extends {AbstractJoiningTransformer<"json">}
+ * @template {import('./AbstractJoiningTransformer.js').JSONJoiningTransformerConfig} [TConfig=import('./AbstractJoiningTransformer.js').JSONJoiningTransformerConfig]
  */
-declare class JSONJoiningTransformer extends AbstractJoiningTransformer<"json"> {
+declare class JSONJoiningTransformer<TConfig extends import('./AbstractJoiningTransformer.js').JSONJoiningTransformerConfig = import('./AbstractJoiningTransformer.js').JSONJoiningTransformerConfig> extends AbstractJoiningTransformer<"json"> {
     /** @type {any[]|Record<string, unknown>} */
     _obj: any[] | Record<string, unknown>;
     /** @type {any} */
@@ -83,9 +84,15 @@ declare class JSONJoiningTransformer extends AbstractJoiningTransformer<"json"> 
     /** @type {any} */
     _outputConfig: any;
     /**
-     * @param {any[]|Record<string, unknown>} [o] - Initial object or array
-     * @param {import('./AbstractJoiningTransformer.js').
-     *   JSONJoiningTransformerConfig} [cfg] - Configuration object
+     * @template {import('./AbstractJoiningTransformer.js').JSONJoiningTransformerConfig} T
+     * @param {any[]|Record<string, unknown>} [o] - Initial JSON object or array
+     * @param {T} [cfg] - Configuration options
+     * @returns {JSONJoiningTransformer<T>}
+     */
+    static create<T extends import('./AbstractJoiningTransformer.js').JSONJoiningTransformerConfig>(o?: any[] | Record<string, unknown>, cfg?: T): JSONJoiningTransformer<T>;
+    /**
+     * @param {any[]|Record<string, unknown>} [o] - Initial JSON object or array
+     * @param {import('./AbstractJoiningTransformer.js').JSONJoiningTransformerConfig} [cfg] - Configuration options
      */
     constructor(o?: any[] | Record<string, unknown>, cfg?: import('./AbstractJoiningTransformer.js').JSONJoiningTransformerConfig);
     /**
@@ -110,9 +117,9 @@ declare class JSONJoiningTransformer extends AbstractJoiningTransformer<"json"> 
      * Gets the current object or array. If unwrapSingleResult config option is
      * enabled and the root array contains exactly one element, returns that
      * element directly (unwrapped).
-     * @returns {any[]|Record<string, unknown>|any}
+     * @returns {TConfig['exposeDocuments'] extends true ? any[] : any[]|Record<string, unknown>|any}
      */
-    get(): any[] | Record<string, unknown> | any;
+    get(): TConfig['exposeDocuments'] extends true ? any[] : any[] | Record<string, unknown> | any;
     /**
      * Sets a property value on the current object.
      * @param {string} prop - Property name
@@ -128,7 +135,7 @@ declare class JSONJoiningTransformer extends AbstractJoiningTransformer<"json"> 
      */
     mapEntry(prop: string, val: any): void;
     /**
-     * @param {Record<string, unknown>|ObjectCallback} [objOrCb]
+     * @param {null|Record<string, unknown>|ObjectCallback} [objOrCb]
      *   Seed object or callback.
      * @param {ObjectCallback|any[]} [cbOrUsePropertySets] Callback or sets.
      * @param {any[]|Record<string, unknown>} [usePropertySetsOrPropSets]
@@ -136,7 +143,7 @@ declare class JSONJoiningTransformer extends AbstractJoiningTransformer<"json"> 
      * @param {Record<string, unknown>} [propSets] Key-value pairs to add.
      * @returns {JSONJoiningTransformer}
      */
-    object(objOrCb?: Record<string, unknown> | ObjectCallback, cbOrUsePropertySets?: ObjectCallback | any[], usePropertySetsOrPropSets?: any[] | Record<string, unknown>, propSets?: Record<string, unknown>): JSONJoiningTransformer;
+    object(objOrCb?: null | Record<string, unknown> | ObjectCallback, cbOrUsePropertySets?: ObjectCallback | any[], usePropertySetsOrPropSets?: any[] | Record<string, unknown>, propSets?: Record<string, unknown>): JSONJoiningTransformer;
     /**
      * Alias for object(). Build an object/map.
      * @param {Record<string, unknown>|ObjectCallback} [objOrCb]
@@ -150,11 +157,11 @@ declare class JSONJoiningTransformer extends AbstractJoiningTransformer<"json"> 
     map(objOrCb?: Record<string, unknown> | ObjectCallback, cbOrUsePropertySets?: ObjectCallback | any[], usePropertySetsOrPropSets?: any[] | Record<string, unknown>, propSets?: Record<string, unknown>): JSONJoiningTransformer;
     /**
      * Creates a new array and executes a callback in its context.
-     * @param {any[]|ArrayCallback} [arrOrCb] Seed array or callback.
+     * @param {any[]|ArrayCallback|null} [arrOrCb] Seed array or callback.
      * @param {ArrayCallback} [cb] Callback when first arg was array.
      * @returns {JSONJoiningTransformer}
      */
-    array(arrOrCb?: any[] | ArrayCallback, cb?: ArrayCallback): JSONJoiningTransformer;
+    array(arrOrCb?: any[] | ArrayCallback | null, cb?: ArrayCallback): JSONJoiningTransformer;
     /**
      * Appends a string value.
      * @param {string} str String value.

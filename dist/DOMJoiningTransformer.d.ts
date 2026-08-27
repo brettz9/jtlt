@@ -14,8 +14,9 @@ export type SimpleCallback = (@this {DOMJoiningTransformer}
  * attribute(), and text()), though string/number/boolean will append text
  * nodes for convenience.
  * @extends {AbstractJoiningTransformer<"dom">}
+ * @template {import('./AbstractJoiningTransformer.js').DOMJoiningTransformerConfig} [TConfig=import('./AbstractJoiningTransformer.js').DOMJoiningTransformerConfig]
  */
-declare class DOMJoiningTransformer extends AbstractJoiningTransformer<"dom"> {
+declare class DOMJoiningTransformer<TConfig extends import('./AbstractJoiningTransformer.js').DOMJoiningTransformerConfig = import('./AbstractJoiningTransformer.js').DOMJoiningTransformerConfig> extends AbstractJoiningTransformer<"dom"> {
     _dom: DocumentFragment | Element;
     /** @type {any} */
     _context: any;
@@ -37,7 +38,18 @@ declare class DOMJoiningTransformer extends AbstractJoiningTransformer<"dom"> {
      * @param {import('./AbstractJoiningTransformer.js').
      *   DOMJoiningTransformerConfig} cfg - Configuration object
      */
-    constructor(o: DocumentFragment | Element, cfg: import('./AbstractJoiningTransformer.js').DOMJoiningTransformerConfig);
+    /**
+     * @template {import('./AbstractJoiningTransformer.js').DOMJoiningTransformerConfig} T
+     * @param {DocumentFragment|Element|undefined} dom - DOM element or fragment
+     * @param {T} cfg - Configuration options
+     * @returns {DOMJoiningTransformer<T>}
+     */
+    static create<T extends import('./AbstractJoiningTransformer.js').DOMJoiningTransformerConfig>(dom: DocumentFragment | Element | undefined, cfg: T): DOMJoiningTransformer<T>;
+    /**
+     * @param {DocumentFragment|Element|undefined} o - DOM element or fragment
+     * @param {import('./AbstractJoiningTransformer.js').DOMJoiningTransformerConfig} cfg - Configuration options
+     */
+    constructor(o: DocumentFragment | Element | undefined, cfg: import('./AbstractJoiningTransformer.js').DOMJoiningTransformerConfig);
     /**
      * @param {Node} item
      * @returns {void}
@@ -55,9 +67,10 @@ declare class DOMJoiningTransformer extends AbstractJoiningTransformer<"dom"> {
      */
     append(item: string | Node): void;
     /**
-     * @returns {DocumentFragment|Element|XMLDocument[]}
+     * @returns {TConfig['exposeDocuments'] extends true ?
+     *   XMLDocument[] : DocumentFragment|Element}
      */
-    get(): DocumentFragment | Element | XMLDocument[];
+    get(): TConfig['exposeDocuments'] extends true ? XMLDocument[] : DocumentFragment | Element;
     /**
      * @param {string} prop - Property name
      * @param {any} val - Property value
@@ -73,12 +86,13 @@ declare class DOMJoiningTransformer extends AbstractJoiningTransformer<"dom"> {
     mapEntry(prop: string, val: any): void;
     /**
      * @param {Record<string, unknown>} obj - Object to serialize
-     * @param {(this: DOMJoiningTransformer) => void} [cb] - Callback function.
+     * @param {((this: DOMJoiningTransformer) => void)|null} [cb] - Callback
+     *   function.
      * @param {any[]} [usePropertySets] - Property sets to use
      * @param {Record<string, unknown>} [propSets] - Additional property sets
      * @returns {DOMJoiningTransformer}
      */
-    object(obj: Record<string, unknown>, cb?: (this: DOMJoiningTransformer) => void, usePropertySets?: any[], propSets?: Record<string, unknown>): DOMJoiningTransformer;
+    object(obj: Record<string, unknown>, cb?: ((this: DOMJoiningTransformer) => void) | null, usePropertySets?: any[], propSets?: Record<string, unknown>): DOMJoiningTransformer;
     /**
      * Alias for object(). Build an object/map.
      * @param {Record<string, unknown>} obj - Object to serialize
@@ -135,6 +149,7 @@ declare class DOMJoiningTransformer extends AbstractJoiningTransformer<"dom"> {
      * @param {Record<string, string>} atts
      * @param {(Node|string)[]} childNodes
      * @param {(this: DOMJoiningTransformer) => void} cb
+     * @param {string[]} [useAttributeSets] - Attribute set names to apply
      * @returns {DOMJoiningTransformer}
      */
     /**
@@ -192,13 +207,14 @@ declare class DOMJoiningTransformer extends AbstractJoiningTransformer<"dom"> {
      * @param {string[]} [useAttributeSets] - Attribute set names to apply
      * @returns {DOMJoiningTransformer}
      */
-    element(elName: Element | string, atts: Record<string, string>, childNodes: (Node | string)[], cb: (this: DOMJoiningTransformer) => void): DOMJoiningTransformer;
+    element(elName: Element | string, atts: Record<string, string>, childNodes: (Node | string)[], cb: (this: DOMJoiningTransformer) => void, useAttributeSets?: string[]): DOMJoiningTransformer;
     /**
      * @overload
      * @param {Element|string} elName
      * @param {Record<string, string>} atts
      * @param {(Node|string)[]} childNodes
      * @param {(this: DOMJoiningTransformer) => void} cb
+     * @param {string[]} [useAttributeSets] - Attribute set names to apply
      * @returns {DOMJoiningTransformer}
      */
     /**
@@ -263,6 +279,7 @@ declare class DOMJoiningTransformer extends AbstractJoiningTransformer<"dom"> {
      * @param {Record<string, string>} atts
      * @param {(Node|string)[]} childNodes
      * @param {(this: DOMJoiningTransformer) => void} cb
+     * @param {string[]} [useAttributeSets] - Attribute set names to apply
      * @returns {DOMJoiningTransformer}
      */
     /**
@@ -327,6 +344,7 @@ declare class DOMJoiningTransformer extends AbstractJoiningTransformer<"dom"> {
      * @param {Record<string, string>} atts
      * @param {(Node|string)[]} childNodes
      * @param {(this: DOMJoiningTransformer) => void} cb
+     * @param {string[]} [useAttributeSets] - Attribute set names to apply
      * @returns {DOMJoiningTransformer}
      */
     /**
@@ -391,6 +409,7 @@ declare class DOMJoiningTransformer extends AbstractJoiningTransformer<"dom"> {
      * @param {Record<string, string>} atts
      * @param {(Node|string)[]} childNodes
      * @param {(this: DOMJoiningTransformer) => void} cb
+     * @param {string[]} [useAttributeSets] - Attribute set names to apply
      * @returns {DOMJoiningTransformer}
      */
     /**
@@ -455,6 +474,7 @@ declare class DOMJoiningTransformer extends AbstractJoiningTransformer<"dom"> {
      * @param {Record<string, string>} atts
      * @param {(Node|string)[]} childNodes
      * @param {(this: DOMJoiningTransformer) => void} cb
+     * @param {string[]} [useAttributeSets] - Attribute set names to apply
      * @returns {DOMJoiningTransformer}
      */
     /**
@@ -519,6 +539,7 @@ declare class DOMJoiningTransformer extends AbstractJoiningTransformer<"dom"> {
      * @param {Record<string, string>} atts
      * @param {(Node|string)[]} childNodes
      * @param {(this: DOMJoiningTransformer) => void} cb
+     * @param {string[]} [useAttributeSets] - Attribute set names to apply
      * @returns {DOMJoiningTransformer}
      */
     /**
@@ -583,6 +604,7 @@ declare class DOMJoiningTransformer extends AbstractJoiningTransformer<"dom"> {
      * @param {Record<string, string>} atts
      * @param {(Node|string)[]} childNodes
      * @param {(this: DOMJoiningTransformer) => void} cb
+     * @param {string[]} [useAttributeSets] - Attribute set names to apply
      * @returns {DOMJoiningTransformer}
      */
     /**

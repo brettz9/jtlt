@@ -35,8 +35,10 @@ export type XPathTransformerContextConfig = {
  * - joiningTransformer: joiner with append(), string(), object(), array(), etc.
  * - xpathVersion: 1|2|3.1 (default 1)
  * - errorOnEqualPriority, specificityPriorityResolver (same semantics).
+ * @template [T="dom"]
+ * @template [V=DocumentFragment|Element]
  */
-declare class XPathTransformerContext {
+declare class XPathTransformerContext<T = "dom", V = DocumentFragment | Element> {
     _config: XPathTransformerContextConfig;
     _templates: import("./index.js").XPathTemplateObject<any>[];
     /** @type {Document|Element|Node} */

@@ -28,9 +28,6 @@ export type ElementAttributes = Record<string, unknown> & {
  * }} ElementAttributes
  */
 /**
- *
- */
-/**
  * Joining transformer that builds a string result.
  *
  * This transformer provides a fluent API to compose strings while supporting
@@ -56,9 +53,10 @@ export type ElementAttributes = Record<string, unknown> & {
  *   name mapping rules differ, etc.).
  * - cfg.preEscapedAttributes: skip escaping attribute values.
  * - cfg.JHTMLForJSON / cfg.mode: affect how object()/array() serialize.
+ * @template {import('./AbstractJoiningTransformer.js').StringJoiningTransformerConfig} [T=import('./AbstractJoiningTransformer.js').StringJoiningTransformerConfig]
  * @extends {AbstractJoiningTransformer<"string">}
  */
-declare class StringJoiningTransformer extends AbstractJoiningTransformer<"string"> {
+declare class StringJoiningTransformer<T extends import('./AbstractJoiningTransformer.js').StringJoiningTransformerConfig = import('./AbstractJoiningTransformer.js').StringJoiningTransformerConfig> extends AbstractJoiningTransformer<"string"> {
     _str: string;
     /** @type {any} */
     _context: any;
@@ -92,8 +90,18 @@ declare class StringJoiningTransformer extends AbstractJoiningTransformer<"strin
     root: any;
     /**
      * @param {string} s - Initial string
-     * @param {import('./AbstractJoiningTransformer.js').
-     *   StringJoiningTransformerConfig} [cfg] - Configuration object
+     * @param {T} [cfg] - Configuration object
+     */
+    /**
+     * @template {import('./AbstractJoiningTransformer.js').StringJoiningTransformerConfig} U
+     * @param {string} s - Initial string
+     * @param {U} [cfg] - Configuration options
+     * @returns {StringJoiningTransformer<U>}
+     */
+    static create<U extends import('./AbstractJoiningTransformer.js').StringJoiningTransformerConfig>(s: string, cfg?: U): StringJoiningTransformer<U>;
+    /**
+     * @param {string} s - Initial string
+     * @param {import('./AbstractJoiningTransformer.js').StringJoiningTransformerConfig} [cfg] - Configuration options
      */
     constructor(s: string, cfg?: import('./AbstractJoiningTransformer.js').StringJoiningTransformerConfig);
     /**
@@ -108,9 +116,9 @@ declare class StringJoiningTransformer extends AbstractJoiningTransformer<"strin
      */
     append(s: string | any): StringJoiningTransformer;
     /**
-     * @returns {string|string[]}
+     * @returns {T['exposeDocuments'] extends true ? string[] : string}
      */
-    get(): string | string[];
+    get(): T['exposeDocuments'] extends true ? string[] : string;
     /**
      * @param {string} prop - Property name
      * @param {any} val - Property value
@@ -131,13 +139,14 @@ declare class StringJoiningTransformer extends AbstractJoiningTransformer<"strin
      */
     propOnly(prop: string, cb: (this: StringJoiningTransformer) => void): StringJoiningTransformer;
     /**
-     * @param {Record<string, unknown>|Element} obj - Object to serialize
-     * @param {(this: StringJoiningTransformer) => void} cb - Callback function
+     * @param {null|Record<string, unknown>|Element} obj - Object to serialize
+     * @param {((this: StringJoiningTransformer) => void)|null} [cb] - Callback
+     *   function
      * @param {any[]} [usePropertySets] - Property sets to use
      * @param {Record<string, unknown>} [propSets] - Additional property sets
      * @returns {StringJoiningTransformer}
      */
-    object(obj: Record<string, unknown> | Element, cb: (this: StringJoiningTransformer) => void, usePropertySets?: any[], propSets?: Record<string, unknown>): StringJoiningTransformer;
+    object(obj: null | Record<string, unknown> | Element, cb?: ((this: StringJoiningTransformer) => void) | null, usePropertySets?: any[], propSets?: Record<string, unknown>): StringJoiningTransformer;
     /**
      * Alias for object(). Build an object/map.
      * @param {Record<string, unknown>|Element} obj - Object to serialize
@@ -148,11 +157,11 @@ declare class StringJoiningTransformer extends AbstractJoiningTransformer<"strin
      */
     map(obj: Record<string, unknown> | Element, cb: (this: StringJoiningTransformer) => void, usePropertySets?: any[], propSets?: Record<string, unknown>): StringJoiningTransformer;
     /**
-     * @param {any[]|Element} [arr] - Array to serialize
+     * @param {null|any[]|Element} [arr] - Array to serialize
      * @param {(this: StringJoiningTransformer) => void} [cb] - Callback function
      * @returns {StringJoiningTransformer}
      */
-    array(arr?: any[] | Element, cb?: (this: StringJoiningTransformer) => void): StringJoiningTransformer;
+    array(arr?: null | any[] | Element, cb?: (this: StringJoiningTransformer) => void): StringJoiningTransformer;
     /**
      * @param {string|Element|Record<string, unknown>} str
      *   String value or element
@@ -186,10 +195,11 @@ declare class StringJoiningTransformer extends AbstractJoiningTransformer<"strin
      */
     nonfiniteNumber(num: number | Element): StringJoiningTransformer;
     /**
-     * @param {((...args: any[]) => any)|Element} func - Function to stringify
+     * @param {string|
+     *   ((...args: any[]) => any)|Element} func - Function to stringify
      * @returns {StringJoiningTransformer}
      */
-    outputFunction(func: ((...args: any[]) => any) | Element): StringJoiningTransformer;
+    outputFunction(func: string | ((...args: any[]) => any) | Element): StringJoiningTransformer;
     /**
      * @param {string|Element} elem - Element name or element object
      * @param {ElementAttributes} [atts] - Element attributes

@@ -6,9 +6,9 @@ import JSONPathTransformerContext from './JSONPathTransformerContext.js';
  * optional `mode`), sorts by priority, and invokes the winning template.
  * If no template matches, built-in default rules emulate XSLT-like behavior
  * for objects, arrays, scalars, etc.
- * @template T
+ * @template {"json"|"string"|"dom"} [T="json"]
  */
-declare class JSONPathTransformer<T> {
+declare class JSONPathTransformer<T extends "json" | "string" | "dom" = "json"> {
     _config: import("./JSONPathTransformerContext.js").JSONPathTransformerContextConfig<T>;
     /** @type {import('./index.js').JSONPathTemplateObject<T>[]} */
     rootTemplates: import('./index.js').JSONPathTemplateObject<T>[];
@@ -16,13 +16,13 @@ declare class JSONPathTransformer<T> {
     static DefaultTemplateRules: {
         transformRoot: {
             /**
-             * @template U
+             * @template {"json"|"string"|"dom"} U
              * @this {JSONPathTransformerContext<U>}
              * @param {any} value - Value
              * @param {{mode?: string}} cfg - Configuration
              * @returns {void}
              */
-            template<U>(this: JSONPathTransformerContext<U>, value: any, cfg: {
+            template<U extends "json" | "string" | "dom">(this: JSONPathTransformerContext<U>, value: any, cfg: {
                 mode?: string;
             }): void;
         };
