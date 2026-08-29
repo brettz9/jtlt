@@ -33,6 +33,7 @@
     "@lezer/highlight": "^1.2.3",
     "codemirror": "^6.0.2",
     "fontoxpath": "^3.34.0",
+    "idb": "^8.0.3",
     "jamilih": "0.69.0",
     "jhtml": "0.7.3",
     "jsdom": "30.0.1",
