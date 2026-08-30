@@ -59,7 +59,7 @@ export type SortObject<V = unknown> = {
     localeOptions?: unknown;
 };
 export type SortComparator<V = unknown> = (a: V, b: V, ctx: JSONPathTransformerContext) => number;
-export type SortSpec<V = unknown> = string | SortObject | SortComparator | Array<string | SortObject>;
+export type SortSpec<V = unknown> = string | SortObject | SortComparator | Array<string | SortObject> | null;
 export type JoiningTransformerMap = {
     json: import('./JSONJoiningTransformer.js').default;
     string: import('./StringJoiningTransformer.js').default;
@@ -107,6 +107,11 @@ export type JSONPathTransformerContextConfig<T extends "json" | "string" | "dom"
      */
     preventEval?: boolean;
     /**
+     * - When true, throw if a template returns a
+     * Promise instead of awaiting it (disables `indexedDB()`)
+     */
+    sync?: boolean;
+    /**
      * Priority resolver function
      */
     specificityPriorityResolver?: (path: string) => number;
@@ -153,7 +158,7 @@ export type JSONPathTransformerContextConfig<T extends "json" | "string" | "dom"
  *   ctx: JSONPathTransformerContext
  * ) => number} SortComparator
  * @typedef {string | SortObject | SortComparator |
- *   Array<string|SortObject>} SortSpec
+ *   Array<string|SortObject> | null} SortSpec
  */
 /**
  * @typedef {object} JoiningTransformerMap
@@ -185,6 +190,8 @@ export type JSONPathTransformerContextConfig<T extends "json" | "string" | "dom"
  * @property {JoiningTransformerMap[T]} joiningTransformer - Joining transformer
  * @property {boolean} [preventEval] - Whether to prevent eval in
  *   JSONPath
+ * @property {boolean} [sync] - When true, throw if a template returns a
+ *   Promise instead of awaiting it (disables `indexedDB()`)
  * @property {(path: string) => number} [specificityPriorityResolver]
  *   Priority resolver function
  * @property {import('./index.js').JSONPathTemplateObject<T>[]|
@@ -264,9 +271,9 @@ declare class JSONPathTransformerContext<T extends "json" | "string" | "dom" = "
     appendOutput(item: AppendItemMap[T]): this;
     /**
      * Gets the current output.
-     * @returns {any} The output from the joining transformer
+     * @returns {unknown} The output from the joining transformer
      */
-    getOutput(): any;
+    getOutput(): unknown;
     /**
      * Get() and set() are provided as a convenience method for templates, but
      *   it should typically not be used (use valueOf or the copy methods to add
@@ -277,10 +284,10 @@ declare class JSONPathTransformerContext<T extends "json" | "string" | "dom" = "
      */
     get(select: string, wrap: boolean): any;
     /**
-     * @param {any} v - Value to set
+     * @param {unknown} v - Value to set
      * @returns {this}
      */
-    set(v: any): this;
+    set(v: unknown): this;
     /**
      * Apply matching templates to nodes selected by JSONPath, optionally sorted.
      *
@@ -337,9 +344,12 @@ declare class JSONPathTransformerContext<T extends "json" | "string" | "dom" = "
      *   expression matches
      * @param {string} [options.groupEndingWith] - Ends group when expression
      *   matches
-     * @param {any} [options.sort] - Sort specification (same as forEach)
+     * @param {SortSpec<V>} [options.sort] - Sort specification (same as forEach)
      * @param {(
-     *   this: JSONPathTransformerContext<T>, key: any, items: any[], ctx: any
+     *   this: JSONPathTransformerContext<T>,
+     *   key: unknown,
+     *   items: unknown[],
+     *   ctx: JSONPathTransformerContext<T>
      * ) => void} cb - Callback receives (groupingKey, groupItems, context)
      * @returns {this}
      */
@@ -348,8 +358,8 @@ declare class JSONPathTransformerContext<T extends "json" | "string" | "dom" = "
         groupAdjacent?: string;
         groupStartingWith?: string;
         groupEndingWith?: string;
-        sort?: any;
-    }, cb: (this: JSONPathTransformerContext<T>, key: any, items: any[], ctx: any) => void): this;
+        sort?: SortSpec<V>;
+    }, cb: (this: JSONPathTransformerContext<T>, key: unknown, items: unknown[], ctx: JSONPathTransformerContext<T>) => void): this;
     /**
      * Helper to build comparator for sorting.
      * @param {any} sortSpec
@@ -360,14 +370,34 @@ declare class JSONPathTransformerContext<T extends "json" | "string" | "dom" = "
     private _buildComparator;
     /**
      * Returns the current group (for use within forEachGroup callback).
-     * @returns {any[]|undefined}
+     * @returns {unknown[]|undefined}
      */
-    currentGroup(): any[] | undefined;
+    currentGroup(): unknown[] | undefined;
     /**
      * Returns the current grouping key (for use within forEachGroup callback).
-     * @returns {any}
+     * @returns {unknown}
      */
-    currentGroupingKey(): any;
+    currentGroupingKey(): unknown;
+    /**
+     * Directly query IndexedDB from within a template, e.g.
+     * `await this.indexedDB('myDB', 'myStore', {index: 'byAge'})`.
+     *
+     * Since IndexedDB access is asynchronous, this is unavailable when JTLT is
+     * configured with `sync: true`.
+     * @param {string} dbName - Database name
+     * @param {string} storeName - Object store name
+     * @param {import('./indexedDB.js').QueryOptions} [options] - Query options
+     * @returns {Promise<unknown[]>} The matching records
+     */
+    indexedDB(dbName: string, storeName: string, options?: import('./indexedDB.js').QueryOptions): Promise<unknown[]>;
+    /**
+     * Await a parsed `indexedDB(...)` expression and append its (stringified)
+     * value to the output. Used by {@link valueOf}. Callers reject `config.sync`.
+     * @param {import('./indexedDB.js').ParsedIndexedDBExpression} parsed
+     * @param {any} results - The joining transformer
+     * @returns {Promise<this>}
+     */
+    _appendIndexedDBValue(parsed: import('./indexedDB.js').ParsedIndexedDBExpression, results: any): Promise<this>;
     /**
      * @param {string|object} [select] - JSONPath selector
      * @returns {this}
@@ -615,10 +645,10 @@ declare class JSONPathTransformerContext<T extends "json" | "string" | "dom" = "
     /**
      * Invoke a registered stylesheet function with positional arguments.
      * @param {string} name - Function name (with namespace)
-     * @param {any[]} args - Positional arguments
-     * @returns {any} Function return value
+     * @param {unknown[]} args - Positional arguments
+     * @returns {unknown} Function return value
      */
-    invokeFunctionByArity(name: string, args?: any[]): any;
+    invokeFunctionByArity(name: string, args?: unknown[]): unknown;
     /**
      * Create an element. Mirrors the joining transformer API so templates can
      * call `this.element()`.
@@ -702,10 +732,10 @@ declare class JSONPathTransformerContext<T extends "json" | "string" | "dom" = "
     _usePropertySets(obj: Record<string, unknown>, name: string): Record<string, unknown>;
     /**
      * @param {string} name - Key name
-     * @param {any} value - Value to match
-     * @returns {any}
+     * @param {unknown} value - Value to match
+     * @returns {unknown}
      */
-    getKey(name: string, value: any): any;
+    getKey(name: string, value: unknown): unknown;
     /**
      * @param {string} name - Key name
      * @param {string} match - Match expression

@@ -12,6 +12,16 @@ export type XPathTransformerContextConfig = {
      */
     joiningTransformer: import('./index.js').JoiningTransformer;
     errorOnEqualPriority?: boolean;
+    /**
+     * - When true, throw if a template returns a
+     * Promise instead of awaiting it (disables `indexedDB()`)
+     */
+    sync?: boolean;
+    /**
+     * - Whether to prevent eval in the JSONPath
+     * trailing segment of an `indexedDB(...)` expression
+     */
+    preventEval?: boolean;
     specificityPriorityResolver?: (path: string) => number;
 };
 /**
@@ -21,6 +31,10 @@ export type XPathTransformerContextConfig = {
  * @property {import('./index.js').
  *   JoiningTransformer} joiningTransformer Joiner
  * @property {boolean} [errorOnEqualPriority]
+ * @property {boolean} [sync] - When true, throw if a template returns a
+ *   Promise instead of awaiting it (disables `indexedDB()`)
+ * @property {boolean} [preventEval] - Whether to prevent eval in the JSONPath
+ *   trailing segment of an `indexedDB(...)` expression
  * @property {(path: string) => number} [specificityPriorityResolver]
  */
 /**
@@ -114,8 +128,8 @@ declare class XPathTransformerContext<T = "dom", V = DocumentFragment | Element>
      *   XPathTemplateObject<any>[]} templates - Template objects
      */
     constructor(config: XPathTransformerContextConfig, templates: import('./index.js').XPathTemplateObject<any>[]);
-    /** @returns {import('./index.js').JoiningTransformer} */
-    _getJoiningTransformer(): import('./index.js').JoiningTransformer;
+    /** @returns {import('./index.js').BuiltinJoiningTransformer} */
+    _getJoiningTransformer(): import('./index.js').BuiltinJoiningTransformer;
     /**
      * Check if whitespace should be stripped for a given element.
      * @param {Node} node - The node to check
@@ -204,7 +218,10 @@ declare class XPathTransformerContext<T = "dom", V = DocumentFragment | Element>
      * @param {string} [options.groupEndingWith] - Ends group when expression
      *   matches
      * @param {(
-     *   this: XPathTransformerContext, key: any, items: Node[], ctx: any
+     *   this: XPathTransformerContext,
+     *   key: unknown,
+     *   items: Node[],
+     *   ctx: XPathTransformerContext
      * ) => void} cb - Callback receives (groupingKey, groupItems, context)
      * @returns {this}
      */
@@ -213,7 +230,7 @@ declare class XPathTransformerContext<T = "dom", V = DocumentFragment | Element>
         groupAdjacent?: string;
         groupStartingWith?: string;
         groupEndingWith?: string;
-    }, cb: (this: XPathTransformerContext, key: any, items: Node[], ctx: any) => void): this;
+    }, cb: (this: XPathTransformerContext, key: unknown, items: Node[], ctx: XPathTransformerContext) => void): this;
     /**
      * Returns the current group (for use within forEachGroup callback).
      * @returns {Node[]|undefined}
@@ -221,9 +238,29 @@ declare class XPathTransformerContext<T = "dom", V = DocumentFragment | Element>
     currentGroup(): Node[] | undefined;
     /**
      * Returns the current grouping key (for use within forEachGroup callback).
-     * @returns {any}
+     * @returns {unknown}
      */
-    currentGroupingKey(): any;
+    currentGroupingKey(): unknown;
+    /**
+     * Directly query IndexedDB from within a template, e.g.
+     * `await this.indexedDB('myDB', 'myStore', {index: 'byAge'})`.
+     *
+     * Since IndexedDB access is asynchronous, this is unavailable when JTLT is
+     * configured with `sync: true`.
+     * @param {string} dbName - Database name
+     * @param {string} storeName - Object store name
+     * @param {import('./indexedDB.js').QueryOptions} [options] - Query options
+     * @returns {Promise<unknown[]>} The matching records
+     */
+    indexedDB(dbName: string, storeName: string, options?: import('./indexedDB.js').QueryOptions): Promise<unknown[]>;
+    /**
+     * Evaluate an XPath selector that calls the `jtlt:indexedDB(...)` function,
+     * awaiting the underlying IndexedDB reads, then append the string result.
+     * Used by {@link valueOf}. Callers reject `config.sync`.
+     * @param {string} selectStr
+     * @returns {Promise<XPathTransformerContext>}
+     */
+    _appendIndexedDBValue(selectStr: string): Promise<XPathTransformerContext>;
     /**
      * Append the value from an XPath expression or the context node text.
      * @param {string|object} [select]
@@ -489,10 +526,10 @@ declare class XPathTransformerContext<T = "dom", V = DocumentFragment | Element>
     /**
      * Invoke a registered stylesheet function with positional arguments.
      * @param {string} name - Function name (with namespace)
-     * @param {any[]} args - Positional arguments
-     * @returns {any} Function return value
+     * @param {unknown[]} args - Positional arguments
+     * @returns {unknown} Function return value
      */
-    invokeFunctionByArity(name: string, args?: any[]): any;
+    invokeFunctionByArity(name: string, args?: unknown[]): unknown;
     /**
      * Append element.
      * @param {string} name Tag name

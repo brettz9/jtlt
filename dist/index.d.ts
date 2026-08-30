@@ -36,7 +36,7 @@ export type TemplateObject<T, U, TCtx> = {
 };
 export type TemplateFunction<T, U, TCtx> = (this: TCtx, value: ResultType<U>, cfg?: {
     mode?: string;
-}) => ResultType<T> | void;
+}) => ResultType<T> | void | Promise<ResultType<T> | void>;
 export type JSONPathTemplateObject<T extends "json" | "string" | "dom"> = TemplateObject<T, "json", import('./JSONPathTransformerContext.js').default<T>>;
 export type XPathTemplateObject<T> = TemplateObject<T, "dom", import('./XPathTransformerContext.js').default>;
 export type XPathTemplateArray<T> = (XPathTemplateObject<T> | [
@@ -47,17 +47,50 @@ export type JSONPathTemplateArray<T extends "json" | "string" | "dom"> = JSONPat
     string,
     TemplateFunction<T, "json", import('./JSONPathTransformerContext.js').default>
 ];
-export type JoiningTransformer = (StringJoiningTransformer | DOMJoiningTransformer | JSONJoiningTransformer);
+export type JoiningTransformerContract = {
+    append: (item: unknown) => unknown;
+    get: () => unknown;
+    text?: (txt: string) => unknown;
+    string?: (str: unknown, cb?: () => void) => unknown;
+    number?: (num: unknown) => unknown;
+    object?: (obj: unknown, cb?: unknown, usePropertySets?: unknown, propSets?: unknown) => unknown;
+    array?: (arr: unknown, cb?: unknown) => unknown;
+    element?: (name: string, atts?: unknown, children?: unknown, cb?: unknown, useAttributeSets?: unknown) => unknown;
+    attribute?: (name: string, val: unknown, avoidAttEscape?: unknown) => unknown;
+    comment?: (text: string) => unknown;
+    processingInstruction?: (target: string, data: string) => unknown;
+    plainText?: (str: unknown) => unknown;
+    propValue?: (prop: unknown, val: unknown) => unknown;
+    rawAppend?: (item: unknown) => unknown;
+    namespace?: (prefix: string, namespaceURI: string) => unknown;
+    setContext?: (context: unknown) => unknown;
+    output?: (cfg: unknown) => unknown;
+    mode?: (cfg: unknown) => unknown;
+    stylesheet?: (cfg: unknown) => unknown;
+    function?: (cfg: unknown) => unknown;
+    invokeFunctionByArity?: (name: string, args?: unknown[]) => unknown;
+    characterMap?: (name: string, outputCharacters: unknown) => unknown;
+    attributeSet?: (name: string, attributes: unknown) => unknown;
+    namespaceAlias?: (stylesheetPrefix: string, resultPrefix: string) => unknown;
+};
+export type BuiltinJoiningTransformer = (StringJoiningTransformer | DOMJoiningTransformer | JSONJoiningTransformer);
+export type JoiningTransformer = BuiltinJoiningTransformer | JoiningTransformerContract;
 export type joiningTypes = "json" | "string" | "dom";
-export type ResultType<T, E extends boolean | undefined = false> = T extends "json" ? (E extends true ? any[] : unknown) : T extends "string" ? (E extends true ? string[] : string) : (E extends true ? XMLDocument[] : DocumentFragment | Element);
+export type ResultType<T, E extends boolean | undefined = false> = T extends "json" ? (E extends true ? unknown[] : unknown) : T extends "string" ? (E extends true ? string[] : string) : (E extends true ? XMLDocument[] : DocumentFragment | Element);
 export type BaseJTLTOptions<T, E extends boolean | undefined = false> = {
+    /**
+     * Off by default: the engine awaits any Promise a
+     * template returns (e.g. from `await this.indexedDB(...)`). Set `true` to
+     * forbid asynchrony — a template that returns a Promise then throws.
+     */
+    sync?: boolean;
     /**
      * A callback supplied
      * with a single argument that is the result of this instance's
      * transform() method. When used in TypeScript, this can be made
      * generic as `success<T>(result: T): void`.
      */
-    success: (result: ResultType<T, E>) => ResultType<T, E> | void;
+    success?: (result: ResultType<T, E>) => ResultType<T, E> | void;
     /**
      * A JSON
      * object or DOM document (XPath)
@@ -150,7 +183,7 @@ export type XPathJTLTOptions<T extends "json" | "string" | "dom", E extends bool
     xpathVersion?: 1 | 2 | 3.1;
     outputType?: T;
 };
-export type JTLTOptions<E extends boolean | undefined = any> = JSONPathJTLTOptions<"json", E> | JSONPathJTLTOptions<"string", E> | JSONPathJTLTOptions<"dom", E> | XPathJTLTOptions<"json", E> | XPathJTLTOptions<"string", E> | XPathJTLTOptions<"dom", E>;
+export type JTLTOptions<E extends boolean | undefined = boolean | undefined> = JSONPathJTLTOptions<"json", E> | JSONPathJTLTOptions<"string", E> | JSONPathJTLTOptions<"dom", E> | XPathJTLTOptions<"json", E> | XPathJTLTOptions<"string", E> | XPathJTLTOptions<"dom", E>;
 /**
  * Internal options extension adding private runtime state flags.
  * Not part of the public API surface but used for narrowing casts.
@@ -182,7 +215,7 @@ export type JTLTOptions<E extends boolean | undefined = any> = JSONPathJTLTOptio
  * @typedef {(this: TCtx,
  *   value: ResultType<U>,
  *   cfg?: {mode?: string}
- * ) => ResultType<T>|void} TemplateFunction
+ * ) => ResultType<T>|void|Promise<ResultType<T>|void>} TemplateFunction
  */
 /**
  * @template {"json"|"string"|"dom"} T
@@ -209,11 +242,69 @@ export type JTLTOptions<E extends boolean | undefined = any> = JSONPathJTLTOptio
  * >]} JSONPathTemplateArray
  */
 /**
+ * The output-sink surface a custom `joiningTransformer` may provide. Only
+ * `append` and `get` are required; the rest are optional because the engine
+ * guards each call. The built-in joiners' `append`/`string`/… signatures
+ * diverge (e.g. the DOM joiner also accepts `Node`), so under
+ * `strictFunctionTypes` no single structural type is a supertype of all
+ * three; this contract lists the surface with `unknown` parameters, and
+ * {@link JoiningTransformer} unions it with the concrete classes so real
+ * joiners still type precisely.
+ * @typedef {object} JoiningTransformerContract
+ * @property {(item: unknown) => unknown} append
+ * @property {() => unknown} get
+ * @property {(txt: string) => unknown} [text]
+ * @property {(str: unknown, cb?: () => void) => unknown} [string]
+ * @property {(num: unknown) => unknown} [number]
+ * @property {(
+ *   obj: unknown, cb?: unknown, usePropertySets?: unknown, propSets?: unknown
+ * ) => unknown} [object]
+ * @property {(arr: unknown, cb?: unknown) => unknown} [array]
+ * @property {(
+ *   name: string, atts?: unknown, children?: unknown,
+ *   cb?: unknown, useAttributeSets?: unknown
+ * ) => unknown} [element]
+ * @property {(
+ *   name: string, val: unknown, avoidAttEscape?: unknown
+ * ) => unknown} [attribute]
+ * @property {(text: string) => unknown} [comment]
+ * @property {(
+ *   target: string, data: string
+ * ) => unknown} [processingInstruction]
+ * @property {(str: unknown) => unknown} [plainText]
+ * @property {(prop: unknown, val: unknown) => unknown} [propValue]
+ * @property {(item: unknown) => unknown} [rawAppend]
+ * @property {(prefix: string, namespaceURI: string) => unknown} [namespace]
+ * @property {(context: unknown) => unknown} [setContext]
+ * @property {(cfg: unknown) => unknown} [output]
+ * @property {(cfg: unknown) => unknown} [mode]
+ * @property {(cfg: unknown) => unknown} [stylesheet]
+ * @property {(cfg: unknown) => unknown} [function]
+ * @property {(
+ *   name: string, args?: unknown[]
+ * ) => unknown} [invokeFunctionByArity]
+ * @property {(
+ *   name: string, outputCharacters: unknown
+ * ) => unknown} [characterMap]
+ * @property {(name: string, attributes: unknown) => unknown} [attributeSet]
+ * @property {(
+ *   stylesheetPrefix: string, resultPrefix: string
+ * ) => unknown} [namespaceAlias]
+ */
+/**
+ * One of the three built-in joiners. Used where engine internals rely on
+ * concrete members (e.g. `_modeConfig`).
  * @typedef {(
  *   StringJoiningTransformer|
  *   DOMJoiningTransformer|
  *   JSONJoiningTransformer
- * )} JoiningTransformer
+ * )} BuiltinJoiningTransformer
+ */
+/**
+ * The type accepted for a config `joiningTransformer`: a built-in joiner or
+ * any object implementing {@link JoiningTransformerContract}.
+ * @typedef {BuiltinJoiningTransformer | JoiningTransformerContract
+ * } JoiningTransformer
  */
 /**
  * @typedef {"json"|"string"|"dom"} joiningTypes
@@ -222,7 +313,7 @@ export type JTLTOptions<E extends boolean | undefined = any> = JSONPathJTLTOptio
  * @template T
  * @template {boolean|undefined} [E=false]
  * @typedef {T extends "json" ?
- *   (E extends true ? any[] : unknown) :
+ *   (E extends true ? unknown[] : unknown) :
  *   T extends "string" ?
  *   (E extends true ? string[] : string) :
  *   (E extends true ? XMLDocument[] :
@@ -233,9 +324,12 @@ export type JTLTOptions<E extends boolean | undefined = any> = JSONPathJTLTOptio
  * @template T
  * @template {boolean|undefined} [E=false]
  * @typedef {object} BaseJTLTOptions
+ * @property {boolean} [sync] Off by default: the engine awaits any Promise a
+ *   template returns (e.g. from `await this.indexedDB(...)`). Set `true` to
+ *   forbid asynchrony — a template that returns a Promise then throws.
  * @property {(
  *   result: ResultType<T, E>
- * ) => ResultType<T, E>|void} success A callback supplied
+ * ) => ResultType<T, E>|void} [success] A callback supplied
  *   with a single argument that is the result of this instance's
  *   transform() method. When used in TypeScript, this can be made
  *   generic as `success<T>(result: T): void`.
@@ -322,7 +416,7 @@ export type JTLTOptions<E extends boolean | undefined = any> = JSONPathJTLTOptio
  * }} XPathJTLTOptions
  */
 /**
- * @template {boolean|undefined} [E=any]
+ * @template {boolean|undefined} [E=boolean|undefined]
  * @typedef {JSONPathJTLTOptions<"json", E> |
  *   JSONPathJTLTOptions<"string", E> |
  *   JSONPathJTLTOptions<"dom", E> |

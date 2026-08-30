@@ -234,10 +234,10 @@ declare class AbstractJoiningTransformer<T> {
     /**
      * Invoke a registered stylesheet function with positional arguments.
      * @param {string} name - Function name (with namespace)
-     * @param {any[]} args - Positional arguments
-     * @returns {any} Function return value
+     * @param {unknown[]} args - Positional arguments
+     * @returns {unknown} Function return value
      */
-    invokeFunctionByArity(name: string, args?: any[]): any;
+    invokeFunctionByArity(name: string, args?: unknown[]): unknown;
     /**
      * @param {string} name
      * @param {OutputCharacters} outputCharacters
@@ -297,12 +297,12 @@ declare class AbstractJoiningTransformer<T> {
     _requireSameChildren(type: string, embedType: string): void;
     /**
      * @param {string} prop - Configuration property name
-     * @param {any} val - Configuration property value
+     * @param {unknown} val - Configuration property value
      * @param {(this: AbstractJoiningTransformer<T>) => void} [cb]
      *   Optional callback invoked with this instance
      * @returns {void}
      */
-    config(prop: string, val: any, cb?: (this: AbstractJoiningTransformer<T>) => void): void;
+    config(prop: string, val: unknown, cb?: (this: AbstractJoiningTransformer<T>) => void): void;
 }
 export default AbstractJoiningTransformer;
 //# sourceMappingURL=AbstractJoiningTransformer.d.ts.map

@@ -18,40 +18,40 @@ declare class JSONPathTransformer<T extends "json" | "string" | "dom" = "json"> 
             /**
              * @template {"json"|"string"|"dom"} U
              * @this {JSONPathTransformerContext<U>}
-             * @param {any} value - Value
+             * @param {unknown} value - Value
              * @param {{mode?: string}} cfg - Configuration
              * @returns {void}
              */
-            template<U extends "json" | "string" | "dom">(this: JSONPathTransformerContext<U>, value: any, cfg: {
+            template<U extends "json" | "string" | "dom">(this: JSONPathTransformerContext<U>, value: unknown, cfg: {
                 mode?: string;
             }): void;
         };
         transformPropertyNames: {
             /**
-             * @param {any} value - Current context value
-             * @returns {any}
+             * @param {unknown} value - Current context value
+             * @returns {unknown}
              */
-            template(value: any): any;
+            template(value: unknown): unknown;
         };
         transformObjects: {
             /**
              * @this {JSONPathTransformerContext}
-             * @param {any} value - Value
+             * @param {unknown} value - Value
              * @param {{mode?: string}} cfg - Configuration
              * @returns {void}
              */
-            template(this: JSONPathTransformerContext, value: any, cfg: {
+            template(this: JSONPathTransformerContext, value: unknown, cfg: {
                 mode?: string;
             }): void;
         };
         transformArrays: {
             /**
              * @this {JSONPathTransformerContext}
-             * @param {any} value - Value
+             * @param {unknown} value - Value
              * @param {{mode?: string}} cfg - Configuration
              * @returns {void}
              */
-            template(this: JSONPathTransformerContext, value: any, cfg: {
+            template(this: JSONPathTransformerContext, value: unknown, cfg: {
                 mode?: string;
             }): void;
         };
@@ -64,10 +64,11 @@ declare class JSONPathTransformer<T extends "json" | "string" | "dom" = "json"> 
         };
         transformFunctions: {
             /**
-             * @param {( ...args: any[]) => any} value - Function at current context
-             * @returns {any}
+             * @param {(...args: unknown[]) => unknown} value - Function at current
+             *   context
+             * @returns {unknown}
              */
-            template(value: (...args: any[]) => any): any;
+            template(value: (...args: unknown[]) => unknown): unknown;
         };
     };
     /**

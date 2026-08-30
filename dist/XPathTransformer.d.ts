@@ -11,6 +11,11 @@ export type XPathTransformerConfig<T> = {
      * XPath version (1|2|3.1)
      */
     xpathVersion?: number;
+    /**
+     * When true, throw if a template returns a Promise
+     * instead of awaiting it (disables `indexedDB()` and other async features)
+     */
+    sync?: boolean;
 };
 /**
  * @template T
@@ -19,6 +24,8 @@ export type XPathTransformerConfig<T> = {
  * @property {import('./index.js').
  *   XPathTemplateArray<T>} templates Template objects
  * @property {number} [xpathVersion] XPath version (1|2|3.1)
+ * @property {boolean} [sync] When true, throw if a template returns a Promise
+ *   instead of awaiting it (disables `indexedDB()` and other async features)
  */
 /**
  * Applies named XPath-driven templates to XML/HTML DOM data.
@@ -37,11 +44,11 @@ declare class XPathTransformer<T> {
     static DefaultTemplateRules: {
         transformRoot: {
             /**
-             * @param {any} node Node
+             * @param {unknown} node Node
              * @param {{mode:string}} cfg Config
              * @returns {void}
              */
-            template(node: any, cfg: {
+            template(node: unknown, cfg: {
                 mode: string;
             }): void;
         };
