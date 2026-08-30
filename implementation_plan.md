@@ -4,13 +4,17 @@ To fulfill the proposal, we must introduce asynchronous capabilities to JTLT wit
 
 ## Status
 
-- **JSONPath engine: implemented.** `src/index.js`, `src/JSONPathTransformer.js`, `src/JSONPathTransformerContext.js`, `src/maybeAsync.js`, and `src/indexedDB.js` support async templates and `indexedDB(...)` interception in `valueOf()`, plus a direct `this.indexedDB(dbName, storeName, options?)` helper. Covered by `test/test.indexeddb.js` (`tsc`, `eslint`, and 100% coverage all pass).
-- **XPath engine: not started.** The earlier partial edits to `src/XPathTransformer.js` and `src/XPathTransformerContext.js` were incomplete (broken scope references, `continue` → `return` in a real `for` loop) and have been reverted to a clean baseline. Redo them deliberately following section 1/2 below, mirroring the JSONPath implementation.
+**Both engines implemented.** `src/index.js`, `src/JSONPathTransformer.js`, `src/XPathTransformer.js`, `src/JSONPathTransformerContext.js`, `src/XPathTransformerContext.js`, `src/maybeAsync.js`, and `src/indexedDB.js` support async templates, plus a direct `this.indexedDB(dbName, storeName, options?)` helper on both contexts.
+
+- **JSONPath**: `valueOf()` intercepts the non-JSONPath string form `indexedDB('db', 'store').*.name`; the segment after `)` is JSONPath evaluated against the fetched records (`resolveIndexedDBQuery`).
+- **XPath**: `indexedDB()` is a real XPath function registered with `fontoxpath.registerCustomXPathFunction` under the predefined `jtlt` prefix (`urn:jtlt`), e.g. `string-join(jtlt:indexedDB('db', 'store') ! ?name, ',')`; options are an XPath map. fontoxpath 3.x is synchronous, so `evaluateXPathWithIndexedDB` does a collect pass (function records its args, returns `()`), awaits the queries, then a resolve pass (function returns cached records).
+
+Covered by `test/test.indexeddb.js`; `npm test` (mocha + `c8` at 100% thresholds), `npm run tsc`, and `npm run lint` all pass.
 
 ## Goal
 Implement the `indexedDB()` API for XPath and JSONPath by:
-1. Allowing templates to conditionally return `Promises` (supporting `await this.indexedDB(...)`).
-2. Supporting asynchronous pre-evaluation of `indexedDB(...)` at the root of JSONPath expressions.
+1. Allowing templates to conditionally return `Promises` (supporting `await this.indexedDB(...)` and `await this.valueOf(...)`).
+2. Supporting asynchronous pre-evaluation of `indexedDB(...)` inside a `valueOf()` selector for both engines.
 3. Keeping the core engine perfectly synchronous when `async` features aren't used.
 
 ## Proposed Changes
@@ -40,17 +44,30 @@ Implement the `indexedDB()` API for XPath and JSONPath by:
 
 #### [NEW] `src/indexedDB.js` — done
 - `queryIndexedDB(dbName, storeName, options?)` wraps `idb`, lazily loading it (and `indexeddbshim` under Node) via a memoized loader. `options` supports `index`, `range` (`IDBKeyRange.bound`), `query` (`IDBKeyRange.only`), `direction`, and `count` (the `prev*` directions walk a cursor).
+- `options.resultType` (mirrors `jsonpath-plus`) selects what each matched entry contributes:
+  - `'value'` (default) — the stored record (`getAll` / cursor).
+  - `'primaryKey'` — the object store's primary key (`getAllKeys` / key cursor).
+  - `'key'` — the query key: same as the primary key for a store query, or the indexed field's value when `index` is set (`getAllKeys` for a store; a key cursor for an index).
+  - `'all'` — a `{key, primaryKey, value}` object, via `getAllRecords()` when available, otherwise a cursor.
 - `parseIndexedDBExpression(expr)` returns `{dbName, storeName, options, trailing}` or `null`. It matches `/^\s*indexedDB\((?<args>.*)\)(?<trailing>.*)$/v`, splits the argument list at top level (quote/bracket aware), and coerces each argument (quoted string, number, `true`/`false`/`null`, or JSON object/array literal).
+
+- `resolveIndexedDBQuery(parsed, {preventEval})` (exported from `src/indexedDB.js`) fetches via `queryIndexedDB` and, when a trailing segment is present (e.g. `.*.name` or `[0].name`), evaluates `'$' + trailing` with `jsonpath-plus` against the fetched records. Because IndexedDB yields plain JSON, the trailing query is JSONPath for **both** engines.
 
 #### [MODIFY] `src/JSONPathTransformerContext.js` — done
 - `valueOf(select)` calls `parseIndexedDBExpression` on the selector string. On a match it throws synchronously when `config.async` is false, otherwise returns `_appendIndexedDBValue(...)` (a Promise) so templates can `await this.valueOf(...)`.
-- `_resolveIndexedDBExpression` fetches via `queryIndexedDB` and, when a trailing segment is present (e.g. `.*.name` or `[0].name`), evaluates `'$' + trailing` with `jsonpath-plus` against the fetched records.
 - `indexedDB(dbName, storeName, options?)` is exposed on the context for direct `await this.indexedDB(...)` use; it also throws synchronously unless `config.async`.
 
-#### [TODO] XPath equivalent (`src/XPathTransformerContext.js`)
-- Mirror the above: intercept `indexedDB(...)` in the XPath `valueOf`/function path, reuse `parseIndexedDBExpression` (its `trailing` may be an XPath step like `/name`), and add a direct `this.indexedDB(...)` helper.
+#### [MODIFY] `src/XPathTransformerContext.js` — done
+- `valueOf(select)` detects a `jtlt:indexedDB(...)` call in the selector (`xpathExpressionUsesIndexedDB`). It throws synchronously when `config.async` is false, otherwise defers to `evaluateXPathWithIndexedDB` (see above) and appends the string result — returning a Promise so templates can `await this.valueOf(...)`.
+- `indexedDB(dbName, storeName, options?)` direct helper, same as the JSONPath context.
+- `applyTemplates` now iterates with `maybeAsyncLoop`; when a template returns a Promise (and `config.async`), the per-node body chains it and `applyTemplates` returns a Promise. `XPathTransformer.transform` mirrors `JSONPathTransformer.transform`'s async return handling.
+
+#### [MODIFY] `src/indexedDB.js` — done (XPath additions)
+- `registerCustomXPathFunction` for `jtlt:indexedDB` arity 2 and 3 (`map(*)` options), backed by a module-level collect/resolve state object.
+- `evaluateXPathWithIndexedDB(selectStr, contextNode)` runs the collect → fetch → resolve passes and returns the string result.
+- `xpathExpressionUsesIndexedDB(expr)` and `JTLT_XPATH_NAMESPACE` are also exported.
 
 ## Verification Plan
 ### Automated Tests
-- `test/test.indexeddb.js` uses `indexeddbshim` for Node and exercises: `valueOf()` with and without a trailing path, bracketed trailing paths, the direct `this.indexedDB()` helper, async root and non-root template returns, the sync-mode guards, every `queryIndexedDB` option, and `parseIndexedDBExpression`/`maybeAsyncLoop` directly.
+- `test/test.indexeddb.js` uses `indexeddbshim` for Node. JSONPath: `valueOf()` with/without a trailing path, bracketed trailing paths. XPath: `jtlt:indexedDB(...)` in `valueOf()`, options-as-map, and de-duplication of repeated calls in one expression. Both engines: the direct `this.indexedDB()` helper, async root and non-root template returns, and the sync-mode guards. It also covers every `queryIndexedDB` option and `parseIndexedDBExpression`/`maybeAsyncLoop` directly.
 - `npm test` (mocha + `c8` at 100% thresholds), `npm run tsc`, and `npm run lint` all pass.

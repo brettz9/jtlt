@@ -1,4 +1,5 @@
 import {expect} from 'chai';
+import {JSDOM} from 'jsdom';
 import JTLT from '../src/index.js';
 import {maybeAsyncLoop} from '../src/maybeAsync.js';
 import {
@@ -32,6 +33,32 @@ async function runJSONPath (cfg) {
     ...cfg
   }));
   await jtlt.transform();
+  return result;
+}
+
+/**
+ * Build a JSONPath JTLT instance over an XML document and run it.
+ * @param {{templates: any[], async?: boolean}} cfg
+ * @returns {Promise<any>}
+ */
+async function runXPath (cfg) {
+  const {window} = new JSDOM('<!doctype html><html><body></body></html>');
+  const doc = new window.DOMParser().parseFromString(
+    '<root><item>x</item></root>', 'text/xml'
+  );
+  let result;
+  const jtlt = JTLT.create(/** @type {any} */ ({
+    autostart: false,
+    engineType: 'xpath',
+    xpathVersion: 1,
+    outputType: 'string',
+    data: doc,
+    success (/** @type {any} */ res) {
+      result = res;
+    },
+    ...cfg
+  }));
+  await jtlt.transform('');
   return result;
 }
 
@@ -120,6 +147,24 @@ describe('IndexedDB tests', () => {
         });
         expect(result).to.equal('Alice');
       });
+
+    it('honors a resultType option in the string form', async () => {
+      const result = await runJSONPath({
+        async: true,
+        templates: [
+          {
+            path: '$',
+            async template () {
+              await this.valueOf({
+                select: "indexedDB('testDB', 'users', " +
+                  '{"resultType": "all"}).*.primaryKey'
+              });
+            }
+          }
+        ]
+      });
+      expect(result).to.equal('1,2,3');
+    });
 
     it('exposes a direct this.indexedDB() helper', async () => {
       const result = await runJSONPath({
@@ -236,6 +281,207 @@ describe('IndexedDB tests', () => {
     });
   });
 
+  describe('XPath integration', () => {
+    it('resolves the jtlt:indexedDB() XPath function in valueOf()',
+      async () => {
+        const result = await runXPath({
+          async: true,
+          templates: [
+            {
+              path: '/',
+              async template () {
+                await this.valueOf({
+                  select:
+                    "string-join(jtlt:indexedDB('testDB', 'users') ! ?name" +
+                    ", ',')"
+                });
+              }
+            }
+          ]
+        });
+        expect(result).to.equal('Alice,Bob,Charlie');
+      });
+
+    it('fetches each distinct query once when repeated in an expression',
+      async () => {
+        const result = await runXPath({
+          async: true,
+          templates: [
+            {
+              path: '/',
+              async template () {
+                await this.valueOf({
+                  select:
+                    "concat(string-join(jtlt:indexedDB('testDB', 'users') " +
+                    "! ?name, ','), '/', " +
+                    "string(count(jtlt:indexedDB('testDB', 'users'))))"
+                });
+              }
+            }
+          ]
+        });
+        expect(result).to.equal('Alice,Bob,Charlie/3');
+      });
+
+    it('passes an XPath map of options to jtlt:indexedDB()', async () => {
+      const result = await runXPath({
+        async: true,
+        templates: [
+          {
+            path: '/',
+            async template () {
+              await this.valueOf({
+                select:
+                  "string-join(jtlt:indexedDB('testDB', 'users', " +
+                  "map{'direction': 'prev', 'count': 2}) ! ?name, ',')"
+              });
+            }
+          }
+        ]
+      });
+      expect(result).to.equal('Charlie,Bob');
+    });
+
+    it("passes resultType 'all' through the options map", async () => {
+      const result = await runXPath({
+        async: true,
+        templates: [
+          {
+            path: '/',
+            async template () {
+              await this.valueOf({
+                select:
+                  "string-join(jtlt:indexedDB('testDB', 'users', " +
+                  "map{'resultType': 'all'}) ! string(?primaryKey), ',')"
+              });
+            }
+          }
+        ]
+      });
+      expect(result).to.equal('1,2,3');
+    });
+
+    it("passes resultType 'key' with an index through the options map",
+      async () => {
+        const result = await runXPath({
+          async: true,
+          templates: [
+            {
+              path: '/',
+              async template () {
+                await this.valueOf({
+                  select:
+                    "string-join(jtlt:indexedDB('testDB', 'users', " +
+                    "map{'resultType': 'key', 'index': 'byAge'}) " +
+                    "! string(.), ',')"
+                });
+              }
+            }
+          ]
+        });
+        expect(result).to.equal('30,40,50');
+      });
+
+    it('exposes a direct this.indexedDB() helper', async () => {
+      const result = await runXPath({
+        async: true,
+        templates: [
+          {
+            path: '/',
+            async template () {
+              const users = await this.indexedDB('testDB', 'users', {
+                index: 'byAge'
+              });
+              return pluck(users, 'name').join('|');
+            }
+          }
+        ]
+      });
+      expect(result).to.equal('Alice|Bob|Charlie');
+    });
+
+    it('awaits an async non-root template applied in a loop', async () => {
+      const result = await runXPath({
+        async: true,
+        templates: [
+          {
+            path: '/',
+            async template () {
+              await this.applyTemplates('//item');
+            }
+          },
+          {
+            path: '//item',
+            async template (/** @type {any} */ node) {
+              const users = await this.indexedDB('testDB', 'users');
+              return node.textContent + ':' + users.length;
+            }
+          }
+        ]
+      });
+      expect(result).to.equal('x:3');
+    });
+
+    it('resolves an async return value from the root template', async () => {
+      const result = await runXPath({
+        async: true,
+        templates: [
+          {
+            path: '/',
+            async template () {
+              await Promise.resolve();
+              return 'DONE';
+            }
+          }
+        ]
+      });
+      expect(result).to.equal('DONE');
+    });
+
+    it('throws for jtlt:indexedDB() in valueOf() when async is not enabled',
+      async () => {
+        let error;
+        try {
+          await runXPath({
+            templates: [
+              {
+                path: '/',
+                template () {
+                  this.valueOf({
+                    select: "jtlt:indexedDB('testDB', 'users')"
+                  });
+                }
+              }
+            ]
+          });
+        } catch (err) {
+          error = err;
+        }
+        expect(error).to.be.an('error');
+        expect(/** @type {Error} */ (error).message).to.match(/async/v);
+      });
+
+    it('throws for this.indexedDB() when async is not enabled', async () => {
+      let error;
+      try {
+        await runXPath({
+          templates: [
+            {
+              path: '/',
+              template () {
+                this.indexedDB('testDB', 'users');
+              }
+            }
+          ]
+        });
+      } catch (err) {
+        error = err;
+      }
+      expect(error).to.be.an('error');
+      expect(/** @type {Error} */ (error).message).to.match(/async/v);
+    });
+  });
+
   describe('queryIndexedDB()', () => {
     it('reads every record by default', async () => {
       const rows = await queryIndexedDB('testDB', 'users');
@@ -271,6 +517,78 @@ describe('IndexedDB tests', () => {
         direction: 'prevunique', range: {lower: 1, upper: 2}
       });
       expect(pluck(rows, 'name')).to.deep.equal(['Bob', 'Alice']);
+    });
+  });
+
+  describe('queryIndexedDB() resultType', () => {
+    it("resultType 'primaryKey' returns the store keys", async () => {
+      expect(await queryIndexedDB('testDB', 'users', {
+        resultType: 'primaryKey'
+      })).to.deep.equal([1, 2, 3]);
+    });
+
+    it("resultType 'primaryKey' on an index returns store keys in " +
+      'index order', async () => {
+      expect(await queryIndexedDB('testDB', 'users', {
+        index: 'byAge', resultType: 'primaryKey'
+      })).to.deep.equal([1, 2, 3]);
+    });
+
+    it("resultType 'key' on a store equals the primary keys", async () => {
+      expect(await queryIndexedDB('testDB', 'users', {
+        resultType: 'key'
+      })).to.deep.equal([1, 2, 3]);
+    });
+
+    it("resultType 'key' on an index returns the indexed values",
+      async () => {
+        expect(await queryIndexedDB('testDB', 'users', {
+          index: 'byAge', resultType: 'key'
+        })).to.deep.equal([30, 40, 50]);
+      });
+
+    it("resultType 'key' on an index honors reverse direction", async () => {
+      expect(await queryIndexedDB('testDB', 'users', {
+        index: 'byAge', resultType: 'key', direction: 'prev'
+      })).to.deep.equal([50, 40, 30]);
+    });
+
+    it("resultType 'primaryKey' honors reverse direction and count",
+      async () => {
+        expect(await queryIndexedDB('testDB', 'users', {
+          resultType: 'primaryKey', direction: 'prev', count: 2
+        })).to.deep.equal([3, 2]);
+      });
+
+    it("resultType 'all' returns {key, primaryKey, value} triples",
+      async () => {
+        const rows = await queryIndexedDB('testDB', 'users', {
+          resultType: 'all'
+        });
+        expect(rows).to.deep.equal([
+          {key: 1, primaryKey: 1, value: {id: 1, name: 'Alice', age: 30}},
+          {key: 2, primaryKey: 2, value: {id: 2, name: 'Bob', age: 40}},
+          {key: 3, primaryKey: 3, value: {id: 3, name: 'Charlie', age: 50}}
+        ]);
+      });
+
+    it("resultType 'all' on an index reports index key vs primary key",
+      async () => {
+        const rows = await queryIndexedDB('testDB', 'users', {
+          index: 'byAge', resultType: 'all', count: 1
+        });
+        expect(rows).to.deep.equal([
+          {key: 30, primaryKey: 1, value: {id: 1, name: 'Alice', age: 30}}
+        ]);
+      });
+
+    it("resultType 'all' honors reverse direction", async () => {
+      const rows = await queryIndexedDB('testDB', 'users', {
+        resultType: 'all', direction: 'prev', count: 1
+      });
+      expect(rows).to.deep.equal([
+        {key: 3, primaryKey: 3, value: {id: 3, name: 'Charlie', age: 50}}
+      ]);
     });
   });
 

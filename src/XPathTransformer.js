@@ -7,6 +7,8 @@ import XPathTransformerContext from './XPathTransformerContext.js';
  * @property {import('./index.js').
  *   XPathTemplateArray<T>} templates Template objects
  * @property {number} [xpathVersion] XPath version (1|2|3.1)
+ * @property {boolean} [async] Whether templates may run asynchronously
+ *   (required for `indexedDB()` support)
  */
 
 /**
@@ -106,7 +108,31 @@ class XPathTransformer {
     }
     // Set up parameter context for valueOf() access in root template
     xte._params = {0: xte._contextNode};
+    /**
+     * The template may return synchronously or, when `config.async` is
+     * enabled, return a Promise (e.g. from `await this.indexedDB(...)`).
+     * @type {any}
+     */
     const ret = templateObj.template.call(xte, undefined, {mode});
+
+    if (ret !== null && typeof ret !== 'undefined' &&
+        typeof ret.then === 'function' && this._config.async) {
+      return /** @type {any} */ (
+        // eslint-disable-next-line @stylistic/max-len -- Long
+        // eslint-disable-next-line promise/prefer-await-to-then -- intentional dynamic sync/async
+        ret.then((/** @type {any} */ resolvedRet) => {
+          if (typeof resolvedRet !== 'undefined') {
+            /** @type {any} */ (xte)._getJoiningTransformer().append(
+              resolvedRet
+            );
+          }
+          return /** @type {import('./index.js').ResultType<T>} */ (
+            xte.getOutput()
+          );
+        })
+      );
+    }
+
     if (typeof ret !== 'undefined') {
       /** @type {any} */ (xte)._getJoiningTransformer().append(ret);
     }

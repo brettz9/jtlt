@@ -1,7 +1,9 @@
 import {JSONPath as jsonpath} from 'jsonpath-plus';
 import JSONPathTransformer from './JSONPathTransformer.js';
 import {maybeAsyncLoop} from './maybeAsync.js';
-import {parseIndexedDBExpression, queryIndexedDB} from './indexedDB.js';
+import {
+  parseIndexedDBExpression, queryIndexedDB, resolveIndexedDBQuery
+} from './indexedDB.js';
 
 /**
  * @param {string} string
@@ -1229,36 +1231,17 @@ class JSONPathTransformerContext {
   }
 
   /**
-   * Resolve a parsed `indexedDB(...)` expression to its value, applying any
-   * trailing JSONPath (e.g. `.*.name`) to the fetched records. Callers are
-   * responsible for enforcing `config.async`.
-   * @param {import('./indexedDB.js').ParsedIndexedDBExpression} parsed
-   * @returns {Promise<any>}
-   */
-  async _resolveIndexedDBExpression (parsed) {
-    const {dbName, storeName, options, trailing} = parsed;
-    const data = await queryIndexedDB(dbName, storeName, options);
-    if (!trailing) {
-      return data;
-    }
-    // A JSONPath trailing segment always begins with a step (`.` or `[`).
-    const path = '$' + trailing;
-    return /** @type {any} */ (jsonpath)({
-      path, json: data,
-      preventEval: this._config.preventEval,
-      wrap: false, returnType: 'value'
-    });
-  }
-
-  /**
    * Await a parsed `indexedDB(...)` expression and append its (stringified)
-   * value to the output. Used by {@link valueOf}.
+   * value to the output. Used by {@link valueOf}. Callers enforce
+   * `config.async`.
    * @param {import('./indexedDB.js').ParsedIndexedDBExpression} parsed
    * @param {any} results - The joining transformer
    * @returns {Promise<this>}
    */
   async _appendIndexedDBValue (parsed, results) {
-    const value = await this._resolveIndexedDBExpression(parsed);
+    const value = await resolveIndexedDBQuery(parsed, {
+      preventEval: this._config.preventEval
+    });
     results.text(String(value));
     return this;
   }

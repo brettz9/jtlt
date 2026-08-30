@@ -2,6 +2,12 @@ import xpath2 from 'xpath2.js'; // Runtime JS import; ambient types declared
 // eslint-disable-next-line @stylistic/max-len -- Long
 // xpathVersion: 1 => browser/native XPathEvaluator API; 2 => xpath2.js, 3 => fontoxpath
 import fontoxpath from 'fontoxpath';
+import {maybeAsyncLoop} from './maybeAsync.js';
+import {
+  queryIndexedDB,
+  xpathExpressionUsesIndexedDB,
+  evaluateXPathWithIndexedDB
+} from './indexedDB.js';
 // import xsdValidator from 'xsd-validator';
 
 /**
@@ -19,6 +25,10 @@ const escapeRegexReplacement = (string) => {
  * @property {import('./index.js').
  *   JoiningTransformer} joiningTransformer Joiner
  * @property {boolean} [errorOnEqualPriority]
+ * @property {boolean} [async] - Whether templates may run asynchronously
+ *   (required for `indexedDB()` support)
+ * @property {boolean} [preventEval] - Whether to prevent eval in the JSONPath
+ *   trailing segment of an `indexedDB(...)` expression
  * @property {(path: string) => number} [specificityPriorityResolver]
  */
 
@@ -398,9 +408,13 @@ class XPathTransformerContext {
     });
 
     const preApplyContext = this._contextNode;
+    const isAsync = Boolean(/** @type {any} */ (this._config).async);
 
-    // Process each node
-    for (const node of nodes) {
+    // Process each node. `maybeAsyncLoop` keeps this a plain synchronous
+    // loop unless a template returns a Promise (e.g. via
+    // `await this.indexedDB(...)`), in which case it chains and the whole
+    // call becomes asynchronous.
+    const loopResult = maybeAsyncLoop(nodes, (node) => {
     // Path resolution simplified (could track full XPath if needed)
       const pathMatchedTemplates = modeMatched.filter((t) => {
         // Basic matching: template.path is XPath tested for existence
@@ -438,7 +452,7 @@ class XPathTransformerContext {
           }
           if (onNoMatch === 'deep-skip') {
             // Skip this node entirely
-            continue;
+            return undefined;
           }
           if (onNoMatch === 'shallow-copy') {
             // Output the node without processing children
@@ -451,7 +465,7 @@ class XPathTransformerContext {
             } else if (node.nodeType === 3 && node.nodeValue) { // Text
               joiner.text(node.nodeValue);
             }
-            continue;
+            return undefined;
           }
           if (onNoMatch === 'deep-copy') {
             // Output the node and all descendants
@@ -462,7 +476,7 @@ class XPathTransformerContext {
             } else if (node.nodeType === 3 && node.nodeValue) { // Text
               joiner.text(node.nodeValue);
             }
-            continue;
+            return undefined;
           }
           if (onNoMatch === 'text-only-copy') {
             // Output only text content
@@ -474,7 +488,7 @@ class XPathTransformerContext {
                 joiner.text(textContent);
               }
             }
-            continue;
+            return undefined;
           }
           // 'apply-templates', 'shallow-skip', or other:
           // use default template rules
@@ -569,10 +583,38 @@ class XPathTransformerContext {
       const prevTemplateParams = this._params;
       this._params = {0: node};
 
+      /**
+       * The template may return synchronously or, when `config.async` is
+       * enabled, return a Promise (e.g. from `await this.indexedDB(...)`).
+       * @type {any}
+       */
       const ret = templateObj.template.call(this, node, {mode});
 
       // Restore previous parameter context
       this._params = prevTemplateParams;
+
+      if (isAsync && ret !== null && typeof ret !== 'undefined' &&
+          typeof ret.then === 'function') {
+        // eslint-disable-next-line @stylistic/max-len -- Long
+        // eslint-disable-next-line promise/prefer-await-to-then -- intentional dynamic sync/async
+        return ret.then((/** @type {any} */ resolvedRet) => {
+          if (typeof resolvedRet !== 'undefined') {
+            const joiner = this._getJoiningTransformer();
+            /* c8 ignore start -- _openTagState only on
+               StringJoiningTransformer; string-output defensive check */
+            // @ts-expect-error -- _openTagState: StringJoiningTransformer only
+            if (joiner._openTagState) {
+              joiner.append('>');
+              // @ts-expect-error -- _openTagState: StringJoiningTransformer
+              joiner._openTagState = false;
+            }
+            /* c8 ignore stop */
+            joiner.append(resolvedRet);
+          }
+          this._contextNode = node;
+          return undefined;
+        });
+      }
 
       if (typeof ret !== 'undefined') {
         const joiner = this._getJoiningTransformer();
@@ -586,6 +628,18 @@ class XPathTransformerContext {
         joiner.append(ret);
       }
       this._contextNode = node; // Restore (placeholder for more complex state)
+      return undefined;
+    });
+
+    if (isAsync && typeof loopResult?.then === 'function') {
+      return /** @type {any} */ (
+        // eslint-disable-next-line @stylistic/max-len -- Long
+        // eslint-disable-next-line promise/prefer-await-to-then -- intentional dynamic sync/async
+        loopResult.then(() => {
+          this._contextNode = preApplyContext;
+          return this;
+        })
+      );
     }
 
     this._contextNode = preApplyContext;
@@ -926,17 +980,69 @@ class XPathTransformerContext {
   }
 
   /**
+   * Directly query IndexedDB from within a template, e.g.
+   * `await this.indexedDB('myDB', 'myStore', {index: 'byAge'})`.
+   *
+   * Requires the JTLT instance to be configured with `async: true`, since
+   * IndexedDB access is inherently asynchronous.
+   * @param {string} dbName - Database name
+   * @param {string} storeName - Object store name
+   * @param {import('./indexedDB.js').QueryOptions} [options] - Query options
+   * @returns {Promise<NonNullable<object>[]>} The matching records
+   */
+  indexedDB (dbName, storeName, options) {
+    if (!(/** @type {any} */ (this._config).async)) {
+      throw new Error(
+        'The `indexedDB()` API requires JTLT to be configured with ' +
+        '`async: true`.'
+      );
+    }
+    return queryIndexedDB(dbName, storeName, options);
+  }
+
+  /**
+   * Evaluate an XPath selector that calls the `jtlt:indexedDB(...)` function,
+   * awaiting the underlying IndexedDB reads, then append the string result.
+   * Used by {@link valueOf}. Callers enforce `config.async`.
+   * @param {string} selectStr
+   * @returns {Promise<XPathTransformerContext>}
+   */
+  async _appendIndexedDBValue (selectStr) {
+    const value = await evaluateXPathWithIndexedDB(
+      selectStr, this._contextNode
+    );
+    this._getJoiningTransformer().text(value);
+    return this;
+  }
+
+  /**
    * Append the value from an XPath expression or the context node text.
    * @param {string|object} [select]
    * @returns {XPathTransformerContext}
    */
   valueOf (select) {
-    const jt = this._getJoiningTransformer();
-    let val;
-
     const selectStr = typeof select === 'object'
       ? /** @type {{select?: string}} */ (select).select
       : select;
+
+    // `jtlt:indexedDB(...)` is a registered XPath function backed by async
+    // IndexedDB reads. When it appears in the selector, evaluate the whole
+    // expression asynchronously (fontoxpath itself stays synchronous) and
+    // return a Promise so templates can `await this.valueOf(...)`.
+    if (xpathExpressionUsesIndexedDB(selectStr)) {
+      if (!(/** @type {any} */ (this._config).async)) {
+        throw new Error(
+          'The `indexedDB()` XPath function requires JTLT to be configured ' +
+          'with `async: true`.'
+        );
+      }
+      return /** @type {any} */ (
+        this._appendIndexedDBValue(/** @type {string} */ (selectStr))
+      );
+    }
+
+    const jt = this._getJoiningTransformer();
+    let val;
 
     // Check if select is a custom function call: prefix:name(...)
     // Try to parse and invoke registered function
