@@ -20,15 +20,13 @@ export default [
   ...ashNazg(['sauron']),
   {
     rules: {
+      // Should reapply to testing file which demonstrates the API
       'jsdoc/reject-any-type': 0,
 
       // Temporary only:
       'no-unused-vars': 0,
       'unicorn/prefer-private-class-fields': 0,
       'unicorn/no-undeclared-class-members': 0,
-
-      // AI was frequently making egregious mistakes here, so make fixable
-      'jsdoc/check-alignment': 'error',
 
       // We frequently use callbacks for nested interactions
       'promise/prefer-await-to-callbacks': 0,

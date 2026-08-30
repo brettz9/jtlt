@@ -2,6 +2,11 @@
 
 To fulfill the proposal, we must introduce asynchronous capabilities to JTLT without breaking the existing synchronous API. This is a delicate architectural change because `idb` operations return Promises, but standard DOM tools (and current users of JTLT) rely heavily on synchronous execution.
 
+## Status
+
+- **JSONPath engine: implemented.** `src/index.js`, `src/JSONPathTransformer.js`, `src/JSONPathTransformerContext.js`, `src/maybeAsync.js`, and `src/indexedDB.js` support async templates and `indexedDB(...)` interception in `valueOf()`, plus a direct `this.indexedDB(dbName, storeName, options?)` helper. Covered by `test/test.indexeddb.js` (`tsc`, `eslint`, and 100% coverage all pass).
+- **XPath engine: not started.** The earlier partial edits to `src/XPathTransformer.js` and `src/XPathTransformerContext.js` were incomplete (broken scope references, `continue` → `return` in a real `for` loop) and have been reverted to a clean baseline. Redo them deliberately following section 1/2 below, mirroring the JSONPath implementation.
+
 ## Goal
 Implement the `indexedDB()` API for XPath and JSONPath by:
 1. Allowing templates to conditionally return `Promises` (supporting `await this.indexedDB(...)`).
@@ -33,16 +38,19 @@ Implement the `indexedDB()` API for XPath and JSONPath by:
 
 ### 3. Implement `indexedDB` Sandbox Function
 
-#### [NEW] `src/indexedDB.js`
-- Create a helper module wrapping the `idb` package to provide the `queryIndexedDB(dbName, storeName)` logic.
+#### [NEW] `src/indexedDB.js` — done
+- `queryIndexedDB(dbName, storeName, options?)` wraps `idb`, lazily loading it (and `indexeddbshim` under Node) via a memoized loader. `options` supports `index`, `range` (`IDBKeyRange.bound`), `query` (`IDBKeyRange.only`), `direction`, and `count` (the `prev*` directions walk a cursor).
+- `parseIndexedDBExpression(expr)` returns `{dbName, storeName, options, trailing}` or `null`. It matches `/^\s*indexedDB\((?<args>.*)\)(?<trailing>.*)$/v`, splits the argument list at top level (quote/bracket aware), and coerces each argument (quoted string, number, `true`/`false`/`null`, or JSON object/array literal).
 
-#### [MODIFY] `src/JSONPathTransformerContext.js`
-- In `_evaluateJSONPath` (or where paths are evaluated), if a path string matches `/^indexedDB\\((.*)\\)(.*)$/`, intercept it.
-- Asynchronously import and call `queryIndexedDB` to fetch the data.
-- If there's a trailing JSONPath (like `.*.name`), dynamically evaluate `jsonpath-plus` on the resolved data and append it to the `results` string.
-- If `config.async` is false, throw an Error preventing synchronous users from calling `indexedDB()`.
+#### [MODIFY] `src/JSONPathTransformerContext.js` — done
+- `valueOf(select)` calls `parseIndexedDBExpression` on the selector string. On a match it throws synchronously when `config.async` is false, otherwise returns `_appendIndexedDBValue(...)` (a Promise) so templates can `await this.valueOf(...)`.
+- `_resolveIndexedDBExpression` fetches via `queryIndexedDB` and, when a trailing segment is present (e.g. `.*.name` or `[0].name`), evaluates `'$' + trailing` with `jsonpath-plus` against the fetched records.
+- `indexedDB(dbName, storeName, options?)` is exposed on the context for direct `await this.indexedDB(...)` use; it also throws synchronously unless `config.async`.
+
+#### [TODO] XPath equivalent (`src/XPathTransformerContext.js`)
+- Mirror the above: intercept `indexedDB(...)` in the XPath `valueOf`/function path, reuse `parseIndexedDBExpression` (its `trailing` may be an XPath step like `/name`), and add a direct `this.indexedDB(...)` helper.
 
 ## Verification Plan
 ### Automated Tests
-- Create `test.indexeddb.js` testing IDB operations using `indexeddbshim` (to support Node environments).
-- Set `async: true` in the JTLT config for the test, and verify `jtlt.transform()` accurately awaits the IndexedDB data without returning `[object Promise]`.
+- `test/test.indexeddb.js` uses `indexeddbshim` for Node and exercises: `valueOf()` with and without a trailing path, bracketed trailing paths, the direct `this.indexedDB()` helper, async root and non-root template returns, the sync-mode guards, every `queryIndexedDB` option, and `parseIndexedDBExpression`/`maybeAsyncLoop` directly.
+- `npm test` (mocha + `c8` at 100% thresholds), `npm run tsc`, and `npm run lint` all pass.

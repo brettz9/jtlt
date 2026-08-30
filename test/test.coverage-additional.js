@@ -762,7 +762,6 @@ describe('Coverage - additional edge cases', function () {
 
     it('should throw on construction if neither ajaxData nor data provided', function () {
       assert.throws(() => {
-        // @ts-expect-error Bad argument
         JTLT.create({templates: [{path: '$', template () {}}]});
       }, /You must supply either config.ajaxData or config.data/v);
     });

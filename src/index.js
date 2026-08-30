@@ -558,7 +558,8 @@ class JTLT {
       }
       throw new Error('You must wait until the ajax file is retrieved');
     }
-    if (typeof this.config.success !== 'function') {
+    const {success} = this.config;
+    if (typeof success !== 'function') {
       throw new TypeError("You must supply a 'success' callback");
     }
 
@@ -587,13 +588,20 @@ class JTLT {
     );
     // The engine returns ResultType<T>. We cast through never to bypass
     // the impossible intersection type that TypeScript infers for the union.
-    if (result && typeof result.then === 'function' && this.config.async) {
-      return result.then((res) => {
-        const ret = this.config.success(res);
-        return /** @type {any} */ (ret);
-      });
+    // When `config.async` is enabled the engine may instead return a Promise
+    // (e.g. a template performed an `await this.indexedDB(...)` fetch).
+    const maybePromise = /** @type {{then?: unknown}} */ (result);
+    if (maybePromise && typeof maybePromise.then === 'function' &&
+        this.config.async) {
+      return /** @type {any} */ (
+        // eslint-disable-next-line @stylistic/max-len -- Long
+        // eslint-disable-next-line promise/prefer-await-to-then -- intentional dynamic sync/async
+        /** @type {Promise<never>} */ (result).then((res) => {
+          return /** @type {any} */ (success(res));
+        })
+      );
     }
-    const ret = this.config.success(
+    const ret = success(
       /** @type {never} */ (result)
     );
     return /** @type {any} */ (ret);

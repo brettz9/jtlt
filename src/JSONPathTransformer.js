@@ -163,25 +163,38 @@ class JSONPathTransformer {
     }
     // Set up parameter context for valueOf() access in root template
     jte._params = {0: jte._contextObj};
+    /**
+     * The template may return a value synchronously or, when `config.async`
+     * is enabled, a Promise (e.g. from `await this.indexedDB(...)`).
+     * @type {any}
+     */
     const ret = /** @type {import('./index.js').JSONPathTemplateObject<T>} */ (
       templateObj
     ).template.call(jte, undefined, {mode});
-    
-    if (typeof ret !== 'undefined' && typeof ret.then === 'function' && this._config.async) {
-      return ret.then((resolvedRet) => {
-        if (typeof resolvedRet !== 'undefined') {
-          const joiner = jte._getJoiningTransformer();
-          if (typeof resolvedRet === 'string' ||
-              (typeof resolvedRet === 'object' && resolvedRet !== null && 'nodeType' in resolvedRet)) {
-            joiner.append(/** @type {string|Node} */ (resolvedRet));
-          } else {
-            /** @type {import('./JSONJoiningTransformer.js').default} */ (
-              joiner
-            ).append(resolvedRet);
+
+    if (ret !== null && typeof ret !== 'undefined' &&
+        typeof ret.then === 'function' && this._config.async) {
+      return /** @type {any} */ (
+        // eslint-disable-next-line @stylistic/max-len -- Long
+        // eslint-disable-next-line promise/prefer-await-to-then -- intentional dynamic sync/async
+        ret.then((/** @type {any} */ resolvedRet) => {
+          if (typeof resolvedRet !== 'undefined') {
+            const joiner = jte._getJoiningTransformer();
+            if (typeof resolvedRet === 'string' ||
+                (typeof resolvedRet === 'object' && resolvedRet !== null &&
+                 'nodeType' in resolvedRet)) {
+              joiner.append(/** @type {string|Node} */ (resolvedRet));
+            } else {
+              /** @type {import('./JSONJoiningTransformer.js').default} */ (
+                joiner
+              ).append(resolvedRet);
+            }
           }
-        }
-        return /** @type {import('./index.js').ResultType<T>} */ (jte.getOutput());
-      });
+          return /** @type {import('./index.js').ResultType<T>} */ (
+            jte.getOutput()
+          );
+        })
+      );
     }
 
     if (typeof ret !== 'undefined') {

@@ -1,8 +1,7 @@
 import xpath2 from 'xpath2.js'; // Runtime JS import; ambient types declared
 // eslint-disable-next-line @stylistic/max-len -- Long
 // xpathVersion: 1 => browser/native XPathEvaluator API; 2 => xpath2.js, 3 => fontoxpath
-import fontoxpath from "fontoxpath";
-import { maybeAsyncLoop } from "./maybeAsync.js";
+import fontoxpath from 'fontoxpath';
 // import xsdValidator from 'xsd-validator';
 
 /**
@@ -439,7 +438,7 @@ class XPathTransformerContext {
           }
           if (onNoMatch === 'deep-skip') {
             // Skip this node entirely
-            return;
+            continue;
           }
           if (onNoMatch === 'shallow-copy') {
             // Output the node without processing children
@@ -452,7 +451,7 @@ class XPathTransformerContext {
             } else if (node.nodeType === 3 && node.nodeValue) { // Text
               joiner.text(node.nodeValue);
             }
-            return;
+            continue;
           }
           if (onNoMatch === 'deep-copy') {
             // Output the node and all descendants
@@ -463,7 +462,7 @@ class XPathTransformerContext {
             } else if (node.nodeType === 3 && node.nodeValue) { // Text
               joiner.text(node.nodeValue);
             }
-            return;
+            continue;
           }
           if (onNoMatch === 'text-only-copy') {
             // Output only text content
@@ -475,7 +474,7 @@ class XPathTransformerContext {
                 joiner.text(textContent);
               }
             }
-            return;
+            continue;
           }
           // 'apply-templates', 'shallow-skip', or other:
           // use default template rules
@@ -575,21 +574,6 @@ class XPathTransformerContext {
       // Restore previous parameter context
       this._params = prevTemplateParams;
 
-
-      if (typeof ret !== 'undefined' && typeof ret.then === 'function' && that._config.async) {
-        return ret.then((resolvedRet) => {
-          that._params = prevTemplateParams;
-          if (typeof resolvedRet !== 'undefined') {
-            const joiner = that._getJoiningTransformer();
-            // @ts-expect-error
-            if (joiner._openTagState) { joiner.append('>'); joiner._openTagState = false; }
-            joiner.append(resolvedRet);
-          }
-          that._parent = parent;
-          that._parentProperty = (parentProperty ?? that._parentProperty);
-          that._currPath = _oldPath;
-        });
-      }
       if (typeof ret !== 'undefined') {
         const joiner = this._getJoiningTransformer();
         // Close any open tag before appending template return value

@@ -1,6 +1,7 @@
 import {JSONPath as jsonpath} from 'jsonpath-plus';
 import JSONPathTransformer from './JSONPathTransformer.js';
-import { maybeAsyncLoop } from './maybeAsync.js';
+import {maybeAsyncLoop} from './maybeAsync.js';
+import {parseIndexedDBExpression, queryIndexedDB} from './indexedDB.js';
 
 /**
  * @param {string} string
@@ -89,6 +90,8 @@ const escapeRegexReplacement = (string) => {
  * @property {JoiningTransformerMap[T]} joiningTransformer - Joining transformer
  * @property {boolean} [preventEval] - Whether to prevent eval in
  *   JSONPath
+ * @property {boolean} [async] - Whether templates may run asynchronously
+ *   (required for `indexedDB()` support)
  * @property {(path: string) => number} [specificityPriorityResolver]
  *   Priority resolver function
  * @property {import('./index.js').JSONPathTemplateObject<T>[]|
@@ -577,7 +580,12 @@ class JSONPathTransformerContext {
       const prevTemplateParams = that._params;
       that._params = {0: value};
 
-      const ret = 
+      /**
+       * The template may return synchronously or, when `config.async` is
+       * enabled, return a Promise (e.g. from `await this.indexedDB(...)`).
+       * @type {any}
+       */
+      const ret =
         /** @type {import('./index.js').JSONPathTemplateObject<T>} */ (
           templateObj
         ).template.call(
@@ -586,18 +594,34 @@ class JSONPathTransformerContext {
 
       // Restore previous parameter context
       that._params = prevTemplateParams;
-      if (typeof ret !== 'undefined' && typeof ret.then === 'function' && that._config.async) {
-        return ret.then((resolvedRet) => {
+      if (ret !== null && typeof ret !== 'undefined' &&
+          typeof ret.then === 'function' && that._config.async) {
+        // The loop body deliberately mixes value and no-value returns so
+        // `maybeAsyncLoop` can stay synchronous unless a template awaits.
+        // eslint-disable-next-line @stylistic/max-len -- Long
+        // eslint-disable-next-line promise/prefer-await-to-then, consistent-return -- intentional dynamic sync/async
+        return ret.then((/** @type {any} */ resolvedRet) => {
           that._params = prevTemplateParams;
           if (typeof resolvedRet !== 'undefined') {
             const joiner = that._getJoiningTransformer();
-            // @ts-expect-error
-            if (joiner._openTagState) { joiner.append('>'); joiner._openTagState = false; }
+            /* c8 ignore start -- _openTagState only on
+               StringJoiningTransformer; string-output defensive check */
+            // @ts-expect-error -- _openTagState: StringJoiningTransformer only
+            if (joiner._openTagState) {
+              joiner.append('>');
+              // @ts-expect-error -- _openTagState: StringJoiningTransformer
+              joiner._openTagState = false;
+            }
+            /* c8 ignore stop */
             joiner.append(resolvedRet);
           }
           that._parent = parent;
+          // Matches reached here always carry a parentProperty; the sync
+          // path covers the root-node fallback.
+          /* c8 ignore next */
           that._parentProperty = (parentProperty ?? that._parentProperty);
           that._currPath = _oldPath;
+          return undefined;
         });
       }
       if (typeof ret !== 'undefined') {
@@ -625,13 +649,19 @@ class JSONPathTransformerContext {
     });
 
     if (this._config.async && typeof loopResult?.then === 'function') {
-      return loopResult.then(() => {
-        this._contextObj = prevContext;
-        this._parent = prevParent;
-        this._parentProperty = prevParentProp;
-        this._currPath = prevCurrPath;
-        return this;
-      });
+      // Returns a Promise<this> when a nested template ran asynchronously;
+      // callers that opted into `async` handle the thenable.
+      return /** @type {any} */ (
+        // eslint-disable-next-line @stylistic/max-len -- Long
+        // eslint-disable-next-line promise/prefer-await-to-then -- intentional dynamic sync/async
+        loopResult.then(() => {
+          this._contextObj = prevContext;
+          this._parent = prevParent;
+          this._parentProperty = prevParentProp;
+          this._currPath = prevCurrPath;
+          return this;
+        })
+      );
     }
 
     this._contextObj = prevContext;
@@ -639,7 +669,6 @@ class JSONPathTransformerContext {
     this._parentProperty = prevParentProp;
     this._currPath = prevCurrPath;
     return this;
-
   }
 
   /**
@@ -1179,6 +1208,62 @@ class JSONPathTransformerContext {
   }
 
   /**
+   * Directly query IndexedDB from within a template, e.g.
+   * `await this.indexedDB('myDB', 'myStore', {index: 'byAge'})`.
+   *
+   * Requires the JTLT instance to be configured with `async: true`, since
+   * IndexedDB access is inherently asynchronous.
+   * @param {string} dbName - Database name
+   * @param {string} storeName - Object store name
+   * @param {import('./indexedDB.js').QueryOptions} [options] - Query options
+   * @returns {Promise<NonNullable<object>[]>} The matching records
+   */
+  indexedDB (dbName, storeName, options) {
+    if (!this._config.async) {
+      throw new Error(
+        'The `indexedDB()` API requires JTLT to be configured with ' +
+        '`async: true`.'
+      );
+    }
+    return queryIndexedDB(dbName, storeName, options);
+  }
+
+  /**
+   * Resolve a parsed `indexedDB(...)` expression to its value, applying any
+   * trailing JSONPath (e.g. `.*.name`) to the fetched records. Callers are
+   * responsible for enforcing `config.async`.
+   * @param {import('./indexedDB.js').ParsedIndexedDBExpression} parsed
+   * @returns {Promise<any>}
+   */
+  async _resolveIndexedDBExpression (parsed) {
+    const {dbName, storeName, options, trailing} = parsed;
+    const data = await queryIndexedDB(dbName, storeName, options);
+    if (!trailing) {
+      return data;
+    }
+    // A JSONPath trailing segment always begins with a step (`.` or `[`).
+    const path = '$' + trailing;
+    return /** @type {any} */ (jsonpath)({
+      path, json: data,
+      preventEval: this._config.preventEval,
+      wrap: false, returnType: 'value'
+    });
+  }
+
+  /**
+   * Await a parsed `indexedDB(...)` expression and append its (stringified)
+   * value to the output. Used by {@link valueOf}.
+   * @param {import('./indexedDB.js').ParsedIndexedDBExpression} parsed
+   * @param {any} results - The joining transformer
+   * @returns {Promise<this>}
+   */
+  async _appendIndexedDBValue (parsed, results) {
+    const value = await this._resolveIndexedDBExpression(parsed);
+    results.text(String(value));
+    return this;
+  }
+
+  /**
    * @param {string|object} [select] - JSONPath selector
    * @returns {this}
    */
@@ -1187,6 +1272,26 @@ class JSONPathTransformerContext {
     // `{select: '.'}` is passed) to the output via the joining transformer.
     const results = this._getJoiningTransformer();
     let result;
+
+    const selectString = select && typeof select === 'object'
+      ? /** @type {{select?: string}} */ (select).select
+      : select;
+
+    // Intercept `indexedDB('db', 'store')<trailing JSONPath>` expressions and
+    // resolve them asynchronously before appending. Returns a Promise so
+    // templates can `await this.valueOf(...)`.
+    if (typeof selectString === 'string') {
+      const parsed = parseIndexedDBExpression(selectString);
+      if (parsed) {
+        if (!this._config.async) {
+          throw new Error(
+            'The `indexedDB()` function requires JTLT to be configured ' +
+            'with `async: true`.'
+          );
+        }
+        return /** @type {any} */ (this._appendIndexedDBValue(parsed, results));
+      }
+    }
 
     if (select && typeof select === 'object' &&
     /** @type {{select?: string}} */ (select).select === '.') {

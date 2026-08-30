@@ -107,17 +107,6 @@ class XPathTransformer {
     // Set up parameter context for valueOf() access in root template
     xte._params = {0: xte._contextNode};
     const ret = templateObj.template.call(xte, undefined, {mode});
-    if (typeof ret !== 'undefined' && typeof ret.then === 'function' && this._config.async) {
-      return ret.then((resolvedRet) => {
-        if (typeof resolvedRet !== 'undefined') {
-          /** @type {any} */ (xte)._getJoiningTransformer().append(resolvedRet);
-        }
-        return /** @type {import('./index.js').ResultType<T>} */ (
-          xte.getOutput()
-        );
-      });
-    }
-    
     if (typeof ret !== 'undefined') {
       /** @type {any} */ (xte)._getJoiningTransformer().append(ret);
     }
