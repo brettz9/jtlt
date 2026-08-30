@@ -69,16 +69,16 @@ JTLT has two layers:
 
 ### Common joiner methods
 
-- append(value): Central sink. Based on context, concatenates to string, pushes to array, or assigns to an object property.
-- get(): Return the accumulated result.
-- object(obj?, cb?, usePropertySets?, propSets?): Enter object context; optionally seed from an object or build via cb.
-- array(arr?, cb?): Enter array context; optionally seed from an array or build via cb.
-- string(str, cb?): Emit a string value (no HTML escaping). In String joiner, optional cb lets you compose nested fragments before emitting.
-- number(num), boolean(bool), null(), undefined() (JS mode only), nonfiniteNumber(NaN|Infinity), function(fn) (JS mode only): Emit primitives/functions.
-- element(name, attrs?, children?, cb?): Build elements (String and DOM joiners). In String joiner, uses Jamilih under the hood to serialize; in DOM joiner, creates Elements.
-- attribute(name, value, avoidEscape?): Add attributes to the most recently opened element (String joiner) or to the current Element (DOM joiner).
-- text(txt): Emit text content. In String joiner, escapes & and <, and closes an open start tag if needed.
-- plainText(str): Raw, no‑escape append that bypasses context routing in the String joiner (always writes to top‑level buffer). In DOM/JSON joiners, it maps to text()/string() respectively.
+- `append(value)`: Central sink. Based on context, concatenates to string, pushes to array, or assigns to an object property.
+- `get()`: Return the accumulated result.
+- `object(obj?, cb?, usePropertySets?, propSets?)`: Enter object context; optionally seed from an object or build via cb.
+- `array(arr?, cb?)`: Enter array context; optionally seed from an array or build via cb.
+- `string(str, cb?)`: Emit a string value (no HTML escaping). In String joiner, optional cb lets you compose nested fragments before emitting.
+- `number(num), boolean(bool), null(), undefined()` (JS mode only), `nonfiniteNumber(NaN|Infinity), function(fn)` (JS mode only): Emit primitives/functions.
+- `element(name, attrs?, children?, cb?)`: Build elements (String and DOM joiners). In String joiner, uses Jamilih under the hood to serialize; in DOM joiner, creates Elements.
+- `attribute(name, value, avoidEscape?)`: Add attributes to the most recently opened element (String joiner) or to the current Element (DOM joiner).
+- `text(txt)`: Emit text content. In String joiner, escapes & and <, and closes an open start tag if needed.
+- `plainText(str)`: Raw, no‑escape append that bypasses context routing in the String joiner (always writes to top‑level buffer). In DOM/JSON joiners, it maps to text()/string() respectively.
 
 ### string() vs text() vs plainText() (String joiner)
 
