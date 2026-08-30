@@ -1,5 +1,10 @@
 # jtlt CHANGES
 
+## 0.14.0
+
+- feat: indexedDB JSONPath and XPath support
+- fix(types): more precise typing (any -> unknown)
+
 ## 0.13.0
 
 - fix(types): more precise typing

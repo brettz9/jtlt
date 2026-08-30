@@ -76,7 +76,7 @@
     functions (or in XQuery), add equivalents to XSLT's
     `document()` and `unparsed-text()` for allowing non-JSON file
     retrieval (as well as variables/parameters) and also methods for
-    iterating or retrieving IndexedDB, `localStorage`, and cookies
+    iterating or retrieving `localStorage` and cookies
     (names, keys and values).
 
 6. Add `outputType` which uses a DOM joiner but allows specialized
