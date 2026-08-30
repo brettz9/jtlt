@@ -88,7 +88,21 @@
 
 8. jtlt as templating engine (including zodexy-aware path expressions like @blob() for jsonpath-plus with `copyOf`/`valueOf` `document(...url...)`; work on **schema-driven** search forms too
 
-9. Consider implementing the following elements from <https://www.w3.org/TR/xslt-30/>
+9. Note that while we could allow `template` to act as a sync function with sync calls to `this.valueOf` even when indexedDB was used within that latter call, the problem is that with the easy solution, it would require adding content to output after subsequent synchronous calls within the function did so.
+
+```js
+const args = {
+  template () {
+    this.valueOf({select: "indexedDB('db','store').*.name"}); // resolves later
+    this.string('!'); // appends NOW
+  }
+};
+// -> "!Alice,Bob,Charlie"   (not "Alice,Bob,Charlie!")
+```
+
+We'd otherwise have to refactor a great deal to maintain a buffer.
+
+10. Consider implementing the following elements from <https://www.w3.org/TR/xslt-30/>
     which are not yet implemented.
 
   xsl:accept
