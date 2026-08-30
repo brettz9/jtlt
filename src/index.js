@@ -587,6 +587,12 @@ class JTLT {
     );
     // The engine returns ResultType<T>. We cast through never to bypass
     // the impossible intersection type that TypeScript infers for the union.
+    if (result && typeof result.then === 'function' && this.config.async) {
+      return result.then((res) => {
+        const ret = this.config.success(res);
+        return /** @type {any} */ (ret);
+      });
+    }
     const ret = this.config.success(
       /** @type {never} */ (result)
     );

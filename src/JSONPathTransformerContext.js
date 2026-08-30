@@ -460,11 +460,13 @@ class JSONPathTransformerContext {
           if (onNoMatch === 'shallow-copy') {
             // Output the value as-is without processing children
             joiner.append(value);
+            that._currPath = _oldPath;
             return;
           }
           if (onNoMatch === 'deep-copy') {
             // Output the value and all descendants as-is
             joiner.append(JSON.stringify(value));
+            that._currPath = _oldPath;
             return;
           }
           if (onNoMatch === 'text-only-copy') {
@@ -473,6 +475,7 @@ class JSONPathTransformerContext {
                 typeof value === 'boolean') {
               joiner.append(String(value));
             }
+            that._currPath = _oldPath;
             return;
           }
           // 'apply-templates', 'shallow-skip', or other:

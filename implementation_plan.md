@@ -1,53 +1,48 @@
 # Implementing `indexedDB()` and Asynchronous JTLT
 
-To fulfill the proposal (Path A + awaitable template rules), we must introduce asynchronous capabilities to JTLT, which is currently a purely synchronous engine. This is a major architectural change because `idb` operations return Promises.
+To fulfill the proposal, we must introduce asynchronous capabilities to JTLT without breaking the existing synchronous API. This is a delicate architectural change because `idb` operations return Promises, but standard DOM tools (and current users of JTLT) rely heavily on synchronous execution.
 
 ## Goal
 Implement the `indexedDB()` API for XPath and JSONPath by:
-1. Allowing templates to be `async` functions (supporting `await this.indexedDB(...)`).
+1. Allowing templates to conditionally return `Promises` (supporting `await this.indexedDB(...)`).
 2. Supporting asynchronous pre-evaluation of `indexedDB(...)` at the root of JSONPath expressions.
-3. Supporting `indexedDB` in `fontoxpath` via `evaluateXPathToAsync`.
+3. Keeping the core engine perfectly synchronous when `async` features aren't used.
 
 ## Proposed Changes
 
-### 1. Make the Engine "Optionally" Async (Preserve Sync Default)
-
-To keep JTLT's core class synchronous by default while supporting Promises where needed, we will introduce an execution mode config.
+### 1. Conditional Async Engine (`JTLT.transform`)
 
 #### [MODIFY] `src/index.js`
-- Introduce a `config.syncOnly` flag. If `true`, JTLT will explicitly throw an error if a Promise is detected during template evaluation (a strict sync mode).
-- The main `jtlt()` wrapper function (which already returns a Promise) will assume `async` mode by default, meaning it handles Promises seamlessly.
-- For the `JTLT` class directly, `transform()` will remain synchronous unless a Promise is detected (Maybe Async) or if `syncOnly` prevents it.
+- **DO NOT** make `transform(mode)` an `async` function.
+- Instead, inspect the return value of `engine(config)`. If it is a Promise (via `typeof result.then === 'function'`) and `this.config.async === true`, then return `result.then(...)` and trigger `this.config.success` asynchronously.
+- Otherwise, execute `this.config.success` synchronously and return the synchronous result.
 
 #### [MODIFY] `src/JSONPathTransformer.js` & `src/XPathTransformer.js`
-- For JSONPath: Update loop iterators in `applyTemplates` and `transform` to check `if (result instanceof Promise)`. If found, and `syncOnly` is true, throw an error. If `syncOnly` is false, it chains `.then()` and propagates the Promise up the call stack.
-- For XPath: `fontoxpath`'s synchronous `evaluateXPathToNodes` throws an error if an async custom function is executed. We will use `evaluateXPathToAsync` automatically if the main `jtlt()` function is used, or if a user specifically requests async execution.
+- **DO NOT** convert `transform(mode)` to `async transform(mode)`.
+- Synchronously call `templateObj.template.call(...)`.
+- Inspect the return value (`ret`). If it is a Promise, return a new Promise that waits for it to resolve before calling `joiner.append()`.
 
-### 2. Core Methods (`applyTemplates`, `valueOf`, etc.)
+### 2. Async Looping Context (`maybeAsyncLoop`)
+
+#### [NEW] `src/maybeAsync.js`
+- Create a `maybeAsyncLoop` utility function that iterates over an array. If a callback returns a Promise, it chains `.then()` and becomes asynchronous. If the callback returns synchronously, the loop continues synchronously without ever spawning microtasks.
 
 #### [MODIFY] `src/JSONPathTransformerContext.js` & `src/XPathTransformerContext.js`
-- Core template execution methods (`applyTemplates`, `forEach`, `valueOf`) will **not** be strictly converted to `async` functions to preserve sync behavior.
-- Instead, they will use a "Maybe Async" pattern: they will check if an evaluated template or path returns a `Promise`.
-  - If a Promise is found and `syncOnly` is true: throw an error.
-  - If a Promise is found and `syncOnly` is false: chain `.then()` and return a Promise to the caller, cascading the async behavior up the stack.
-  - If NO Promise is found: continue synchronously and return the result immediately.
+- Replace `matches.forEach(...)` with `maybeAsyncLoop` in `applyTemplates` and `valueOf`.
+- This ensures that if a nested template performs an async `indexedDB` fetch, the loop waits for it. But if standard templates run, it executes in a pure synchronous while-loop to avoid breaking DOM constraints.
 
-### 3. Implement `indexedDB` pre-evaluation
+### 3. Implement `indexedDB` Sandbox Function
 
 #### [NEW] `src/indexedDB.js`
-- Create a helper module wrapping the `idb` package to provide the `indexedDB(dbName, storeName, options)` logic (fetching all, fetching by key, or fetching by range/index).
+- Create a helper module wrapping the `idb` package to provide the `queryIndexedDB(dbName, storeName)` logic.
 
 #### [MODIFY] `src/JSONPathTransformerContext.js`
-- In `_evaluateJSONPath` (or wherever paths are evaluated), if a path string matches `/^indexedDB\((.*)\)(.*)$/`, intercept it.
-- `await` the `indexedDB` fetch using the extracted arguments.
-- Pass the resolved data as the root object into `jsonpath-plus` for the remainder of the path.
-- Expose `async indexedDB(...)` on the context prototype so users can write `await this.indexedDB(...)` in templates.
-
-#### [MODIFY] `src/XPathTransformerContext.js`
-- In `_registerCustomFunctions`, register `indexedDB` returning a Promise using `fontoxpath.registerCustomXPathFunction`.
-- Ensure `fontoxpath` evaluation uses `evaluateXPathToAsync` instead of `evaluateXPathToNodes`.
+- In `_evaluateJSONPath` (or where paths are evaluated), if a path string matches `/^indexedDB\\((.*)\\)(.*)$/`, intercept it.
+- Asynchronously import and call `queryIndexedDB` to fetch the data.
+- If there's a trailing JSONPath (like `.*.name`), dynamically evaluate `jsonpath-plus` on the resolved data and append it to the `results` string.
+- If `config.async` is false, throw an Error preventing synchronous users from calling `indexedDB()`.
 
 ## Verification Plan
 ### Automated Tests
-- Create `test.indexeddb.js` testing IDB operations (using `indexeddbshim` for the Node environment).
-- Run existing Mocha test suite to ensure async conversions don't break existing synchronous functionality.
+- Create `test.indexeddb.js` testing IDB operations using `indexeddbshim` (to support Node environments).
+- Set `async: true` in the JTLT config for the test, and verify `jtlt.transform()` accurately awaits the IndexedDB data without returning `[object Promise]`.

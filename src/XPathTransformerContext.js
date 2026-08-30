@@ -1,8 +1,8 @@
 import xpath2 from 'xpath2.js'; // Runtime JS import; ambient types declared
 // eslint-disable-next-line @stylistic/max-len -- Long
 // xpathVersion: 1 => browser/native XPathEvaluator API; 2 => xpath2.js, 3 => fontoxpath
-import fontoxpath from 'fontoxpath';
-import { maybeAsyncLoop } from './maybeAsync.js';
+import fontoxpath from "fontoxpath";
+import { maybeAsyncLoop } from "./maybeAsync.js";
 // import xsdValidator from 'xsd-validator';
 
 /**
@@ -177,7 +177,7 @@ class XPathTransformerContext {
           const childNodes = [...n.childNodes];
           for (const child of childNodes) {
             if (child.nodeType !== 3) {
-              return;
+              continue;
             }
 
             // Text node
@@ -570,10 +570,12 @@ class XPathTransformerContext {
       const prevTemplateParams = this._params;
       this._params = {0: node};
 
-      const ret =  templateObj.template.call(this, node, {mode});
+      const ret = templateObj.template.call(this, node, {mode});
 
       // Restore previous parameter context
       this._params = prevTemplateParams;
+
+
       if (typeof ret !== 'undefined' && typeof ret.then === 'function' && that._config.async) {
         return ret.then((resolvedRet) => {
           that._params = prevTemplateParams;
@@ -2179,7 +2181,7 @@ class XPathTransformerContext {
     const nodesArray = /** @type {Node[]} */ (matches);
     for (const m of nodesArray) {
       if (!(m && m.nodeType === 1)) {
-        return;
+        continue;
       }
 
       // Element

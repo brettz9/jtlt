@@ -24,7 +24,7 @@ describe('IndexedDB tests', () => {
     async () => {
       /** @type {import('../src/index.js').JSONPathTemplateArray<"string">[]} */
       let result;
-    const templates = [
+      const templates = [
         {
           path: '$',
           async template () {
@@ -35,12 +35,14 @@ describe('IndexedDB tests', () => {
 
       const jtlt = JTLT.create({
         async: true,
+        autostart: false,
         engineType: 'jsonpath',
         outputType: 'string',
         data: {}, // ignored since root is IDB
-        templates
+        templates,
+        success: (res) => { result = res; }
       });
-      // Fixed test
+      await jtlt.transform();
 
       expect(result).to.equal('Alice,Bob,Charlie');
     }
