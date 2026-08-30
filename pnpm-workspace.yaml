@@ -3,7 +3,6 @@ allowBuilds:
   canvas: true
   is-hidden-file: true
   libxmljs: true
-  sqlite3: true
   unrs-resolver: true
 minimumReleaseAgeExclude:
   - '@rollup/rollup-android-arm-eabi@4.63.0'
@@ -36,6 +35,7 @@ minimumReleaseAgeExclude:
   - eslint-config-ash-nazg@43.1.0
   - eslint-plugin-escompat@3.12.0
   - eslint-plugin-jsdoc@64.3.0
-  - indexeddbshim@17.4.1 || 17.4.2 || 17.4.3
+  - indexeddbshim@17.4.1 || 17.4.2 || 17.4.3 || 17.5.0
   - open@11.0.2
   - powershell-utils@0.2.1
+  - websql-configurable@4.0.0
