@@ -1218,7 +1218,7 @@ class JSONPathTransformerContext {
    * @param {string} dbName - Database name
    * @param {string} storeName - Object store name
    * @param {import('./indexedDB.js').QueryOptions} [options] - Query options
-   * @returns {Promise<NonNullable<object>[]>} The matching records
+   * @returns {Promise<unknown[]>} The matching records
    */
   indexedDB (dbName, storeName, options) {
     if (!this._config.async) {

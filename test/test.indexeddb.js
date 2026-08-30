@@ -2,71 +2,87 @@ import {expect} from 'chai';
 import {JSDOM} from 'jsdom';
 import JTLT from '../src/index.js';
 import {maybeAsyncLoop} from '../src/maybeAsync.js';
-import {
-  parseIndexedDBExpression, queryIndexedDB
-} from '../src/indexedDB.js';
+import {parseIndexedDBExpression, queryIndexedDB} from '../src/indexedDB.js';
 
 /**
- * @typedef {import('../src/index.js').JSONPathTemplateObject<any>[]} Templates
+ * A record stored in the test `users` object store.
+ * @typedef {{id: number, name: string, age: number}} User
  */
 
 /**
- * Build a JSONPath JTLT instance and run it, resolving to the `success` result.
+ * A `resultType: 'all'` row from the test `users` store.
+ * @typedef {{key: number, primaryKey: number, value: User}} UserRecord
+ */
+
+/**
+ * @typedef {import('../src/index.js').JSONPathTemplateObject<"string">
+ * } JSONPathStringTemplate
+ */
+
+/**
+ * @typedef {import('../src/index.js').XPathTemplateObject<"string">
+ * } XPathStringTemplate
+ */
+
+/**
+ * Run a string-producing JSONPath transform over the given templates.
+ * Returns a string for a synchronous transform, or a `Promise<string>` when
+ * `async` is set.
  * @param {{
- *   templates: Templates,
+ *   templates: JSONPathStringTemplate[],
  *   async?: boolean,
- *   outputType?: "json"|"string"|"dom",
- *   data?: any
- * }} cfg - Extra config merged over the defaults
- * @returns {Promise<any>}
+ *   data?: object
+ * }} opts
+ * @returns {string | Promise<string>}
  */
-async function runJSONPath (cfg) {
-  let result;
-  const jtlt = JTLT.create(/** @type {any} */ ({
+function runJSONPath ({templates, async: isAsync = false, data = {}}) {
+  return JTLT.create({
+    async: isAsync,
     autostart: false,
     engineType: 'jsonpath',
     outputType: 'string',
-    data: {},
-    success (/** @type {any} */ res) {
-      result = res;
-    },
-    ...cfg
-  }));
-  await jtlt.transform();
-  return result;
+    data,
+    templates,
+    /**
+     * @param {string} res
+     * @returns {string}
+     */
+    success: (res) => res
+  }).transform();
 }
 
 /**
- * Build a JSONPath JTLT instance over an XML document and run it.
- * @param {{templates: any[], async?: boolean}} cfg
- * @returns {Promise<any>}
+ * Run a string-producing XPath transform over a tiny XML document.
+ * @param {{templates: XPathStringTemplate[], async?: boolean}} opts
+ * @returns {string | Promise<string>}
  */
-async function runXPath (cfg) {
+function runXPath ({templates, async: isAsync = false}) {
   const {window} = new JSDOM('<!doctype html><html><body></body></html>');
   const doc = new window.DOMParser().parseFromString(
     '<root><item>x</item></root>', 'text/xml'
   );
-  let result;
-  const jtlt = JTLT.create(/** @type {any} */ ({
+  return JTLT.create({
+    async: isAsync,
     autostart: false,
     engineType: 'xpath',
     xpathVersion: 1,
     outputType: 'string',
     data: doc,
-    success (/** @type {any} */ res) {
-      result = res;
-    },
-    ...cfg
-  }));
-  await jtlt.transform('');
-  return result;
+    templates,
+    /**
+     * @param {string} res
+     * @returns {string}
+     */
+    success: (res) => res
+  }).transform('');
 }
 
 /**
- * Map an array of records to one of their property values.
- * @param {any[]} rows
- * @param {string} key
- * @returns {any[]}
+ * Project one property out of every row.
+ * @template {object} T
+ * @param {readonly T[]} rows
+ * @param {keyof T} key
+ * @returns {T[keyof T][]}
  */
 function pluck (rows, key) {
   return rows.map((row) => row[key]);
@@ -173,7 +189,9 @@ describe('IndexedDB tests', () => {
           {
             path: '$',
             async template () {
-              const users = await this.indexedDB('testDB', 'users');
+              const users = /** @type {readonly User[]} */ (
+                await this.indexedDB('testDB', 'users')
+              );
               return pluck(users, 'name').join('|');
             }
           }
@@ -200,9 +218,12 @@ describe('IndexedDB tests', () => {
       });
 
     it('resolves an async object return value (json output)', async () => {
-      const result = await runJSONPath({
-        outputType: 'json',
+      const result = await JTLT.create({
         async: true,
+        autostart: false,
+        engineType: 'jsonpath',
+        outputType: 'json',
+        data: {},
         templates: [
           {
             path: '$',
@@ -211,8 +232,13 @@ describe('IndexedDB tests', () => {
               return {greeting: 'hi'};
             }
           }
-        ]
-      });
+        ],
+        /**
+         * @param {unknown} res
+         * @returns {unknown}
+         */
+        success: (res) => res
+      }).transform();
       expect(result).to.deep.equal([{greeting: 'hi'}]);
     });
 
@@ -239,45 +265,30 @@ describe('IndexedDB tests', () => {
       expect(result).to.equal('ABC');
     });
 
-    it('throws for indexedDB() in valueOf() when async is not enabled',
-      async () => {
-        let error;
-        try {
-          await runJSONPath({
-            templates: [
-              {
-                path: '$',
-                template () {
-                  this.valueOf({select: "indexedDB('testDB', 'users')"});
-                }
-              }
-            ]
-          });
-        } catch (err) {
-          error = err;
-        }
-        expect(error).to.be.an('error');
-        expect(/** @type {Error} */ (error).message).to.match(/async/v);
-      });
-
-    it('throws for this.indexedDB() when async is not enabled', async () => {
-      let error;
-      try {
-        await runJSONPath({
-          templates: [
-            {
-              path: '$',
-              template () {
-                this.indexedDB('testDB', 'users');
-              }
+    it('throws for indexedDB() in valueOf() when async is not enabled', () => {
+      expect(() => runJSONPath({
+        templates: [
+          {
+            path: '$',
+            template () {
+              this.valueOf({select: "indexedDB('testDB', 'users')"});
             }
-          ]
-        });
-      } catch (err) {
-        error = err;
-      }
-      expect(error).to.be.an('error');
-      expect(/** @type {Error} */ (error).message).to.match(/async/v);
+          }
+        ]
+      })).to.throw(/async/v);
+    });
+
+    it('throws for this.indexedDB() when async is not enabled', () => {
+      expect(() => runJSONPath({
+        templates: [
+          {
+            path: '$',
+            template () {
+              this.indexedDB('testDB', 'users');
+            }
+          }
+        ]
+      })).to.throw(/async/v);
     });
   });
 
@@ -389,9 +400,9 @@ describe('IndexedDB tests', () => {
           {
             path: '/',
             async template () {
-              const users = await this.indexedDB('testDB', 'users', {
-                index: 'byAge'
-              });
+              const users = /** @type {readonly User[]} */ (
+                await this.indexedDB('testDB', 'users', {index: 'byAge'})
+              );
               return pluck(users, 'name').join('|');
             }
           }
@@ -412,8 +423,10 @@ describe('IndexedDB tests', () => {
           },
           {
             path: '//item',
-            async template (/** @type {any} */ node) {
-              const users = await this.indexedDB('testDB', 'users');
+            async template (node) {
+              const users = /** @type {readonly User[]} */ (
+                await this.indexedDB('testDB', 'users')
+              );
               return node.textContent + ':' + users.length;
             }
           }
@@ -439,83 +452,75 @@ describe('IndexedDB tests', () => {
     });
 
     it('throws for jtlt:indexedDB() in valueOf() when async is not enabled',
-      async () => {
-        let error;
-        try {
-          await runXPath({
-            templates: [
-              {
-                path: '/',
-                template () {
-                  this.valueOf({
-                    select: "jtlt:indexedDB('testDB', 'users')"
-                  });
-                }
-              }
-            ]
-          });
-        } catch (err) {
-          error = err;
-        }
-        expect(error).to.be.an('error');
-        expect(/** @type {Error} */ (error).message).to.match(/async/v);
-      });
-
-    it('throws for this.indexedDB() when async is not enabled', async () => {
-      let error;
-      try {
-        await runXPath({
+      () => {
+        expect(() => runXPath({
           templates: [
             {
               path: '/',
               template () {
-                this.indexedDB('testDB', 'users');
+                this.valueOf({select: "jtlt:indexedDB('testDB', 'users')"});
               }
             }
           ]
-        });
-      } catch (err) {
-        error = err;
-      }
-      expect(error).to.be.an('error');
-      expect(/** @type {Error} */ (error).message).to.match(/async/v);
+        })).to.throw(/async/v);
+      });
+
+    it('throws for this.indexedDB() when async is not enabled', () => {
+      expect(() => runXPath({
+        templates: [
+          {
+            path: '/',
+            template () {
+              this.indexedDB('testDB', 'users');
+            }
+          }
+        ]
+      })).to.throw(/async/v);
     });
   });
 
   describe('queryIndexedDB()', () => {
     it('reads every record by default', async () => {
-      const rows = await queryIndexedDB('testDB', 'users');
+      const rows = /** @type {readonly User[]} */ (
+        await queryIndexedDB('testDB', 'users')
+      );
       expect(pluck(rows, 'name')).to.deep.equal(['Alice', 'Bob', 'Charlie']);
     });
 
     it('reads through a named index', async () => {
-      const rows = await queryIndexedDB('testDB', 'users', {index: 'byAge'});
+      const rows = /** @type {readonly User[]} */ (
+        await queryIndexedDB('testDB', 'users', {index: 'byAge'})
+      );
       expect(pluck(rows, 'age')).to.deep.equal([30, 40, 50]);
     });
 
     it('restricts results with a bound key range', async () => {
-      const rows = await queryIndexedDB('testDB', 'users', {
-        range: {lower: 2, upper: 3}
-      });
+      const rows = /** @type {readonly User[]} */ (
+        await queryIndexedDB('testDB', 'users', {range: {lower: 2, upper: 3}})
+      );
       expect(pluck(rows, 'name')).to.deep.equal(['Bob', 'Charlie']);
     });
 
     it('restricts results with an exact key query', async () => {
-      const rows = await queryIndexedDB('testDB', 'users', {query: 1});
+      const rows = /** @type {readonly User[]} */ (
+        await queryIndexedDB('testDB', 'users', {query: 1})
+      );
       expect(pluck(rows, 'name')).to.deep.equal(['Alice']);
     });
 
     it('walks a cursor backwards, honoring count', async () => {
-      const rows = await queryIndexedDB('testDB', 'users', {
-        direction: 'prev', count: 2
-      });
+      const rows = /** @type {readonly User[]} */ (
+        await queryIndexedDB('testDB', 'users', {direction: 'prev', count: 2})
+      );
       expect(pluck(rows, 'name')).to.deep.equal(['Charlie', 'Bob']);
     });
 
     it('walks a cursor backwards over a range', async () => {
-      const rows = await queryIndexedDB('testDB', 'users', {
-        direction: 'prevunique', range: {lower: 1, upper: 2}
-      });
+      const rows = /** @type {readonly User[]} */ (
+        await queryIndexedDB('testDB', 'users', {
+          direction: 'prevunique', range: {lower: 1, upper: 2}
+        })
+      );
       expect(pluck(rows, 'name')).to.deep.equal(['Bob', 'Alice']);
     });
   });
@@ -562,9 +567,9 @@ describe('IndexedDB tests', () => {
 
     it("resultType 'all' returns {key, primaryKey, value} triples",
       async () => {
-        const rows = await queryIndexedDB('testDB', 'users', {
-          resultType: 'all'
-        });
+        const rows = /** @type {readonly UserRecord[]} */ (
+          await queryIndexedDB('testDB', 'users', {resultType: 'all'})
+        );
         expect(rows).to.deep.equal([
           {key: 1, primaryKey: 1, value: {id: 1, name: 'Alice', age: 30}},
           {key: 2, primaryKey: 2, value: {id: 2, name: 'Bob', age: 40}},
@@ -574,18 +579,22 @@ describe('IndexedDB tests', () => {
 
     it("resultType 'all' on an index reports index key vs primary key",
       async () => {
-        const rows = await queryIndexedDB('testDB', 'users', {
-          index: 'byAge', resultType: 'all', count: 1
-        });
+        const rows = /** @type {readonly UserRecord[]} */ (
+          await queryIndexedDB('testDB', 'users', {
+            index: 'byAge', resultType: 'all', count: 1
+          })
+        );
         expect(rows).to.deep.equal([
           {key: 30, primaryKey: 1, value: {id: 1, name: 'Alice', age: 30}}
         ]);
       });
 
     it("resultType 'all' honors reverse direction", async () => {
-      const rows = await queryIndexedDB('testDB', 'users', {
-        resultType: 'all', direction: 'prev', count: 1
-      });
+      const rows = /** @type {readonly UserRecord[]} */ (
+        await queryIndexedDB('testDB', 'users', {
+          resultType: 'all', direction: 'prev', count: 1
+        })
+      );
       expect(rows).to.deep.equal([
         {key: 3, primaryKey: 3, value: {id: 3, name: 'Charlie', age: 50}}
       ]);

@@ -47,7 +47,7 @@ function getOpenDB () {
  * @typedef {object} QueryOptions
  * @property {string} [index]
  * @property {{
- *   lower?: any, upper?: any,
+ *   lower?: IDBValidKey, upper?: IDBValidKey,
  *   lowerOpen?: boolean, upperOpen?: boolean
  * }} [range]
  * @property {NonNullable<object|string|number>} [query]
@@ -57,14 +57,54 @@ function getOpenDB () {
  */
 
 /**
+ * One entry of a cursor walk (as wrapped by `idb`, so `continue()` is async).
+ * @typedef {object} IdbCursorLike
+ * @property {IDBValidKey} key
+ * @property {IDBValidKey} primaryKey
+ * @property {unknown} value
+ * @property {() => Promise<IdbCursorLike | null>} continue
+ */
+
+/**
+ * A `{key, primaryKey, value}` triple for a single matched entry, as returned
+ * by `queryIndexedDB(..., {resultType: 'all'})`.
+ * @typedef {{
+ *   key: IDBValidKey, primaryKey: IDBValidKey, value: unknown
+ * }} IdbRecord
+ */
+
+/**
+ * The subset of an IndexedDB object store / index (as wrapped by `idb`, so
+ * the request methods resolve Promises) that {@link queryIndexedDB} calls.
+ * @typedef {object} IdbQueryTarget
+ * @property {(
+ *   range?: IDBKeyRange | null, direction?: IDBCursorDirection
+ * ) => Promise<IdbCursorLike | null>} openCursor
+ * @property {(
+ *   range?: IDBKeyRange | null, direction?: IDBCursorDirection
+ * ) => Promise<IdbCursorLike | null>} openKeyCursor
+ * @property {(
+ *   range?: IDBKeyRange | null, count?: number
+ * ) => Promise<unknown[]>} getAll
+ * @property {(
+ *   range?: IDBKeyRange | null, count?: number
+ * ) => Promise<IDBValidKey[]>} getAllKeys
+ * @property {((options?: {
+ *   query?: IDBKeyRange | null,
+ *   count?: number,
+ *   direction?: IDBCursorDirection
+ * }) => Promise<IdbRecord[]>)} [getAllRecords]
+ */
+
+/**
  * Walk a cursor over `target`, collecting `project(cursor)` for each entry.
- * @param {any} target - An object store or index
+ * @param {IdbQueryTarget} target - An object store or index
  * @param {IDBKeyRange|null} range
- * @param {string|undefined} direction
+ * @param {IDBCursorDirection|undefined} direction
  * @param {number|undefined} count
- * @param {(cursor: any) => any} project
+ * @param {(cursor: IdbCursorLike) => unknown} project
  * @param {boolean} keyOnly - Open a key-only cursor (skips reading records)
- * @returns {Promise<any[]>}
+ * @returns {Promise<unknown[]>}
  */
 async function collectViaCursor (
   target, range, direction, count, project, keyOnly
@@ -84,17 +124,16 @@ async function collectViaCursor (
 }
 
 /**
- * Read every matched entry as a `{key, primaryKey, value}` object, preferring
- * the newer bulk `getAllRecords()` API and falling back to a cursor walk.
- * @param {any} target - An object store or index
+ * Read every matched entry as an {@link IdbRecord}, preferring the newer bulk
+ * `getAllRecords()` API and falling back to a cursor walk.
+ * @param {IdbQueryTarget} target - An object store or index
  * @param {IDBKeyRange|null} range
- * @param {string|undefined} direction
+ * @param {IDBCursorDirection|undefined} direction
  * @param {number|undefined} count
- * @returns {Promise<{key: any, primaryKey: any, value: any}[]>}
+ * @returns {Promise<IdbRecord[]>}
  */
 async function readAllRecords (target, range, direction, count) {
   if (typeof target.getAllRecords === 'function') {
-    /** @type {any[]} */
     const records = await target.getAllRecords({
       query: range ?? undefined, count, direction
     });
@@ -103,17 +142,42 @@ async function readAllRecords (target, range, direction, count) {
     }));
   }
   /* c8 ignore start -- cursor fallback only where getAllRecords is absent */
-  return collectViaCursor(target, range, direction, count, (cursor) => ({
-    key: cursor.key, primaryKey: cursor.primaryKey, value: cursor.value
-  }), false);
+  return /** @type {Promise<IdbRecord[]>} */ (
+    collectViaCursor(target, range, direction, count, (cursor) => ({
+      key: cursor.key, primaryKey: cursor.primaryKey, value: cursor.value
+    }), false)
+  );
   /* c8 ignore stop */
 }
 
 /**
+ * Read entries from an IndexedDB object store (or one of its indexes). The
+ * element type of the resolved array is narrowed by `options.resultType`.
+ * @overload
+ * @param {string} dbName
+ * @param {string} storeName
+ * @param {QueryOptions & {resultType: 'all'}} options
+ * @returns {Promise<IdbRecord[]>}
+ */
+/**
+ * @overload
+ * @param {string} dbName
+ * @param {string} storeName
+ * @param {QueryOptions & {resultType: 'key' | 'primaryKey'}} options
+ * @returns {Promise<IDBValidKey[]>}
+ */
+/**
+ * @overload
  * @param {string} dbName
  * @param {string} storeName
  * @param {QueryOptions} [options]
- * @returns {Promise<any[]>}
+ * @returns {Promise<unknown[]>}
+ */
+/**
+ * @param {string} dbName
+ * @param {string} storeName
+ * @param {QueryOptions} [options]
+ * @returns {Promise<unknown[]>}
  */
 export async function queryIndexedDB (dbName, storeName, options = {}) {
   const {resultType = 'value', count, direction} = options;
@@ -122,9 +186,9 @@ export async function queryIndexedDB (dbName, storeName, options = {}) {
   const tx = db.transaction(storeName, 'readonly');
   const store = tx.objectStore(storeName);
 
-  const target = /** @type {any} */ (options.index
-    ? store.index(options.index)
-    : store);
+  const target = /** @type {IdbQueryTarget} */ (/** @type {unknown} */ (
+    options.index ? store.index(options.index) : store
+  ));
 
   let range = null;
   if (options.range) {
@@ -222,7 +286,7 @@ function splitTopLevelArgs (argStr) {
  * JavaScript value. Supports single/double-quoted strings, numbers, the
  * literals `true`/`false`/`null`, and JSON object/array literals.
  * @param {string} raw
- * @returns {any}
+ * @returns {unknown}
  */
 function parseArgValue (raw) {
   const s = raw.trim();
@@ -297,7 +361,7 @@ export function parseIndexedDBExpression (expr) {
  * the fetched records. Shared by the JSONPath and XPath engines.
  * @param {ParsedIndexedDBExpression} parsed
  * @param {{preventEval?: boolean}} [options]
- * @returns {Promise<any>}
+ * @returns {Promise<unknown>}
  */
 export async function resolveIndexedDBQuery (parsed, {preventEval} = {}) {
   const {dbName, storeName, options, trailing} = parsed;
@@ -306,7 +370,7 @@ export async function resolveIndexedDBQuery (parsed, {preventEval} = {}) {
     return data;
   }
   // A JSONPath trailing segment always begins with a step (`.` or `[`).
-  return /** @type {any} */ (jsonpath)({
+  return /** @type {(config: object) => unknown} */ (jsonpath)({
     path: '$' + trailing,
     json: data,
     preventEval,
@@ -331,16 +395,16 @@ const xpathIndexedDB = {
   registered: false,
   /** @type {'collect'|'resolve'} */
   mode: 'resolve',
-  /** @type {{dbName: string, storeName: string, options: any}[]} */
+  /** @type {{dbName: string, storeName: string, options: unknown}[]} */
   requests: [],
-  /** @type {Map<string, any[]>} */
+  /** @type {Map<string, unknown[]>} */
   cache: new Map()
 };
 
 /**
  * @param {string} dbName
  * @param {string} storeName
- * @param {any} options
+ * @param {unknown} options
  * @returns {string}
  */
 function xpathCacheKey (dbName, storeName, options) {
@@ -351,11 +415,11 @@ function xpathCacheKey (dbName, storeName, options) {
  * Implementation shared by both arities of the `jtlt:indexedDB` XPath
  * function. In `collect` mode it records the requested query and returns an
  * empty sequence; in `resolve` mode it returns the pre-fetched records.
- * @param {any} _domFacade - fontoxpath dynamic context (unused)
+ * @param {unknown} _domFacade - fontoxpath dynamic context (unused)
  * @param {string} dbName
  * @param {string} storeName
- * @param {any} [options] - An XPath map, surfaced to JS as a plain object
- * @returns {any[]}
+ * @param {unknown} [options] - An XPath map, surfaced to JS as a plain object
+ * @returns {unknown[]}
  */
 function xpathIndexedDBFunction (_domFacade, dbName, storeName, options) {
   const opts = options ?? undefined;
@@ -414,7 +478,7 @@ export function xpathExpressionUsesIndexedDB (expr) {
  * expression in "collect" mode to discover every `indexedDB()` call, awaits
  * those queries, then evaluates again with the records available.
  * @param {string} selectStr
- * @param {any} contextNode
+ * @param {Node} contextNode
  * @returns {Promise<string>}
  */
 export async function evaluateXPathWithIndexedDB (selectStr, contextNode) {
@@ -450,7 +514,11 @@ export async function evaluateXPathWithIndexedDB (selectStr, contextNode) {
     fetched.add(key);
     xpathIndexedDB.cache.set(
       key,
-      await queryIndexedDB(req.dbName, req.storeName, req.options)
+      await queryIndexedDB(
+        req.dbName,
+        req.storeName,
+        /** @type {QueryOptions|undefined} */ (req.options)
+      )
     );
   }));
 

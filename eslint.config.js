@@ -20,7 +20,6 @@ export default [
   ...ashNazg(['sauron']),
   {
     rules: {
-      // Should reapply to testing file which demonstrates the API
       'jsdoc/reject-any-type': 0,
 
       // Temporary only:
@@ -48,6 +47,9 @@ export default [
   {
     files: ['test/**/*.js', 'test.js'],
     rules: {
+      // Reapply rule to testing file as it demonstrates the API
+      'jsdoc/reject-any-type': ['error'],
+
       'unicorn/prefer-https': 0, // Old namespaces
       // Too many are JSON properties called "children"
       'unicorn/better-dom-traversing': 0,

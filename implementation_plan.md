@@ -44,11 +44,11 @@ Implement the `indexedDB()` API for XPath and JSONPath by:
 
 #### [NEW] `src/indexedDB.js` — done
 - `queryIndexedDB(dbName, storeName, options?)` wraps `idb`, lazily loading it (and `indexeddbshim` under Node) via a memoized loader. `options` supports `index`, `range` (`IDBKeyRange.bound`), `query` (`IDBKeyRange.only`), `direction`, and `count` (the `prev*` directions walk a cursor).
-- `options.resultType` (mirrors `jsonpath-plus`) selects what each matched entry contributes:
-  - `'value'` (default) — the stored record (`getAll` / cursor).
-  - `'primaryKey'` — the object store's primary key (`getAllKeys` / key cursor).
-  - `'key'` — the query key: same as the primary key for a store query, or the indexed field's value when `index` is set (`getAllKeys` for a store; a key cursor for an index).
-  - `'all'` — a `{key, primaryKey, value}` object, via `getAllRecords()` when available, otherwise a cursor.
+- `options.resultType` (mirrors `jsonpath-plus`) selects what each matched entry contributes. JSDoc `@overload`s discriminate the resolved element type on the `resultType` literal:
+  - `'value'` (default) — the stored record (`getAll` / cursor); resolves `Promise<unknown[]>`.
+  - `'primaryKey'` — the object store's primary key (`getAllKeys` / key cursor); resolves `Promise<IDBValidKey[]>`.
+  - `'key'` — the query key: same as the primary key for a store query, or the indexed field's value when `index` is set (`getAllKeys` for a store; a key cursor for an index); resolves `Promise<IDBValidKey[]>`.
+  - `'all'` — an `IdbRecord` (`{key: IDBValidKey, primaryKey: IDBValidKey, value: unknown}`), via `getAllRecords()` when available, otherwise a cursor; resolves `Promise<IdbRecord[]>`.
 - `parseIndexedDBExpression(expr)` returns `{dbName, storeName, options, trailing}` or `null`. It matches `/^\s*indexedDB\((?<args>.*)\)(?<trailing>.*)$/v`, splits the argument list at top level (quote/bracket aware), and coerces each argument (quoted string, number, `true`/`false`/`null`, or JSON object/array literal).
 
 - `resolveIndexedDBQuery(parsed, {preventEval})` (exported from `src/indexedDB.js`) fetches via `queryIndexedDB` and, when a trailing segment is present (e.g. `.*.name` or `[0].name`), evaluates `'$' + trailing` with `jsonpath-plus` against the fetched records. Because IndexedDB yields plain JSON, the trailing query is JSONPath for **both** engines.
