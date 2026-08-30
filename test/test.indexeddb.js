@@ -26,17 +26,18 @@ import {parseIndexedDBExpression, queryIndexedDB} from '../src/indexedDB.js';
 
 /**
  * Run a string-producing JSONPath transform over the given templates. `jtlt()`
- * resolves to the result directly, so there is no `success` callback.
+ * resolves to the result directly, so there is no `success` callback; async
+ * templates are awaited by default (pass `sync: true` to forbid them).
  * @param {{
  *   templates: JSONPathStringTemplate[],
- *   async?: boolean,
+ *   sync?: boolean,
  *   data?: object
  * }} opts
  * @returns {Promise<string>}
  */
-function runJSONPath ({templates, async: isAsync = false, data = {}}) {
+function runJSONPath ({templates, sync = false, data = {}}) {
   return jtlt({
-    async: isAsync,
+    sync,
     engineType: 'jsonpath',
     outputType: 'string',
     data,
@@ -46,16 +47,16 @@ function runJSONPath ({templates, async: isAsync = false, data = {}}) {
 
 /**
  * Run a string-producing XPath transform over a tiny XML document.
- * @param {{templates: XPathStringTemplate[], async?: boolean}} opts
+ * @param {{templates: XPathStringTemplate[], sync?: boolean}} opts
  * @returns {Promise<string>}
  */
-function runXPath ({templates, async: isAsync = false}) {
+function runXPath ({templates, sync = false}) {
   const {window} = new JSDOM('<!doctype html><html><body></body></html>');
   const doc = new window.DOMParser().parseFromString(
     '<root><item>x</item></root>', 'text/xml'
   );
   return jtlt({
-    async: isAsync,
+    sync,
     engineType: 'xpath',
     xpathVersion: 1,
     outputType: 'string',
@@ -116,7 +117,6 @@ describe('IndexedDB tests', () => {
     it('fetches data asynchronously via valueOf() with a trailing path',
       async () => {
         const result = await runJSONPath({
-          async: true,
           templates: [
             {
               path: '$',
@@ -134,7 +134,6 @@ describe('IndexedDB tests', () => {
     it('fetches the whole store when no trailing path is given',
       async () => {
         const result = await runJSONPath({
-          async: true,
           templates: [
             {
               path: '$',
@@ -154,7 +153,6 @@ describe('IndexedDB tests', () => {
     it('applies a bracketed trailing path to the fetched records',
       async () => {
         const result = await runJSONPath({
-          async: true,
           templates: [
             {
               path: '$',
@@ -171,7 +169,6 @@ describe('IndexedDB tests', () => {
 
     it('honors a resultType option in the string form', async () => {
       const result = await runJSONPath({
-        async: true,
         templates: [
           {
             path: '$',
@@ -189,7 +186,6 @@ describe('IndexedDB tests', () => {
 
     it('exposes a direct this.indexedDB() helper', async () => {
       const result = await runJSONPath({
-        async: true,
         templates: [
           {
             path: '$',
@@ -208,7 +204,6 @@ describe('IndexedDB tests', () => {
     it('resolves an async string return value from the root template',
       async () => {
         const result = await runJSONPath({
-          async: true,
           templates: [
             {
               path: '$',
@@ -224,7 +219,6 @@ describe('IndexedDB tests', () => {
 
     it('resolves an async object return value (json output)', async () => {
       const result = await jtlt({
-        async: true,
         engineType: 'jsonpath',
         outputType: 'json',
         data: {},
@@ -243,7 +237,6 @@ describe('IndexedDB tests', () => {
 
     it('awaits async non-root templates applied in a loop', async () => {
       const result = await runJSONPath({
-        async: true,
         data: {items: ['a', 'b', 'c']},
         templates: [
           {
@@ -264,22 +257,23 @@ describe('IndexedDB tests', () => {
       expect(result).to.equal('ABC');
     });
 
-    it('rejects for indexedDB() in valueOf() when async is not enabled',
-      async () => {
-        await expectRejection(runJSONPath({
-          templates: [
-            {
-              path: '$',
-              template () {
-                this.valueOf({select: "indexedDB('testDB', 'users')"});
-              }
-            }
-          ]
-        }), /async/v);
-      });
-
-    it('rejects for this.indexedDB() when async is not enabled', async () => {
+    it('rejects for indexedDB() in valueOf() under sync: true', async () => {
       await expectRejection(runJSONPath({
+        sync: true,
+        templates: [
+          {
+            path: '$',
+            template () {
+              this.valueOf({select: "indexedDB('testDB', 'users')"});
+            }
+          }
+        ]
+      }), /sync/v);
+    });
+
+    it('rejects for this.indexedDB() under sync: true', async () => {
+      await expectRejection(runJSONPath({
+        sync: true,
         templates: [
           {
             path: '$',
@@ -288,15 +282,51 @@ describe('IndexedDB tests', () => {
             }
           }
         ]
-      }), /async/v);
+      }), /sync/v);
     });
+
+    it('rejects when a root template returns a Promise under sync: true',
+      async () => {
+        await expectRejection(runJSONPath({
+          sync: true,
+          templates: [
+            {
+              path: '$',
+              template () {
+                return Promise.resolve('x');
+              }
+            }
+          ]
+        }), /sync/v);
+      });
+
+    it('rejects when a non-root template returns a Promise under sync: true',
+      async () => {
+        await expectRejection(runJSONPath({
+          sync: true,
+          data: {items: ['a']},
+          templates: [
+            {
+              path: '$',
+              template () {
+                this.applyTemplates({select: '$.items.*'});
+              }
+            },
+            {
+              path: '$.items.*',
+              template () {
+                return Promise.resolve('x');
+              }
+            }
+          ]
+        }), /sync/v);
+      });
   });
 
   describe('XPath integration', () => {
     it('resolves the jtlt:indexedDB() XPath function in valueOf()',
       async () => {
         const result = await runXPath({
-          async: true,
           templates: [
             {
               path: '/',
@@ -316,7 +346,6 @@ describe('IndexedDB tests', () => {
     it('fetches each distinct query once when repeated in an expression',
       async () => {
         const result = await runXPath({
-          async: true,
           templates: [
             {
               path: '/',
@@ -336,7 +365,6 @@ describe('IndexedDB tests', () => {
 
     it('passes an XPath map of options to jtlt:indexedDB()', async () => {
       const result = await runXPath({
-        async: true,
         templates: [
           {
             path: '/',
@@ -355,7 +383,6 @@ describe('IndexedDB tests', () => {
 
     it("passes resultType 'all' through the options map", async () => {
       const result = await runXPath({
-        async: true,
         templates: [
           {
             path: '/',
@@ -375,7 +402,6 @@ describe('IndexedDB tests', () => {
     it("passes resultType 'key' with an index through the options map",
       async () => {
         const result = await runXPath({
-          async: true,
           templates: [
             {
               path: '/',
@@ -395,7 +421,6 @@ describe('IndexedDB tests', () => {
 
     it('exposes a direct this.indexedDB() helper', async () => {
       const result = await runXPath({
-        async: true,
         templates: [
           {
             path: '/',
@@ -413,7 +438,6 @@ describe('IndexedDB tests', () => {
 
     it('awaits an async non-root template applied in a loop', async () => {
       const result = await runXPath({
-        async: true,
         templates: [
           {
             path: '/',
@@ -437,7 +461,6 @@ describe('IndexedDB tests', () => {
 
     it('resolves an async return value from the root template', async () => {
       const result = await runXPath({
-        async: true,
         templates: [
           {
             path: '/',
@@ -451,9 +474,10 @@ describe('IndexedDB tests', () => {
       expect(result).to.equal('DONE');
     });
 
-    it('rejects for jtlt:indexedDB() in valueOf() when async is not enabled',
+    it('rejects for jtlt:indexedDB() in valueOf() under sync: true',
       async () => {
         await expectRejection(runXPath({
+          sync: true,
           templates: [
             {
               path: '/',
@@ -462,11 +486,12 @@ describe('IndexedDB tests', () => {
               }
             }
           ]
-        }), /async/v);
+        }), /sync/v);
       });
 
-    it('rejects for this.indexedDB() when async is not enabled', async () => {
+    it('rejects for this.indexedDB() under sync: true', async () => {
       await expectRejection(runXPath({
+        sync: true,
         templates: [
           {
             path: '/',
@@ -475,8 +500,44 @@ describe('IndexedDB tests', () => {
             }
           }
         ]
-      }), /async/v);
+      }), /sync/v);
     });
+
+    it('rejects when a root template returns a Promise under sync: true',
+      async () => {
+        await expectRejection(runXPath({
+          sync: true,
+          templates: [
+            {
+              path: '/',
+              template () {
+                return Promise.resolve('x');
+              }
+            }
+          ]
+        }), /sync/v);
+      });
+
+    it('rejects when a non-root template returns a Promise under sync: true',
+      async () => {
+        await expectRejection(runXPath({
+          sync: true,
+          templates: [
+            {
+              path: '/',
+              template () {
+                this.applyTemplates('//item');
+              }
+            },
+            {
+              path: '//item',
+              template () {
+                return Promise.resolve('x');
+              }
+            }
+          ]
+        }), /sync/v);
+      });
   });
 
   describe('queryIndexedDB()', () => {

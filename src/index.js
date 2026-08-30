@@ -167,8 +167,9 @@ export const setWindow = (win) => {
  * @template T
  * @template {boolean|undefined} [E=false]
  * @typedef {object} BaseJTLTOptions
- * @property {boolean} [async] Enable asynchronous transformations.
- * @property {boolean} [syncOnly] Require synchronous transformations.
+ * @property {boolean} [sync] Off by default: the engine awaits any Promise a
+ *   template returns (e.g. from `await this.indexedDB(...)`). Set `true` to
+ *   forbid asynchrony — a template that returns a Promise then throws.
  * @property {(
  *   result: ResultType<T, E>
  * ) => ResultType<T, E>|void} [success] A callback supplied
@@ -648,11 +649,11 @@ class JTLT {
     );
     // The engine returns ResultType<T>. We cast through never to bypass
     // the impossible intersection type that TypeScript infers for the union.
-    // When `config.async` is enabled the engine may instead return a Promise
-    // (e.g. a template performed an `await this.indexedDB(...)` fetch).
+    // The engine returns a Promise instead when a template ran asynchronously
+    // (e.g. it performed an `await this.indexedDB(...)` fetch); under
+    // `config.sync` the engine throws rather than returning one.
     const maybePromise = /** @type {{then?: unknown}} */ (result);
-    if (maybePromise && typeof maybePromise.then === 'function' &&
-        this.config.async) {
+    if (maybePromise && typeof maybePromise.then === 'function') {
       return /** @type {any} */ (
         // eslint-disable-next-line @stylistic/max-len -- Long
         // eslint-disable-next-line promise/prefer-await-to-then -- intentional dynamic sync/async

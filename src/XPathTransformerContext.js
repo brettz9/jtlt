@@ -25,8 +25,8 @@ const escapeRegexReplacement = (string) => {
  * @property {import('./index.js').
  *   JoiningTransformer} joiningTransformer Joiner
  * @property {boolean} [errorOnEqualPriority]
- * @property {boolean} [async] - Whether templates may run asynchronously
- *   (required for `indexedDB()` support)
+ * @property {boolean} [sync] - When true, throw if a template returns a
+ *   Promise instead of awaiting it (disables `indexedDB()`)
  * @property {boolean} [preventEval] - Whether to prevent eval in the JSONPath
  *   trailing segment of an `indexedDB(...)` expression
  * @property {(path: string) => number} [specificityPriorityResolver]
@@ -413,7 +413,7 @@ class XPathTransformerContext {
     });
 
     const preApplyContext = this._contextNode;
-    const isAsync = Boolean(/** @type {any} */ (this._config).async);
+    const isSync = Boolean(/** @type {any} */ (this._config).sync);
 
     // Process each node. `maybeAsyncLoop` keeps this a plain synchronous
     // loop unless a template returns a Promise (e.g. via
@@ -589,8 +589,8 @@ class XPathTransformerContext {
       this._params = {0: node};
 
       /**
-       * The template may return synchronously or, when `config.async` is
-       * enabled, return a Promise (e.g. from `await this.indexedDB(...)`).
+       * The template may return synchronously or return a Promise (e.g. from
+       * `await this.indexedDB(...)`), which is awaited unless `config.sync`.
        * @type {any}
        */
       const ret = templateObj.template.call(this, node, {mode});
@@ -598,8 +598,14 @@ class XPathTransformerContext {
       // Restore previous parameter context
       this._params = prevTemplateParams;
 
-      if (isAsync && ret !== null && typeof ret !== 'undefined' &&
+      if (ret !== null && typeof ret !== 'undefined' &&
           typeof ret.then === 'function') {
+        if (isSync) {
+          throw new Error(
+            'A template returned a Promise but JTLT is configured with ' +
+            '`sync: true`.'
+          );
+        }
         // eslint-disable-next-line @stylistic/max-len -- Long
         // eslint-disable-next-line promise/prefer-await-to-then -- intentional dynamic sync/async
         return ret.then((/** @type {any} */ resolvedRet) => {
@@ -636,7 +642,7 @@ class XPathTransformerContext {
       return undefined;
     });
 
-    if (isAsync && typeof loopResult?.then === 'function') {
+    if (typeof loopResult?.then === 'function') {
       return /** @type {any} */ (
         // eslint-disable-next-line @stylistic/max-len -- Long
         // eslint-disable-next-line promise/prefer-await-to-then -- intentional dynamic sync/async
@@ -991,18 +997,18 @@ class XPathTransformerContext {
    * Directly query IndexedDB from within a template, e.g.
    * `await this.indexedDB('myDB', 'myStore', {index: 'byAge'})`.
    *
-   * Requires the JTLT instance to be configured with `async: true`, since
-   * IndexedDB access is inherently asynchronous.
+   * Since IndexedDB access is asynchronous, this is unavailable when JTLT is
+   * configured with `sync: true`.
    * @param {string} dbName - Database name
    * @param {string} storeName - Object store name
    * @param {import('./indexedDB.js').QueryOptions} [options] - Query options
    * @returns {Promise<unknown[]>} The matching records
    */
   indexedDB (dbName, storeName, options) {
-    if (!(/** @type {any} */ (this._config).async)) {
+    if (/** @type {any} */ (this._config).sync) {
       throw new Error(
-        'The `indexedDB()` API requires JTLT to be configured with ' +
-        '`async: true`.'
+        'The `indexedDB()` API is unavailable when JTLT is configured with ' +
+        '`sync: true`.'
       );
     }
     return queryIndexedDB(dbName, storeName, options);
@@ -1011,7 +1017,7 @@ class XPathTransformerContext {
   /**
    * Evaluate an XPath selector that calls the `jtlt:indexedDB(...)` function,
    * awaiting the underlying IndexedDB reads, then append the string result.
-   * Used by {@link valueOf}. Callers enforce `config.async`.
+   * Used by {@link valueOf}. Callers reject `config.sync`.
    * @param {string} selectStr
    * @returns {Promise<XPathTransformerContext>}
    */
@@ -1038,10 +1044,10 @@ class XPathTransformerContext {
     // expression asynchronously (fontoxpath itself stays synchronous) and
     // return a Promise so templates can `await this.valueOf(...)`.
     if (xpathExpressionUsesIndexedDB(selectStr)) {
-      if (!(/** @type {any} */ (this._config).async)) {
+      if (/** @type {any} */ (this._config).sync) {
         throw new Error(
-          'The `indexedDB()` XPath function requires JTLT to be configured ' +
-          'with `async: true`.'
+          'The `indexedDB()` XPath function is unavailable when JTLT is ' +
+          'configured with `sync: true`.'
         );
       }
       return /** @type {any} */ (

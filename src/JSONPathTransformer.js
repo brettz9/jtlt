@@ -165,8 +165,8 @@ class JSONPathTransformer {
     // Set up parameter context for valueOf() access in root template
     jte._params = {0: jte._contextObj};
     /**
-     * The template may return a value synchronously or, when `config.async`
-     * is enabled, a Promise (e.g. from `await this.indexedDB(...)`).
+     * The template may return a value synchronously or a Promise (e.g. from
+     * `await this.indexedDB(...)`), which is awaited unless `config.sync`.
      * @type {any}
      */
     const ret = /** @type {import('./index.js').JSONPathTemplateObject<T>} */ (
@@ -174,7 +174,13 @@ class JSONPathTransformer {
     ).template.call(jte, undefined, {mode});
 
     if (ret !== null && typeof ret !== 'undefined' &&
-        typeof ret.then === 'function' && this._config.async) {
+        typeof ret.then === 'function') {
+      if (this._config.sync) {
+        throw new Error(
+          'A template returned a Promise but JTLT is configured with ' +
+          '`sync: true`.'
+        );
+      }
       return /** @type {any} */ (
         // eslint-disable-next-line @stylistic/max-len -- Long
         // eslint-disable-next-line promise/prefer-await-to-then -- intentional dynamic sync/async

@@ -92,8 +92,8 @@ const escapeRegexReplacement = (string) => {
  * @property {JoiningTransformerMap[T]} joiningTransformer - Joining transformer
  * @property {boolean} [preventEval] - Whether to prevent eval in
  *   JSONPath
- * @property {boolean} [async] - Whether templates may run asynchronously
- *   (required for `indexedDB()` support)
+ * @property {boolean} [sync] - When true, throw if a template returns a
+ *   Promise instead of awaiting it (disables `indexedDB()`)
  * @property {(path: string) => number} [specificityPriorityResolver]
  *   Priority resolver function
  * @property {import('./index.js').JSONPathTemplateObject<T>[]|
@@ -583,8 +583,8 @@ class JSONPathTransformerContext {
       that._params = {0: value};
 
       /**
-       * The template may return synchronously or, when `config.async` is
-       * enabled, return a Promise (e.g. from `await this.indexedDB(...)`).
+       * The template may return synchronously or return a Promise (e.g. from
+       * `await this.indexedDB(...)`), which is awaited unless `config.sync`.
        * @type {any}
        */
       const ret =
@@ -597,7 +597,13 @@ class JSONPathTransformerContext {
       // Restore previous parameter context
       that._params = prevTemplateParams;
       if (ret !== null && typeof ret !== 'undefined' &&
-          typeof ret.then === 'function' && that._config.async) {
+          typeof ret.then === 'function') {
+        if (that._config.sync) {
+          throw new Error(
+            'A template returned a Promise but JTLT is configured with ' +
+            '`sync: true`.'
+          );
+        }
         // The loop body deliberately mixes value and no-value returns so
         // `maybeAsyncLoop` can stay synchronous unless a template awaits.
         // eslint-disable-next-line @stylistic/max-len -- Long
@@ -650,9 +656,8 @@ class JSONPathTransformerContext {
       that._currPath = _oldPath;
     });
 
-    if (this._config.async && typeof loopResult?.then === 'function') {
-      // Returns a Promise<this> when a nested template ran asynchronously;
-      // callers that opted into `async` handle the thenable.
+    if (typeof loopResult?.then === 'function') {
+      // Returns a Promise<this> when a nested template ran asynchronously.
       return /** @type {any} */ (
         // eslint-disable-next-line @stylistic/max-len -- Long
         // eslint-disable-next-line promise/prefer-await-to-then -- intentional dynamic sync/async
@@ -1216,18 +1221,18 @@ class JSONPathTransformerContext {
    * Directly query IndexedDB from within a template, e.g.
    * `await this.indexedDB('myDB', 'myStore', {index: 'byAge'})`.
    *
-   * Requires the JTLT instance to be configured with `async: true`, since
-   * IndexedDB access is inherently asynchronous.
+   * Since IndexedDB access is asynchronous, this is unavailable when JTLT is
+   * configured with `sync: true`.
    * @param {string} dbName - Database name
    * @param {string} storeName - Object store name
    * @param {import('./indexedDB.js').QueryOptions} [options] - Query options
    * @returns {Promise<unknown[]>} The matching records
    */
   indexedDB (dbName, storeName, options) {
-    if (!this._config.async) {
+    if (this._config.sync) {
       throw new Error(
-        'The `indexedDB()` API requires JTLT to be configured with ' +
-        '`async: true`.'
+        'The `indexedDB()` API is unavailable when JTLT is configured with ' +
+        '`sync: true`.'
       );
     }
     return queryIndexedDB(dbName, storeName, options);
@@ -1235,8 +1240,7 @@ class JSONPathTransformerContext {
 
   /**
    * Await a parsed `indexedDB(...)` expression and append its (stringified)
-   * value to the output. Used by {@link valueOf}. Callers enforce
-   * `config.async`.
+   * value to the output. Used by {@link valueOf}. Callers reject `config.sync`.
    * @param {import('./indexedDB.js').ParsedIndexedDBExpression} parsed
    * @param {any} results - The joining transformer
    * @returns {Promise<this>}
@@ -1269,10 +1273,10 @@ class JSONPathTransformerContext {
     if (typeof selectString === 'string') {
       const parsed = parseIndexedDBExpression(selectString);
       if (parsed) {
-        if (!this._config.async) {
+        if (this._config.sync) {
           throw new Error(
-            'The `indexedDB()` function requires JTLT to be configured ' +
-            'with `async: true`.'
+            'The `indexedDB()` function is unavailable when JTLT is ' +
+            'configured with `sync: true`.'
           );
         }
         return /** @type {any} */ (this._appendIndexedDBValue(parsed, results));

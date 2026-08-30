@@ -7,8 +7,8 @@ import XPathTransformerContext from './XPathTransformerContext.js';
  * @property {import('./index.js').
  *   XPathTemplateArray<T>} templates Template objects
  * @property {number} [xpathVersion] XPath version (1|2|3.1)
- * @property {boolean} [async] Whether templates may run asynchronously
- *   (required for `indexedDB()` support)
+ * @property {boolean} [sync] When true, throw if a template returns a Promise
+ *   instead of awaiting it (disables `indexedDB()` and other async features)
  */
 
 /**
@@ -109,14 +109,20 @@ class XPathTransformer {
     // Set up parameter context for valueOf() access in root template
     xte._params = {0: xte._contextNode};
     /**
-     * The template may return synchronously or, when `config.async` is
-     * enabled, return a Promise (e.g. from `await this.indexedDB(...)`).
+     * The template may return synchronously or return a Promise (e.g. from
+     * `await this.indexedDB(...)`), which is awaited unless `config.sync`.
      * @type {any}
      */
     const ret = templateObj.template.call(xte, undefined, {mode});
 
     if (ret !== null && typeof ret !== 'undefined' &&
-        typeof ret.then === 'function' && this._config.async) {
+        typeof ret.then === 'function') {
+      if (this._config.sync) {
+        throw new Error(
+          'A template returned a Promise but JTLT is configured with ' +
+          '`sync: true`.'
+        );
+      }
       return /** @type {any} */ (
         // eslint-disable-next-line @stylistic/max-len -- Long
         // eslint-disable-next-line promise/prefer-await-to-then -- intentional dynamic sync/async
