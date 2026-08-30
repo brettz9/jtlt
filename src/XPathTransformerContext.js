@@ -136,9 +136,14 @@ class XPathTransformerContext {
     this._stripSpaceElements = [];
   }
 
-  /** @returns {import('./index.js').JoiningTransformer} */
+  /** @returns {import('./index.js').BuiltinJoiningTransformer} */
   _getJoiningTransformer () {
-    return this._config.joiningTransformer;
+    // Engine internals only ever run against a built-in joiner (they touch
+    // concrete members such as `_modeConfig`); a custom stub is the caller's
+    // responsibility.
+    return /** @type {import('./index.js').BuiltinJoiningTransformer} */ (
+      this._config.joiningTransformer
+    );
   }
 
   /**
@@ -1148,7 +1153,7 @@ class XPathTransformerContext {
           const resultToAppend = Array.isArray(result)
             ? result.join(' ')
             : result;
-          jt.append(resultToAppend);
+          jt.append(/** @type {string | Node} */ (resultToAppend));
           return this;
         }
       /* c8 ignore start -- Error handler for malformed function calls */

@@ -487,8 +487,10 @@ describe('stylesheet() and transform() methods', function () {
         ctx.namespace('unused', 'https://example.com/unused');
       });
 
-      const result = ctx.getOutput();
-      const rootElement = result[0];
+      const result = /** @type {unknown[]} */ (ctx.getOutput());
+      const rootElement = /** @type {[string, Record<string, string>]} */ (
+        result[0]
+      );
       const {xmlns} = rootElement[1];
 
       expect(xmlns).to.be.undefined;
@@ -508,7 +510,7 @@ describe('stylesheet() and transform() methods', function () {
           ctx.namespace('unused', 'https://example.com/unused');
         });
 
-        const result = ctx.getOutput();
+        const result = /** @type {unknown[]} */ (ctx.getOutput());
         expect(result).not.to.include('xmlns:unused');
       }
     );
@@ -529,7 +531,7 @@ describe('stylesheet() and transform() methods', function () {
           ctx.namespace('test', 'https://example.com/test');
         });
 
-        const result = ctx.getOutput();
+        const result = /** @type {unknown[]} */ (ctx.getOutput());
         expect(result).not.to.include('xmlns:test');
       }
     );

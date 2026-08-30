@@ -16,7 +16,7 @@ class JSONPathTransformer {
       /**
        * @template {"json"|"string"|"dom"} U
        * @this {JSONPathTransformerContext<U>}
-       * @param {any} value - Value
+       * @param {unknown} value - Value
        * @param {{mode?: string}} cfg - Configuration
        * @returns {void}
        */
@@ -26,8 +26,8 @@ class JSONPathTransformer {
     },
     transformPropertyNames: {
       /**
-       * @param {any} value - Current context value
-       * @returns {any}
+       * @param {unknown} value - Current context value
+       * @returns {unknown}
        */
       template (value) {
         // Emit property names for the current object context
@@ -40,7 +40,7 @@ class JSONPathTransformer {
     transformObjects: {
       /**
        * @this {JSONPathTransformerContext}
-       * @param {any} value - Value
+       * @param {unknown} value - Value
        * @param {{mode?: string}} cfg - Configuration
        * @returns {void}
        */
@@ -51,7 +51,7 @@ class JSONPathTransformer {
     transformArrays: {
       /**
        * @this {JSONPathTransformerContext}
-       * @param {any} value - Value
+       * @param {unknown} value - Value
        * @param {{mode?: string}} cfg - Configuration
        * @returns {void}
        */
@@ -70,8 +70,9 @@ class JSONPathTransformer {
     },
     transformFunctions: {
       /**
-       * @param {( ...args: any[]) => any} value - Function at current context
-       * @returns {any}
+       * @param {(...args: unknown[]) => unknown} value - Function at current
+       *   context
+       * @returns {unknown}
        */
       template (value) {
         // Call the function and return its result

@@ -80,11 +80,71 @@ export const setWindow = (win) => {
  */
 
 /**
+ * The output-sink surface a custom `joiningTransformer` may provide. Only
+ * `append` and `get` are required; the rest are optional because the engine
+ * guards each call. The built-in joiners' `append`/`string`/… signatures
+ * diverge (e.g. the DOM joiner also accepts `Node`), so under
+ * `strictFunctionTypes` no single structural type is a supertype of all
+ * three; this contract lists the surface with `unknown` parameters, and
+ * {@link JoiningTransformer} unions it with the concrete classes so real
+ * joiners still type precisely.
+ * @typedef {object} JoiningTransformerContract
+ * @property {(item: unknown) => unknown} append
+ * @property {() => unknown} get
+ * @property {(txt: string) => unknown} [text]
+ * @property {(str: unknown, cb?: () => void) => unknown} [string]
+ * @property {(num: unknown) => unknown} [number]
+ * @property {(
+ *   obj: unknown, cb?: unknown, usePropertySets?: unknown, propSets?: unknown
+ * ) => unknown} [object]
+ * @property {(arr: unknown, cb?: unknown) => unknown} [array]
+ * @property {(
+ *   name: string, atts?: unknown, children?: unknown,
+ *   cb?: unknown, useAttributeSets?: unknown
+ * ) => unknown} [element]
+ * @property {(
+ *   name: string, val: unknown, avoidAttEscape?: unknown
+ * ) => unknown} [attribute]
+ * @property {(text: string) => unknown} [comment]
+ * @property {(
+ *   target: string, data: string
+ * ) => unknown} [processingInstruction]
+ * @property {(str: unknown) => unknown} [plainText]
+ * @property {(prop: unknown, val: unknown) => unknown} [propValue]
+ * @property {(item: unknown) => unknown} [rawAppend]
+ * @property {(prefix: string, namespaceURI: string) => unknown} [namespace]
+ * @property {(context: unknown) => unknown} [setContext]
+ * @property {(cfg: unknown) => unknown} [output]
+ * @property {(cfg: unknown) => unknown} [mode]
+ * @property {(cfg: unknown) => unknown} [stylesheet]
+ * @property {(cfg: unknown) => unknown} [function]
+ * @property {(
+ *   name: string, args?: unknown[]
+ * ) => unknown} [invokeFunctionByArity]
+ * @property {(
+ *   name: string, outputCharacters: unknown
+ * ) => unknown} [characterMap]
+ * @property {(name: string, attributes: unknown) => unknown} [attributeSet]
+ * @property {(
+ *   stylesheetPrefix: string, resultPrefix: string
+ * ) => unknown} [namespaceAlias]
+ */
+
+/**
+ * One of the three built-in joiners. Used where engine internals rely on
+ * concrete members (e.g. `_modeConfig`).
  * @typedef {(
  *   StringJoiningTransformer|
  *   DOMJoiningTransformer|
  *   JSONJoiningTransformer
- * )} JoiningTransformer
+ * )} BuiltinJoiningTransformer
+ */
+
+/**
+ * The type accepted for a config `joiningTransformer`: a built-in joiner or
+ * any object implementing {@link JoiningTransformerContract}.
+ * @typedef {BuiltinJoiningTransformer | JoiningTransformerContract
+ * } JoiningTransformer
  */
 
 /**
@@ -95,7 +155,7 @@ export const setWindow = (win) => {
  * @template T
  * @template {boolean|undefined} [E=false]
  * @typedef {T extends "json" ?
- *   (E extends true ? any[] : unknown) :
+ *   (E extends true ? unknown[] : unknown) :
  *   T extends "string" ?
  *   (E extends true ? string[] : string) :
  *   (E extends true ? XMLDocument[] :
@@ -201,7 +261,7 @@ export const setWindow = (win) => {
  */
 
 /**
- * @template {boolean|undefined} [E=any]
+ * @template {boolean|undefined} [E=boolean|undefined]
  * @typedef {JSONPathJTLTOptions<"json", E> |
  *   JSONPathJTLTOptions<"string", E> |
  *   JSONPathJTLTOptions<"dom", E> |
@@ -673,7 +733,7 @@ class JTLT {
  */
 /**
  * @param {Omit<JTLTOptions, "success">} cfg Options
- * @returns {Promise<any>}
+ * @returns {Promise<unknown>}
  */
 export function jtlt (cfg) {
   // eslint-disable-next-line promise/avoid-new -- Own API

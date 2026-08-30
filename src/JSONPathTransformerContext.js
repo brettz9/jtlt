@@ -201,7 +201,7 @@ class JSONPathTransformerContext {
 
   /**
    * Gets the current output.
-   * @returns {any} The output from the joining transformer
+   * @returns {unknown} The output from the joining transformer
    */
   getOutput () {
     return this._getJoiningTransformer().get();
@@ -227,7 +227,7 @@ class JSONPathTransformerContext {
   }
 
   /**
-   * @param {any} v - Value to set
+   * @param {unknown} v - Value to set
    * @returns {this}
    */
   set (v) {
@@ -1198,7 +1198,7 @@ class JSONPathTransformerContext {
 
   /**
    * Returns the current group (for use within forEachGroup callback).
-   * @returns {any[]|undefined}
+   * @returns {unknown[]|undefined}
    */
   currentGroup () {
     return /** @type {any} */ (this)._currentGroup;
@@ -1206,7 +1206,7 @@ class JSONPathTransformerContext {
 
   /**
    * Returns the current grouping key (for use within forEachGroup callback).
-   * @returns {any}
+   * @returns {unknown}
    */
   currentGroupingKey () {
     return /** @type {any} */ (this)._currentGroupingKey;
@@ -2199,8 +2199,8 @@ class JSONPathTransformerContext {
   /**
    * Invoke a registered stylesheet function with positional arguments.
    * @param {string} name - Function name (with namespace)
-   * @param {any[]} args - Positional arguments
-   * @returns {any} Function return value
+   * @param {unknown[]} args - Positional arguments
+   * @returns {unknown} Function return value
    */
   invokeFunctionByArity (name, args = []) {
     return this._getJoiningTransformer().invokeFunctionByArity(name, args);

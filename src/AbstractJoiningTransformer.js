@@ -258,8 +258,8 @@ class AbstractJoiningTransformer {
   /**
    * Invoke a registered stylesheet function with positional arguments.
    * @param {string} name - Function name (with namespace)
-   * @param {any[]} args - Positional arguments
-   * @returns {any} Function return value
+   * @param {unknown[]} args - Positional arguments
+   * @returns {unknown} Function return value
    */
   invokeFunctionByArity (name, args = []) {
     const arity = args.length;
@@ -436,7 +436,7 @@ class AbstractJoiningTransformer {
 
   /**
    * @param {string} prop - Configuration property name
-   * @param {any} val - Configuration property value
+   * @param {unknown} val - Configuration property value
    * @param {(this: AbstractJoiningTransformer<T>) => void} [cb]
    *   Optional callback invoked with this instance
    * @returns {void}

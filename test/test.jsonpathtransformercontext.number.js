@@ -16,7 +16,7 @@ describe('JSONPathTransformerContext number() formatting', () => {
       templates: []
     }, []);
     ctx.number(opts);
-    return ctx.getOutput().join('');
+    return (/** @type {string[]} */ (ctx.getOutput())).join('');
   }
 
   it('formats roman numerals (lowercase)', () => {
@@ -103,7 +103,8 @@ describe('JSONPathTransformerContext number() formatting', () => {
       groupingSize: 3
     });
     // Output should be '12.345' (with grouping separator)
-    expect(ctx.getOutput().join('')).to.include('12.345');
+    const output = /** @type {string[]} */ (ctx.getOutput()).join('');
+    expect(output).to.include('12.345');
   });
 
   it('number() falls back to String(num) if Intl.NumberFormat throws', () => {
@@ -114,7 +115,7 @@ describe('JSONPathTransformerContext number() formatting', () => {
       templates: []
     }, []);
     ctx.number({value: 'not-a-number', format: '1'});
-    const output = ctx.getOutput().join('');
+    const output = (/** @type {string[]} */ (ctx.getOutput())).join('');
     // fallback to default value (see implementation)
     expect(output).to.equal('1');
   });

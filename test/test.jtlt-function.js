@@ -81,7 +81,10 @@ describe('jtlt function wrapper', () => {
         templates: [{
           path: '//item',
           template (n) {
-            const jt = this._config.joiningTransformer;
+            const jt =
+              /**
+               * @type {import('../src/index.js').BuiltinJoiningTransformer}
+               */ (this._config.joiningTransformer);
             this.object(function () {
               jt.propValue('text', n.textContent);
             });

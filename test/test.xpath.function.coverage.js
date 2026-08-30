@@ -66,10 +66,7 @@ describe('XPathTransformerContext function coverage', () => {
       ];
       const ctx = new XPathTransformerContext({
         data: doc,
-        joiningTransformer:
-        /** @type {import('../src/index.js').JoiningTransformer} */ (
-        /** @type {unknown} */ (joiner)
-        )
+        joiningTransformer: joiner
       }, templates);
 
       // Direct method invocations (chainability & side-effects)

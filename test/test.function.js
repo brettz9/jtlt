@@ -370,7 +370,9 @@ describe('function() - XSLT-like stylesheet functions', function () {
           path: '$.items[*]',
           template (item) {
             // Call function from item template
-            const formatted = this.invokeFunctionByArity('f:format', [item]);
+            const formatted = String(
+              this.invokeFunctionByArity('f:format', [item])
+            );
             this.string(formatted);
             this.string(' ');
           }
@@ -405,7 +407,9 @@ describe('function() - XSLT-like stylesheet functions', function () {
                 return 1;
               }
               // Recursive call via callFunction
-              return n * that.invokeFunctionByArity('math:factorial', [n - 1]);
+              return n * Number(
+                that.invokeFunctionByArity('math:factorial', [n - 1])
+              );
             }
           });
 
@@ -522,7 +526,9 @@ describe('function() - XSLT-like stylesheet functions', function () {
           template () {
             // Get parameter value directly from _params
             const val = this._params?.value;
-            const formatted = this.invokeFunctionByArity('f:bracket', [val]);
+            const formatted = String(
+              this.invokeFunctionByArity('f:bracket', [val])
+            );
             this.string(formatted);
             this.string(' ');
           }

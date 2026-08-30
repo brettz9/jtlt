@@ -23,7 +23,7 @@ class XPathTransformer {
   static DefaultTemplateRules = {
     transformRoot: {
       /**
-       * @param {any} node Node
+       * @param {unknown} node Node
        * @param {{mode:string}} cfg Config
        * @returns {void}
        */
