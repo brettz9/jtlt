@@ -745,7 +745,10 @@ class XPathTransformerContext {
    * @param {string} [options.groupEndingWith] - Ends group when expression
    *   matches
    * @param {(
-   *   this: XPathTransformerContext, key: any, items: Node[], ctx: any
+   *   this: XPathTransformerContext,
+   *   key: unknown,
+   *   items: Node[],
+   *   ctx: XPathTransformerContext
    * ) => void} cb - Callback receives (groupingKey, groupItems, context)
    * @returns {this}
    */

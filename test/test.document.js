@@ -178,9 +178,9 @@ describe('document() method', () => {
 
       // Extract root element from document
       const {childNodes} = docs[0].$document;
-      const rootElement = childNodes.find(
-        (/** @type {any} */ node) => Array.isArray(node) && node[0] === 'root'
-      );
+      const rootElement = childNodes.find((/** @type {unknown} */ node) => {
+        return Array.isArray(node) && node[0] === 'root';
+      });
 
       expect(rootElement).to.exist;
       expect(rootElement[0]).to.equal('root');
@@ -211,14 +211,15 @@ describe('document() method', () => {
       expect(docs).to.have.lengthOf(2);
       // Main document should be preserved
       const mainElement = docs[0].$document.childNodes.find(
-        (/** @type {any} */ node) => Array.isArray(node) &&
-          node[0] === 'mainDoc'
+        (/** @type {unknown} */ node) => {
+          return Array.isArray(node) && node[0] === 'mainDoc';
+        }
       );
       expect(mainElement).to.exist;
 
       // Nested document should exist
       const nestedElement = docs[1].$document.childNodes.find(
-        (/** @type {any} */ node) => {
+        (/** @type {unknown} */ node) => {
           return Array.isArray(node) && node[0] === 'nestedDoc';
         }
       );

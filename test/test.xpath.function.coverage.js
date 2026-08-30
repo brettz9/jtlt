@@ -13,7 +13,7 @@ describe('XPathTransformerContext function coverage', () => {
       } = new JSDOM('<root id="r"><child id="c">text</child></root>');
       const doc = window.document;
       // Stub joiner capturing all calls
-      const joiner = /** @type {any} */ ({
+      const joiner = {
         /** @type {unknown[]} */ _out: [],
         append (/** @type {unknown} */ v) {
           this._out.push(v);
@@ -56,7 +56,7 @@ describe('XPathTransformerContext function coverage', () => {
         text (/** @type {unknown} */ txt) {
           this._out.push({text: txt});
         }
-      });
+      };
       // Minimal templates so applyTemplates can run if called
       const templates = [
         {path: '.', template () { /* root template minimal for coverage */ }},
@@ -66,7 +66,10 @@ describe('XPathTransformerContext function coverage', () => {
       ];
       const ctx = new XPathTransformerContext({
         data: doc,
-        joiningTransformer: joiner
+        joiningTransformer:
+        /** @type {import('../src/index.js').JoiningTransformer} */ (
+        /** @type {unknown} */ (joiner)
+        )
       }, templates);
 
       // Direct method invocations (chainability & side-effects)

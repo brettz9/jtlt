@@ -227,7 +227,7 @@ describe('XPathTransformerContext complete coverage', () => {
         {document}
       );
 
-      /** @type {import('../src/index.js').XPathTemplateObject<any>[]} */
+      /** @type {import('../src/index.js').XPathTemplateObject<"dom">[]} */
       const templates = [
         {
           name: 'myTemplate',
@@ -262,7 +262,7 @@ describe('XPathTransformerContext complete coverage', () => {
         {document}
       );
 
-      /** @type {import('../src/index.js').XPathTemplateObject<any>[]} */
+      /** @type {import('../src/index.js').XPathTemplateObject<"dom">[]} */
       const templates = [
         {
           name: 'test',
@@ -294,7 +294,7 @@ describe('XPathTransformerContext complete coverage', () => {
         {document}
       );
 
-      /** @type {import('../src/index.js').XPathTemplateObject<any>[]} */
+      /** @type {import('../src/index.js').XPathTemplateObject<"dom">[]} */
       const templates = [
         {
           name: 'noParams',
@@ -343,7 +343,7 @@ describe('XPathTransformerContext complete coverage', () => {
         {document}
       );
 
-      /** @type {import('../src/index.js').XPathTemplateObject<any>[]} */
+      /** @type {import('../src/index.js').XPathTemplateObject<"dom">[]} */
       const templates = [
         {
           name: 'withSelect',
@@ -375,7 +375,7 @@ describe('XPathTransformerContext complete coverage', () => {
         {document}
       );
 
-      /** @type {import('../src/index.js').XPathTemplateObject<any>[]} */
+      /** @type {import('../src/index.js').XPathTemplateObject<"dom">[]} */
       const templates = [
         {
           name: 'indexed',
@@ -406,7 +406,7 @@ describe('XPathTransformerContext complete coverage', () => {
         {document}
       );
 
-      /** @type {import('../src/index.js').XPathTemplateObject<any>[]} */
+      /** @type {import('../src/index.js').XPathTemplateObject<"dom">[]} */
       const templates = [
         {
           name: 'inner',
@@ -513,7 +513,7 @@ describe('XPathTransformerContext complete coverage', () => {
         {document}
       );
 
-      /** @type {import('../src/index.js').XPathTemplateObject<any>[]} */
+      /** @type {import('../src/index.js').XPathTemplateObject<"dom">[]} */
       const templates = [
         {
           name: 'namedOnly',
@@ -553,7 +553,7 @@ describe('XPathTransformerContext complete coverage', () => {
         {document}
       );
 
-      /** @type {import('../src/index.js').XPathTemplateObject<any>[]} */
+      /** @type {import('../src/index.js').XPathTemplateObject<"dom">[]} */
       const templates = [
         {
           path: '//item',
@@ -591,7 +591,7 @@ describe('XPathTransformerContext complete coverage', () => {
         {document}
       );
 
-      /** @type {import('../src/index.js').XPathTemplateObject<any>[]} */
+      /** @type {import('../src/index.js').XPathTemplateObject<"dom">[]} */
       const templates = [
         {
           name: 'namedTemplate',
@@ -629,7 +629,7 @@ describe('XPathTransformerContext complete coverage', () => {
         {document}
       );
 
-      /** @type {import('../src/index.js').XPathTemplateObject<any>[]} */
+      /** @type {import('../src/index.js').XPathTemplateObject<"dom">[]} */
       const templates = [
         {
           // No name, no path - edge case

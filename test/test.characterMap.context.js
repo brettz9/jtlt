@@ -336,8 +336,8 @@ describe('characterMap - JSONPath context', () => {
       success (result) {
         try {
           expect(Array.isArray(result)).to.equal(true);
-          const arr = /** @type {any[]} */ (result);
-          const element = arr[0];
+          const arr = /** @type {unknown[]} */ (result);
+          const element = /** @type {[string, [string]]} */ (arr[0]);
           expect(element[0]).to.equal('result');
           expect(element[1][0]).to.equal('(C) (R)');
           done();

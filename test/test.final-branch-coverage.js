@@ -247,9 +247,16 @@ describe('XPathTransformerContext final missing coverage', function () {
             path: '/',
             template () {
               // Intercept the generated function body before it's registered
-              const joiner = /** @type {any} */ (this._getJoiningTransformer());
+              /**
+               * @typedef {{name?: string,
+               *   body?: (...args: unknown[]) => unknown}} StubFnConfig
+               */
+              const joiner =
+                /** @type {{function: (cfg: StubFnConfig) => unknown}} */ (
+                  /** @type {unknown} */ (this._getJoiningTransformer())
+                );
               const originalFunction = joiner.function;
-              joiner.function = function (/** @type {any} */ cfg) {
+              joiner.function = function (cfg) {
                 // Execute actualBody with fewer arguments to
                 //   hit lines 1859-1860
                 if (cfg.name === 'my:func' && cfg.body) {

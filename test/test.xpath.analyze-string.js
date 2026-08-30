@@ -21,7 +21,7 @@ describe('XPathTransformerContext analyzeString', () => {
   it('should split text on newlines', () => {
     const {document} = buildDom('<root>Line 1\nLine 2\nLine 3</root>');
     const joiner = StringJoiningTransformer.create('');
-    /** @type {import('../src/index.js').XPathTemplateObject<any>[]} */
+    /** @type {import('../src/index.js').XPathTemplateObject<"string">[]} */
     const templates = [{
       path: '/root',
       template () {
@@ -50,7 +50,7 @@ describe('XPathTransformerContext analyzeString', () => {
       '<root>Some [cited] text with [multiple] citations</root>'
     );
     const joiner = StringJoiningTransformer.create('');
-    /** @type {import('../src/index.js').XPathTemplateObject<any>[]} */
+    /** @type {import('../src/index.js').XPathTemplateObject<"string">[]} */
     const templates = [{
       path: '/root',
       template () {
@@ -86,7 +86,7 @@ describe('XPathTransformerContext analyzeString', () => {
     const {document} = buildDom('<root></root>');
     const joiner = StringJoiningTransformer.create('');
 
-    /** @type {import('../src/index.js').XPathTemplateObject<any>[]} */
+    /** @type {import('../src/index.js').XPathTemplateObject<"string">[]} */
     const templates = [{
       path: '/root',
       template () {
@@ -113,7 +113,7 @@ describe('XPathTransformerContext analyzeString', () => {
   it('should parse date format', () => {
     const {document} = buildDom('<root>23 March 2002</root>');
     const joiner = StringJoiningTransformer.create('');
-    /** @type {import('../src/index.js').XPathTemplateObject<any>[]} */
+    /** @type {import('../src/index.js').XPathTemplateObject<"string">[]} */
     const templates = [{
       path: '/root',
       template () {
@@ -151,7 +151,7 @@ describe('XPathTransformerContext analyzeString', () => {
   it('should handle text with only non-matching parts', () => {
     const {document} = buildDom('<root>No digits here</root>');
     const joiner = StringJoiningTransformer.create('');
-    /** @type {import('../src/index.js').XPathTemplateObject<any>[]} */
+    /** @type {import('../src/index.js').XPathTemplateObject<"string">[]} */
     const templates = [{
       path: '/root',
       template () {
@@ -178,7 +178,7 @@ describe('XPathTransformerContext analyzeString', () => {
   it('should handle text with only matching parts', () => {
     const {document} = buildDom('<root>123</root>');
     const joiner = StringJoiningTransformer.create('');
-    /** @type {import('../src/index.js').XPathTemplateObject<any>[]} */
+    /** @type {import('../src/index.js').XPathTemplateObject<"string">[]} */
     const templates = [{
       path: '/root',
       template () {
@@ -205,7 +205,7 @@ describe('XPathTransformerContext analyzeString', () => {
   it('should throw on zero-length matching regex', () => {
     const {document} = buildDom('<root>test</root>');
     const joiner = StringJoiningTransformer.create('');
-    /** @type {import('../src/index.js').XPathTemplateObject<any>[]} */
+    /** @type {import('../src/index.js').XPathTemplateObject<"string">[]} */
     const templates = [{
       path: '/root',
       template () {
@@ -230,7 +230,7 @@ describe('XPathTransformerContext analyzeString', () => {
   it('should work with string regex and flags', () => {
     const {document} = buildDom('<root>Test TEST test</root>');
     const joiner = StringJoiningTransformer.create('');
-    /** @type {import('../src/index.js').XPathTemplateObject<any>[]} */
+    /** @type {import('../src/index.js').XPathTemplateObject<"string">[]} */
     const templates = [{
       path: '/root',
       template () {
@@ -258,7 +258,7 @@ describe('XPathTransformerContext analyzeString', () => {
   it('should handle multiple capturing groups', () => {
     const {document} = buildDom('<root>Name: John, Age: 30</root>');
     const joiner = StringJoiningTransformer.create('');
-    /** @type {import('../src/index.js').XPathTemplateObject<any>[]} */
+    /** @type {import('../src/index.js').XPathTemplateObject<"string">[]} */
     const templates = [{
       path: '/root',
       template () {
@@ -286,7 +286,7 @@ describe('XPathTransformerContext analyzeString', () => {
   it('should return empty string for invalid regex groups', () => {
     const {document} = buildDom('<root>test123</root>');
     const joiner = StringJoiningTransformer.create('');
-    /** @type {import('../src/index.js').XPathTemplateObject<any>[]} */
+    /** @type {import('../src/index.js').XPathTemplateObject<"string">[]} */
     const templates = [{
       path: '/root',
       template () {

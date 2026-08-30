@@ -4,6 +4,15 @@ import JSONPathTransformer from '../src/JSONPathTransformer.js';
 import XPathTransformer from '../src/XPathTransformer.js';
 import StringJoiningTransformer from '../src/StringJoiningTransformer.js';
 
+/**
+ * The record shape shared by the grouping fixtures in this file. `forEachGroup`
+ * hands its callback `items` as `unknown[]` (arbitrary JSON), so each callback
+ * asserts this known shape.
+ * @typedef {{
+ *   name?: string, age?: number, text?: string
+ * }} GroupItem
+ */
+
 describe('forEachGroup() function', function () {
   describe('JSONPathTransformer', function () {
     it('should group by value with groupBy', function () {
@@ -25,10 +34,10 @@ describe('forEachGroup() function', function () {
                 '$.items[*]',
                 {groupBy: '$.department'},
                 function (key, items) {
-                  this.element('group', {dept: key}, [], () => {
-                    items.forEach((item) => {
+                  this.element('group', {dept: String(key)}, [], () => {
+                    (/** @type {GroupItem[]} */ (items)).forEach((item) => {
                       this.element('person', {}, [], () => {
-                        this.text(item.name);
+                        this.text(String(item.name));
                       });
                     });
                   });
@@ -65,7 +74,7 @@ describe('forEachGroup() function', function () {
           {
             path: '$',
             template () {
-              /** @type {{key: any, count: number}[]} */
+              /** @type {{key: unknown, count: number}[]} */
               const groups = [];
               this.forEachGroup(
                 '$.items[*]',
@@ -113,9 +122,10 @@ describe('forEachGroup() function', function () {
                 {groupStartingWith: '$.isHeader'},
                 function (key, items) {
                   groupCount++;
+                  const rows = /** @type {GroupItem[]} */ (items);
                   this.element('section', {}, [], () => {
                     this.element('title', {}, [], () => {
-                      this.text(items[0].text);
+                      this.text(String(rows[0].text));
                     });
                     this.element('count', {}, [], () => {
                       this.text(String(items.length));
@@ -159,9 +169,9 @@ describe('forEachGroup() function', function () {
                 function (key, items) {
                   groupCount++;
                   this.element('group', {}, [], () => {
-                    items.forEach((item) => {
+                    (/** @type {GroupItem[]} */ (items)).forEach((item) => {
                       this.element('line', {}, [], () => {
-                        this.text(item.text);
+                        this.text(String(item.text));
                       });
                     });
                   });
@@ -252,7 +262,7 @@ describe('forEachGroup() function', function () {
                 'item',
                 {groupBy: '@dept'},
                 function (key, items) {
-                  this.element('group', {dept: key}, [], () => {
+                  this.element('group', {dept: String(key)}, [], () => {
                     items.forEach((node) => {
                       this.element('person', {}, [], () => {
                         this.text(/** @type {string} */ (node.textContent));
@@ -297,14 +307,8 @@ describe('forEachGroup() function', function () {
               this.forEachGroup(
                 'item',
                 {groupAdjacent: '@status'},
-                /**
-                 * @param {any} key
-                 * @param {any[]} items
-                 * @param {any} ctx
-                 * @returns {void}
-                 */
                 function (key, items, ctx) {
-                  this.element('group', {status: key}, [], () => {
+                  this.element('group', {status: String(key)}, [], () => {
                     this.element('count', {}, [], () => {
                       this.text(String(items.length));
                     });
@@ -345,12 +349,6 @@ describe('forEachGroup() function', function () {
               this.forEachGroup(
                 'item',
                 {groupStartingWith: '@type = "header"'},
-                /**
-                 * @param {any} key
-                 * @param {any[]} items
-                 * @param {any} ctx
-                 * @returns {void}
-                 */
                 function (key, items, ctx) {
                   this.element('section', {}, [], () => {
                     this.element('size', {}, [], () => {
@@ -389,10 +387,6 @@ describe('forEachGroup() function', function () {
               this.forEachGroup(
                 'item',
                 {groupBy: '@cat'},
-                /**
-                 * @this {any}
-                 * @returns {void}
-                 */
                 function () {
                   const key = this.currentGroupingKey();
                   const group = this.currentGroup();
@@ -440,12 +434,6 @@ describe('forEachGroup() function', function () {
               this.forEachGroup(
                 'item',
                 {groupEndingWith: '@end = "true"'},
-                /**
-                 * @param {any} key
-                 * @param {any[]} items
-                 * @param {any} ctx
-                 * @returns {void}
-                 */
                 function (key, items, ctx) {
                   this.element('section', {}, [], () => {
                     this.element('size', {}, [], () => {
@@ -487,17 +475,11 @@ describe('forEachGroup() function', function () {
                   groupBy: '$.dept',
                   sort: '$.name'
                 },
-                /**
-                 * @param {any} key
-                 * @param {any[]} items
-                 * @param {any} ctx
-                 * @returns {void}
-                 */
                 function (key, items, ctx) {
                   this.element('group', {}, [], () => {
-                    items.forEach((item) => {
+                    (/** @type {GroupItem[]} */ (items)).forEach((item) => {
                       this.element('name', {}, [], () => {
-                        this.text(item.name);
+                        this.text(String(item.name));
                       });
                     });
                   });
@@ -538,15 +520,9 @@ describe('forEachGroup() function', function () {
                     {select: '$.age', type: 'number', order: 'descending'}
                   ]
                 },
-                /**
-                 * @param {any} key
-                 * @param {any[]} items
-                 * @param {any} ctx
-                 * @returns {void}
-                 */
                 function (key, items, ctx) {
                   this.element('group', {}, [], () => {
-                    for (const item of items) {
+                    for (const item of /** @type {GroupItem[]} */ (items)) {
                       this.element('person', {}, [], () => {
                         this.text(`${item.name}-${item.age}`);
                       });
@@ -584,25 +560,14 @@ describe('forEachGroup() function', function () {
                 '$.items[*]',
                 {
                   groupBy: '$.name',
-                  sort:
-                  /**
-                   * @param {any} a
-                   * @param {any} b
-                   * @returns {number}
-                   */
-                  (a, b) => a.value - b.value
+                  sort: (a, b) => /** @type {{value: number}} */ (a).value -
+                  /** @type {{value: number}} */ (b).value
                 },
-                /**
-                 * @param {any} key
-                 * @param {any[]} items
-                 * @param {any} ctx
-                 * @returns {void}
-                 */
                 function (key, items, ctx) {
                   this.element('group', {}, [], () => {
-                    for (const item of items) {
+                    for (const item of /** @type {GroupItem[]} */ (items)) {
                       this.element('name', {}, [], () => {
-                        this.text(item.name);
+                        this.text(String(item.name));
                       });
                     }
                   });
@@ -645,12 +610,6 @@ describe('forEachGroup() function', function () {
                 this.forEachGroup(
                   '$.items[*]',
                   {groupEndingWith: '$.isEnd'},
-                  /**
-                   * @param {any} key
-                   * @param {any[]} items
-                   * @param {any} ctx
-                   * @returns {void}
-                   */
                   function (key, items, ctx) {
                     this.element('section', {}, [], () => {
                       this.element('count', {}, [], () => {
@@ -695,12 +654,6 @@ describe('forEachGroup() function', function () {
                 this.forEachGroup(
                   'item',
                   {groupStartingWith: '@start = "true"'},
-                  /**
-                   * @param {any} key
-                   * @param {any[]} items
-                   * @param {any} ctx
-                   * @returns {void}
-                   */
                   function (key, items, ctx) {
                     this.element('section', {}, [], () => {
                       this.element('size', {}, [], () => {
@@ -741,12 +694,6 @@ describe('forEachGroup() function', function () {
               this.forEachGroup(
                 'item',
                 {groupBy: 'value'},
-                /**
-                 * @param {any} key
-                 * @param {any[]} items
-                 * @param {any} ctx
-                 * @returns {void}
-                 */
                 function (key, items, ctx) {
                   this.element('group', {key: String(key)}, [], () => {
                     this.text(String(items.length));
@@ -783,12 +730,6 @@ describe('forEachGroup() function', function () {
               this.forEachGroup(
                 'item',
                 {groupBy: 'cat[1]'},
-                /**
-                 * @param {any} key
-                 * @param {any[]} items
-                 * @param {any} ctx
-                 * @returns {void}
-                 */
                 function (key, items, ctx) {
                   this.element('group', {}, [], () => {
                     this.text(String(key));
@@ -827,16 +768,10 @@ describe('forEachGroup() function', function () {
                   groupBy: '$.name',
                   sort: {select: '$.score', type: 'number', order: 'ascending'}
                 },
-                /**
-                 * @param {any} key
-                 * @param {any[]} items
-                 * @param {any} ctx
-                 * @returns {void}
-                 */
                 function (key, items, ctx) {
-                  for (const item of items) {
+                  for (const item of /** @type {GroupItem[]} */ (items)) {
                     this.element('name', {}, [], () => {
-                      this.text(item.name);
+                      this.text(String(item.name));
                     });
                   }
                 }
@@ -881,16 +816,10 @@ describe('forEachGroup() function', function () {
                     localeOptions: {sensitivity: 'base'}
                   }
                 },
-                /**
-                 * @param {any} key
-                 * @param {any[]} items
-                 * @param {any} ctx
-                 * @returns {void}
-                 */
                 function (key, items, ctx) {
-                  for (const item of items) {
+                  for (const item of /** @type {GroupItem[]} */ (items)) {
                     this.element('name', {}, [], () => {
-                      this.text(item.name);
+                      this.text(String(item.name));
                     });
                   }
                 }
@@ -931,14 +860,8 @@ describe('forEachGroup() function', function () {
                     '$.name'
                   ]
                 },
-                /**
-                 * @param {any} key
-                 * @param {any[]} items
-                 * @param {any} ctx
-                 * @returns {void}
-                 */
                 function (key, items, ctx) {
-                  for (const item of items) {
+                  for (const item of /** @type {GroupItem[]} */ (items)) {
                     this.element('person', {}, [], () => {
                       this.text(`${item.name}-${item.age}`);
                     });
@@ -983,12 +906,6 @@ describe('forEachGroup() function', function () {
               this.forEachGroup(
                 'item',
                 {groupEndingWith: '@end = "true"'},
-                /**
-                 * @param {any} key
-                 * @param {any[]} items
-                 * @param {any} ctx
-                 * @returns {void}
-                 */
                 function (key, items, ctx) {
                   this.element('section', {}, [], () => {
                     this.element('size', {}, [], () => {
@@ -1029,12 +946,6 @@ describe('forEachGroup() function', function () {
               this.forEachGroup(
                 'item',
                 {groupBy: '@category'},
-                /**
-                 * @param {any} key
-                 * @param {any[]} items
-                 * @param {any} ctx
-                 * @returns {void}
-                 */
                 function (key, items, ctx) {
                   this.element('group', {}, [], () => {
                     this.element('key', {}, [], () => {
@@ -1074,12 +985,6 @@ describe('forEachGroup() function', function () {
               this.forEachGroup(
                 '$.items[*]',
                 {groupBy: '@'},
-                /**
-                 * @param {any} key
-                 * @param {any[]} items
-                 * @param {any} ctx
-                 * @returns {void}
-                 */
                 function (key, items, ctx) {
                   this.element('group', {}, [], () => {
                     this.element('key', {}, [], () => {
@@ -1118,12 +1023,6 @@ describe('forEachGroup() function', function () {
               this.forEachGroup(
                 '$.items[*]',
                 {groupBy: '.'},
-                /**
-                 * @param {any} key
-                 * @param {any[]} items
-                 * @param {any} ctx
-                 * @returns {void}
-                 */
                 function (key, items, ctx) {
                   this.element('group', {}, [], () => {
                     this.element('val', {}, [], () => {
@@ -1158,12 +1057,6 @@ describe('forEachGroup() function', function () {
               this.forEachGroup(
                 '$.items[*]',
                 {groupBy: '.', sort: null},
-                /**
-                 * @param {any} key
-                 * @param {any[]} items
-                 * @param {any} ctx
-                 * @returns {void}
-                 */
                 function (key, items, ctx) {
                   this.element('val', {}, [], () => {
                     this.text(String(key));
@@ -1203,12 +1096,6 @@ describe('forEachGroup() function', function () {
               this.forEachGroup(
                 'item',
                 {groupBy: '.'},
-                /**
-                 * @param {any} key
-                 * @param {any[]} items
-                 * @param {any} ctx
-                 * @returns {void}
-                 */
                 function (key, items, ctx) {
                   this.element('group', {key: String(key)}, [], () => {
                     this.text(String(items.length));
@@ -1245,12 +1132,6 @@ describe('forEachGroup() function', function () {
               this.forEachGroup(
                 'item',
                 {groupBy: 'nonexistent'},
-                /**
-                 * @param {any} key
-                 * @param {any[]} items
-                 * @param {any} ctx
-                 * @returns {void}
-                 */
                 function (key, items, ctx) {
                   this.element('group', {}, [], () => {
                     this.element('key', {}, [], () => {
@@ -1289,12 +1170,6 @@ describe('forEachGroup() function', function () {
               this.forEachGroup(
                 'item',
                 {groupBy: 'missing-element'},
-                /**
-                 * @param {any} key
-                 * @param {any[]} items
-                 * @param {any} ctx
-                 * @returns {void}
-                 */
                 function (key, items, ctx) {
                   this.element('group', {}, [], () => {
                     this.text(String(items.length));
@@ -1332,12 +1207,6 @@ describe('forEachGroup() function', function () {
               this.forEachGroup(
                 'item',
                 {groupBy: '@value'},
-                /**
-                 * @param {any} key
-                 * @param {any[]} items
-                 * @param {any} ctx
-                 * @returns {void}
-                 */
                 function (key, items, ctx) {
                   this.element('group', {key: String(key)}, [], () => {
                     this.text(String(items.length));
@@ -1375,12 +1244,6 @@ describe('forEachGroup() function', function () {
               this.forEachGroup(
                 'item',
                 {groupBy: '@active = "true"'},
-                /**
-                 * @param {any} key
-                 * @param {any[]} items
-                 * @param {any} ctx
-                 * @returns {void}
-                 */
                 function (key, items, ctx) {
                   this.element('group', {}, [], () => {
                     this.text(String(items.length));
@@ -1419,12 +1282,6 @@ describe('forEachGroup() function', function () {
               this.forEachGroup(
                 '$.items[*]',
                 {groupBy: '$.category'},
-                /**
-                 * @param {any} key
-                 * @param {any[]} items
-                 * @param {any} ctx
-                 * @returns {void}
-                 */
                 function (key, items, ctx) {
                   this.element('group', {key: String(key)}, [], () => {
                     this.text(String(items.length));

@@ -80,7 +80,7 @@ describe('JSONPathTransformer additional coverage', function () {
           let buf = '';
           return {
             /**
-             * @param {any} x
+             * @param {unknown} x
              * @returns {void}
              */
             append (x) {
@@ -120,7 +120,7 @@ describe('JSONPathTransformer additional coverage', function () {
         let sink;
         return {
           /**
-           * @param {any} x
+           * @param {unknown} x
            */
           append (x) {
             // Assign locally to avoid empty method lint while not

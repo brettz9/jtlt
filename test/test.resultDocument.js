@@ -401,9 +401,9 @@ describe('resultDocument() method', () => {
       expect(result.document.$document).to.exist;
 
       const {childNodes} = result.document.$document;
-      const rootElement = childNodes.find(
-        (/** @type {any} */ node) => Array.isArray(node) && node[0] === 'root'
-      );
+      const rootElement = childNodes.find((/** @type {unknown} */ node) => {
+        return Array.isArray(node) && node[0] === 'root';
+      });
 
       expect(rootElement).to.exist;
       expect(rootElement[0]).to.equal('root');

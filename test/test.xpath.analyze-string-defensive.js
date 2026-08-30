@@ -24,7 +24,7 @@ describe('XPathTransformerContext analyzeString defensive code', () => {
     // but creates zero-length matches in actual strings
     const {document} = buildDom('<root>abc</root>');
     const joiner = StringJoiningTransformer.create('');
-    /** @type {import('../src/index.js').XPathTemplateObject<any>[]} */
+    /** @type {import('../src/index.js').XPathTemplateObject<"string">[]} */
     const templates = [{
       path: '/root',
       template () {
@@ -54,7 +54,7 @@ describe('XPathTransformerContext analyzeString defensive code', () => {
     const {document} = buildDom('<root>a1b2c3</root>');
     const joiner = StringJoiningTransformer.create('');
 
-    /** @type {import('../src/index.js').XPathTemplateObject<any>[]} */
+    /** @type {import('../src/index.js').XPathTemplateObject<"string">[]} */
     const templates = [{
       path: '/root',
       template () {
@@ -84,7 +84,7 @@ describe('XPathTransformerContext analyzeString defensive code', () => {
     const {document} = buildDom('<root>a1b2</root>');
     const joiner = StringJoiningTransformer.create('');
 
-    /** @type {import('../src/index.js').XPathTemplateObject<any>[]} */
+    /** @type {import('../src/index.js').XPathTemplateObject<"string">[]} */
     const templates = [{
       path: '/root',
       template () {
@@ -109,7 +109,7 @@ describe('XPathTransformerContext analyzeString defensive code', () => {
   it('covers missing nonMatchingSubstring callback (line 1209)', () => {
     const {document} = buildDom('<root>a1b2</root>');
     const joiner = StringJoiningTransformer.create('');
-    /** @type {import('../src/index.js').XPathTemplateObject<any>[]} */
+    /** @type {import('../src/index.js').XPathTemplateObject<"string">[]} */
     const templates = [{
       path: '/root',
       template () {
@@ -135,7 +135,7 @@ describe('XPathTransformerContext analyzeString defensive code', () => {
     const {document} = buildDom('<root>test  space</root>');
     const joiner = StringJoiningTransformer.create('');
 
-    /** @type {import('../src/index.js').XPathTemplateObject<any>[]} */
+    /** @type {import('../src/index.js').XPathTemplateObject<"string">[]} */
     const templates = [{
       path: '/root',
       template () {

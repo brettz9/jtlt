@@ -56,7 +56,7 @@ const escapeRegexReplacement = (string) => {
  *   ctx: JSONPathTransformerContext
  * ) => number} SortComparator
  * @typedef {string | SortObject | SortComparator |
- *   Array<string|SortObject>} SortSpec
+ *   Array<string|SortObject> | null} SortSpec
  */
 
 /**
@@ -879,9 +879,12 @@ class JSONPathTransformerContext {
    *   expression matches
    * @param {string} [options.groupEndingWith] - Ends group when expression
    *   matches
-   * @param {any} [options.sort] - Sort specification (same as forEach)
+   * @param {SortSpec<V>} [options.sort] - Sort specification (same as forEach)
    * @param {(
-   *   this: JSONPathTransformerContext<T>, key: any, items: any[], ctx: any
+   *   this: JSONPathTransformerContext<T>,
+   *   key: unknown,
+   *   items: unknown[],
+   *   ctx: JSONPathTransformerContext<T>
    * ) => void} cb - Callback receives (groupingKey, groupItems, context)
    * @returns {this}
    */

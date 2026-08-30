@@ -80,7 +80,7 @@ describe('JSONPathTransformer return value handling', () => {
     const result = engine.transform('');
     // Result should be the array with the appended object
     expect(Array.isArray(result)).to.equal(true);
-    const arr = /** @type {any[]} */ (result);
+    const arr = /** @type {unknown[]} */ (result);
     expect(arr).to.have.lengthOf(1);
     expect(arr[0]).to.deep.equal({key: 'value', num: 42});
   });
@@ -103,7 +103,7 @@ describe('JSONPathTransformer return value handling', () => {
     });
     const result = engine.transform('');
     expect(Array.isArray(result)).to.equal(true);
-    const arr = /** @type {any[]} */ (result);
+    const arr = /** @type {unknown[]} */ (result);
     expect(arr).to.have.lengthOf(1);
     expect(arr[0]).to.deep.equal([1, 2, 3]);
   });
@@ -126,7 +126,7 @@ describe('JSONPathTransformer return value handling', () => {
     });
     const result = engine.transform('');
     expect(Array.isArray(result)).to.equal(true);
-    const arr = /** @type {any[]} */ (result);
+    const arr = /** @type {unknown[]} */ (result);
     expect(arr[0]).to.equal(123);
   });
 
