@@ -1,6 +1,9 @@
 allowBuilds:
+  better-sqlite3: true
+  canvas: true
   is-hidden-file: true
   libxmljs: true
+  sqlite3: true
   unrs-resolver: true
 minimumReleaseAgeExclude:
   - '@rollup/rollup-android-arm-eabi@4.63.0'
