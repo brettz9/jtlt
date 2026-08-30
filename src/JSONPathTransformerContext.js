@@ -1,5 +1,6 @@
 import {JSONPath as jsonpath} from 'jsonpath-plus';
 import JSONPathTransformer from './JSONPathTransformer.js';
+import { maybeAsyncLoop } from './maybeAsync.js';
 
 /**
  * @param {string} string
@@ -403,7 +404,7 @@ class JSONPathTransformerContext {
     const prevCurrPath = that._currPath;
 
     // Process in (sorted) order
-    for (const o of matches) {
+    const loopResult = maybeAsyncLoop(matches, (o) => {
       const {value, parent, parentProperty, path} = o;
       const _oldPath = that._currPath;
       that._currPath += path.replace(/^\$/v, '');
@@ -454,17 +455,17 @@ class JSONPathTransformerContext {
           }
           if (onNoMatch === 'deep-skip') {
             // Skip this node and its descendants entirely
-            continue;
+            return;
           }
           if (onNoMatch === 'shallow-copy') {
             // Output the value as-is without processing children
             joiner.append(value);
-            continue;
+            return;
           }
           if (onNoMatch === 'deep-copy') {
             // Output the value and all descendants as-is
             joiner.append(JSON.stringify(value));
-            continue;
+            return;
           }
           if (onNoMatch === 'text-only-copy') {
             // Output only text content (primitives)
@@ -472,7 +473,7 @@ class JSONPathTransformerContext {
                 typeof value === 'boolean') {
               joiner.append(String(value));
             }
-            continue;
+            return;
           }
           // 'apply-templates', 'shallow-skip', or other:
           // use default template rules
@@ -573,7 +574,7 @@ class JSONPathTransformerContext {
       const prevTemplateParams = that._params;
       that._params = {0: value};
 
-      const ret =
+      const ret = 
         /** @type {import('./index.js').JSONPathTemplateObject<T>} */ (
           templateObj
         ).template.call(
@@ -582,6 +583,20 @@ class JSONPathTransformerContext {
 
       // Restore previous parameter context
       that._params = prevTemplateParams;
+      if (typeof ret !== 'undefined' && typeof ret.then === 'function' && that._config.async) {
+        return ret.then((resolvedRet) => {
+          that._params = prevTemplateParams;
+          if (typeof resolvedRet !== 'undefined') {
+            const joiner = that._getJoiningTransformer();
+            // @ts-expect-error
+            if (joiner._openTagState) { joiner.append('>'); joiner._openTagState = false; }
+            joiner.append(resolvedRet);
+          }
+          that._parent = parent;
+          that._parentProperty = (parentProperty ?? that._parentProperty);
+          that._currPath = _oldPath;
+        });
+      }
       if (typeof ret !== 'undefined') {
         // After the undefined check, ret is ResultType<T>
         const joiner = that._getJoiningTransformer();
@@ -604,13 +619,24 @@ class JSONPathTransformerContext {
       that._parent = parent;
       that._parentProperty = (parentProperty ?? that._parentProperty);
       that._currPath = _oldPath;
+    });
+
+    if (this._config.async && typeof loopResult?.then === 'function') {
+      return loopResult.then(() => {
+        this._contextObj = prevContext;
+        this._parent = prevParent;
+        this._parentProperty = prevParentProp;
+        this._currPath = prevCurrPath;
+        return this;
+      });
     }
-    // Restore outer context
-    that._contextObj = prevContext;
-    that._parent = prevParent;
-    that._parentProperty = prevParentProp;
-    that._currPath = prevCurrPath;
+
+    this._contextObj = prevContext;
+    this._parent = prevParent;
+    this._parentProperty = prevParentProp;
+    this._currPath = prevCurrPath;
     return this;
+
   }
 
   /**

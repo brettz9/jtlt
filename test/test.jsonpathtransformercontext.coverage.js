@@ -74,7 +74,7 @@ describe('JSONPathTransformerContext branch coverage', () => {
     // Simulate empty result
     ctx.calculatePosition = ctx.calculatePosition.bind({
       ...ctx,
-      jsonpath: () => []
+      _evaluatePath: () => []
     });
     expect(ctx.calculatePosition('$.notfound')).to.equal(0);
   });

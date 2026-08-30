@@ -51,7 +51,7 @@ export const setWindow = (win) => {
  * @typedef {(this: TCtx,
  *   value: ResultType<U>,
  *   cfg?: {mode?: string}
- * ) => ResultType<T>|void} TemplateFunction
+ * ) => ResultType<T>|void|Promise<ResultType<T>|void>} TemplateFunction
  */
 
 /**
@@ -107,9 +107,11 @@ export const setWindow = (win) => {
  * @template T
  * @template {boolean|undefined} [E=false]
  * @typedef {object} BaseJTLTOptions
+ * @property {boolean} [async] Enable asynchronous transformations.
+ * @property {boolean} [syncOnly] Require synchronous transformations.
  * @property {(
  *   result: ResultType<T, E>
- * ) => ResultType<T, E>|void} success A callback supplied
+ * ) => ResultType<T, E>|void} [success] A callback supplied
  *   with a single argument that is the result of this instance's
  *   transform() method. When used in TypeScript, this can be made
  *   generic as `success<T>(result: T): void`.
