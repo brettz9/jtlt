@@ -3,7 +3,12 @@
 ## 0.14.0
 
 - feat: indexedDB JSONPath and XPath support
+- feat: async templates are awaited by default; new off-by-default `sync`
+  option throws instead (replaces `async`/`syncOnly`)
+- fix: `getKey()` resolves its `match` against the document root, so it now
+  works inside `forEach()`/`applyTemplates()` callbacks
 - fix(types): more precise typing (any -> unknown)
+- docs: lead with the `jtlt()` function; correct examples
 
 ## 0.13.0
 

@@ -1,17 +1,17 @@
 /**
  * Demo: Using valueOf() to access parameters in callTemplate
  *
- * This demonstrates the new feature where parameters passed via callTemplate
+ * This demonstrates the feature where parameters passed via callTemplate
  * can be accessed within the template using valueOf({select: '$paramName'})
  * instead of having to receive them as function parameters.
  */
 
 /* eslint-disable no-console -- Demo file */
 
-import JTLT from '../src/index-node.js';
+import {jtlt} from '../src/index-node.js';
 
 console.log('=== Demo 1: Named parameters ===');
-JTLT.create({
+console.log(await jtlt({
   data: {
     users: [
       {name: 'Alice', role: 'Admin'},
@@ -50,15 +50,12 @@ JTLT.create({
         this.string(')\n');
       }
     }
-  ],
-  success (result) {
-    console.log(result);
-    console.log('\n');
-  }
-});
+  ]
+}));
+console.log('\n');
 
 console.log('=== Demo 2: Indexed parameters (no names) ===');
-JTLT.create({
+console.log(await jtlt({
   data: {value: 'Test'},
   outputType: 'string',
   templates: [
@@ -88,15 +85,12 @@ JTLT.create({
         this.string('\n');
       }
     }
-  ],
-  success (result) {
-    console.log(result);
-    console.log('\n');
-  }
-});
+  ]
+}));
+console.log('\n');
 
 console.log('=== Demo 3: Nested callTemplate ===');
-JTLT.create({
+console.log(await jtlt({
   data: {company: 'ACME Corp'},
   outputType: 'string',
   templates: [
@@ -135,8 +129,5 @@ JTLT.create({
         this.string('\n');
       }
     }
-  ],
-  success (result) {
-    console.log(result);
-  }
-});
+  ]
+}));

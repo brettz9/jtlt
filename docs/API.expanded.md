@@ -4,14 +4,18 @@ This document describes the public API surface of JTLT (JavaScript Template Lang
 
 > Early alpha: APIs may evolve; experimental sections (XPath) can change without major version bumps.
 
-## Core façade: `JTLT`
+## Entry points: `jtlt()` and `JTLT`
 
-High-level entry point for running a transform over JSON data using JSONPath.
+### `jtlt(config)` — recommended
+
+Runs a transform and returns a `Promise` resolving to the result. It takes
+every option below **except `success`**, and does not accept `autostart`
+meaningfully (it always runs).
 
 ```js
-import JTLT from 'jtlt';
+import {jtlt} from 'jtlt';
 
-const out = JTLT.create({
+const out = await jtlt({
   data: {title: 'Hello'},
   outputType: 'string',
   templates: [
@@ -22,31 +26,56 @@ const out = JTLT.create({
         this.string('</h1>');
       }
     }
-  ],
-  success: (res) => res
-}).transform('');
+  ]
+});
 ```
 
-### `new JTLT(config)` or `JTLT.create(config)` options
+### `JTLT` class — lower level
+
+`JTLT.create(config)` (or `new JTLT(config)`) returns a `JTLT` instance. The
+result is delivered through the **required `success` callback**, which is
+also the return value of `.transform(mode?)`:
+
+```js
+import JTLT from 'jtlt';
+
+const inst = JTLT.create({
+  data: {title: 'Hello'},
+  outputType: 'string',
+  templates: [/* … */],
+  success: (res) => res
+});
+const out = inst.transform('');
+```
+
+By default the constructor runs the transform immediately; pass
+`autostart: false` to defer it to your own `.transform()` call.
+
+### Options
+
+Common to both entry points unless noted.
 
 | Option | Type | Description |
 | ------ | ---- | ----------- |
-| `data` | any | Root JSON/JS object. Required unless `ajaxData` provided. |
+| `data` | object \| primitive | Root JSON/JS value (or DOM `Document`/`Element` for the XPath engine). Required unless `ajaxData` provided. |
 | `ajaxData` | string | URL to fetch JSON (async start). |
-| `templates` | Array<TemplateObject> | Template declarations; see below. |
+| `templates` | Array&lt;TemplateObject&gt; | Template declarations; see below. |
 | `template` | Function \| TemplateObject | Single root template convenience. |
 | `query` | Function | Root template convenience (wrapped as `path: '$'`). |
 | `forQuery` | [select, cb] | One-off query (like FLWOR `for`). Auto-wrapped as root template. |
-| `success` | Function(result) | Required callback; also receives transform return. |
+| `success` | Function(result) | **`JTLT` only** — required callback; also the return of `.transform()`. Not accepted by `jtlt()`. |
 | `mode` | string | Starting mode for template matching. |
-| `outputType` | 'string' \| 'dom' \| 'json' | Chooses joiner. Default 'string'. |
-| `joiningTransformer` | Joiner instance | Custom joiner; skip auto creation. |
+| `outputType` | 'string' \| 'dom' \| 'json' | Chooses joiner. Default `'string'`. |
+| `engineType` | 'jsonpath' \| 'xpath' | Engine to use. Default `'jsonpath'`. |
+| `xpathVersion` | 1 \| 2 \| 3.1 | XPath engine only. `1` native, `2` xpath2.js, `3.1` fontoxpath. Default `1`. |
+| `sync` | boolean | Off by default (async templates are awaited). When `true`, a template that returns a Promise throws; disables `indexedDB()`. |
+| `joiningTransformer` | Joiner | Custom joiner; skip auto creation. Needs `append` and `get` (see `JoiningTransformerContract`). |
 | `joiningConfig` | object | Passed to joiner (e.g., `{xmlElements:true}`). |
 | `unwrapSingleResult` | boolean | For JSON joiner: unwrap single-item root array. |
 | `errorOnEqualPriority` | boolean | Throw when multiple templates share priority on a node. |
-| `specificityPriorityResolver` | fn(path)=>number | Custom resolver for relative priorities. Defaults to XSLT-like JSONPath resolver. |
-| `engine` | fn(config)=>any | Override transform engine (defaults to JSONPathTransformer). |
-| `autostart` | boolean | If `false`, don’t auto-call `transform()` in constructor. |
+| `specificityPriorityResolver` | fn(path)=&gt;number | Custom resolver for relative priorities. Defaults to XSLT-like JSONPath resolver. |
+| `engine` | fn(config)=&gt;result | Override transform engine (defaults to JSONPathTransformer). |
+| `autostart` | boolean | **`JTLT` only** — if `false`, don't auto-call `transform()` in constructor. |
 | `preventEval` | boolean | Disable parenthetical eval portions of JSONPath (security). |
 
 ## Template objects
@@ -123,9 +152,10 @@ const out = engine.transform('');
 ```
 
 Limitations:
-- Versions 2 and 3 (`xpath2.js` and `fontoxpath`) may lack some XPath functions;
-  stick to basic location paths and simple predicates.
-- Namespace resolution not yet exposed (future `namespaceResolver` option).
+- Versions 2 and 3.1 (`xpath2.js` and `fontoxpath`) may lack some XPath
+  functions; stick to basic location paths and simple predicates.
+- A user `namespaceResolver` option is not yet exposed (the XPath 3.1
+  `jtlt:` prefix used by `indexedDB()` is wired in internally).
 
 ## Contexts
 
@@ -144,6 +174,13 @@ Methods (subset):
 - `variable(name, select)` – stores value/array from JSONPath.
 - `callTemplate(name, withParam?)`
 - `key(name, match, use)` / `getKey(name, value)`
+- `indexedDB(dbName, storeName, options?)` – returns a `Promise` of matching
+  IndexedDB records. `options` mirror `jsonpath-plus`'s `resultType`
+  (`'value'` default, `'key'`, `'primaryKey'`, `'all'`) plus `index`,
+  `range`, `query`, `direction`, `count`. A template using it must be
+  `async` (or return the Promise). Throws under `sync: true`. A selector of
+  the form `indexedDB('db', 'store').*.name` in `valueOf()` is intercepted
+  and resolved the same way.
 - Joiner passthrough: `string()`, `text()`, `element()`, `object()`, `array()`, `number()`, `boolean()`, etc.
 \- Cloning helpers:
   - `copy(propertySets?)` — Shallow clone of current context value (object/array). Nested references are preserved. Optional `propertySets` (array of registered names) merge into the top-level clone when object-like.
@@ -163,6 +200,14 @@ Parallels JSONPath context with XPath evaluation:
   current context node; absolute paths (`/`, `//`) target the document root.
 - `variable(name, select)` – always stores node arrays for XPath.
 - `key(name, match, use)` – index by attribute value; `getKey` returns matching Element or context sentinel (`this`).
+- `indexedDB(dbName, storeName, options?)` – same direct helper as the
+  JSONPath context. Additionally, `jtlt:indexedDB('db', 'store')` is
+  registered as an XPath 3.1 function (predefined `jtlt` prefix,
+  `urn:jtlt`), so `valueOf()` selectors such as
+  `string-join(jtlt:indexedDB('db', 'store') ! ?name, ',')` work; options
+  are passed as an XPath map. Since fontoxpath is synchronous, the
+  expression is evaluated in a collect pass, the queries are awaited, then
+  it is re-evaluated with the records. Throws under `sync: true`.
 - Default template rules: root traverses `.`, element traverses `*`, text nodes emit `nodeValue`, scalars emit `valueOf('.')`.
 \- Cloning helpers:
   - `copy()` — Shallow clone of the current context node (`cloneNode(false)`) appended to the joiner.
@@ -456,9 +501,14 @@ See `README.md` for FLWOR-style and join patterns.
 ## Roadmap (selected)
 
 - Namespace support for XPath.
-- Copy helpers (deep/shallow) parity with XSLT.
-- Streaming / async query execution.
 - Schema-aware template targeting.
+- Broader async data sources (async templates and IndexedDB access via
+  `this.indexedDB(...)` already land).
+- Closing remaining `xsl:copy` / `xsl:copy-of` parity gaps: a sequence
+  constructor for `copy()` (shallow-copy the node, then build its content in
+  the same call), `use-attribute-sets` on the XPath `copy()` (the JSONPath
+  one already takes `propertySets`), and `copy-namespaces` /
+  `inherit-namespaces` control over which namespace nodes are carried.
 
 ## Versioning
 

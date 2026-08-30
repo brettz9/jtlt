@@ -114,7 +114,9 @@ describe('Coverage: uncovered functionality', () => {
         path: '$',
         template () {
           this.key('itemKey', '$.items[*]', 'id');
-          const found = this.getKey('itemKey', 2);
+          const found = /** @type {{name: string}} */ (
+            this.getKey('itemKey', 2)
+          );
           expect(found.name).to.equal('B');
           done();
         }

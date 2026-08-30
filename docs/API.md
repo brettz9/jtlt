@@ -3,11 +3,15 @@
 For the full reference (engines, contexts, joiners, sorting, keys, variables,
 property sets, defaults, roadmap), see `docs/API.expanded.md`.
 
-## Facade: JTLT
+## Entry points: `jtlt()` and `JTLT`
+
+**`jtlt(config)`** is the recommended entry point. It runs the transform and
+returns a `Promise` that resolves to the result — no `success` callback:
 
 ```js
-import JTLT from 'jtlt';
-JTLT.create({
+import {jtlt} from 'jtlt';
+
+const out = await jtlt({
   data: {title: 'Hi'},
   templates: [
     {path: '$.title', template (v) {
@@ -15,10 +19,31 @@ JTLT.create({
       this.string('</h1>');
     }}
   ],
+  outputType: 'string'
+});
+```
+
+Async templates (e.g. `await this.indexedDB(...)`) are awaited automatically;
+pass `sync: true` to forbid them (a template that returns a Promise then
+throws).
+
+The lower-level **`JTLT`** class (`JTLT.create(config)` / `new JTLT(config)`)
+is for when you need the instance itself, `autostart: false`, or to call
+`.transform(mode)` yourself. It delivers the result through a **required
+`success` callback** (also returned from `.transform()`):
+
+```js
+import JTLT from 'jtlt';
+
+const out = JTLT.create({
+  data: {title: 'Hi'},
+  templates: [/* … */],
   outputType: 'string',
-  success: (out) => out
+  success: (result) => result
 }).transform('');
 ```
+
+`jtlt()` accepts every `JTLT` option except `success`.
 
 ## Engines
 
@@ -32,6 +57,11 @@ JTLT.create({
 `applyTemplates(select?, mode?)`, `forEach(select, cb)`, `valueOf(path?)`,
 `variable(name, select)`, `key(name, match, use)`, `getKey(name, value)`.
 JSONPath variables store values; XPath variables store arrays of nodes.
+
+Async: a template may be `async` and `await` inside it. `this.indexedDB(db,
+store, options?)` resolves to matching IndexedDB records (see
+`docs/API.expanded.md`). Unavailable when JTLT is configured with
+`sync: true`.
 
 Cloning:
 `copy()` (shallow clone current JSON value or DOM node) and

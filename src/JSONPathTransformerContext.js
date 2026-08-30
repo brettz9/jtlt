@@ -2357,12 +2357,23 @@ class JSONPathTransformerContext {
 
   /**
    * @param {string} name - Key name
-   * @param {any} value - Value to match
-   * @returns {any}
+   * @param {unknown} value - Value to match
+   * @returns {unknown}
    */
   getKey (name, value) {
     const key = this.keys[name];
-    const matches = this.get(key.match, true);
+    // Keys are document-global (like `xsl:key`): resolve `match` against the
+    // root, not the current context (which may be a `forEach`/`applyTemplates`
+    // item).
+    const matches = /** @type {any[]} */ (
+      (/** @type {any} */ (jsonpath))({
+        path: JSONPathTransformer.makeJSONPathAbsolute(key.match),
+        json: this._origObj,
+        preventEval: this._config.preventEval,
+        wrap: true,
+        returnType: 'value'
+      })
+    );
     for (const match of matches) { // For objects or arrays
       if (match && typeof match === 'object' &&
         match[key.use] === value) {

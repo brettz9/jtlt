@@ -8,8 +8,6 @@ As with XSLT, allows for declarative, linear declaration of
 (recursive) templates and can be transformed into different
 formats (e.g., strings, JSON, or DOM objects).
 
-***Beta state!!!***
-
 See the [Demo](https://brettz9.github.io/jtlt/demo/).
 
 ## Credits
@@ -29,9 +27,56 @@ See the [test file](./test/browser/index.html).
 
 ## Basic usage
 
-### Node
+The quickest way to run a transform is the **`jtlt()`** function. Give it a
+config object; it runs the transform and returns a `Promise` that resolves to
+the result:
 
-### Browser
+```js
+import {jtlt} from 'jtlt';
+
+const data = {title: 'Hello', items: ['a', 'b']};
+
+const templates = [
+  {path: '$', template () {
+    this.applyTemplates('$.title');
+    this.applyTemplates('$.items[*]');
+  }},
+  {path: '$.title', template (v) {
+    this.element('h1', {}, [], () => this.text(v));
+  }},
+  {path: '$.items[*]', template (v) {
+    this.element('li', {}, [], () => this.text(v));
+  }}
+];
+
+const out = await jtlt({data, templates, outputType: 'string'});
+// -> <h1>Hello</h1><li>a</li><li>b</li>
+```
+
+Templates may be `async` (for example to `await this.indexedDB(...)`);
+`jtlt()` awaits them automatically. Pass `sync: true` to forbid asynchronous
+templates (a template that then returns a Promise throws).
+
+The same call works in Node and the browser (in the browser you must also
+load the dependencies — see the [test file](./test/browser/index.html)). For
+XML/HTML sources, add `engineType: 'xpath'` — see
+[Quick start (XML source with XPath)](#quick-start-xml-source-with-xpath).
+
+### `jtlt()` vs `JTLT.create()`
+
+`jtlt()` is a thin, Promise-returning wrapper around the lower-level
+`JTLT` class. Prefer `jtlt()`. Reach for `JTLT.create()` /
+`new JTLT()` only when you need the instance itself, `autostart: false`, or
+to drive `.transform(mode)` yourself.
+
+| | `jtlt(config)` | `JTLT.create(config)` |
+| --- | --- | --- |
+| Returns | a `Promise` of the result | a `JTLT` instance |
+| Result delivery | the resolved value | a required `success` callback (also returned by `.transform()`) |
+| Async templates | awaited automatically | awaited automatically; `.transform()` returns a Promise |
+
+Anywhere below that shows `JTLT.create({…}).transform(mode)` can instead be
+written `await jtlt({…, mode})`.
 
 ## API
 
@@ -39,16 +84,20 @@ See the [docs](docs/API.md). A high‑level overview is below.
 
 ## API overview
 
-JTLT has two layers:
+Run a transform with the **`jtlt(config)`** function (Promise-returning,
+recommended) or the lower-level **`JTLT`** class (`JTLT.create(config)` /
+`new JTLT(config)`, which delivers the result through a required `success`
+callback). Under the hood JTLT has two layers:
 
 - Engine (template application):
     - JSONPathTransformer: Applies templates to JSON by matching JSONPath selectors (and optional modes), resolving priority, and invoking the winning template. Falls back to built‑in default rules when no user template matches.
     - JSONPathTransformerContext: The execution context passed to templates. It mirrors the joiner API (e.g., string(), object(), array()) so templates can emit results. It also provides helpers like applyTemplates(), callTemplate(), valueOf(), variable(), and forEach().
     - XPathTransformer (experimental): Applies templates to
       XML/HTML DOM by matching XPath selectors (and optional modes).
-      Supports three evaluation modes: version 1 (native
-      XPathEvaluator), version 2 (via xpath2.js), and version 3 (via fontoxpath).
-      Falls back to built‑in default rules when no template matches.
+      Supports three evaluation modes: version `1` (native
+      XPathEvaluator), version `2` (via xpath2.js), and version `3.1` (via
+      fontoxpath). Falls back to built‑in default rules when no template
+      matches.
     - XPathTransformerContext (experimental): Execution context for
       XPath. Offers get(), forEach(), valueOf(), variable(), key()
       and the same joiner helpers as the JSONPath context.
@@ -95,56 +144,32 @@ Provide joiningConfig when constructing JTLT:
 - joiningConfig.xmlElements: Switch element() to XML serialization mode in the String joiner.
 - joiningConfig.preEscapedAttributes: Skip escaping attribute values in the String joiner.
 
-## Quick start (JSON source)
-
-```js
-import {jtlt} from 'jtlt';
-
-const data = {title: 'Hello', items: ['a', 'b']};
-
-const templates = [
-  {path: '$', template () {
-    this.applyTemplates();
-  }},
-  {path: '$.title', template (v) {
-    this.string('<h1>', () => this.text(v));
-    this.string('</h1>');
-  }},
-  {path: '$.items[*]', template (v) {
-    this.element('li', {}, [], () => this.text(v));
-  }}
-];
-
-const out = await jtlt({data, templates, outputType: 'string'});
-
-console.log(out);
-```
-
-Notes:
+## Notes on the basic example
 
 - Modes let you organize multiple passes or output targets.
-- You can also call templates by name via this.callTemplate('name').
-- For DOM output, use outputType: 'dom'. For JSON output, use 'json'.
+- You can also call templates by name via `this.callTemplate('name')`.
+- For DOM output, use `outputType: 'dom'`. For JSON output, use `'json'`
+  (the default is `'string'`).
 
-### Quick start (XML source with XPath)
+## Quick start (XML source with XPath)
 
 You can run templates against XML/HTML using XPath instead of JSONPath.
 
 - `data` should be a Document or Element (e.g., from `DOMParser` with
   `text/xml`).
-- `xpathVersion`: `1` uses native XPath (browser like). `2` uses
-  `xpath2.js` for XPath 2.0‑style evaluation. and `3.1` uses `fontoxpath`
-  for XPath 3.1.
+- `xpathVersion`: `1` uses native XPath (browser‑like). `2` uses
+  `xpath2.js` for XPath 2.0‑style evaluation. `3.1` uses `fontoxpath` for
+  XPath 3.1. Default is `1`.
 - In version 2, some functions may be missing; prefer simple path
   expressions. Use version 1 for standard XPath 1.0 function support.
 
-Example (string output) using the JTLT facade with XPath:
+Example (string output) with `jtlt()` and the XPath engine:
 
 ```js
 import {JSDOM} from 'jsdom';
 import {jtlt} from 'jtlt';
 
-const {window} = new JSDOM('<!doctype><html><body></body></html>');
+const {window} = new JSDOM('<!doctype html><html><body></body></html>');
 const parser = new window.DOMParser();
 const doc = parser.parseFromString(
   '<root><item>a</item><item>b</item></root>', 'text/xml'
@@ -160,8 +185,7 @@ const templates = [
   {
     path: '//item',
     template (n) {
-      this.string('<li>', () => this.text(n.textContent));
-      this.string('</li>');
+      this.element('li', {}, [], () => this.text(n.textContent));
     }
   }
 ];
@@ -171,8 +195,7 @@ const out = await jtlt({
   templates,
   outputType: 'string',
   engineType: 'xpath',
-  xpathVersion: 1, // or 2
-  success: (res) => res
+  xpathVersion: 1 // or 2, or 3.1
 });
 // -> <li>a</li><li>b</li>
 ```
@@ -182,15 +205,14 @@ const out = await jtlt({
 If you just want to run a single, non-recursive query (similar to an XQuery "for … where … return …"), you can skip defining templates and use `forQuery` to seed a root function that iterates a JSONPath and emits results.
 
 - `forQuery` takes the same arguments you’d pass to `this.forEach(select, cb)`: an absolute JSONPath selector and a callback invoked for each match.
-- You can set variables via `this.variable(name, select)` and use plain JavaScript `if` for conditions (there is no dedicated `this.if`).
+- The callback runs once per match with `this` bound to that match, so use plain JavaScript `if` for conditions (there is no dedicated `this.if`).
 
-Example: collect item names whose price meets a threshold, using a variable sourced from the root.
+Example: collect item names whose price is at least 10.
 
 ```js
-import JTLT from 'jtlt';
+import {jtlt} from 'jtlt';
 
 const data = {
-  threshold: 10,
   items: [
     {name: 'A', price: 8},
     {name: 'B', price: 12},
@@ -198,37 +220,29 @@ const data = {
   ]
 };
 
-const jtlt = JTLT.create({
+const result = await jtlt({
   data,
   outputType: 'json', // Top-level result will be a JSON array
   // forQuery mirrors: this.forEach(select, cb)
   forQuery: [
     '$.items[*]',
     function (item) {
-      // Set a reusable variable from the root context
-      this.variable('threshold', '$.threshold');
-      const {threshold} = this.vars;
-
       // Use normal JS conditionals (no this.if helper)
-      if (item.price >= threshold) {
+      if (item.price >= 10) {
         // In JSON output mode, appending a string pushes into
         //   the top-level array
         this.string(item.name);
       }
     }
-  ],
-  // success receives the final result; return it for convenience
-  success: (out) => out
+  ]
 });
-
-const result = jtlt.transform();
 // result => ['B', 'C']
 ```
 
 Tips:
 
 - For string output, set `outputType: 'string'` and emit with `this.text()`/`this.string()` in the callback.
-- `this.variable(name, select)` evaluates the JSONPath against the current context (root for `forQuery`), storing it in `this.vars[name]`.
+- `forQuery`'s callback context is the matched item, not the root — to use a value from the root (e.g. a `threshold`), use a root template instead: `this.variable('threshold', '$.threshold')` then `this.forEach('$.items[*]', cb)` (see the FLWOR example below).
 - If you need multiple passes or richer logic, switch to named templates and modes.
 
 ## FLWOR-style (XQuery) example
@@ -238,7 +252,7 @@ You can express the essentials of a FLWOR expression (For, Let, Where, Order by,
 Scenario: list book titles whose price is at/above a threshold, ordered by price descending and then title ascending.
 
 ```js
-import JTLT from 'jtlt';
+import {jtlt} from 'jtlt';
 
 const data = {
   threshold: 10,
@@ -274,8 +288,7 @@ const templates = [
   }}
 ];
 
-const out = JTLT.create({data, templates, outputType: 'string'}).
-  transform('html');
+const out = await jtlt({data, templates, outputType: 'string', mode: 'html'});
 
 // -> <ul><li>Brave New</li><li>Cobalt</li><li>Delta</li></ul>
 console.log(out);
@@ -297,7 +310,7 @@ You can model a join across two arrays (e.g., orders ↔ customers) using two `f
 Example: render an HTML list of orders annotated with customer names.
 
 ```js
-import JTLT from 'jtlt';
+import {jtlt} from 'jtlt';
 
 const data = {
   customers: [
@@ -333,10 +346,11 @@ const templates = [
   }}
 ];
 
-const out = JTLT.create({
-  data, templates, outputType: 'string'
-}).transform('html');
-// -> <ul><li>Bob — Keyboard</li><li>Alice — Mouse</li></ul>
+const out = await jtlt({
+  data, templates, outputType: 'string', mode: 'html'
+});
+// sorted by date ascending:
+// -> <ul><li>Alice — Mouse</li><li>Bob — Keyboard</li></ul>
 console.log(out);
 ```
 
@@ -352,7 +366,7 @@ Notes:
 Define an index once, then perform O(1) lookups from another sequence when rendering. If no match is found, `getKey()` returns the current context (`this`) as a sentinel; check for that to skip safely.
 
 ```js
-import JTLT from 'jtlt';
+import {jtlt} from 'jtlt';
 
 const data = {
   customers: [
@@ -383,9 +397,9 @@ const templates = [
   }}
 ];
 
-const out = JTLT.create({
-  data, templates, outputType: 'string'
-}).transform('html');
+const out = await jtlt({
+  data, templates, outputType: 'string', mode: 'html'
+});
 // -> <ul><li>Bob: Keyboard</li></ul>
 console.log(out);
 ```
@@ -416,7 +430,7 @@ Differences / current limitations:
   allow a particuluar subset of JavaScript.
 - Stylesheet composition/precedence: no `xsl:import`/`xsl:include` equivalents; only basic priority and modes.
 - Schema awareness: no type-aware processing (a major XSLT/XQuery feature).
-- Multi-output (`xsl:result-document`): not built-in; pick one output type per transform.
+- One output type per transform, though `document()` / `resultDocument()` can emit several documents of that type within a run.
 
 ## Differences between an exact equivalence with XSLT
 
