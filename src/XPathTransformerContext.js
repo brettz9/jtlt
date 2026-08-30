@@ -981,7 +981,7 @@ class XPathTransformerContext {
 
   /**
    * Returns the current grouping key (for use within forEachGroup callback).
-   * @returns {any}
+   * @returns {unknown}
    */
   currentGroupingKey () {
     return /** @type {any} */ (this)._currentGroupingKey;
@@ -2116,8 +2116,8 @@ class XPathTransformerContext {
   /**
    * Invoke a registered stylesheet function with positional arguments.
    * @param {string} name - Function name (with namespace)
-   * @param {any[]} args - Positional arguments
-   * @returns {any} Function return value
+   * @param {unknown[]} args - Positional arguments
+   * @returns {unknown} Function return value
    */
   invokeFunctionByArity (name, args = []) {
     return this._getJoiningTransformer().invokeFunctionByArity(name, args);
