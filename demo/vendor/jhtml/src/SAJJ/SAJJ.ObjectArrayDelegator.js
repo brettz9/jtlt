@@ -7,13 +7,12 @@ import SAJJ from './SAJJ.js';
 /* eslint-enable jsdoc/reject-any-type -- Arbitrary */
 
 /**
-* @abstract
-* @class
-* @todo Might add an add() method which defines how to combine result values
-*  (so as to allow for other means besides string concatenation)
-*/
+ * @abstract
+ * @class
+ * @todo Might add an add() method which defines how to combine result values
+ *  (so as to allow for other means besides string concatenation)
+ */
 class ObjectArrayDelegator extends SAJJ {
-  /* eslint-disable jsdoc/require-returns-check -- Abstract */
   /**
    * @returns {AnyDelegated}
    */
@@ -76,7 +75,6 @@ class ObjectArrayDelegator extends SAJJ {
   ) {
     throw new Error('Abstract');
   }
-  /* eslint-enable jsdoc/require-returns-check -- Abstract */
 
   // It is probably not necessary to override the defaults for the following
   //   two methods and perhaps not any of the others either
@@ -109,17 +107,19 @@ class ObjectArrayDelegator extends SAJJ {
         }
       } else {
         for (const key in value) {
-          if (Object.hasOwn(value, key)) {
-            this.currentKey = key;
-            this.currentObject = value[key];
-            keyVals.push(
-              this.keyValueHandler(
-                value[key], key, value, parentKey,
-                parentObjectArrayBool, false, i
-              )
-            );
-            i++;
+          if (!Object.hasOwn(value, key)) {
+            continue;
           }
+
+          this.currentKey = key;
+          this.currentObject = value[key];
+          keyVals.push(
+            this.keyValueHandler(
+              value[key], key, value, parentKey,
+              parentObjectArrayBool, false, i
+            )
+          );
+          i++;
         }
       }
     }

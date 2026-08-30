@@ -9,6 +9,14 @@ export default [
       'demo/codemirror.esm.js'
     ]
   },
+  {
+    languageOptions: {
+      ecmaVersion: 'latest',
+      globals: {
+        IDBKeyRange: 'readonly'
+      }
+    }
+  },
   ...ashNazg(['sauron']),
   {
     rules: {

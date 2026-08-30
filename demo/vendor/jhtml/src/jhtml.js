@@ -106,12 +106,12 @@ function item2JSONObject (item, allowJS, throwOnSpan) {
       ret = -Infinity;
       break;
     case 'NaN':
-      ret = Number.NaN;
+      ret = NaN;
       break;
     default: {
       // number
       if ((/^-?(?:0|[1-9]\d*)(?:\.\d+)?(?:e(?:[+\-])?\d+)?$/vi).test(textContent)) {
-        return Number.parseFloat(textContent);
+        return Number(textContent);
       }
       // function
       const funcMatch = textContent.match(/^function \w*\s*\(([\w, ]*)\) \{([\s\S]*)\}$/v);
@@ -198,9 +198,10 @@ function item2JSONObject (item, allowJS, throwOnSpan) {
       }
 
       /** @type {JSONObjectPlain} */
-      (ret)[key] = item2JSONObject(/** @type {Element} */ (
+      // eslint-disable-next-line @stylistic/max-len -- Long
+      (ret)[key] = item2JSONObject(/** @type {Element} */ (/** @type {Element} */ (
         node
-      ).children[0], allowJS, true);
+      ).firstElementChild), allowJS, true);
     });
     if (state !== 'dt') {
       throw new Error(
@@ -239,7 +240,8 @@ function item2JSONObject (item, allowJS, throwOnSpan) {
       } else {
         /** @type {JSONObjectArray} */
         (ret).push(item2JSONObject(
-          /** @type {Element} */ (node).children[0], allowJS, true
+          /** @type {Element} */
+          (/** @type {Element} */ (node).firstElementChild), allowJS, true
         ));
       }
     });
@@ -258,7 +260,8 @@ function escapeHTMLText (str) {
   return str.replaceAll('&', '&amp;').replaceAll('<', '&lt;');
 }
 
-// eslint-disable-next-line sonarjs/no-clear-text-protocols -- NS
+// eslint-disable-next-line @stylistic/max-len -- Long
+// eslint-disable-next-line unicorn/prefer-https, sonarjs/no-clear-text-protocols -- NS
 const jhtmlNs = 'http://brett-zamir.me/ns/microdata/json-as-html/2';
 
 /**
@@ -400,12 +403,6 @@ class JHTMLStringifier extends ObjectArrayDelegator {
     return escapeHTMLText(value);
   }
 
-  /* eslint-disable jsdoc/reject-function-type -- Generic */
-  /**
-   * @typedef {Function} GenericFunction
-   */
-  /* eslint-enable jsdoc/reject-function-type -- Generic */
-
   // JavaScript-only (non-JSON) (terminal) handler methods (not used or
   //   required for JSON mode)
   /**
@@ -527,6 +524,8 @@ let _win;
  * @returns {void}
  */
 export const setWindow = (win) => {
+  // eslint-disable-next-line @stylistic/max-len -- Long
+  // eslint-disable-next-line unicorn/no-top-level-assignment-in-function -- Static
   _win = win;
 };
 
@@ -538,11 +537,13 @@ export const setWindow = (win) => {
  * @returns {JSONObject}
  */
 export const toJSONObject = function (items, options) {
-  options = options || {};
+  options ||= {};
   const isElement = items && !Array.isArray(items) && items.nodeType === 1;
   const jsonHtml = isElement
     ? [items]
     : (/** @type {Element[]} */ (items) ||
+    // eslint-disable-next-line @stylistic/max-len -- Long
+    // eslint-disable-next-line unicorn/require-css-escape -- That's what this is doing
       _win.document.querySelectorAll(`[itemtype=${_win.CSS.escape(jhtmlNs)}]`));
   const ret = [...jsonHtml].map((item) => {
     return item2JSONObject(item, options.mode === 'JavaScript');
@@ -561,11 +562,13 @@ export const toJSONObject = function (items, options) {
  * @returns {string|string[]}
  */
 export const toJSONString = function (items, options) {
-  options = options || {};
+  options ||= {};
   const isElement = items && !Array.isArray(items) && items.nodeType === 1;
   const jsonHtml = isElement
     ? [items]
     : (/** @type {Element[]} */ (items) ||
+      // eslint-disable-next-line @stylistic/max-len -- Long
+      // eslint-disable-next-line unicorn/require-css-escape -- That's what this is doing
       _win.document.querySelectorAll(`[itemtype=${_win.CSS.escape(jhtmlNs)}]`));
   const ret = [...jsonHtml].map((item) => {
     const jsonObj = item2JSONObject(item, options.mode === 'JavaScript');
@@ -581,7 +584,7 @@ export const toJSONString = function (items, options) {
  * @returns {string}
  */
 export const toJHTMLString = function (jsonObj, options) {
-  options = options || {};
+  options ||= {};
   options.distinguishKeysValues = true;
   const jhtmlStringifier = new JHTMLStringifier(options);
   return jhtmlStringifier.walkJSONObject(jsonObj);

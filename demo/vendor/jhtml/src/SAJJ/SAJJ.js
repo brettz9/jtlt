@@ -99,9 +99,9 @@
  */
 
 /**
- * @typedef {"undefined"|"null"|"boolean"|"symbol"|
- *   "number"|"nonfiniteNumber"|"bigint"|
- *   "string"|"function"|"array"|"object"|"ignore"} SAJJType
+ * @typedef {"undefined"|"null"|"boolean"|"symbol"
+ *   |"number"|"nonfiniteNumber"|"bigint"
+ *   |"string"|"function"|"array"|"object"|"ignore"} SAJJType
  */
 
 // PRIVATE STATIC UTILITIES
@@ -119,7 +119,7 @@ function _copyObject (obj, deep) {
   const copyObj = {};
   // eslint-disable-next-line guard-for-in -- Deliberate iterating of prototype
   for (const prop in obj) {
-    copyObj[prop] = deep && obj[prop] && typeof obj[prop] === 'object'
+    copyObj[prop] = deep && obj[prop] !== null && typeof obj[prop] === 'object'
       ? _copyObject(/** @type {NestedObject} */ (obj[prop]))
       : obj[prop];
   }
@@ -149,6 +149,17 @@ function _copyObject (obj, deep) {
  */
 class SAJJ {
   ret = '';
+
+  /** @type {SAJJOptions|undefined} */
+  options;
+
+  /**
+   * @param {SAJJOptions} [options] See setDefaultOptions() function body for
+   *   some possibilities
+   */
+  constructor (options) {
+    this.setDefaultOptions(options);
+  }
 
   /* eslint-disable jsdoc/require-returns-check -- Abstract */
   /**
@@ -398,18 +409,6 @@ class SAJJ {
   }
   /* eslint-enable jsdoc/require-returns-check -- Abstract */
 
-  /**
-   * @param {SAJJOptions} options See setDefaultOptions() function body for
-   *   some possibilities
-   */
-  constructor (options) {
-    /** @type {SAJJOptions} */
-    // eslint-disable-next-line no-unused-expressions -- TS
-    this.options;
-
-    this.setDefaultOptions(options);
-  }
-
   // OPTIONS
   /**
    * @param {SAJJOptions} [options]
@@ -447,11 +446,11 @@ class SAJJ {
   }
 
   /**
-  * Rather than use the strategy design pattern, we'll override our prototype
-  *   selectively.
-  * @param {SAJJOptions} options
-  * @returns {void}
-  */
+   * Rather than use the strategy design pattern, we'll override our prototype
+   *   selectively.
+   * @param {SAJJOptions} options
+   * @returns {void}
+   */
   alterDefaultHandlers (options) {
     if (this.distinguishKeysValues) {
       this.keyValueHandler = this.keyValueDistinguishedHandler;
@@ -464,17 +463,17 @@ class SAJJ {
   // PUBLIC METHODS TO INITIATE PARSING
 
   /**
-  * For strings, one may wish to use Clarinet (<https://github.com/dscape/clarinet>) to
-  *   avoid extra overhead or parsing twice.
-  * @param {string} str The JSON string to be walked (after complete conversion
-  *   to an object)
-  * @param {object|object[]} [parentObject] The parent object or array
-  *   containing the string
-  * @param {string} [parentKey] The parent object or array's key
-  * @param {boolean} [parentObjectArrayBool] Whether the parent object is an
-  *   array (not another object)
-  * @returns {AnyValue}
-  */
+   * For strings, one may wish to use Clarinet (<https://github.com/dscape/clarinet>) to
+   *   avoid extra overhead or parsing twice.
+   * @param {string} str The JSON string to be walked (after complete conversion
+   *   to an object)
+   * @param {object|object[]} [parentObject] The parent object or array
+   *   containing the string
+   * @param {string} [parentKey] The parent object or array's key
+   * @param {boolean} [parentObjectArrayBool] Whether the parent object is an
+   *   array (not another object)
+   * @returns {AnyValue}
+   */
   walkJSONString (str, parentObject, parentKey, parentObjectArrayBool) {
     return this.walkJSONObject(
       JSON.parse(str), parentObject, parentKey, parentObjectArrayBool
@@ -482,26 +481,26 @@ class SAJJ {
   }
 
   /**
-  *
-  * @param {import('../jhtml.js').JSONObject} obj The JSON object to walk
-  * @param {object|object[]} [parentObject] The parent object or array
-  *   containing the string
-  * @param {string} [parentKey] The parent object or array's key
-  * @param {boolean} [parentObjectArrayBool] Whether the parent object is an
-  *   array (not another object)
-  * @property {string|AnyValue} ret The intermediate return value (if any) from
-  *   beginHandler and delegateHandlersByType delegation
-  * @returns {string} The final return value including beginHandler and
-  *   delegateHandlersByType delegation plus any endHandler additions;
-  *   one may build one's own intermediate values, but "ret" should be
-  *   set to return the value
-  */
+   *
+   * @param {import('../jhtml.js').JSONObject} obj The JSON object to walk
+   * @param {object|object[]} [parentObject] The parent object or array
+   *   containing the string
+   * @param {string} [parentKey] The parent object or array's key
+   * @param {boolean} [parentObjectArrayBool] Whether the parent object is an
+   *   array (not another object)
+   * @property {string|AnyValue} ret The intermediate return value (if any) from
+   *   beginHandler and delegateHandlersByType delegation
+   * @returns {string} The final return value including beginHandler and
+   *   delegateHandlersByType delegation plus any endHandler additions;
+   *   one may build one's own intermediate values, but "ret" should be
+   *   set to return the value
+   */
   walkJSONObject (obj, parentObject, parentKey, parentObjectArrayBool) {
     this.root = obj;
-    const parObj = parentObject || this.options.parentObject,
-      parKey = parentKey || this.options.parentKey,
+    const parObj = parentObject || this.options?.parentObject,
+      parKey = parentKey || this.options?.parentKey,
       parObjArrBool = parentObjectArrayBool ||
-        this.options.parentObjectArrayBool ||
+        this.options?.parentObjectArrayBool ||
           (parObj && this.isArrayType(parObj));
     this.ret = this.beginHandler(obj, parObj, parKey, parObjArrBool);
     this.ret += this.delegateHandlersByType(obj, parObj, parKey, parObjArrBool);
@@ -661,23 +660,23 @@ class SAJJ {
   }
 
   /**
-  * Could override to always return false if one wished to merge
-  *   arrayHandler/objectHandler or, if in JSMode, to merge detectObjectType
-  *   and this isArrayType method. To merge arrayKeyValueHandler and
-  *   objectKeyValueHandler, see keyValueHandler.
-  * @param {AnyValue} obj
-  * @returns {boolean}
-  */
+   * Could override to always return false if one wished to merge
+   *   arrayHandler/objectHandler or, if in JSMode, to merge detectObjectType
+   *   and this isArrayType method. To merge arrayKeyValueHandler and
+   *   objectKeyValueHandler, see keyValueHandler.
+   * @param {AnyValue} obj
+   * @returns {boolean}
+   */
   isArrayType (obj) {
     return Object.prototype.toString.call(obj) === '[object Array]';
   }
 
   /**
-  * Allow overriding to detect `Date`, `RegExp`, or other types (which will in
-  *   turn route to corresponding names).
-  * @param {AnyValue} obj
-  * @returns {"object"}
-  */
+   * Allow overriding to detect `Date`, `RegExp`, or other types (which will in
+   *   turn route to corresponding names).
+   * @param {AnyValue} obj
+   * @returns {"object"}
+   */
   detectObjectType (
     // eslint-disable-next-line no-unused-vars -- Signature
     obj

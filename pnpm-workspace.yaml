@@ -33,3 +33,9 @@ minimumReleaseAgeExclude:
   - '@rollup/rollup-win32-x64-msvc@4.63.0'
   - rollup@4.63.0
   - jhtml@0.7.2 || 0.7.3
+  - eslint-config-ash-nazg@43.1.0
+  - eslint-plugin-escompat@3.12.0
+  - eslint-plugin-jsdoc@64.3.0
+  - indexeddbshim@17.4.1 || 17.4.2 || 17.4.3
+  - open@11.0.2
+  - powershell-utils@0.2.1
