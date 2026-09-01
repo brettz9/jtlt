@@ -1,5 +1,9 @@
 # jtlt CHANGES
 
+## ?
+
+- chore: bump codemirror/state and devDeps.
+
 ## 0.14.0
 
 - feat: indexedDB JSONPath and XPath support
