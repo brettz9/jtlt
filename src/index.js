@@ -214,6 +214,11 @@ export const setWindow = (win) => {
  *   transformer.
  * @property {object} [parent] Parent object for context
  * @property {string} [parentProperty] Parent property name for context
+ * @property {Record<string, unknown>} [extensions] Extra methods/values
+ * merged onto the template context (the `this` seen inside templates),
+ * e.g. `{myHelper () { ... } }`. Merged after the context's built-in
+ * properties are set, so templates call them as `this.myHelper()`.
+ * Throws if a key collides with an existing context property/method.
  */
 
 /**

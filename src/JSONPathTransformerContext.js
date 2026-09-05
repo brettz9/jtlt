@@ -1,6 +1,7 @@
 import {JSONPath as jsonpath} from 'jsonpath-plus';
 import JSONPathTransformer from './JSONPathTransformer.js';
 import {maybeAsyncLoop} from './maybeAsync.js';
+import applyExtensions from './extendContext.js';
 import {
   parseIndexedDBExpression, queryIndexedDB, resolveIndexedDBQuery
 } from './indexedDB.js';
@@ -98,6 +99,8 @@ const escapeRegexReplacement = (string) => {
  *   Priority resolver function
  * @property {import('./index.js').JSONPathTemplateObject<T>[]|
  *   import('./index.js').JSONPathTemplateArray<T>[]} [templates]
+ * @property {Record<string, unknown>} [extensions] Extra methods/values
+ *   merged onto this context so templates can call `this.myHelper()`
  */
 
 /**
@@ -149,6 +152,9 @@ class JSONPathTransformerContext {
     this._preserveSpaceElements = [];
     /** @type {string[]} */
     this._stripSpaceElements = [];
+    if (config.extensions) {
+      applyExtensions(this, config.extensions);
+    }
   }
 
   /**

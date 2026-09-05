@@ -3,6 +3,7 @@ import xpath2 from 'xpath2.js'; // Runtime JS import; ambient types declared
 // xpathVersion: 1 => browser/native XPathEvaluator API; 2 => xpath2.js, 3 => fontoxpath
 import fontoxpath from 'fontoxpath';
 import {maybeAsyncLoop} from './maybeAsync.js';
+import applyExtensions from './extendContext.js';
 import {
   queryIndexedDB,
   xpathExpressionUsesIndexedDB,
@@ -30,6 +31,8 @@ const escapeRegexReplacement = (string) => {
  * @property {boolean} [preventEval] - Whether to prevent eval in the JSONPath
  *   trailing segment of an `indexedDB(...)` expression
  * @property {(path: string) => number} [specificityPriorityResolver]
+ * @property {Record<string, unknown>} [extensions] Extra methods/values
+ *   merged onto this context so templates can call `this.myHelper()`
  */
 
 /**
@@ -134,6 +137,9 @@ class XPathTransformerContext {
     this._preserveSpaceElements = [];
     /** @type {string[]} */
     this._stripSpaceElements = [];
+    if (config.extensions) {
+      applyExtensions(this, config.extensions);
+    }
   }
 
   /** @returns {import('./index.js').BuiltinJoiningTransformer} */

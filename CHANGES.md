@@ -1,7 +1,8 @@
 # jtlt CHANGES
 
-## ?
+## 0.15.0
 
+- feat: allow custom extensions
 - chore: bump codemirror/state and devDeps.
 
 ## 0.14.0
