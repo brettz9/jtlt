@@ -8,6 +8,8 @@
  */
 export default function applyExtensions (context, extensions) {
   for (const key of Object.keys(extensions)) {
+    // eslint-disable-next-line @stylistic/max-len -- Long
+    // eslint-disable-next-line unicorn/no-computed-property-existence-check -- Needed
     if (key in context) {
       throw new Error(
         `Extension property "${key}" conflicts with an existing ` +

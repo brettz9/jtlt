@@ -3,7 +3,7 @@
 ## 0.15.0
 
 - feat: allow custom extensions
-- chore: bump codemirror/state and devDeps.
+- chore: bump codemirror/state, jamilih, and devDeps.
 
 ## 0.14.0
 

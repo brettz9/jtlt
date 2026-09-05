@@ -1161,7 +1161,7 @@ class JSONPathTransformerContext {
           return 0;
         }
         if (Number.isNaN(an)) {
-          return Number(order);
+          return order;
         }
         if (Number.isNaN(bn)) {
           return -order;

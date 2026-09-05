@@ -790,6 +790,53 @@ describe('forEachGroup() function', function () {
       expect(result).to.include('<name>Charlie</name>');
     });
 
+    it(
+      'should sort a NaN value after a valid number in JSONPath',
+      function () {
+        // Valid number first, non-numeric second, so the comparator is
+        // invoked with a NaN left-hand value and a numeric right-hand value
+        // (exercises the `Number.isNaN(an)` branch of compareBySpec).
+        const data = {
+          items: [
+            {name: 'Bob', score: 10},
+            {name: 'Alice', score: 'invalid'}
+          ]
+        };
+
+        const result = new JSONPathTransformer({
+          templates: [
+            {
+              path: '$',
+              template () {
+                this.forEachGroup(
+                  '$.items[*]',
+                  {
+                    groupBy: '$.name',
+                    sort: {select: '$.score', type: 'number', order: 'ascending'}
+                  },
+                  function (key, items, ctx) {
+                    for (const item of /** @type {GroupItem[]} */ (items)) {
+                      this.element('name', {}, [], () => {
+                        this.text(String(item.name));
+                      });
+                    }
+                  }
+                );
+              }
+            }
+          ],
+          outputType: 'string',
+          joiningTransformer: StringJoiningTransformer.create(''),
+          data
+        }).transform();
+
+        // Bob (valid number) sorts before Alice (NaN)
+        expect(result.indexOf('<name>Bob</name>')).to.be.lessThan(
+          result.indexOf('<name>Alice</name>')
+        );
+      }
+    );
+
     it('should handle locale-aware sorting in JSONPath', function () {
       const data = {
         items: [
