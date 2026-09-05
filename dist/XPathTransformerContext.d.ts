@@ -23,6 +23,11 @@ export type XPathTransformerContextConfig = {
      */
     preventEval?: boolean;
     specificityPriorityResolver?: (path: string) => number;
+    /**
+     * Extra methods/values
+     * merged onto this context so templates can call `this.myHelper()`
+     */
+    extensions?: Record<string, unknown> & ThisType<import('./XPathTransformerContext.js').default & import('./context-extensions.js').ContextExtensions>;
 };
 /**
  * @typedef {object} XPathTransformerContextConfig
@@ -36,6 +41,11 @@ export type XPathTransformerContextConfig = {
  * @property {boolean} [preventEval] - Whether to prevent eval in the JSONPath
  *   trailing segment of an `indexedDB(...)` expression
  * @property {(path: string) => number} [specificityPriorityResolver]
+ * @property {Record<string, unknown> & ThisType<
+ *   import('./XPathTransformerContext.js').default &
+ *   import('./context-extensions.js').ContextExtensions
+ * >} [extensions] Extra methods/values
+ *   merged onto this context so templates can call `this.myHelper()`
  */
 /**
  * Execution context for XPath-driven template application.

@@ -8,12 +8,17 @@
   "types": "./dist/index.d.ts",
   "main": "src/index-node.js",
   "exports": {
-    "types": "./dist/index.d.ts",
-    "browser": {
-      "import": "./src/index-browser.js"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "browser": {
+        "import": "./src/index-browser.js"
+      },
+      "node": {
+        "import": "./src/index-node.js"
+      }
     },
-    "node": {
-      "import": "./src/index-node.js"
+    "./context-extensions": {
+      "types": "./dist/context-extensions.d.ts"
     }
   },
   "engines": {
@@ -67,7 +72,7 @@
     "prepublishOnly": "pnpm i && pnpm build && pnpm tsc && pnpm attw",
     "attw": "attw --pack . --profile esm-only",
     "tsc": "tsc",
-    "build": "tsc -p tsconfig-prod.json && npm run rollup",
+    "build": "tsc -p tsconfig-prod.json && cp src/context-extensions.d.ts dist/context-extensions.d.ts && npm run rollup",
     "rollup": "rollup -c",
     "copy-simple-get-json": "cp -r node_modules/simple-get-json/dist/index-es.js demo/vendor/simple-get-json/dist/index-es.js",
     "copy-jhtml": "cp -Rf node_modules/jhtml/src demo/vendor/jhtml",

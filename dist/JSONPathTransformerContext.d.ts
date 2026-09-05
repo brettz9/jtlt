@@ -116,6 +116,11 @@ export type JSONPathTransformerContextConfig<T extends "json" | "string" | "dom"
      */
     specificityPriorityResolver?: (path: string) => number;
     templates?: import('./index.js').JSONPathTemplateObject<T>[] | import('./index.js').JSONPathTemplateArray<T>[];
+    /**
+     * Extra methods/values
+     * merged onto this context so templates can call `this.myHelper()`
+     */
+    extensions?: Record<string, unknown> & ThisType<import('./JSONPathTransformerContext.js').default<T> & import('./context-extensions.js').ContextExtensions>;
 };
 /**
  * Decimal format symbols for number formatting.
@@ -196,6 +201,11 @@ export type JSONPathTransformerContextConfig<T extends "json" | "string" | "dom"
  *   Priority resolver function
  * @property {import('./index.js').JSONPathTemplateObject<T>[]|
  *   import('./index.js').JSONPathTemplateArray<T>[]} [templates]
+ * @property {Record<string, unknown> & ThisType<
+ *   import('./JSONPathTransformerContext.js').default<T> &
+ *   import('./context-extensions.js').ContextExtensions
+ * >} [extensions] Extra methods/values
+ *   merged onto this context so templates can call `this.myHelper()`
  */
 /**
  * Execution context for JSONPath-driven template application.

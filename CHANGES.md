@@ -3,6 +3,9 @@
 ## 0.15.0
 
 - feat: allow custom extensions
+- feat(types): `jtlt/context-extensions` `ContextExtensions` interface;
+  augment it via declaration merging so `extensions` helpers type-check on
+  `this` inside templates without suppressions
 - chore: bump codemirror/state, jamilih, and devDeps.
 
 ## 0.14.0

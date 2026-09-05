@@ -9,6 +9,7 @@
     "test/**",
     "typings/**",
     "node_modules/**",
+    "**/*.d.ts",
     "**/*.config.js",
     "rollup.config.js",
     "eslint.config.js",

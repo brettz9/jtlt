@@ -7879,7 +7879,7 @@ class Chunk {
         this.value = value;
         this.maxPoint = maxPoint;
     }
-    get length() { return this.to[this.to.length - 1]; }
+    get length() { return last(this.to); }
     // Find the index of the given position and side. Use the ranges'
     // `from` pos when `end == false`, `to` when `end == true`.
     findIndex(pos, side, end, startAt = 0) {
@@ -7902,9 +7902,9 @@ class Chunk {
             if (f(this.from[i] + offset, this.to[i] + offset, this.value[i]) === false)
                 return false;
     }
-    map(offset, changes) {
+    map(offset, changes, basePos, baseSide, spill) {
         let value = [], from = [], to = [], newPos = -1, maxPoint = -1;
-        for (let i = 0; i < this.value.length; i++) {
+        iter: for (let i = 0; i < this.value.length; i++) {
             let val = this.value[i], curFrom = this.from[i] + offset, curTo = this.to[i] + offset, newFrom, newTo;
             if (curFrom == curTo) {
                 let mapped = changes.mapPos(curFrom, val.startSide, val.mapMode);
@@ -7929,9 +7929,29 @@ class Chunk {
                 newPos = newFrom;
             if (val.point)
                 maxPoint = Math.max(maxPoint, newTo - newFrom);
-            value.push(val);
-            from.push(newFrom - newPos);
-            to.push(newTo - newPos);
+            if ((newFrom - basePos || val.startSide - baseSide) >= 0) {
+                value.push(val);
+                from.push(newFrom - newPos);
+                to.push(newTo - newPos);
+                basePos = newTo;
+                baseSide = val.endSide;
+            }
+            else {
+                if (newFrom == newTo) { // Try to reorder points to fit in here
+                    for (let i = value.length; i > 0; i--) {
+                        if ((newFrom - (to[i - 1] + newPos) || val.startSide - value[i - 1].endSide) >= 0) {
+                            value.splice(i, 0, val);
+                            from.splice(i, 0, newFrom - newPos);
+                            to.splice(i, 0, newTo - newPos);
+                            continue iter;
+                        }
+                        if ((newFrom - (from[i - 1] + newPos) || val.endSide - value[i - 1].startSide) > 0)
+                            break;
+                    }
+                }
+                // Otherwise, spill into a new layer
+                spill(newFrom, newTo, val);
+            }
         }
         return { mapped: value.length ? new Chunk(from, to, value, maxPoint) : null, pos: newPos };
     }
@@ -8018,7 +8038,7 @@ class RangeSet {
         while (cur.value || i < add.length) {
             if (i < add.length && (cur.from - add[i].from || cur.startSide - add[i].value.startSide) >= 0) {
                 let range = add[i++];
-                if (!builder.addInner(range.from, range.to, range.value))
+                if (!builder.addInner(range.from, range.to, range.value, false))
                     spill.push(range);
             }
             else if (cur.rangeIndex == 1 && cur.chunkIndex < this.chunk.length &&
@@ -8029,7 +8049,7 @@ class RangeSet {
             }
             else {
                 if (!filter || filterFrom > cur.to || filterTo < cur.from || filter(cur.from, cur.to, cur.value)) {
-                    if (!builder.addInner(cur.from, cur.to, cur.value))
+                    if (!builder.addInner(cur.from, cur.to, cur.value, false))
                         spill.push(Range.create(cur.from, cur.to, cur.value));
                 }
                 cur.next();
@@ -8045,6 +8065,12 @@ class RangeSet {
         if (changes.empty || this.isEmpty)
             return this;
         let chunks = [], chunkPos = [], maxPoint = -1;
+        let spilled;
+        let spill = (from, to, value) => {
+            if (!spilled)
+                spilled = new RangeSetBuilder();
+            spilled.addRange(from, to, value, false);
+        };
         for (let i = 0; i < this.chunk.length; i++) {
             let start = this.chunkPos[i], chunk = this.chunk[i];
             let touch = changes.touchesRange(start, start + chunk.length);
@@ -8054,7 +8080,9 @@ class RangeSet {
                 chunkPos.push(changes.mapPos(start));
             }
             else if (touch === true) {
-                let { mapped, pos } = chunk.map(start, changes);
+                let [prevPos, prevSide] = !chunks.length ? [-1, -1]
+                    : [last(chunkPos) + last(chunks).length, last(last(chunks).value).endSide];
+                let { mapped, pos } = chunk.map(start, changes, prevPos, prevSide, spill);
                 if (mapped) {
                     maxPoint = Math.max(maxPoint, mapped.maxPoint);
                     chunks.push(mapped);
@@ -8063,6 +8091,8 @@ class RangeSet {
             }
         }
         let next = this.nextLayer.map(changes);
+        if (spilled)
+            next = spilled.finishInner(next);
         return chunks.length == 0 ? next : new RangeSet(chunkPos, chunks, next || RangeSet.empty, maxPoint);
     }
     /**
@@ -8204,7 +8234,7 @@ class RangeSet {
     static join(sets) {
         if (!sets.length)
             return RangeSet.empty;
-        let result = sets[sets.length - 1];
+        let result = last(sets);
         for (let i = sets.length - 2; i >= 0; i--) {
             for (let layer = sets[i]; layer != RangeSet.empty; layer = layer.nextLayer)
                 result = new RangeSet(layer.chunkPos, layer.chunk, result, Math.max(layer.maxPoint, result.maxPoint));
@@ -8216,6 +8246,7 @@ class RangeSet {
 The empty set of ranges.
 */
 RangeSet.empty = /*@__PURE__*/new RangeSet([], [], null, -1);
+function last(arr) { return arr[arr.length - 1]; }
 function lazySort(ranges) {
     if (ranges.length > 1)
         for (let prev = ranges[0], i = 1; i < ranges.length; i++) {
@@ -8266,16 +8297,20 @@ class RangeSetBuilder {
     Add a range. Ranges should be added in sorted (by `from` and
     `value.startSide`) order.
     */
-    add(from, to, value) {
-        if (!this.addInner(from, to, value))
-            (this.nextLayer || (this.nextLayer = new RangeSetBuilder)).add(from, to, value);
+    add(from, to, value) { this.addRange(from, to, value, true); }
+    /**
+    @internal
+    */
+    addRange(from, to, value, strict) {
+        if (!this.addInner(from, to, value, strict))
+            (this.nextLayer || (this.nextLayer = new RangeSetBuilder)).addRange(from, to, value, strict);
     }
     /**
     @internal
     */
-    addInner(from, to, value) {
+    addInner(from, to, value, strict) {
         let diff = from - this.lastTo || value.startSide - this.last.endSide;
-        if (diff <= 0 && (from - this.lastFrom || value.startSide - this.last.startSide) < 0)
+        if (strict && diff <= 0 && (from - this.lastFrom || value.startSide - this.last.startSide) < 0)
             throw new Error("Ranges must be added sorted by `from` position and `startSide`");
         if (diff < 0)
             return false;

@@ -44,11 +44,15 @@ export const setWindow = (win) => {
  */
 
 /**
- * A callable template function with an engine-specific `this`.
+ * A callable template function with an engine-specific `this`. The `this`
+ * type is intersected with {@link ContextExtensions} so helpers registered
+ * through the `extensions` option are visible once a consumer augments that
+ * interface.
  * @template T
  * @template U
  * @template TCtx
- * @typedef {(this: TCtx,
+ * @typedef {(this: TCtx &
+ *     import('./context-extensions.js').ContextExtensions,
  *   value: ResultType<U>,
  *   cfg?: {mode?: string}
  * ) => ResultType<T>|void|Promise<ResultType<T>|void>} TemplateFunction
@@ -214,11 +218,6 @@ export const setWindow = (win) => {
  *   transformer.
  * @property {object} [parent] Parent object for context
  * @property {string} [parentProperty] Parent property name for context
- * @property {Record<string, unknown>} [extensions] Extra methods/values
- * merged onto the template context (the `this` seen inside templates),
- * e.g. `{myHelper () { ... } }`. Merged after the context's built-in
- * properties are set, so templates call them as `this.myHelper()`.
- * Throws if a key collides with an existing context property/method.
  */
 
 /**
@@ -238,6 +237,10 @@ export const setWindow = (win) => {
  *   forQuery?: [string, TemplateFunction<T, "json",
  *     import('./XPathTransformerContext.js').default
  *   >],
+ *   extensions?: Record<string, unknown> & ThisType<
+ *     import('./JSONPathTransformerContext.js').default<T> &
+ *     import('./context-extensions.js').ContextExtensions
+ *   >,
  *   engineType?: 'jsonpath',
  *   outputType?: T
  * }} JSONPathJTLTOptions
@@ -260,6 +263,10 @@ export const setWindow = (win) => {
  *   forQuery?: [string, TemplateFunction<T, "dom",
  *     import('./JSONPathTransformerContext.js').default
  *   >],
+ *   extensions?: Record<string, unknown> & ThisType<
+ *     import('./XPathTransformerContext.js').default &
+ *     import('./context-extensions.js').ContextExtensions
+ *   >,
  *   engineType: 'xpath',
  *   xpathVersion?: 1|2|3.1,
  *   outputType?: T
@@ -481,7 +488,9 @@ class JTLT {
         // eslint-disable-next-line @stylistic/max-len -- Long
         // eslint-disable-next-line unicorn/no-array-method-this-argument -- Not array
         this.forEach(path, (arg) => {
-          const ret = fn.call(this, arg);
+          // `this` carries runtime `extensions`; a consumer's
+          // `ContextExtensions` augmentation would otherwise reject it here.
+          const ret = fn.call(/** @type {any} */ (this), arg);
           if (typeof ret !== 'undefined') {
             // @ts-expect-error Ok?
             this._getJoiningTransformer().append(ret);

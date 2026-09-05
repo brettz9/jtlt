@@ -171,7 +171,9 @@ class JSONPathTransformer {
      */
     const ret = /** @type {import('./index.js').JSONPathTemplateObject<T>} */ (
       templateObj
-    ).template.call(jte, undefined, {mode});
+      // `this` carries runtime `extensions`; a consumer's `ContextExtensions`
+      // augmentation would otherwise reject the bare context here.
+    ).template.call(/** @type {any} */ (jte), undefined, {mode});
 
     if (ret !== null && typeof ret !== 'undefined' &&
         typeof ret.then === 'function') {

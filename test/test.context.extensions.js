@@ -2,6 +2,11 @@ import {expect} from 'chai';
 import {jtlt} from '../src/index.js';
 import JTLT from '../src/index-node.js';
 
+// The helpers passed below via `extensions` are registered on
+// `ContextExtensions` in `./context-extensions.d.ts` (declaration merging),
+// so `this.<helper>()` inside templates type-checks without suppressions.
+// Consumers of the published package augment `'jtlt/context-extensions'`.
+
 describe('config.extensions (context extension mechanism)', () => {
   it(
     'merges extension methods onto the JSONPath context as `this`',
@@ -10,15 +15,15 @@ describe('config.extensions (context extension mechanism)', () => {
         data: {title: 'Hello'},
         templates: [
           {path: '$', template () {
-            this.defaultBehavior();
+            this.wrapTitle();
           }},
           {path: '$.title', template (v) {
-            this.text(v);
+            this.text(/** @type {string} */ (v));
           }}
         ],
         outputType: 'string',
         extensions: {
-          defaultBehavior () {
+          wrapTitle () {
             this.string('<wrap>');
             this.applyTemplates('$.title');
             this.string('</wrap>');
@@ -46,7 +51,7 @@ describe('config.extensions (context extension mechanism)', () => {
         err = e;
       }
       expect(err).to.be.an('error');
-      expect(err.message).to.match(/applyTemplates/v);
+      expect(/** @type {Error} */ (err).message).to.match(/applyTemplates/v);
     }
   );
 
@@ -62,11 +67,11 @@ describe('config.extensions (context extension mechanism)', () => {
       outputType: 'string',
       templates: [
         {path: '/root', template () {
-          ranDefault = this.defaultBehavior();
+          ranDefault = this.markRan();
         }}
       ],
       extensions: {
-        defaultBehavior () {
+        markRan () {
           return true;
         }
       },

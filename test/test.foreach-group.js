@@ -812,7 +812,9 @@ describe('forEachGroup() function', function () {
                   '$.items[*]',
                   {
                     groupBy: '$.name',
-                    sort: {select: '$.score', type: 'number', order: 'ascending'}
+                    sort: {
+                      select: '$.score', type: 'number', order: 'ascending'
+                    }
                   },
                   function (key, items, ctx) {
                     for (const item of /** @type {GroupItem[]} */ (items)) {

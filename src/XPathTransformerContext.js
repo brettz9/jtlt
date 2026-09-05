@@ -31,7 +31,10 @@ const escapeRegexReplacement = (string) => {
  * @property {boolean} [preventEval] - Whether to prevent eval in the JSONPath
  *   trailing segment of an `indexedDB(...)` expression
  * @property {(path: string) => number} [specificityPriorityResolver]
- * @property {Record<string, unknown>} [extensions] Extra methods/values
+ * @property {Record<string, unknown> & ThisType<
+ *   import('./XPathTransformerContext.js').default &
+ *   import('./context-extensions.js').ContextExtensions
+ * >} [extensions] Extra methods/values
  *   merged onto this context so templates can call `this.myHelper()`
  */
 

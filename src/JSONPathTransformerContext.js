@@ -99,7 +99,10 @@ const escapeRegexReplacement = (string) => {
  *   Priority resolver function
  * @property {import('./index.js').JSONPathTemplateObject<T>[]|
  *   import('./index.js').JSONPathTemplateArray<T>[]} [templates]
- * @property {Record<string, unknown>} [extensions] Extra methods/values
+ * @property {Record<string, unknown> & ThisType<
+ *   import('./JSONPathTransformerContext.js').default<T> &
+ *   import('./context-extensions.js').ContextExtensions
+ * >} [extensions] Extra methods/values
  *   merged onto this context so templates can call `this.myHelper()`
  */
 
@@ -597,7 +600,9 @@ class JSONPathTransformerContext {
         /** @type {import('./index.js').JSONPathTemplateObject<T>} */ (
           templateObj
         ).template.call(
-          that, value, {mode, parent, parentProperty}
+          // `this` carries runtime `extensions`; a consumer's
+          // `ContextExtensions` augmentation would otherwise reject `that`.
+          /** @type {any} */ (that), value, {mode, parent, parentProperty}
         );
 
       // Restore previous parameter context
@@ -728,7 +733,11 @@ class JSONPathTransformerContext {
       );
     }
 
-    const result = templateObj.template.call(this, this._contextObj, {});
+    const result = templateObj.template.call(
+      // `this` carries runtime `extensions`; a consumer's `ContextExtensions`
+      // augmentation would otherwise reject the bare context.
+      /** @type {any} */ (this), this._contextObj, {}
+    );
     if (typeof result !== 'undefined') {
       /** @type {any} */ (results).append(result);
     }

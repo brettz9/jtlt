@@ -34,7 +34,7 @@ export type TemplateObject<T, U, TCtx> = {
      */
     template: TemplateFunction<T, U, TCtx>;
 };
-export type TemplateFunction<T, U, TCtx> = (this: TCtx, value: ResultType<U>, cfg?: {
+export type TemplateFunction<T, U, TCtx> = (this: TCtx & import('./context-extensions.js').ContextExtensions, value: ResultType<U>, cfg?: {
     mode?: string;
 }) => ResultType<T> | void | Promise<ResultType<T> | void>;
 export type JSONPathTemplateObject<T extends "json" | "string" | "dom"> = TemplateObject<T, "json", import('./JSONPathTransformerContext.js').default<T>>;
@@ -171,6 +171,7 @@ export type JSONPathJTLTOptions<T extends "json" | "string" | "dom" = "json", E 
     template?: JSONPathTemplateObject<T> | TemplateFunction<T, "json", import('./JSONPathTransformerContext.js').default>;
     query?: TemplateFunction<T, "json", import('./JSONPathTransformerContext.js').default>;
     forQuery?: [string, TemplateFunction<T, "json", import('./XPathTransformerContext.js').default>];
+    extensions?: Record<string, unknown> & ThisType<import('./JSONPathTransformerContext.js').default<T> & import('./context-extensions.js').ContextExtensions>;
     engineType?: 'jsonpath';
     outputType?: T;
 };
@@ -179,6 +180,7 @@ export type XPathJTLTOptions<T extends "json" | "string" | "dom", E extends bool
     template?: XPathTemplateObject<T> | TemplateFunction<T, "dom", import('./XPathTransformerContext.js').default>;
     query?: TemplateFunction<T, "dom", import('./XPathTransformerContext.js').default>;
     forQuery?: [string, TemplateFunction<T, "dom", import('./JSONPathTransformerContext.js').default>];
+    extensions?: Record<string, unknown> & ThisType<import('./XPathTransformerContext.js').default & import('./context-extensions.js').ContextExtensions>;
     engineType: 'xpath';
     xpathVersion?: 1 | 2 | 3.1;
     outputType?: T;
@@ -208,11 +210,15 @@ export type JTLTOptions<E extends boolean | undefined = boolean | undefined> = J
  * @property {TemplateFunction<T, U, TCtx>} template - Template function
  */
 /**
- * A callable template function with an engine-specific `this`.
+ * A callable template function with an engine-specific `this`. The `this`
+ * type is intersected with {@link ContextExtensions} so helpers registered
+ * through the `extensions` option are visible once a consumer augments that
+ * interface.
  * @template T
  * @template U
  * @template TCtx
- * @typedef {(this: TCtx,
+ * @typedef {(this: TCtx &
+ *     import('./context-extensions.js').ContextExtensions,
  *   value: ResultType<U>,
  *   cfg?: {mode?: string}
  * ) => ResultType<T>|void|Promise<ResultType<T>|void>} TemplateFunction
@@ -389,6 +395,10 @@ export type JTLTOptions<E extends boolean | undefined = boolean | undefined> = J
  *   forQuery?: [string, TemplateFunction<T, "json",
  *     import('./XPathTransformerContext.js').default
  *   >],
+ *   extensions?: Record<string, unknown> & ThisType<
+ *     import('./JSONPathTransformerContext.js').default<T> &
+ *     import('./context-extensions.js').ContextExtensions
+ *   >,
  *   engineType?: 'jsonpath',
  *   outputType?: T
  * }} JSONPathJTLTOptions
@@ -410,6 +420,10 @@ export type JTLTOptions<E extends boolean | undefined = boolean | undefined> = J
  *   forQuery?: [string, TemplateFunction<T, "dom",
  *     import('./JSONPathTransformerContext.js').default
  *   >],
+ *   extensions?: Record<string, unknown> & ThisType<
+ *     import('./XPathTransformerContext.js').default &
+ *     import('./context-extensions.js').ContextExtensions
+ *   >,
  *   engineType: 'xpath',
  *   xpathVersion?: 1|2|3.1,
  *   outputType?: T
