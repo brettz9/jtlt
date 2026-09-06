@@ -1,5 +1,13 @@
 # jtlt CHANGES
 
+## 0.16.0
+
+- feat: `this.param(name, default)` (`xsl:param`) declares a parameter whose
+  default is overridden by a caller's with-param or by a `config.params`
+  runtime value; `this.withParam(name, value)` (`xsl:with-param`) stages
+  values for the next `callTemplate()`/`applyTemplates()`; `config.params`
+  runtime values are also visible as `$name` in any template
+
 ## 0.15.0
 
 - feat: allow custom extensions

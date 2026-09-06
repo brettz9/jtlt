@@ -99,6 +99,9 @@ const escapeRegexReplacement = (string) => {
  *   Priority resolver function
  * @property {import('./index.js').JSONPathTemplateObject<T>[]|
  *   import('./index.js').JSONPathTemplateArray<T>[]} [templates]
+ * @property {Record<string, unknown>} [params] Runtime parameter values
+ *   (like an XSLT processor's stylesheet parameters); a `param()` with a
+ *   matching name uses this value instead of its declared default
  * @property {Record<string, unknown> & ThisType<
  *   import('./JSONPathTransformerContext.js').default<T> &
  *   import('./context-extensions.js').ContextExtensions
@@ -151,6 +154,19 @@ class JSONPathTransformerContext {
     this._currPath = undefined;
     /** @type {Record<string, any> | undefined} */
     this._params = undefined;
+    /**
+     * Parameter values supplied at runtime via `config.params`, mirroring the
+     * stylesheet parameters an XSLT processor is handed. A `param()` whose
+     * name appears here takes this value instead of its declared default.
+     * @type {Record<string, unknown>}
+     */
+    this._runtimeParams = /** @type {any} */ (config).params || {};
+    /**
+     * Parameters staged by `withParam()` and consumed (then cleared) by the
+     * next `callTemplate()` or `applyTemplates()` call.
+     * @type {{name: string, select?: string, value?: unknown}[] | undefined}
+     */
+    this._pendingParams = undefined;
     /** @type {string[]} */
     this._preserveSpaceElements = [];
     /** @type {string[]} */
@@ -273,6 +289,12 @@ class JSONPathTransformerContext {
       mode = select.mode ?? mode;
       select = select.select ?? select;
     }
+    // Resolve params staged via `this.withParam()` in the calling context,
+    // once, before iterating; each matched template receives them
+    // (`xsl:apply-templates` / `xsl:with-param`).
+    /** @type {Record<string, unknown>} */
+    const appliedParams = {};
+    this._drainPendingParams(appliedParams);
     if (!this._initialized) {
       select ||= '$';
       this._currPath = '$';
@@ -589,7 +611,7 @@ class JSONPathTransformerContext {
 
       // Set up parameter context for valueOf() access in templates
       const prevTemplateParams = that._params;
-      that._params = {0: value};
+      that._params = {0: value, ...appliedParams};
 
       /**
        * The template may return synchronously or return a Promise (e.g. from
@@ -709,6 +731,10 @@ class JSONPathTransformerContext {
     /** @type {Record<string, any>} */
     const params = {};
     this._params = params;
+
+    // Params staged via `this.withParam()` seed the set; explicit `withParam`
+    // entries below override any of the same name (`xsl:with-param`).
+    this._drainPendingParams(params);
 
     withParams.forEach((withParam, index) => {
       const value = withParam.value !== undefined
@@ -1320,9 +1346,8 @@ class JSONPathTransformerContext {
               // Check if it's a parameter reference ($param, not $.jsonpath)
               if (trimmed.startsWith('$') && !trimmed.startsWith('$.')) {
                 const paramName = trimmed.slice(1);
-                return this._params && Object.hasOwn(this._params, paramName)
-                  ? this._params[paramName]
-                  : undefined;
+                const {has, value} = this._lookupParam(paramName);
+                return has ? value : undefined;
               }
               // Check if it's a string literal
               if ((trimmed.startsWith("'") && trimmed.endsWith("'")) ||
@@ -1361,9 +1386,8 @@ class JSONPathTransformerContext {
               !valueExpr.includes('.') && !valueExpr.includes('[')) {
             // Parameter reference (no path components)
             const paramName = valueExpr.trim().slice(1);
-            numValue = this._params && Object.hasOwn(this._params, paramName)
-              ? this._params[paramName]
-              : 0;
+            const {has, value} = this._lookupParam(paramName);
+            numValue = has ? value : 0;
           } else {
             // Try to parse as number or evaluate as JSONPath
             const trimmed = valueExpr.trim();
@@ -1391,8 +1415,9 @@ class JSONPathTransformerContext {
       // Check if this is a parameter reference (starts with $)
       if (selectStr && selectStr.startsWith('$')) {
         const paramName = selectStr.slice(1);
-        result = (this._params && Object.hasOwn(this._params, paramName))
-          ? this._params[paramName]
+        const {has, value} = this._lookupParam(paramName);
+        result = has
+          ? value
           : this.get(/** @type {string} */ (selectStr), false);
       } else {
         result = this.get(/** @type {string} */ (select), false);
@@ -1626,6 +1651,116 @@ class JSONPathTransformerContext {
    */
   variable (name, select) {
     this.vars[name] = this.get(select, false);
+    return this;
+  }
+
+  /**
+   * Normalize a `param()`/`withParam()` default/value argument to `{select}`
+   * or `{value}`: a bare string is a JSONPath expression, `{value}` is a
+   * literal, and `{select}` (or an omitted argument) is an expression.
+   * @param {string|{select?: string, value?: unknown}|undefined} arg
+   * @returns {{select?: string, value?: unknown}}
+   * @private
+   */
+  // eslint-disable-next-line class-methods-use-this -- pure helper
+  _paramSpec (arg) {
+    if (typeof arg === 'string') {
+      return {select: arg};
+    }
+    if (arg && 'value' in arg) {
+      return {value: arg.value};
+    }
+    // `{select}` object, or omitted (a default of `undefined`).
+    return {select: arg && arg.select};
+  }
+
+  /**
+   * Look up a parameter by name across the active with-param scope and the
+   * runtime `config.params`, so runtime-supplied params act like XSLT global
+   * parameters (visible to every template and expression).
+   * @param {string} name
+   * @returns {{has: boolean, value: any}}
+   * @private
+   */
+  _lookupParam (name) {
+    if (this._params && Object.hasOwn(this._params, name)) {
+      return {has: true, value: this._params[name]};
+    }
+    if (Object.hasOwn(this._runtimeParams, name)) {
+      return {has: true, value: this._runtimeParams[name]};
+    }
+    return {has: false, value: undefined};
+  }
+
+  /**
+   * Resolve a `{select}` or `{value}` parameter spec to its value in the
+   * current context.
+   * @param {{select?: string, value?: unknown}} spec
+   * @returns {any}
+   * @private
+   */
+  _resolveParam (spec) {
+    if ('value' in spec) {
+      return spec.value;
+    }
+    return spec.select === undefined ? undefined : this.get(spec.select, false);
+  }
+
+  /**
+   * Resolve staged `withParam()` entries into `target` (in the calling
+   * context) and clear the staged set. Shared by `callTemplate()` and
+   * `applyTemplates()`.
+   * @param {Record<string, unknown>} target
+   * @returns {void}
+   * @private
+   */
+  _drainPendingParams (target) {
+    const pending = this._pendingParams;
+    this._pendingParams = undefined;
+    if (!pending) {
+      return;
+    }
+    for (const entry of pending) {
+      target[entry.name] = this._resolveParam(entry);
+    }
+  }
+
+  /**
+   * Declare a template parameter, equivalent to `xsl:param`. Binds `name` to
+   * the given default, unless a value was supplied by the caller (via
+   * `this.withParam()` or `callTemplate`'s `withParam`) or at runtime (via
+   * `config.params`), in which case the supplied value wins.
+   * @param {string} name - Parameter name
+   * @param {string|{select: string}|{value: unknown}} [select] - The default:
+   *   a JSONPath expression string, an explicit `{select}`, or a literal
+   *   `{value}`. Omitted means a default of `undefined`.
+   * @returns {this}
+   */
+  param (name, select) {
+    this._params ||= {};
+    const supplied = this._lookupParam(name);
+    // A caller's with-param or a `config.params` value overrides the default.
+    const resolved = supplied.has
+      ? supplied.value
+      : this._resolveParam(this._paramSpec(select));
+    this._params[name] = resolved;
+    this.vars[name] = resolved;
+    return this;
+  }
+
+  /**
+   * Stage a parameter for the next `callTemplate()` or `applyTemplates()`
+   * call, equivalent to `xsl:with-param`. The staged set is consumed and
+   * cleared by that call; entries are evaluated in the current (calling)
+   * context.
+   * @param {string} name - Parameter name
+   * @param {string|{select: string}|{value: unknown}} [select] - A JSONPath
+   *   expression string, an explicit `{select}`, or a literal `{value}`.
+   * @returns {this}
+   */
+  withParam (name, select) {
+    this._pendingParams ||= [];
+    this._pendingParams.push({name, ...this._paramSpec(select)});
     return this;
   }
 

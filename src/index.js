@@ -218,6 +218,11 @@ export const setWindow = (win) => {
  *   transformer.
  * @property {object} [parent] Parent object for context
  * @property {string} [parentProperty] Parent property name for context
+ * @property {Record<string, unknown>} [params] Parameter values supplied at
+ *   runtime, mirroring the stylesheet parameters an XSLT processor is handed.
+ *   A `this.param(name, default)` declaration whose name appears here resolves
+ *   to this value instead of its default, and `$name` references such a
+ *   parameter from any template.
  */
 
 /**

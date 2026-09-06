@@ -165,6 +165,14 @@ export type BaseJTLTOptions<T, E extends boolean | undefined = false> = {
      * Parent property name for context
      */
     parentProperty?: string;
+    /**
+     * Parameter values supplied at
+     * runtime, mirroring the stylesheet parameters an XSLT processor is handed.
+     * A `this.param(name, default)` declaration whose name appears here resolves
+     * to this value instead of its default, and `$name` references such a
+     * parameter from any template.
+     */
+    params?: Record<string, unknown>;
 };
 export type JSONPathJTLTOptions<T extends "json" | "string" | "dom" = "json", E extends boolean | undefined = false> = BaseJTLTOptions<T, E> & {
     templates?: JSONPathTemplateArray<T>[] | TemplateFunction<T, "json", import('./JSONPathTransformerContext.js').default<T>>;
@@ -377,6 +385,11 @@ export type JTLTOptions<E extends boolean | undefined = boolean | undefined> = J
  *   transformer.
  * @property {object} [parent] Parent object for context
  * @property {string} [parentProperty] Parent property name for context
+ * @property {Record<string, unknown>} [params] Parameter values supplied at
+ *   runtime, mirroring the stylesheet parameters an XSLT processor is handed.
+ *   A `this.param(name, default)` declaration whose name appears here resolves
+ *   to this value instead of its default, and `$name` references such a
+ *   parameter from any template.
  */
 /**
  * JSONPath engine options with context-aware template typing.

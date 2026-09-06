@@ -117,6 +117,12 @@ export type JSONPathTransformerContextConfig<T extends "json" | "string" | "dom"
     specificityPriorityResolver?: (path: string) => number;
     templates?: import('./index.js').JSONPathTemplateObject<T>[] | import('./index.js').JSONPathTemplateArray<T>[];
     /**
+     * Runtime parameter values
+     * (like an XSLT processor's stylesheet parameters); a `param()` with a
+     * matching name uses this value instead of its declared default
+     */
+    params?: Record<string, unknown>;
+    /**
      * Extra methods/values
      * merged onto this context so templates can call `this.myHelper()`
      */
@@ -201,6 +207,9 @@ export type JSONPathTransformerContextConfig<T extends "json" | "string" | "dom"
  *   Priority resolver function
  * @property {import('./index.js').JSONPathTemplateObject<T>[]|
  *   import('./index.js').JSONPathTemplateArray<T>[]} [templates]
+ * @property {Record<string, unknown>} [params] Runtime parameter values
+ *   (like an XSLT processor's stylesheet parameters); a `param()` with a
+ *   matching name uses this value instead of its declared default
  * @property {Record<string, unknown> & ThisType<
  *   import('./JSONPathTransformerContext.js').default<T> &
  *   import('./context-extensions.js').ContextExtensions
@@ -241,6 +250,23 @@ declare class JSONPathTransformerContext<T extends "json" | "string" | "dom" = "
     _currPath: string | undefined;
     /** @type {Record<string, any> | undefined} */
     _params: Record<string, any> | undefined;
+    /**
+     * Parameter values supplied at runtime via `config.params`, mirroring the
+     * stylesheet parameters an XSLT processor is handed. A `param()` whose
+     * name appears here takes this value instead of its declared default.
+     * @type {Record<string, unknown>}
+     */
+    _runtimeParams: Record<string, unknown>;
+    /**
+     * Parameters staged by `withParam()` and consumed (then cleared) by the
+     * next `callTemplate()` or `applyTemplates()` call.
+     * @type {{name: string, select?: string, value?: unknown}[] | undefined}
+     */
+    _pendingParams: {
+        name: string;
+        select?: string;
+        value?: unknown;
+    }[] | undefined;
     /** @type {string[]} */
     _preserveSpaceElements: string[];
     /** @type {string[]} */
@@ -457,6 +483,72 @@ declare class JSONPathTransformerContext<T extends "json" | "string" | "dom" = "
      * @returns {this}
      */
     variable(name: string, select: string): this;
+    /**
+     * Normalize a `param()`/`withParam()` default/value argument to `{select}`
+     * or `{value}`: a bare string is a JSONPath expression, `{value}` is a
+     * literal, and `{select}` (or an omitted argument) is an expression.
+     * @param {string|{select?: string, value?: unknown}|undefined} arg
+     * @returns {{select?: string, value?: unknown}}
+     * @private
+     */
+    private _paramSpec;
+    /**
+     * Look up a parameter by name across the active with-param scope and the
+     * runtime `config.params`, so runtime-supplied params act like XSLT global
+     * parameters (visible to every template and expression).
+     * @param {string} name
+     * @returns {{has: boolean, value: any}}
+     * @private
+     */
+    private _lookupParam;
+    /**
+     * Resolve a `{select}` or `{value}` parameter spec to its value in the
+     * current context.
+     * @param {{select?: string, value?: unknown}} spec
+     * @returns {any}
+     * @private
+     */
+    private _resolveParam;
+    /**
+     * Resolve staged `withParam()` entries into `target` (in the calling
+     * context) and clear the staged set. Shared by `callTemplate()` and
+     * `applyTemplates()`.
+     * @param {Record<string, unknown>} target
+     * @returns {void}
+     * @private
+     */
+    private _drainPendingParams;
+    /**
+     * Declare a template parameter, equivalent to `xsl:param`. Binds `name` to
+     * the given default, unless a value was supplied by the caller (via
+     * `this.withParam()` or `callTemplate`'s `withParam`) or at runtime (via
+     * `config.params`), in which case the supplied value wins.
+     * @param {string} name - Parameter name
+     * @param {string|{select: string}|{value: unknown}} [select] - The default:
+     *   a JSONPath expression string, an explicit `{select}`, or a literal
+     *   `{value}`. Omitted means a default of `undefined`.
+     * @returns {this}
+     */
+    param(name: string, select?: string | {
+        select: string;
+    } | {
+        value: unknown;
+    }): this;
+    /**
+     * Stage a parameter for the next `callTemplate()` or `applyTemplates()`
+     * call, equivalent to `xsl:with-param`. The staged set is consumed and
+     * cleared by that call; entries are evaluated in the current (calling)
+     * context.
+     * @param {string} name - Parameter name
+     * @param {string|{select: string}|{value: unknown}} [select] - A JSONPath
+     *   expression string, an explicit `{select}`, or a literal `{value}`.
+     * @returns {this}
+     */
+    withParam(name: string, select?: string | {
+        select: string;
+    } | {
+        value: unknown;
+    }): this;
     /**
      * @param {unknown} json - JSON data to log
      * @returns {void}

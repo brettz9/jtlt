@@ -91,7 +91,7 @@ callback). Under the hood JTLT has two layers:
 
 - Engine (template application):
     - JSONPathTransformer: Applies templates to JSON by matching JSONPath selectors (and optional modes), resolving priority, and invoking the winning template. Falls back to built‑in default rules when no user template matches.
-    - JSONPathTransformerContext: The execution context passed to templates. It mirrors the joiner API (e.g., string(), object(), array()) so templates can emit results. It also provides helpers like applyTemplates(), callTemplate(), valueOf(), variable(), and forEach().
+    - JSONPathTransformerContext: The execution context passed to templates. It mirrors the joiner API (e.g., string(), object(), array()) so templates can emit results. It also provides helpers like applyTemplates(), callTemplate(), valueOf(), variable(), param(), withParam(), and forEach().
     - XPathTransformer (experimental): Applies templates to
       XML/HTML DOM by matching XPath selectors (and optional modes).
       Supports three evaluation modes: version `1` (native
@@ -99,8 +99,9 @@ callback). Under the hood JTLT has two layers:
       fontoxpath). Falls back to built‑in default rules when no template
       matches.
     - XPathTransformerContext (experimental): Execution context for
-      XPath. Offers get(), forEach(), valueOf(), variable(), key()
-      and the same joiner helpers as the JSONPath context.
+      XPath. Offers get(), forEach(), valueOf(), variable(), param(),
+      withParam(), key() and the same joiner helpers as the JSONPath
+      context.
 
 - Joiners (output builders):
     - StringJoiningTransformer: Builds a string. Context‑aware append() routes into objects/arrays when inside object()/array() scopes, otherwise concatenates to a buffer. Includes element(), attribute(), and text() helpers for HTML/XML emission.
@@ -417,7 +418,7 @@ Advantages (strong parallels with XSLT):
 - Template matching by path and mode: templates use JSONPath selectors and optional `mode`, with priority resolution and an option to error on equal priority.
 - Built‑in default rules: when no template matches, defaults traverse and render objects, arrays, scalars, property names, and functions, similar to XSLT’s built‑in templates.
 - applyTemplates/forEach and sorting: `applyTemplates(select, mode, sort)` and `forEach(select, cb, sort)` mirror `xsl:apply-templates`/`xsl:for-each` and `xsl:sort`.
-- Named templates and parameters: `callTemplate(name, withParam)` reflects `xsl:call-template` + `xsl:with-param`.
+- Named templates and parameters: `callTemplate(name, withParam)` reflects `xsl:call-template` + `xsl:with-param`. `this.param(name, default)` mirrors `xsl:param` — the declared default is used unless the caller supplied a value (via `this.withParam(name, value)` before the call, or `callTemplate`'s `withParam` array) or a runtime value was passed as `config.params` (like an XSLT processor's stylesheet parameters). `this.withParam(name, value)` stages a parameter for the next `callTemplate()`/`applyTemplates()`, which consumes and clears the staged set. `config.params` values are also readable as `$name` from any template. In each of `param()`/`withParam()`, the value argument is a selector expression string (or `{select}`), or a literal `{value}`.
 - Keys and lookups: `key(name, match, use)` + `getKey(name, value)` provide `xsl:key`-style indexing for joins and fast lookups.
 - Multiple output forms: string, DOM, and JSON builders ("joiners") allow emitting different result trees like XSLT’s result tree model.
 
