@@ -730,6 +730,10 @@ declare class XPathTransformerContext<T = "dom", V = DocumentFragment | Element>
      * Conditionally execute a callback when an XPath evaluates to a truthy
      * scalar or a non-empty node set (akin to xsl:if semantics).
      *
+     * A bare `$name` reference tests a parameter — one declared with `param()`,
+     * supplied via `withParam()`, or provided at runtime as `config.params` —
+     * rather than an XPath expression.
+     *
      * Truthiness rules:
      * - Node set: length > 0 passes.
      * - Scalar: Boolean(value) must be true.
@@ -741,7 +745,18 @@ declare class XPathTransformerContext<T = "dom", V = DocumentFragment | Element>
      */
     if(select: string, cb: (this: XPathTransformerContext) => void): XPathTransformerContext;
     /**
-     * Internal helper: evaluate XPath truthiness like if().
+     * Apply `if()`/`choose()`/`assert()` truthiness to an already-resolved
+     * value: a non-empty node set (array) is truthy, a scalar is coerced with
+     * `Boolean()`.
+     * @param {any} val
+     * @returns {boolean}
+     * @private
+     */
+    private _isTruthyResult;
+    /**
+     * Internal helper: evaluate XPath truthiness like if(). A bare `$name`
+     * reference resolves against the parameter scope (local with-param then
+     * runtime `config.params`); anything else is evaluated as XPath.
      * @param {string} select
      * @returns {boolean}
      */

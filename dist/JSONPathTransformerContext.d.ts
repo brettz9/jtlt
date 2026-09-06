@@ -850,6 +850,10 @@ declare class JSONPathTransformerContext<T extends "json" | "string" | "dom" = "
      * to a truthy scalar or a non-empty result set (node set analogue).
      * Mirrors XSLT's xsl:if semantics where a non-empty node set is truthy.
      *
+     * A bare `$name` reference (not `$.path`) tests a parameter — one declared
+     * with `param()`, supplied via `withParam()`, or provided at runtime as
+     * `config.params` — rather than a JSONPath expression.
+     *
      * Truthiness rules:
      * - If the selection (with wrap) yields an array with length > 0, the
      *   condition passes.
@@ -863,9 +867,19 @@ declare class JSONPathTransformerContext<T extends "json" | "string" | "dom" = "
      */
     if(select: string, cb: (this: JSONPathTransformerContext<T>) => void): this;
     /**
-     * Internal helper: determine if `select` passes truthiness test.
-     * Non-empty wrapped results => true; single item: objects truthy,
-     * primitives coerced via Boolean().
+     * Apply `if()`/`choose()`/`assert()` truthiness to an already-resolved
+     * value: a non-empty result set (or single non-empty item) is truthy, a
+     * scalar is coerced with `Boolean()`.
+     * @param {any} val
+     * @returns {boolean}
+     * @private
+     */
+    private _isTruthyResult;
+    /**
+     * Internal helper: determine if `select` passes the truthiness test. A
+     * bare `$name` reference resolves against the parameter scope (local
+     * with-param then runtime `config.params`); anything else is evaluated as
+     * a JSONPath expression.
      * @param {string} select
      * @returns {boolean}
      */

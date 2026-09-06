@@ -1,5 +1,11 @@
 # jtlt CHANGES
 
+## 0.17.0
+
+- feat: `this.if('$name', ...)` (and `choose()`/`assert()`) test a parameter
+  — local, with-param, or `config.params` runtime — when passed a bare
+  `$name` reference rather than a path expression
+
 ## 0.16.0
 
 - feat: `this.param(name, default)` (`xsl:param`) declares a parameter whose

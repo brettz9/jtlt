@@ -2549,6 +2549,10 @@ class JSONPathTransformerContext {
    * to a truthy scalar or a non-empty result set (node set analogue).
    * Mirrors XSLT's xsl:if semantics where a non-empty node set is truthy.
    *
+   * A bare `$name` reference (not `$.path`) tests a parameter — one declared
+   * with `param()`, supplied via `withParam()`, or provided at runtime as
+   * `config.params` — rather than a JSONPath expression.
+   *
    * Truthiness rules:
    * - If the selection (with wrap) yields an array with length > 0, the
    *   condition passes.
@@ -2569,35 +2573,56 @@ class JSONPathTransformerContext {
   }
 
   /**
-   * Internal helper: determine if `select` passes truthiness test.
-   * Non-empty wrapped results => true; single item: objects truthy,
-   * primitives coerced via Boolean().
-   * @param {string} select
+   * Apply `if()`/`choose()`/`assert()` truthiness to an already-resolved
+   * value: a non-empty result set (or single non-empty item) is truthy, a
+   * scalar is coerced with `Boolean()`.
+   * @param {any} val
    * @returns {boolean}
+   * @private
    */
-  _passesIf (select) {
-    // Evaluate with wrapping to detect non-empty match sets
-    /** @type {any} */ const wrapped = this.get(select, true);
-    if (Array.isArray(wrapped)) {
-      if (wrapped.length === 0) {
+  // eslint-disable-next-line class-methods-use-this -- pure helper
+  _isTruthyResult (val) {
+    if (Array.isArray(val)) {
+      if (val.length === 0) {
         return false;
       }
-      if (wrapped.length > 1) {
+      if (val.length > 1) {
         // Multiple matches (node set analogue) => truthy
         return true;
       }
       // Single item; apply scalar truthiness
-      const single = wrapped[0];
-      // Objects (arrays) always truthy; primitives use Boolean()
+      const single = val[0];
       if (single && typeof single === 'object') {
         return true;
       }
       return Boolean(single);
     }
-    /* c8 ignore next 3 -- unreachable defensive non-array branch:
-     * jsonpath-plus with wrap:true always returns arrays. */
-    // Fallback if library behavior changed in future
-    return Boolean(wrapped);
+    if (val && typeof val === 'object') {
+      return true;
+    }
+    return Boolean(val);
+  }
+
+  /**
+   * Internal helper: determine if `select` passes the truthiness test. A
+   * bare `$name` reference resolves against the parameter scope (local
+   * with-param then runtime `config.params`); anything else is evaluated as
+   * a JSONPath expression.
+   * @param {string} select
+   * @returns {boolean}
+   */
+  _passesIf (select) {
+    if (typeof select === 'string') {
+      const paramRef = select.trim().match(/^\$(?<name>[\w\-]+)$/v);
+      if (paramRef && paramRef.groups) {
+        const param = this._lookupParam(paramRef.groups.name);
+        if (param.has) {
+          return this._isTruthyResult(param.value);
+        }
+      }
+    }
+    // Evaluate with wrapping to detect non-empty match sets
+    return this._isTruthyResult(this.get(select, true));
   }
 
   /**

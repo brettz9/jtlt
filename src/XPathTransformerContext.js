@@ -2465,6 +2465,10 @@ class XPathTransformerContext {
    * Conditionally execute a callback when an XPath evaluates to a truthy
    * scalar or a non-empty node set (akin to xsl:if semantics).
    *
+   * A bare `$name` reference tests a parameter — one declared with `param()`,
+   * supplied via `withParam()`, or provided at runtime as `config.params` —
+   * rather than an XPath expression.
+   *
    * Truthiness rules:
    * - Node set: length > 0 passes.
    * - Scalar: Boolean(value) must be true.
@@ -2483,11 +2487,41 @@ class XPathTransformerContext {
   }
 
   /**
-   * Internal helper: evaluate XPath truthiness like if().
+   * Apply `if()`/`choose()`/`assert()` truthiness to an already-resolved
+   * value: a non-empty node set (array) is truthy, a scalar is coerced with
+   * `Boolean()`.
+   * @param {any} val
+   * @returns {boolean}
+   * @private
+   */
+  // eslint-disable-next-line class-methods-use-this -- pure helper
+  _isTruthyResult (val) {
+    if (Array.isArray(val)) {
+      return val.length > 0;
+    }
+    if (val && typeof val === 'object') {
+      return true;
+    }
+    return Boolean(val);
+  }
+
+  /**
+   * Internal helper: evaluate XPath truthiness like if(). A bare `$name`
+   * reference resolves against the parameter scope (local with-param then
+   * runtime `config.params`); anything else is evaluated as XPath.
    * @param {string} select
    * @returns {boolean}
    */
   _passesIf (select) {
+    if (typeof select === 'string') {
+      const paramRef = select.trim().match(/^\$(?<name>[\w\-]+)$/v);
+      if (paramRef && paramRef.groups) {
+        const param = this._lookupParam(paramRef.groups.name);
+        if (param.has) {
+          return this._isTruthyResult(param.value);
+        }
+      }
+    }
     let passes = false;
     // Try scalar evaluation first (handles boolean/comparison expressions)
     try {

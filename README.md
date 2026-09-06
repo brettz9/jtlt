@@ -206,7 +206,7 @@ const out = await jtlt({
 If you just want to run a single, non-recursive query (similar to an XQuery "for … where … return …"), you can skip defining templates and use `forQuery` to seed a root function that iterates a JSONPath and emits results.
 
 - `forQuery` takes the same arguments you’d pass to `this.forEach(select, cb)`: an absolute JSONPath selector and a callback invoked for each match.
-- The callback runs once per match with `this` bound to that match, so use plain JavaScript `if` for conditions (there is no dedicated `this.if`).
+- The callback runs once per match with `this` bound to that match, so use plain JavaScript `if` for conditions.
 
 Example: collect item names whose price is at least 10.
 

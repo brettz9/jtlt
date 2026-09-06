@@ -432,3 +432,181 @@ describe('this.param() and this.withParam() (xsl:param / xsl:with-param)',
       });
     });
   });
+
+describe('$param references inside this.if() / choose() / assert()',
+  function () {
+    describe('JSONPath engine', function () {
+      /**
+       * @param {Record<string, unknown>} params
+       * @param {(this: import(
+       *   '../src/JSONPathTransformerContext.js').default<"string">
+       * ) => void} tmpl
+       * @returns {Promise<string>}
+       */
+      const render = (params, tmpl) => jtlt({
+        data: {name: 'Ada'},
+        outputType: 'string',
+        params,
+        templates: [{path: '$', template: tmpl}]
+      });
+
+      it('runs the branch when a runtime $param is truthy', async () => {
+        const out = await render({on: 1}, function () {
+          this.if('$on', () => this.string('yes'));
+        });
+        expect(out).to.equal('yes');
+      });
+
+      it('skips the branch when a runtime $param is falsy', async () => {
+        for (const falsy of [0, '', false, null]) {
+          // eslint-disable-next-line no-await-in-loop -- sequential by design
+          const out = await render({on: falsy}, function () {
+            this.if('$on', () => this.string('yes'));
+          });
+          expect(out).to.equal('');
+        }
+      });
+
+      it('treats a non-empty $param array/object as truthy, empty as falsy',
+        async () => {
+          const out = await render(
+            {list: [1, 2], one: [0], empty: [], obj: {}},
+            function () {
+              this.if('$list', () => this.string('L'));
+              this.if('$one', () => this.string('O'));
+              this.if('$empty', () => this.string('E'));
+              this.if('$obj', () => this.string('B'));
+            }
+          );
+          expect(out).to.equal('LB');
+        });
+
+      it('reads a param declared with param() or supplied via withParam()',
+        async () => {
+          const out = await jtlt({
+            data: {},
+            outputType: 'string',
+            templates: [
+              {path: '$', template () {
+                this.withParam('viaWith', {value: 'x'});
+                this.callTemplate('t');
+              }},
+              {name: 't', template () {
+                this.param('viaParam', {value: 'y'});
+                this.if('$viaParam', () => this.string('P'));
+                this.if('$viaWith', () => this.string('W'));
+              }}
+            ]
+          });
+          expect(out).to.equal('PW');
+        });
+
+      it('falls back to JSONPath when the $name is not a known param',
+        async () => {
+          const out = await render({}, function () {
+            // `$unknownParam` is not declared/supplied, so it is evaluated
+            // as a (non-matching) JSONPath expression rather than throwing.
+            this.if('$unknownParam', () => this.string('nope'));
+            this.string('ok');
+          });
+          expect(out).to.equal('ok');
+        });
+
+      it('choose() routes on a runtime $param', async () => {
+        const whenOut = await render({flag: true}, function () {
+          this.choose(
+            '$flag',
+            () => this.string('when'),
+            () => this.string('otherwise')
+          );
+        });
+        const elseOut = await render({flag: 0}, function () {
+          this.choose(
+            '$flag',
+            () => this.string('when'),
+            () => this.string('otherwise')
+          );
+        });
+        expect(whenOut).to.equal('when');
+        expect(elseOut).to.equal('otherwise');
+      });
+
+      it('assert() passes on a truthy $param and throws on a falsy one',
+        async () => {
+          await render({ready: 'go'}, function () {
+            this.assert('$ready', 'must be ready');
+          });
+          let err;
+          try {
+            await render({ready: 0}, function () {
+              this.assert('$ready', 'must be ready');
+            });
+          } catch (e) {
+            err = e;
+          }
+          const msg = /** @type {Error} */ (err).message;
+          expect(msg).to.match(/must be ready/v);
+        });
+    });
+
+    describe('XPath engine', function () {
+      /**
+       * @param {Record<string, unknown>} params
+       * @param {(this: import(
+       *   '../src/XPathTransformerContext.js').default
+       * ) => void} tmpl
+       * @returns {string}
+       */
+      const render = (params, tmpl) => {
+        const doc = new JSDOM(
+          '<root/>', {contentType: 'text/xml'}
+        ).window.document;
+        const joiner = DOMJoiningTransformer.create(
+          doc.createDocumentFragment(), {document: doc}
+        );
+        const ctx = new XPathTransformerContext({
+          data: doc.documentElement, joiningTransformer: joiner, params
+        }, [{name: 't', template: tmpl}]);
+        ctx.callTemplate('t');
+        return joiner.get().textContent || '';
+      };
+
+      it('runs / skips this.if() on a runtime $param (scalar, object, array)',
+        () => {
+          expect(render({on: 1}, function () {
+            this.if('$on', () => this.string('yes'));
+          })).to.equal('yes');
+          expect(render({on: 0}, function () {
+            this.if('$on', () => this.string('yes'));
+          })).to.equal('');
+          expect(render({cfg: {}}, function () {
+            this.if('$cfg', () => this.string('obj'));
+          })).to.equal('obj');
+          expect(render({list: ['a'], none: []}, function () {
+            this.if('$list', () => this.string('L'));
+            this.if('$none', () => this.string('N'));
+          })).to.equal('L');
+        });
+
+      it('choose() and assert() honor a runtime $param', () => {
+        expect(render({flag: 'y'}, function () {
+          this.choose(
+            '$flag',
+            () => this.string('W'),
+            () => this.string('O')
+          );
+        })).to.equal('W');
+
+        expect(() => render({ok: 0}, function () {
+          this.assert('$ok', 'needed');
+        })).to.throw(/needed/v);
+      });
+
+      it('falls back to XPath when the $name is not a known param', () => {
+        expect(render({}, function () {
+          this.if('$nope', () => this.string('x'));
+          this.string('done');
+        })).to.equal('done');
+      });
+    });
+  });
