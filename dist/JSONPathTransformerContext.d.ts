@@ -854,6 +854,14 @@ declare class JSONPathTransformerContext<T extends "json" | "string" | "dom" = "
      * with `param()`, supplied via `withParam()`, or provided at runtime as
      * `config.params` — rather than a JSONPath expression.
      *
+     * The test may also be a simple binary comparison of a reference against a
+     * literal, evaluated without `eval`, e.g. `this.if('$name === "x"')` or
+     * `this.if('$.count < 50')`. The left side is a bare `$name` parameter or a
+     * plain dotted/indexed `$...` path; the operator is one of `===`, `!==`,
+     * `==`, `!=`, `<`, `<=`, `>`, `>=`; the right side is a string, number,
+     * boolean, `null`, or `undefined` literal. Anything more complex (filter
+     * expressions, function calls) is left to the JSONPath engine.
+     *
      * Truthiness rules:
      * - If the selection (with wrap) yields an array with length > 0, the
      *   condition passes.
@@ -884,6 +892,45 @@ declare class JSONPathTransformerContext<T extends "json" | "string" | "dom" = "
      * @returns {boolean}
      */
     _passesIf(select: string): boolean;
+    /**
+     * Parse a simple `<ref> <op> <literal>` comparison test (no `eval`), such
+     * as `$name === "x"` or `$.a.b < 50`. The left side must be a bare `$name`
+     * parameter reference or a plain dotted/indexed `$...` path — no filter
+     * expressions or function calls; the right side a string, number, boolean,
+     * `null`, or `undefined` literal. Returns `null` when the string is not
+     * such a comparison, so richer JSONPath expressions fall through untouched.
+     * @param {string} str
+     * @returns {{left: string, op: string, right: unknown}|null}
+     * @private
+     */
+    private _parseComparison;
+    /**
+     * Parse a JSON-ish scalar literal: a double- or single-quoted string, a
+     * number, or `true` / `false` / `null` / `undefined`. Returns `null` when
+     * `str` is none of these.
+     * @param {string} str
+     * @returns {{value: unknown}|null}
+     * @private
+     */
+    private _parseLiteral;
+    /**
+     * Resolve the left side of a simple comparison: a bare `$name` parameter
+     * reference (local, with-param, then runtime `config.params`), otherwise a
+     * plain `$...` path evaluated (unwrapped) in the current context.
+     * @param {string} ref
+     * @returns {unknown}
+     * @private
+     */
+    private _resolveComparand;
+    /**
+     * Apply a comparison operator to two already-resolved values.
+     * @param {any} a - Left operand
+     * @param {string} op - One of `===`, `!==`, `==`, `!=`, `<`, `<=`, `>`, `>=`
+     * @param {any} b - Right operand
+     * @returns {boolean}
+     * @private
+     */
+    private _compareValues;
     /**
      * Like `if()`, but also supports an optional fallback callback executed
      * when the test does not pass (similar to xsl:choose/xsl:otherwise).

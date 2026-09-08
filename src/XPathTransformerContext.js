@@ -2469,6 +2469,13 @@ class XPathTransformerContext {
    * supplied via `withParam()`, or provided at runtime as `config.params` —
    * rather than an XPath expression.
    *
+   * The test may also be a simple binary comparison of a `$name` parameter
+   * against a literal, evaluated without `eval`, e.g.
+   * `this.if('$name === "x"')` or `this.if('$count < 50')`. The operator is
+   * one of `===`, `!==`, `==`, `!=`, `<`, `<=`, `>`, `>=`; the right side is
+   * a string, number, boolean, `null`, or `undefined` literal. Anything else
+   * is left to the XPath engine.
+   *
    * Truthiness rules:
    * - Node set: length > 0 passes.
    * - Scalar: Boolean(value) must be true.
@@ -2514,12 +2521,19 @@ class XPathTransformerContext {
    */
   _passesIf (select) {
     if (typeof select === 'string') {
-      const paramRef = select.trim().match(/^\$(?<name>[\w\-]+)$/v);
+      const trimmed = select.trim();
+      const paramRef = trimmed.match(/^\$(?<name>[\w\-]+)$/v);
       if (paramRef && paramRef.groups) {
         const param = this._lookupParam(paramRef.groups.name);
         if (param.has) {
           return this._isTruthyResult(param.value);
         }
+      }
+      const cmp = this._parseComparison(trimmed);
+      if (cmp) {
+        return this._compareValues(
+          this._resolveComparand(cmp.left), cmp.op, cmp.right
+        );
       }
     }
     let passes = false;
@@ -2565,6 +2579,106 @@ class XPathTransformerContext {
       }
     }
     return passes;
+  }
+
+  /**
+   * Parse a simple `$name <op> <literal>` comparison test (no `eval`), such
+   * as `$name === "x"` or `$count < 50`. The left side must be a bare `$name`
+   * parameter reference; the right side a string, number, boolean, `null`,
+   * or `undefined` literal. Returns `null` when the string is not such a
+   * comparison, so richer XPath expressions fall through untouched.
+   * @param {string} str
+   * @returns {{left: string, op: string, right: unknown}|null}
+   * @private
+   */
+  _parseComparison (str) {
+    const m = str.match(
+      /^(?<left>\$[\w\-]+)\s*(?<op>===|!==|==|!=|<=|>=|<|>)\s*(?<right>.+)$/v
+    );
+    if (!m || !m.groups) {
+      return null;
+    }
+    const right = this._parseLiteral(m.groups.right.trim());
+    if (!right) {
+      return null;
+    }
+    return {left: m.groups.left, op: m.groups.op, right: right.value};
+  }
+
+  /**
+   * Parse a JSON-ish scalar literal: a double- or single-quoted string, a
+   * number, or `true` / `false` / `null` / `undefined`. Returns `null` when
+   * `str` is none of these.
+   * @param {string} str
+   * @returns {{value: unknown}|null}
+   * @private
+   */
+  // eslint-disable-next-line class-methods-use-this -- pure helper
+  _parseLiteral (str) {
+    if ((/^"(?:[^"\\]|\\.)*"$/v).test(str)) {
+      return {value: JSON.parse(str)};
+    }
+    if ((/^'(?:[^'\\]|\\.)*'$/v).test(str)) {
+      return {value: str.slice(1, -1).replaceAll(/\\(?=['\\])/gv, '')};
+    }
+    if ((/^-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+\-]?\d+)?$/v).test(str)) {
+      return {value: Number(str)};
+    }
+    if (str === 'true') {
+      return {value: true};
+    }
+    if (str === 'false') {
+      return {value: false};
+    }
+    if (str === 'null') {
+      return {value: null};
+    }
+    if (str === 'undefined') {
+      return {value: undefined};
+    }
+    return null;
+  }
+
+  /**
+   * Resolve the left side of a simple comparison: a bare `$name` parameter
+   * reference (local, with-param, then runtime `config.params`).
+   * @param {string} ref
+   * @returns {unknown}
+   * @private
+   */
+  _resolveComparand (ref) {
+    const paramRef = ref.match(/^\$(?<name>[\w\-]+)$/v);
+    /* c8 ignore next 3 -- `_parseComparison` only yields a `$name` left side */
+    if (!paramRef || !paramRef.groups) {
+      return undefined;
+    }
+    return this._lookupParam(paramRef.groups.name).value;
+  }
+
+  /**
+   * Apply a comparison operator to two already-resolved values.
+   * @param {any} a - Left operand
+   * @param {string} op - One of `===`, `!==`, `==`, `!=`, `<`, `<=`, `>`, `>=`
+   * @param {any} b - Right operand
+   * @returns {boolean}
+   * @private
+   */
+  // eslint-disable-next-line class-methods-use-this -- pure helper
+  _compareValues (a, op, b) {
+    /* eslint-disable eqeqeq -- `==`/`!=` are deliberately offered */
+    switch (op) {
+    case '===': return a === b;
+    case '!==': return a !== b;
+    case '==': return a == b;
+    case '!=': return a != b;
+    case '<': return a < b;
+    case '<=': return a <= b;
+    case '>': return a > b;
+    case '>=': return a >= b;
+    /* c8 ignore next -- the regex only yields the operators handled above */
+    default: return false;
+    }
+    /* eslint-enable eqeqeq -- restore */
   }
 
   /**

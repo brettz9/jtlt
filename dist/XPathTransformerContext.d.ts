@@ -734,6 +734,13 @@ declare class XPathTransformerContext<T = "dom", V = DocumentFragment | Element>
      * supplied via `withParam()`, or provided at runtime as `config.params` —
      * rather than an XPath expression.
      *
+     * The test may also be a simple binary comparison of a `$name` parameter
+     * against a literal, evaluated without `eval`, e.g.
+     * `this.if('$name === "x"')` or `this.if('$count < 50')`. The operator is
+     * one of `===`, `!==`, `==`, `!=`, `<`, `<=`, `>`, `>=`; the right side is
+     * a string, number, boolean, `null`, or `undefined` literal. Anything else
+     * is left to the XPath engine.
+     *
      * Truthiness rules:
      * - Node set: length > 0 passes.
      * - Scalar: Boolean(value) must be true.
@@ -761,6 +768,43 @@ declare class XPathTransformerContext<T = "dom", V = DocumentFragment | Element>
      * @returns {boolean}
      */
     _passesIf(select: string): boolean;
+    /**
+     * Parse a simple `$name <op> <literal>` comparison test (no `eval`), such
+     * as `$name === "x"` or `$count < 50`. The left side must be a bare `$name`
+     * parameter reference; the right side a string, number, boolean, `null`,
+     * or `undefined` literal. Returns `null` when the string is not such a
+     * comparison, so richer XPath expressions fall through untouched.
+     * @param {string} str
+     * @returns {{left: string, op: string, right: unknown}|null}
+     * @private
+     */
+    private _parseComparison;
+    /**
+     * Parse a JSON-ish scalar literal: a double- or single-quoted string, a
+     * number, or `true` / `false` / `null` / `undefined`. Returns `null` when
+     * `str` is none of these.
+     * @param {string} str
+     * @returns {{value: unknown}|null}
+     * @private
+     */
+    private _parseLiteral;
+    /**
+     * Resolve the left side of a simple comparison: a bare `$name` parameter
+     * reference (local, with-param, then runtime `config.params`).
+     * @param {string} ref
+     * @returns {unknown}
+     * @private
+     */
+    private _resolveComparand;
+    /**
+     * Apply a comparison operator to two already-resolved values.
+     * @param {any} a - Left operand
+     * @param {string} op - One of `===`, `!==`, `==`, `!=`, `<`, `<=`, `>`, `>=`
+     * @param {any} b - Right operand
+     * @returns {boolean}
+     * @private
+     */
+    private _compareValues;
     /**
      * Conditional with optional fallback (like choose/otherwise).
      * Truthiness same as `if()`.

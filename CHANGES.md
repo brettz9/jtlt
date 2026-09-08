@@ -1,5 +1,15 @@
 # jtlt CHANGES
 
+## 0.18.0
+
+- feat: `this.if()` / `choose()` / `assert()` accept a simple, non-`eval`
+  binary comparison as their test, e.g. `this.if('$name === "x"')` or
+  `this.if('$count < 50')` — a bare `$name` parameter (or, for the JSONPath
+  engine, a plain dotted/indexed `$...` path) on the left, one of
+  `===` / `!==` / `==` / `!=` / `<` / `<=` / `>` / `>=`, and a string,
+  number, boolean, `null`, or `undefined` literal on the right; anything
+  more complex is left to the JSONPath/XPath engine
+
 ## 0.17.0
 
 - feat: `this.if('$name', ...)` (and `choose()`/`assert()`) test a parameter
