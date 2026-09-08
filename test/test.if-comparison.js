@@ -54,6 +54,11 @@ describe('this.if() simple comparison operators', function () {
     });
 
     it('compares a numeric $param with < <= > >=', async () => {
+      /**
+       * @param {number} age
+       * @param {string} cond
+       * @returns {Promise<string>}
+       */
       const fires = (age, cond) => render({age}, function () {
         this.if(cond, () => this.string('hit'));
       });
@@ -128,6 +133,10 @@ describe('this.if() simple comparison operators', function () {
       });
 
     it('choose() routes on a comparison', async () => {
+      /**
+       * @param {number} age
+       * @returns {Promise<string>}
+       */
       const fires = (age) => render({age}, function () {
         this.choose(
           '$age >= 18',
@@ -152,7 +161,7 @@ describe('this.if() simple comparison operators', function () {
         } catch (e) {
           err = e;
         }
-        expect(/** @type {Error} */ (err).message).to.match(/must be positive/v);
+        expect(String(err)).to.match(/must be positive/v);
       });
 
     it('leaves a JSONPath filter expression containing < untouched',
@@ -238,6 +247,11 @@ describe('this.if() simple comparison operators', function () {
     });
 
     it('exercises every comparison operator', () => {
+      /**
+       * @param {Record<string, unknown>} params
+       * @param {string} cond
+       * @returns {string}
+       */
       const fires = (params, cond) => render(params, function () {
         this.if(cond, () => this.string('hit'));
       });
