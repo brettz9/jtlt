@@ -112,6 +112,7 @@ We'd otherwise have to refactor a great deal to maintain a buffer.
   xsl:break
   xsl:catch
   xsl:context-item
+  ~~"xsl:document",~~ (not yet exposed)
   xsl:evaluate
   xsl:expose
   "xsl:fallback",
@@ -139,6 +140,8 @@ We'd otherwise have to refactor a great deal to maintain a buffer.
   xsl:use-package
   xsl:where-populated
 
+  // Todo: Some of these may be implemented but not yet exposed
+
   ~~"xsl:analyze-string",~~
   ~~"xsl:apply-templates",~~
   ~~xsl:assert~~
@@ -151,7 +154,6 @@ We'd otherwise have to refactor a great deal to maintain a buffer.
   ~~"xsl:copy",~~
   ~~"xsl:copy-of",~~
   ~~"xsl:decimal-format",~~
-  ~~"xsl:document",~~
   ~~"xsl:element",~~
   ~~"xsl:for-each",~~
   ~~"xsl:for-each-group",~~
