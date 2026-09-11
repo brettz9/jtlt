@@ -189,7 +189,7 @@ declare class DOMJoiningTransformer<TConfig extends import('./AbstractJoiningTra
      * @overload
      * @param {Element|string} elName
      * @param {(this: DOMJoiningTransformer) => void} cb
-     * @returns {DOMJoiningTransformer}
+     * @returns {DOMJoiningTransformer|Promise<DOMJoiningTransformer>}
      */
     /**
      * @overload
@@ -203,9 +203,15 @@ declare class DOMJoiningTransformer<TConfig extends import('./AbstractJoiningTra
      *   childNodes, or callback
      * @param {(Node|string)[]|((this: DOMJoiningTransformer) => void)
      *   } [childNodes] - Child nodes or callback
-     * @param {(this: DOMJoiningTransformer) => void} [cb] - Callback
+     * @param {(this: DOMJoiningTransformer) => void} [cb] -
+     *   Callback; may be async (e.g. to `await` a `$indexedDB` fetch), in
+     *   which case `element()` itself returns a `Promise` instead of `this`.
+     *   (Typed as returning plain `void`, not `void|Promise<void>` — a union
+     *   there would lose TypeScript's usual "a void-returning callback
+     *   parameter accepts any actual return value" leniency, which existing
+     *   callers rely on for e.g. `() => this.text(...)` concise arrows.)
      * @param {string[]} [useAttributeSets] - Attribute set names to apply
-     * @returns {DOMJoiningTransformer}
+     * @returns {DOMJoiningTransformer|Promise<DOMJoiningTransformer>}
      */
     element(elName: Element | string, atts: Record<string, string>, childNodes: (Node | string)[], cb: (this: DOMJoiningTransformer) => void, useAttributeSets?: string[]): DOMJoiningTransformer;
     /**
@@ -254,7 +260,7 @@ declare class DOMJoiningTransformer<TConfig extends import('./AbstractJoiningTra
      * @overload
      * @param {Element|string} elName
      * @param {(this: DOMJoiningTransformer) => void} cb
-     * @returns {DOMJoiningTransformer}
+     * @returns {DOMJoiningTransformer|Promise<DOMJoiningTransformer>}
      */
     /**
      * @overload
@@ -268,9 +274,15 @@ declare class DOMJoiningTransformer<TConfig extends import('./AbstractJoiningTra
      *   childNodes, or callback
      * @param {(Node|string)[]|((this: DOMJoiningTransformer) => void)
      *   } [childNodes] - Child nodes or callback
-     * @param {(this: DOMJoiningTransformer) => void} [cb] - Callback
+     * @param {(this: DOMJoiningTransformer) => void} [cb] -
+     *   Callback; may be async (e.g. to `await` a `$indexedDB` fetch), in
+     *   which case `element()` itself returns a `Promise` instead of `this`.
+     *   (Typed as returning plain `void`, not `void|Promise<void>` — a union
+     *   there would lose TypeScript's usual "a void-returning callback
+     *   parameter accepts any actual return value" leniency, which existing
+     *   callers rely on for e.g. `() => this.text(...)` concise arrows.)
      * @param {string[]} [useAttributeSets] - Attribute set names to apply
-     * @returns {DOMJoiningTransformer}
+     * @returns {DOMJoiningTransformer|Promise<DOMJoiningTransformer>}
      */
     element(elName: Element | string, atts: Record<string, string>, childNodes: (Node | string)[]): DOMJoiningTransformer;
     /**
@@ -319,7 +331,7 @@ declare class DOMJoiningTransformer<TConfig extends import('./AbstractJoiningTra
      * @overload
      * @param {Element|string} elName
      * @param {(this: DOMJoiningTransformer) => void} cb
-     * @returns {DOMJoiningTransformer}
+     * @returns {DOMJoiningTransformer|Promise<DOMJoiningTransformer>}
      */
     /**
      * @overload
@@ -333,9 +345,15 @@ declare class DOMJoiningTransformer<TConfig extends import('./AbstractJoiningTra
      *   childNodes, or callback
      * @param {(Node|string)[]|((this: DOMJoiningTransformer) => void)
      *   } [childNodes] - Child nodes or callback
-     * @param {(this: DOMJoiningTransformer) => void} [cb] - Callback
+     * @param {(this: DOMJoiningTransformer) => void} [cb] -
+     *   Callback; may be async (e.g. to `await` a `$indexedDB` fetch), in
+     *   which case `element()` itself returns a `Promise` instead of `this`.
+     *   (Typed as returning plain `void`, not `void|Promise<void>` — a union
+     *   there would lose TypeScript's usual "a void-returning callback
+     *   parameter accepts any actual return value" leniency, which existing
+     *   callers rely on for e.g. `() => this.text(...)` concise arrows.)
      * @param {string[]} [useAttributeSets] - Attribute set names to apply
-     * @returns {DOMJoiningTransformer}
+     * @returns {DOMJoiningTransformer|Promise<DOMJoiningTransformer>}
      */
     element(elName: Element | string, atts: Record<string, string>, cb: (this: DOMJoiningTransformer) => void): DOMJoiningTransformer;
     /**
@@ -384,7 +402,7 @@ declare class DOMJoiningTransformer<TConfig extends import('./AbstractJoiningTra
      * @overload
      * @param {Element|string} elName
      * @param {(this: DOMJoiningTransformer) => void} cb
-     * @returns {DOMJoiningTransformer}
+     * @returns {DOMJoiningTransformer|Promise<DOMJoiningTransformer>}
      */
     /**
      * @overload
@@ -398,9 +416,15 @@ declare class DOMJoiningTransformer<TConfig extends import('./AbstractJoiningTra
      *   childNodes, or callback
      * @param {(Node|string)[]|((this: DOMJoiningTransformer) => void)
      *   } [childNodes] - Child nodes or callback
-     * @param {(this: DOMJoiningTransformer) => void} [cb] - Callback
+     * @param {(this: DOMJoiningTransformer) => void} [cb] -
+     *   Callback; may be async (e.g. to `await` a `$indexedDB` fetch), in
+     *   which case `element()` itself returns a `Promise` instead of `this`.
+     *   (Typed as returning plain `void`, not `void|Promise<void>` — a union
+     *   there would lose TypeScript's usual "a void-returning callback
+     *   parameter accepts any actual return value" leniency, which existing
+     *   callers rely on for e.g. `() => this.text(...)` concise arrows.)
      * @param {string[]} [useAttributeSets] - Attribute set names to apply
-     * @returns {DOMJoiningTransformer}
+     * @returns {DOMJoiningTransformer|Promise<DOMJoiningTransformer>}
      */
     element(elName: Element | string, atts: Record<string, string>): DOMJoiningTransformer;
     /**
@@ -449,7 +473,7 @@ declare class DOMJoiningTransformer<TConfig extends import('./AbstractJoiningTra
      * @overload
      * @param {Element|string} elName
      * @param {(this: DOMJoiningTransformer) => void} cb
-     * @returns {DOMJoiningTransformer}
+     * @returns {DOMJoiningTransformer|Promise<DOMJoiningTransformer>}
      */
     /**
      * @overload
@@ -463,9 +487,15 @@ declare class DOMJoiningTransformer<TConfig extends import('./AbstractJoiningTra
      *   childNodes, or callback
      * @param {(Node|string)[]|((this: DOMJoiningTransformer) => void)
      *   } [childNodes] - Child nodes or callback
-     * @param {(this: DOMJoiningTransformer) => void} [cb] - Callback
+     * @param {(this: DOMJoiningTransformer) => void} [cb] -
+     *   Callback; may be async (e.g. to `await` a `$indexedDB` fetch), in
+     *   which case `element()` itself returns a `Promise` instead of `this`.
+     *   (Typed as returning plain `void`, not `void|Promise<void>` — a union
+     *   there would lose TypeScript's usual "a void-returning callback
+     *   parameter accepts any actual return value" leniency, which existing
+     *   callers rely on for e.g. `() => this.text(...)` concise arrows.)
      * @param {string[]} [useAttributeSets] - Attribute set names to apply
-     * @returns {DOMJoiningTransformer}
+     * @returns {DOMJoiningTransformer|Promise<DOMJoiningTransformer>}
      */
     element(elName: Element | string, childNodes: (Node | string)[], cb: (this: DOMJoiningTransformer) => void): DOMJoiningTransformer;
     /**
@@ -514,7 +544,7 @@ declare class DOMJoiningTransformer<TConfig extends import('./AbstractJoiningTra
      * @overload
      * @param {Element|string} elName
      * @param {(this: DOMJoiningTransformer) => void} cb
-     * @returns {DOMJoiningTransformer}
+     * @returns {DOMJoiningTransformer|Promise<DOMJoiningTransformer>}
      */
     /**
      * @overload
@@ -528,9 +558,15 @@ declare class DOMJoiningTransformer<TConfig extends import('./AbstractJoiningTra
      *   childNodes, or callback
      * @param {(Node|string)[]|((this: DOMJoiningTransformer) => void)
      *   } [childNodes] - Child nodes or callback
-     * @param {(this: DOMJoiningTransformer) => void} [cb] - Callback
+     * @param {(this: DOMJoiningTransformer) => void} [cb] -
+     *   Callback; may be async (e.g. to `await` a `$indexedDB` fetch), in
+     *   which case `element()` itself returns a `Promise` instead of `this`.
+     *   (Typed as returning plain `void`, not `void|Promise<void>` — a union
+     *   there would lose TypeScript's usual "a void-returning callback
+     *   parameter accepts any actual return value" leniency, which existing
+     *   callers rely on for e.g. `() => this.text(...)` concise arrows.)
      * @param {string[]} [useAttributeSets] - Attribute set names to apply
-     * @returns {DOMJoiningTransformer}
+     * @returns {DOMJoiningTransformer|Promise<DOMJoiningTransformer>}
      */
     element(elName: Element | string, childNodes: (Node | string)[]): DOMJoiningTransformer;
     /**
@@ -579,7 +615,7 @@ declare class DOMJoiningTransformer<TConfig extends import('./AbstractJoiningTra
      * @overload
      * @param {Element|string} elName
      * @param {(this: DOMJoiningTransformer) => void} cb
-     * @returns {DOMJoiningTransformer}
+     * @returns {DOMJoiningTransformer|Promise<DOMJoiningTransformer>}
      */
     /**
      * @overload
@@ -593,20 +629,26 @@ declare class DOMJoiningTransformer<TConfig extends import('./AbstractJoiningTra
      *   childNodes, or callback
      * @param {(Node|string)[]|((this: DOMJoiningTransformer) => void)
      *   } [childNodes] - Child nodes or callback
-     * @param {(this: DOMJoiningTransformer) => void} [cb] - Callback
+     * @param {(this: DOMJoiningTransformer) => void} [cb] -
+     *   Callback; may be async (e.g. to `await` a `$indexedDB` fetch), in
+     *   which case `element()` itself returns a `Promise` instead of `this`.
+     *   (Typed as returning plain `void`, not `void|Promise<void>` — a union
+     *   there would lose TypeScript's usual "a void-returning callback
+     *   parameter accepts any actual return value" leniency, which existing
+     *   callers rely on for e.g. `() => this.text(...)` concise arrows.)
+     * @param {string[]} [useAttributeSets] - Attribute set names to apply
+     * @returns {DOMJoiningTransformer|Promise<DOMJoiningTransformer>}
+     */
+    element(elName: Element | string, cb: (this: DOMJoiningTransformer) => void): DOMJoiningTransformer | Promise<DOMJoiningTransformer>;
+    /**
+     * @overload
+     * @param {Element|string} elName
+     * @param {Record<string, string>} atts
+     * @param {(Node|string)[]} childNodes
+     * @param {(this: DOMJoiningTransformer) => void} cb
      * @param {string[]} [useAttributeSets] - Attribute set names to apply
      * @returns {DOMJoiningTransformer}
      */
-    element(elName: Element | string, cb: (this: DOMJoiningTransformer) => void): DOMJoiningTransformer;
-    /**
-     * @overload
-     * @param {Element|string} elName
-     * @param {Record<string, string>} atts
-     * @param {(Node|string)[]} childNodes
-     * @param {(this: DOMJoiningTransformer) => void} cb
-     * @param {string[]} [useAttributeSets] - Attribute set names to apply
-     * @returns {DOMJoiningTransformer}
-     */
     /**
      * @overload
      * @param {Element|string} elName
@@ -644,7 +686,7 @@ declare class DOMJoiningTransformer<TConfig extends import('./AbstractJoiningTra
      * @overload
      * @param {Element|string} elName
      * @param {(this: DOMJoiningTransformer) => void} cb
-     * @returns {DOMJoiningTransformer}
+     * @returns {DOMJoiningTransformer|Promise<DOMJoiningTransformer>}
      */
     /**
      * @overload
@@ -658,9 +700,15 @@ declare class DOMJoiningTransformer<TConfig extends import('./AbstractJoiningTra
      *   childNodes, or callback
      * @param {(Node|string)[]|((this: DOMJoiningTransformer) => void)
      *   } [childNodes] - Child nodes or callback
-     * @param {(this: DOMJoiningTransformer) => void} [cb] - Callback
+     * @param {(this: DOMJoiningTransformer) => void} [cb] -
+     *   Callback; may be async (e.g. to `await` a `$indexedDB` fetch), in
+     *   which case `element()` itself returns a `Promise` instead of `this`.
+     *   (Typed as returning plain `void`, not `void|Promise<void>` — a union
+     *   there would lose TypeScript's usual "a void-returning callback
+     *   parameter accepts any actual return value" leniency, which existing
+     *   callers rely on for e.g. `() => this.text(...)` concise arrows.)
      * @param {string[]} [useAttributeSets] - Attribute set names to apply
-     * @returns {DOMJoiningTransformer}
+     * @returns {DOMJoiningTransformer|Promise<DOMJoiningTransformer>}
      */
     element(elName: Element | string): DOMJoiningTransformer;
     /**

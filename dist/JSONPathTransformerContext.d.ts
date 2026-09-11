@@ -117,6 +117,13 @@ export type JSONPathTransformerContextConfig<T extends "json" | "string" | "dom"
     specificityPriorityResolver?: (path: string) => number;
     templates?: import('./index.js').JSONPathTemplateObject<T>[] | import('./index.js').JSONPathTemplateArray<T>[];
     /**
+     * Config-wide
+     * default for the jamilih validation strictness `compileJSONTemplate`
+     * applies to a declarative (Array) `template`, used when an entry has no
+     * `format` of its own
+     */
+    defaultTemplateFormat?: 'json' | 'javascript';
+    /**
      * Runtime parameter values
      * (like an XSLT processor's stylesheet parameters); a `param()` with a
      * matching name uses this value instead of its declared default
@@ -207,6 +214,10 @@ export type JSONPathTransformerContextConfig<T extends "json" | "string" | "dom"
  *   Priority resolver function
  * @property {import('./index.js').JSONPathTemplateObject<T>[]|
  *   import('./index.js').JSONPathTemplateArray<T>[]} [templates]
+ * @property {'json'|'javascript'} [defaultTemplateFormat] Config-wide
+ *   default for the jamilih validation strictness `compileJSONTemplate`
+ *   applies to a declarative (Array) `template`, used when an entry has no
+ *   `format` of its own
  * @property {Record<string, unknown>} [params] Runtime parameter values
  *   (like an XSLT processor's stylesheet parameters); a `param()` with a
  *   matching name uses this value instead of its declared default
@@ -363,11 +374,15 @@ declare class JSONPathTransformerContext<T extends "json" | "string" | "dom" = "
      * @param {string} select - JSONPath selector
      * @param {(this: JSONPathTransformerContext<T>,
      *   value: unknown
-     * ) => void} cb - Callback function
+     * ) => void} cb - Callback function; may be async, in which case
+     *   `forEach()` itself returns a `Promise<this>` instead of `this` from
+     *   the iteration where that first happens onward. (Typed as plain
+     *   `void`, not `void|Promise<void>` — see the note on `SimpleCallback`
+     *   in JSONJoiningTransformer.js.)
      * @param {SortSpec<V>} [sort] - Sort spec
-     * @returns {this}
+     * @returns {this|Promise<this>}
      */
-    forEach(select: string, cb: (this: JSONPathTransformerContext<T>, value: unknown) => void, sort?: SortSpec<V>): this;
+    forEach(select: string, cb: (this: JSONPathTransformerContext<T>, value: unknown) => void, sort?: SortSpec<V>): this | Promise<this>;
     /**
      * Groups items and executes callback for each group.
      * Equivalent to XSLT's xsl:for-each-group.
@@ -478,11 +493,21 @@ declare class JSONPathTransformerContext<T extends "json" | "string" | "dom" = "
      */
     copy(propertySets?: string[]): this;
     /**
+     * Bind a variable, equivalent to `xsl:variable`. Accepts the same default/
+     * value forms as `param()`/`withParam()`: a bare string (a JSONPath
+     * expression), an explicit `{select}`, or a literal `{value}` — the last
+     * for binding an already-computed value (e.g. `this.indexedDB(...)`'s
+     * result) directly, with no selector round-trip.
      * @param {string} name - Variable name
-     * @param {string} select - JSONPath selector
+     * @param {string|{select: string}|{value: unknown}} select - A JSONPath
+     *   expression string, an explicit `{select}`, or a literal `{value}`.
      * @returns {this}
      */
-    variable(name: string, select: string): this;
+    variable(name: string, select: string | {
+        select: string;
+    } | {
+        value: unknown;
+    }): this;
     /**
      * Normalize a `param()`/`withParam()` default/value argument to `{select}`
      * or `{value}`: a bare string is a JSONPath expression, `{value}` is a
@@ -493,9 +518,12 @@ declare class JSONPathTransformerContext<T extends "json" | "string" | "dom" = "
      */
     private _paramSpec;
     /**
-     * Look up a parameter by name across the active with-param scope and the
-     * runtime `config.params`, so runtime-supplied params act like XSLT global
-     * parameters (visible to every template and expression).
+     * Look up a parameter by name across the active with-param scope, any
+     * `variable()`-set value, and the runtime `config.params`, so a bare
+     * `$name` reference resolves the same way from `if()`/`choose()`/
+     * comparisons/`valueOf()` regardless of which of those set it. Runtime
+     * params act like XSLT global parameters (visible to every template and
+     * expression); `vars` is more local, matching `xsl:variable` scoping.
      * @param {string} name
      * @returns {{has: boolean, value: any}}
      * @private
@@ -761,12 +789,17 @@ declare class JSONPathTransformerContext<T extends "json" | "string" | "dom" = "
      * @param {any[]|
      *   ((this: JSONPathTransformerContext<T>) => void)} [children] -
      *   Child nodes or callback
-     * @param {(this: JSONPathTransformerContext<T>) => void} [cb] -
-     *   Callback function
+     * @param {(this: JSONPathTransformerContext<T>) => void
+     *   } [cb] - Callback function; may be async (e.g. to `await` a
+     *   `$indexedDB` fetch), in which case `element()` itself returns a
+     *   `Promise<this>` instead of `this` — check for `.then` (or `await`)
+     *   rather than assuming a synchronous return. (Typed as plain `void`,
+     *   not `void|Promise<void>` — see the note on `SimpleCallback` in
+     *   JSONJoiningTransformer.js.)
      * @param {string[]} [useAttributeSets] - Attribute set names to apply
-     * @returns {this}
+     * @returns {this|Promise<this>}
      */
-    element(name: string | Node, atts?: ElementAttsMap[T] | any[] | ((this: JSONPathTransformerContext<T>) => void), children?: any[] | ((this: JSONPathTransformerContext<T>) => void), cb?: (this: JSONPathTransformerContext<T>) => void, useAttributeSets?: string[]): this;
+    element(name: string | Node, atts?: ElementAttsMap[T] | any[] | ((this: JSONPathTransformerContext<T>) => void), children?: any[] | ((this: JSONPathTransformerContext<T>) => void), cb?: (this: JSONPathTransformerContext<T>) => void, useAttributeSets?: string[]): this | Promise<this>;
     /**
      * Adds a prefixed namespace declaration to the most recently opened
      *  element. Mirrors the joining
@@ -870,10 +903,13 @@ declare class JSONPathTransformerContext<T extends "json" | "string" | "dom" = "
      *
      * @param {string} select - JSONPath selector expression
      * @param {(this: JSONPathTransformerContext<T>)
-     *   => void} cb - Callback to invoke if condition is met
-     * @returns {this}
+     *   => void} cb - Callback to invoke if condition is met; may be async,
+     *   in which case `if()` itself returns a `Promise<this>` instead of
+     *   `this`. (Typed as plain `void`, not `void|Promise<void>` — see the
+     *   note on `SimpleCallback` in JSONJoiningTransformer.js.)
+     * @returns {this|Promise<this>}
      */
-    if(select: string, cb: (this: JSONPathTransformerContext<T>) => void): this;
+    if(select: string, cb: (this: JSONPathTransformerContext<T>) => void): this | Promise<this>;
     /**
      * Apply `if()`/`choose()`/`assert()` truthiness to an already-resolved
      * value: a non-empty result set (or single non-empty item) is truthy, a
@@ -936,12 +972,16 @@ declare class JSONPathTransformerContext<T extends "json" | "string" | "dom" = "
      * when the test does not pass (similar to xsl:choose/xsl:otherwise).
      * @param {string} select JSONPath selector
      * @param {(this: JSONPathTransformerContext<T>)
-     *   => void} whenCb Callback when condition passes
+     *   => void} whenCb Callback when condition passes; may be async, in
+     *   which case `choose()` itself returns a `Promise<this>` instead of
+     *   `this`. (Typed as plain `void`, not `void|Promise<void>` — see the
+     *   note on `SimpleCallback` in JSONJoiningTransformer.js.)
      * @param {(this: JSONPathTransformerContext<T>)
-     *   => void} [otherwiseCb] Callback when condition fails
-     * @returns {this}
+     *   => void} [otherwiseCb] Callback when condition fails; may likewise
+     *   be async.
+     * @returns {this|Promise<this>}
      */
-    choose(select: string, whenCb: (this: JSONPathTransformerContext<T>) => void, otherwiseCb?: (this: JSONPathTransformerContext<T>) => void): this;
+    choose(select: string, whenCb: (this: JSONPathTransformerContext<T>) => void, otherwiseCb?: (this: JSONPathTransformerContext<T>) => void): this | Promise<this>;
     /**
      * Assert that a test condition is true, throwing an error if it fails.
      * Equivalent to xsl:assert. Evaluates a JSONPath expression using the

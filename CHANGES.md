@@ -1,5 +1,9 @@
 # jtlt CHANGES
 
+## 0.19.0
+
+- feat: declarative jamilih node format
+
 ## 0.18.0
 
 - feat: `this.if()` / `choose()` / `assert()` accept a simple, non-`eval`

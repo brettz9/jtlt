@@ -30,9 +30,21 @@ export type TemplateObject<T, U, TCtx> = {
      */
     priority?: number;
     /**
-     * - Template function
+     * - For an Array `template` only:
+     * the jamilih validation strictness `compileJSONTemplate` applies
+     * (`isValidJamilih`'s own `format` option) — `'json'` (default) rejects
+     * live values (functions, DOM nodes, …) embedded in the structure,
+     * `'javascript'` allows them. Ignored for a function `template`. Falls
+     * back to `config.defaultTemplateFormat`, then `'json'`, when omitted.
      */
-    template: TemplateFunction<T, U, TCtx>;
+    format?: 'json' | 'javascript';
+    /**
+     * -
+     * Template function, or a declarative (jamilih-shaped) node array
+     * compiled via `compileJSONTemplate` — detected by `Array.isArray`, since
+     * a `TemplateFunction` is never an array.
+     */
+    template: TemplateFunction<T, U, TCtx> | JSONTemplateNode[];
 };
 export type TemplateFunction<T, U, TCtx> = (this: TCtx & import('./context-extensions.js').ContextExtensions, value: ResultType<U>, cfg?: {
     mode?: string;
@@ -45,8 +57,88 @@ export type XPathTemplateArray<T> = (XPathTemplateObject<T> | [
 ])[];
 export type JSONPathTemplateArray<T extends "json" | "string" | "dom"> = JSONPathTemplateObject<T> | [
     string,
-    TemplateFunction<T, "json", import('./JSONPathTransformerContext.js').default>
+    TemplateFunction<T, "json", import('./JSONPathTransformerContext.js').default> | JSONTemplateNode[]
 ];
+export type JSONElementNode = [string] | [
+    string,
+    Record<string, unknown>
+] | [
+    string,
+    JSONTemplateNode[]
+] | [
+    string,
+    Record<string, unknown>,
+    JSONTemplateNode[]
+];
+export type JSONOperationNode = [{
+    $text: unknown;
+}] | [
+    {
+        $jtltText: unknown;
+        $select?: string;
+    }
+] | [
+    {
+        $string: unknown;
+        $select?: string;
+    }
+] | [
+    {
+        $valueOf: string;
+    }
+] | [
+    {
+        $applyTemplates: string;
+        $jtltMode?: string;
+        $sort?: unknown;
+    }
+] | [
+    {
+        $if: string;
+    },
+    JSONTemplateNode[]
+] | [
+    {
+        $if: string;
+    },
+    JSONTemplateNode[],
+    JSONTemplateNode[]
+] | [
+    {
+        $forEach: string;
+        $sort?: unknown;
+    },
+    JSONTemplateNode[]
+] | [
+    {
+        $variable: string;
+        $select: string;
+    }
+] | [
+    {
+        $indexedDB: {
+            db: string;
+            store: string;
+            options?: import('./indexedDB.js').QueryOptions;
+        };
+        $as?: string;
+    }
+] | [
+    {
+        $indexedDB: {
+            db: string;
+            store: string;
+            options?: import('./indexedDB.js').QueryOptions;
+        };
+        $as?: string;
+    },
+    JSONTemplateNode[]
+] | [
+    {
+        $renderDefault: true;
+    }
+];
+export type JSONTemplateNode = string | JSONElementNode | JSONOperationNode;
 export type JoiningTransformerContract = {
     append: (item: unknown) => unknown;
     get: () => unknown;
@@ -173,9 +265,16 @@ export type BaseJTLTOptions<T, E extends boolean | undefined = false> = {
      * parameter from any template.
      */
     params?: Record<string, unknown>;
+    /**
+     * Config-wide
+     * default for an Array `template`'s jamilih validation strictness (see
+     * `TemplateObject.format`), used for any entry that doesn't specify its
+     * own `format`. Defaults to `'json'` when omitted here too.
+     */
+    defaultTemplateFormat?: 'json' | 'javascript';
 };
 export type JSONPathJTLTOptions<T extends "json" | "string" | "dom" = "json", E extends boolean | undefined = false> = BaseJTLTOptions<T, E> & {
-    templates?: JSONPathTemplateArray<T>[] | TemplateFunction<T, "json", import('./JSONPathTransformerContext.js').default<T>>;
+    templates?: JSONPathTemplateArray<T>[] | JSONPathTemplateArray<T> | TemplateFunction<T, "json", import('./JSONPathTransformerContext.js').default<T>>;
     template?: JSONPathTemplateObject<T> | TemplateFunction<T, "json", import('./JSONPathTransformerContext.js').default>;
     query?: TemplateFunction<T, "json", import('./JSONPathTransformerContext.js').default>;
     forQuery?: [string, TemplateFunction<T, "json", import('./XPathTransformerContext.js').default>];
@@ -194,263 +293,6 @@ export type XPathJTLTOptions<T extends "json" | "string" | "dom", E extends bool
     outputType?: T;
 };
 export type JTLTOptions<E extends boolean | undefined = boolean | undefined> = JSONPathJTLTOptions<"json", E> | JSONPathJTLTOptions<"string", E> | JSONPathJTLTOptions<"dom", E> | XPathJTLTOptions<"json", E> | XPathJTLTOptions<"string", E> | XPathJTLTOptions<"dom", E>;
-/**
- * Internal options extension adding private runtime state flags.
- * Not part of the public API surface but used for narrowing casts.
- * @typedef {JTLTOptions & {
- *   _customJoiningTransformer?: boolean
- * }} InternalJTLTOptions
- */
-/**
- * A template declaration whose `template` executes with `this` bound
- * to the engine-specific context type `TCtx`.
- * Either `path` must be provided (for pattern matching), or `name` must be
- * provided (for named templates callable via callTemplate), or both.
- * @template T
- * @template U
- * @template TCtx
- * @typedef {object} TemplateObject
- * @property {string} [path] - JSONPath or XPath selector for matching nodes
- * @property {string} [match] - Alias for 'path' (XSLT compatibility)
- * @property {string} [name] - Optional name for calling via callTemplate
- * @property {string} [mode] - Optional mode for template matching
- * @property {number} [priority] - Priority for template selection
- * @property {TemplateFunction<T, U, TCtx>} template - Template function
- */
-/**
- * A callable template function with an engine-specific `this`. The `this`
- * type is intersected with {@link ContextExtensions} so helpers registered
- * through the `extensions` option are visible once a consumer augments that
- * interface.
- * @template T
- * @template U
- * @template TCtx
- * @typedef {(this: TCtx &
- *     import('./context-extensions.js').ContextExtensions,
- *   value: ResultType<U>,
- *   cfg?: {mode?: string}
- * ) => ResultType<T>|void|Promise<ResultType<T>|void>} TemplateFunction
- */
-/**
- * @template {"json"|"string"|"dom"} T
- * @typedef {TemplateObject<T, "json",
- *   import('./JSONPathTransformerContext.js').default<T>
- * >} JSONPathTemplateObject
- */
-/**
- * @template T
- * @typedef {TemplateObject<T, "dom",
- *   import('./XPathTransformerContext.js').default
- * >} XPathTemplateObject
- */
-/**
- * @template T
- * @typedef {(XPathTemplateObject<T> | [string, TemplateFunction<T, "dom",
- *   import('./XPathTransformerContext.js').default
- * >])[]} XPathTemplateArray
- */
-/**
- * @template {"json"|"string"|"dom"} T
- * @typedef {JSONPathTemplateObject<T> | [string, TemplateFunction<T, "json",
- *   import('./JSONPathTransformerContext.js').default
- * >]} JSONPathTemplateArray
- */
-/**
- * The output-sink surface a custom `joiningTransformer` may provide. Only
- * `append` and `get` are required; the rest are optional because the engine
- * guards each call. The built-in joiners' `append`/`string`/… signatures
- * diverge (e.g. the DOM joiner also accepts `Node`), so under
- * `strictFunctionTypes` no single structural type is a supertype of all
- * three; this contract lists the surface with `unknown` parameters, and
- * {@link JoiningTransformer} unions it with the concrete classes so real
- * joiners still type precisely.
- * @typedef {object} JoiningTransformerContract
- * @property {(item: unknown) => unknown} append
- * @property {() => unknown} get
- * @property {(txt: string) => unknown} [text]
- * @property {(str: unknown, cb?: () => void) => unknown} [string]
- * @property {(num: unknown) => unknown} [number]
- * @property {(
- *   obj: unknown, cb?: unknown, usePropertySets?: unknown, propSets?: unknown
- * ) => unknown} [object]
- * @property {(arr: unknown, cb?: unknown) => unknown} [array]
- * @property {(
- *   name: string, atts?: unknown, children?: unknown,
- *   cb?: unknown, useAttributeSets?: unknown
- * ) => unknown} [element]
- * @property {(
- *   name: string, val: unknown, avoidAttEscape?: unknown
- * ) => unknown} [attribute]
- * @property {(text: string) => unknown} [comment]
- * @property {(
- *   target: string, data: string
- * ) => unknown} [processingInstruction]
- * @property {(str: unknown) => unknown} [plainText]
- * @property {(prop: unknown, val: unknown) => unknown} [propValue]
- * @property {(item: unknown) => unknown} [rawAppend]
- * @property {(prefix: string, namespaceURI: string) => unknown} [namespace]
- * @property {(context: unknown) => unknown} [setContext]
- * @property {(cfg: unknown) => unknown} [output]
- * @property {(cfg: unknown) => unknown} [mode]
- * @property {(cfg: unknown) => unknown} [stylesheet]
- * @property {(cfg: unknown) => unknown} [function]
- * @property {(
- *   name: string, args?: unknown[]
- * ) => unknown} [invokeFunctionByArity]
- * @property {(
- *   name: string, outputCharacters: unknown
- * ) => unknown} [characterMap]
- * @property {(name: string, attributes: unknown) => unknown} [attributeSet]
- * @property {(
- *   stylesheetPrefix: string, resultPrefix: string
- * ) => unknown} [namespaceAlias]
- */
-/**
- * One of the three built-in joiners. Used where engine internals rely on
- * concrete members (e.g. `_modeConfig`).
- * @typedef {(
- *   StringJoiningTransformer|
- *   DOMJoiningTransformer|
- *   JSONJoiningTransformer
- * )} BuiltinJoiningTransformer
- */
-/**
- * The type accepted for a config `joiningTransformer`: a built-in joiner or
- * any object implementing {@link JoiningTransformerContract}.
- * @typedef {BuiltinJoiningTransformer | JoiningTransformerContract
- * } JoiningTransformer
- */
-/**
- * @typedef {"json"|"string"|"dom"} joiningTypes
- */
-/**
- * @template T
- * @template {boolean|undefined} [E=false]
- * @typedef {T extends "json" ?
- *   (E extends true ? unknown[] : unknown) :
- *   T extends "string" ?
- *   (E extends true ? string[] : string) :
- *   (E extends true ? XMLDocument[] :
- *   DocumentFragment|Element)} ResultType
- */
-/**
- * Options common to both engines.
- * @template T
- * @template {boolean|undefined} [E=false]
- * @typedef {object} BaseJTLTOptions
- * @property {boolean} [sync] Off by default: the engine awaits any Promise a
- *   template returns (e.g. from `await this.indexedDB(...)`). Set `true` to
- *   forbid asynchrony — a template that returns a Promise then throws.
- * @property {(
- *   result: ResultType<T, E>
- * ) => ResultType<T, E>|void} [success] A callback supplied
- *   with a single argument that is the result of this instance's
- *   transform() method. When used in TypeScript, this can be made
- *   generic as `success<T>(result: T): void`.
- * @property {null|boolean|number|string|object} [data] A JSON
- *   object or DOM document (XPath)
- * @property {string} [ajaxData] URL of a JSON file to retrieve for
- * evaluation
- * @property {boolean} [errorOnEqualPriority] Whether or not to
- * report an error when equal priority templates are found
- * @property {boolean} [autostart] Whether to begin transform()
- * immediately.
- * @property {boolean} [preventEval] Whether to prevent
- * parenthetical evaluations in JSONPath. Safer if relying on user
- * input, but reduces capabilities of JSONPath.
- * @property {boolean} [unwrapSingleResult] For JSON output, whether to
- * unwrap single-element root arrays to return just the element
- * @property {E} [exposeDocuments] When true, joiners return an array
- * of complete documents: XMLDocument[] for DOM, document wrapper objects[]
- * for JSON, and string[] for string joiners. Each array element corresponds
- * to a root element built during transformation.
- * @property {string} [mode] The mode in which to begin the transform.
- * @property {(opts: JTLTOptions &
- *   Required<Pick<JTLTOptions, "joiningTransformer">>
- * ) => ResultType<T, E>} [engine] Will be based on the
- * same config as passed to this instance. Defaults to a transforming
- * function based on JSONPath and with its own set of priorities for
- * processing templates.
- * @property {null|(
- *   (path: string) => 0 | 0.5 | -0.5
- * )} [specificityPriorityResolver]
- * Callback for getting the priority by specificity
- * @property {JoiningTransformer} [joiningTransformer]
- * A concrete joining transformer instance (or custom subclass) responsible
- * for accumulating output. When omitted, one is created automatically based
- * on `outputType`.
- * @property {import('./AbstractJoiningTransformer.js').
- *   JoiningTransformerConfig<T> &
- *   {exposeDocuments?: E}} [joiningConfig] Config for the joining
- *   transformer.
- * @property {object} [parent] Parent object for context
- * @property {string} [parentProperty] Parent property name for context
- * @property {Record<string, unknown>} [params] Parameter values supplied at
- *   runtime, mirroring the stylesheet parameters an XSLT processor is handed.
- *   A `this.param(name, default)` declaration whose name appears here resolves
- *   to this value instead of its default, and `$name` references such a
- *   parameter from any template.
- */
-/**
- * JSONPath engine options with context-aware template typing.
- * @template {"json"|"string"|"dom"} [T = "json"]
- * @template {boolean|undefined} [E=false]
- * @typedef {BaseJTLTOptions<T, E> & {
- *   templates?: JSONPathTemplateArray<T>[] |
- *     TemplateFunction<T, "json",
- *     import('./JSONPathTransformerContext.js').default<T>>,
- *   template?: JSONPathTemplateObject<T> | TemplateFunction<T, "json",
- *     import('./JSONPathTransformerContext.js').default
- *   >,
- *   query?: TemplateFunction<T, "json",
- *     import('./JSONPathTransformerContext.js').default
- *   >,
- *   forQuery?: [string, TemplateFunction<T, "json",
- *     import('./XPathTransformerContext.js').default
- *   >],
- *   extensions?: Record<string, unknown> & ThisType<
- *     import('./JSONPathTransformerContext.js').default<T> &
- *     import('./context-extensions.js').ContextExtensions
- *   >,
- *   engineType?: 'jsonpath',
- *   outputType?: T
- * }} JSONPathJTLTOptions
- */
-/**
- * XPath engine options with context-aware template typing.
- * @template {"json"|"string"|"dom"} T
- * @template {boolean|undefined} [E=false]
- * @typedef {BaseJTLTOptions<T, E> & {
- *   templates?: XPathTemplateArray<T> |
- *     TemplateFunction<T, "dom",
- *       import('./XPathTransformerContext.js').default<T>>,
- *   template?: XPathTemplateObject<T> | TemplateFunction<T, "dom",
- *     import('./XPathTransformerContext.js').default
- *   >,
- *   query?: TemplateFunction<T, "dom",
- *     import('./XPathTransformerContext.js').default
- *   >,
- *   forQuery?: [string, TemplateFunction<T, "dom",
- *     import('./JSONPathTransformerContext.js').default
- *   >],
- *   extensions?: Record<string, unknown> & ThisType<
- *     import('./XPathTransformerContext.js').default &
- *     import('./context-extensions.js').ContextExtensions
- *   >,
- *   engineType: 'xpath',
- *   xpathVersion?: 1|2|3.1,
- *   outputType?: T
- * }} XPathJTLTOptions
- */
-/**
- * @template {boolean|undefined} [E=boolean|undefined]
- * @typedef {JSONPathJTLTOptions<"json", E> |
- *   JSONPathJTLTOptions<"string", E> |
- *   JSONPathJTLTOptions<"dom", E> |
- *   XPathJTLTOptions<"json", E>|
- *   XPathJTLTOptions<"string", E>|
- *   XPathJTLTOptions<"dom", E>} JTLTOptions
- */
 /**
  * High-level façade for running a JTLT transform.
  *
@@ -522,5 +364,6 @@ export { default as JSONPathTransformerContext } from './JSONPathTransformerCont
 export { default as JSONPathTransformer } from './JSONPathTransformer.js';
 export { default as XPathTransformerContext } from './XPathTransformerContext.js';
 export { default as XPathTransformer } from './XPathTransformer.js';
+export { compileJSONTemplate, isJSONTemplateNodeArray, validateJSONTemplate } from './jsonTemplate.js';
 export default JTLT;
 //# sourceMappingURL=index.d.ts.map

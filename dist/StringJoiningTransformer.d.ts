@@ -204,11 +204,16 @@ declare class StringJoiningTransformer<T extends import('./AbstractJoiningTransf
      * @param {string|Element} elem - Element name or element object
      * @param {ElementAttributes} [atts] - Element attributes
      * @param {any[]} [childNodes] - Child nodes
-     * @param {(this: StringJoiningTransformer) => void} [cb] - Callback function
+     * @param {(this: StringJoiningTransformer) => void} [cb] -
+     *   Callback function; may be async (e.g. to `await` a `$indexedDB`
+     *   fetch), in which case `element()` itself returns a `Promise` instead
+     *   of `this` — check for `.then` (or `await`) rather than assuming a
+     *   synchronous return. (Typed as plain `void`, not `void|Promise<void>`
+     *   — see the note on `SimpleCallback` in JSONJoiningTransformer.js.)
      * @param {string[]} [useAttributeSets] - Attribute set names to apply
-     * @returns {StringJoiningTransformer}
+     * @returns {StringJoiningTransformer|Promise<StringJoiningTransformer>}
      */
-    element(elem: string | Element, atts?: ElementAttributes, childNodes?: any[], cb?: (this: StringJoiningTransformer) => void, useAttributeSets?: string[]): StringJoiningTransformer;
+    element(elem: string | Element, atts?: ElementAttributes, childNodes?: any[], cb?: (this: StringJoiningTransformer) => void, useAttributeSets?: string[]): StringJoiningTransformer | Promise<StringJoiningTransformer>;
     /**
      * @param {string} prefix
      * @param {string} namespaceURI

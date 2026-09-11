@@ -212,11 +212,13 @@ declare class JSONJoiningTransformer<TConfig extends import('./AbstractJoiningTr
      * @param {ElementAttributes|any[]|SimpleCallback} [atts]
      *   Attrs, children, or cb.
      * @param {any[]|SimpleCallback} [childNodes] Children or cb.
-     * @param {SimpleCallback} [cb] Builder callback.
+     * @param {SimpleCallback} [cb] Builder callback; may be async (e.g. to
+     *   `await` a `$indexedDB` fetch), in which case `element()` itself
+     *   returns a `Promise` instead of `this`.
      * @param {string[]} [useAttributeSets] - Attribute set names to apply
-     * @returns {JSONJoiningTransformer}
+     * @returns {JSONJoiningTransformer|Promise<JSONJoiningTransformer>}
      */
-    element(elem: string | Element, atts?: ElementAttributes | any[] | SimpleCallback, childNodes?: any[] | SimpleCallback, cb?: SimpleCallback, useAttributeSets?: string[]): JSONJoiningTransformer;
+    element(elem: string | Element, atts?: ElementAttributes | any[] | SimpleCallback, childNodes?: any[] | SimpleCallback, cb?: SimpleCallback, useAttributeSets?: string[]): JSONJoiningTransformer | Promise<JSONJoiningTransformer>;
     /**
      * @param {string} prefix
      * @param {string} namespaceURI
