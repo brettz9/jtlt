@@ -2,9 +2,11 @@ import * as JHTML from 'jhtml';
 import AbstractJoiningTransformer from './AbstractJoiningTransformer.js';
 
 /**
- * @callback SimpleCallback
- * @this {DOMJoiningTransformer}
- * @returns {void}
+ * A `@callback` tag combined with `@this` mis-emits in `dist/*.d.ts` (the
+ * `@this` type lands as raw, unparsed JSDoc text) — see the equivalent note
+ * in `JSONJoiningTransformer.js`; this inline `@typedef {(this: ...) =>
+ * ...}` function-type form emits correctly instead.
+ * @typedef {(this: DOMJoiningTransformer) => void} SimpleCallback
  */
 
 /* eslint-disable @stylistic/max-len -- Long */

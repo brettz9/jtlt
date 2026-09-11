@@ -20,9 +20,11 @@ import AbstractJoiningTransformer from './AbstractJoiningTransformer.js';
  */
 
 /**
- * @callback SimpleCallback
- * @this {StringJoiningTransformer}
- * @returns {void}
+ * A `@callback` tag combined with `@this` mis-emits in `dist/*.d.ts` (the
+ * `@this` type lands as raw, unparsed JSDoc text) — see the equivalent note
+ * in `JSONJoiningTransformer.js`; this inline `@typedef {(this: ...) =>
+ * ...}` function-type form emits correctly instead.
+ * @typedef {(this: StringJoiningTransformer) => void} SimpleCallback
  */
 
 const camelCase = /[a-z][A-Z]/gv;

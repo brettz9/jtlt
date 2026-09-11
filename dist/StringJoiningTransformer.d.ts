@@ -13,8 +13,7 @@ export type OutputConfig = {
     method?: "xml" | "html" | "text" | "json" | "xhtml";
     useCharacterMaps?: string[];
 };
-export type SimpleCallback = (@this {StringJoiningTransformer}
- * : StringJoiningTransformer) => void;
+export type SimpleCallback = (this: StringJoiningTransformer) => void;
 export type ElementAttributes = Record<string, unknown> & {
     dataset?: Record<string, string>;
     $a?: Array<[string, string]>;

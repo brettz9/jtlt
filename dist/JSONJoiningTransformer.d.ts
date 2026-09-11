@@ -1,12 +1,7 @@
 import AbstractJoiningTransformer from './AbstractJoiningTransformer.js';
-export type ObjectCallback = (@this {JSONJoiningTransformer}
- * : JSONJoiningTransformer, obj: Record<string, unknown>) => void;
-export type ArrayCallback = (@this {JSONJoiningTransformer}
- * : JSONJoiningTransformer, arr: any[]) => void;
-export type SimpleCallback<T = "json"> = (@this {T extends "json" ? JSONJoiningTransformer :
- *   T extends "string" ? import('./StringJoiningTransformer.js').default
- *   : import('./DOMJoiningTransformer.js').default}
- * : T extends "json" ? JSONJoiningTransformer : T extends "string" ? import('./StringJoiningTransformer.js').default : import('./DOMJoiningTransformer.js').default) => void;
+export type ObjectCallback = (this: JSONJoiningTransformer, obj: Record<string, unknown>) => void;
+export type ArrayCallback = (this: JSONJoiningTransformer, arr: any[]) => void;
+export type SimpleCallback<T = "json"> = (this: T extends "json" ? JSONJoiningTransformer : T extends "string" ? import('./StringJoiningTransformer.js').default : import('./DOMJoiningTransformer.js').default) => void;
 export type ElementAttributes = Record<string, unknown> & {
     dataset?: Record<string, string>;
     $a?: [string, string][];
@@ -16,24 +11,26 @@ export type ElementInfo = {
     jmlChildren: unknown[];
 };
 /**
- * @callback ObjectCallback
- * @this {JSONJoiningTransformer}
- * @param {Record<string, unknown>} obj
- * @returns {void}
+ * A `@callback` tag combined with `@this` mis-emits in `dist/*.d.ts`
+ * (verified against `tsc`'s declaration output — the `@this` type lands as
+ * raw, unparsed JSDoc text rather than being converted to a proper `this:`
+ * function-type parameter); the equivalent inline `@typedef {(this: ...) =>
+ * ...}` function-type form (already used elsewhere, e.g. `TemplateFunction`
+ * in `index.js`) emits correctly, so these three use that form instead.
+ * @typedef {(
+ *   this: JSONJoiningTransformer, obj: Record<string, unknown>
+ * ) => void} ObjectCallback
  */
 /**
- * @callback ArrayCallback
- * @this {JSONJoiningTransformer}
- * @param {any[]} arr
- * @returns {void}
+ * @typedef {(this: JSONJoiningTransformer, arr: any[]) => void} ArrayCallback
  */
 /**
  * @template [T = "json"]
- * @callback SimpleCallback
- * @this {T extends "json" ? JSONJoiningTransformer :
- *   T extends "string" ? import('./StringJoiningTransformer.js').default
- *   : import('./DOMJoiningTransformer.js').default}
- * @returns {void}
+ * @typedef {(
+ *   this: T extends "json" ? JSONJoiningTransformer :
+ *     T extends "string" ? import('./StringJoiningTransformer.js').default
+ *     : import('./DOMJoiningTransformer.js').default
+ * ) => void} SimpleCallback
  */
 /**
  * Attributes object for element() allowing standard string attributes

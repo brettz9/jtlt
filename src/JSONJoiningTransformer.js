@@ -11,24 +11,26 @@ function _makeDatasetAttribute (n0) {
 }
 
 /**
- * @callback ObjectCallback
- * @this {JSONJoiningTransformer}
- * @param {Record<string, unknown>} obj
- * @returns {void}
+ * A `@callback` tag combined with `@this` mis-emits in `dist/*.d.ts`
+ * (verified against `tsc`'s declaration output — the `@this` type lands as
+ * raw, unparsed JSDoc text rather than being converted to a proper `this:`
+ * function-type parameter); the equivalent inline `@typedef {(this: ...) =>
+ * ...}` function-type form (already used elsewhere, e.g. `TemplateFunction`
+ * in `index.js`) emits correctly, so these three use that form instead.
+ * @typedef {(
+ *   this: JSONJoiningTransformer, obj: Record<string, unknown>
+ * ) => void} ObjectCallback
  */
 /**
- * @callback ArrayCallback
- * @this {JSONJoiningTransformer}
- * @param {any[]} arr
- * @returns {void}
+ * @typedef {(this: JSONJoiningTransformer, arr: any[]) => void} ArrayCallback
  */
 /**
  * @template [T = "json"]
- * @callback SimpleCallback
- * @this {T extends "json" ? JSONJoiningTransformer :
- *   T extends "string" ? import('./StringJoiningTransformer.js').default
- *   : import('./DOMJoiningTransformer.js').default}
- * @returns {void}
+ * @typedef {(
+ *   this: T extends "json" ? JSONJoiningTransformer :
+ *     T extends "string" ? import('./StringJoiningTransformer.js').default
+ *     : import('./DOMJoiningTransformer.js').default
+ * ) => void} SimpleCallback
  */
 // Kept as plain `void` (not `void|Promise<void>`) rather than a union:
 // TypeScript's "a void-returning callback parameter accepts any actual

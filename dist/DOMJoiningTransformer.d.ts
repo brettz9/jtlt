@@ -1,10 +1,11 @@
 import AbstractJoiningTransformer from './AbstractJoiningTransformer.js';
-export type SimpleCallback = (@this {DOMJoiningTransformer}
- * : DOMJoiningTransformer) => void;
+export type SimpleCallback = (this: DOMJoiningTransformer) => void;
 /**
- * @callback SimpleCallback
- * @this {DOMJoiningTransformer}
- * @returns {void}
+ * A `@callback` tag combined with `@this` mis-emits in `dist/*.d.ts` (the
+ * `@this` type lands as raw, unparsed JSDoc text) — see the equivalent note
+ * in `JSONJoiningTransformer.js`; this inline `@typedef {(this: ...) =>
+ * ...}` function-type form emits correctly instead.
+ * @typedef {(this: DOMJoiningTransformer) => void} SimpleCallback
  */
 /**
  * Joining transformer that accumulates into a DOM tree.
