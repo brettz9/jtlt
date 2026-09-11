@@ -99,6 +99,10 @@ const escapeRegexReplacement = (string) => {
  *   Priority resolver function
  * @property {import('./index.js').JSONPathTemplateObject<T>[]|
  *   import('./index.js').JSONPathTemplateArray<T>[]} [templates]
+ * @property {'json'|'javascript'} [defaultTemplateFormat] Config-wide
+ *   default for the jamilih validation strictness `compileJSONTemplate`
+ *   applies to a declarative (Array) `template`, used when an entry has no
+ *   `format` of its own
  * @property {Record<string, unknown>} [params] Runtime parameter values
  *   (like an XSLT processor's stylesheet parameters); a `param()` with a
  *   matching name uses this value instead of its declared default
@@ -609,26 +613,40 @@ class JSONPathTransformerContext {
       that._parent = parent;
       that._parentProperty = (parentProperty ?? that._parentProperty);
 
-      // Set up parameter context for valueOf() access in templates
+      // Set up parameter context for valueOf() access in templates. `vars`
+      // is reset too — matching XSLT's `xsl:variable`/`xsl:param` scoping,
+      // a `variable()` set in the calling template must not leak into (or
+      // be leaked into by) a separately applied/matched template.
       const prevTemplateParams = that._params;
+      const prevTemplateVars = that.vars;
       that._params = {0: value, ...appliedParams};
+      that.vars = {};
 
+      // `template` is always a function here: a declarative (jamilih-shaped)
+      // Array is compiled to one up front, by JSONPathTransformer's
+      // constructor.
+      const {template: matchedTemplateFn} =
+        /**
+         * @type {import('./index.js').JSONPathTemplateObject<T> &
+         *   {template: import('./index.js').
+         *     TemplateFunction<T, "json", JSONPathTransformerContext<T>>}}
+         */ (
+          templateObj
+        );
       /**
        * The template may return synchronously or return a Promise (e.g. from
        * `await this.indexedDB(...)`), which is awaited unless `config.sync`.
        * @type {any}
        */
-      const ret =
-        /** @type {import('./index.js').JSONPathTemplateObject<T>} */ (
-          templateObj
-        ).template.call(
-          // `this` carries runtime `extensions`; a consumer's
-          // `ContextExtensions` augmentation would otherwise reject `that`.
-          /** @type {any} */ (that), value, {mode, parent, parentProperty}
-        );
+      const ret = matchedTemplateFn.call(
+        // `this` carries runtime `extensions`; a consumer's
+        // `ContextExtensions` augmentation would otherwise reject `that`.
+        /** @type {any} */ (that), value, {mode, parent, parentProperty}
+      );
 
-      // Restore previous parameter context
+      // Restore previous parameter/variable context
       that._params = prevTemplateParams;
+      that.vars = prevTemplateVars;
       if (ret !== null && typeof ret !== 'undefined' &&
           typeof ret.then === 'function') {
         if (that._config.sync) {
@@ -643,6 +661,7 @@ class JSONPathTransformerContext {
         // eslint-disable-next-line promise/prefer-await-to-then, consistent-return -- intentional dynamic sync/async
         return ret.then((/** @type {any} */ resolvedRet) => {
           that._params = prevTemplateParams;
+          that.vars = prevTemplateVars;
           if (typeof resolvedRet !== 'undefined') {
             const joiner = that._getJoiningTransformer();
             /* c8 ignore start -- _openTagState only on
@@ -726,11 +745,16 @@ class JSONPathTransformerContext {
     }
     withParams ||= [];
 
-    // Store parameters in a temporary context for valueOf() access
+    // Store parameters in a temporary context for valueOf() access. `vars`
+    // is reset too, matching XSLT's `xsl:variable`/`xsl:param` scoping: a
+    // called template gets a fresh scope, not the caller's `variable()`
+    // values, and its own don't leak back once it returns.
     const prevParams = this._params;
+    const prevVars = this.vars;
     /** @type {Record<string, any>} */
     const params = {};
     this._params = params;
+    this.vars = {};
 
     // Params staged via `this.withParam()` seed the set; explicit `withParam`
     // entries below override any of the same name (`xsl:with-param`).
@@ -759,7 +783,16 @@ class JSONPathTransformerContext {
       );
     }
 
-    const result = templateObj.template.call(
+    // `template` is always a function here: a declarative (jamilih-shaped)
+    // Array is compiled to one up front, by JSONPathTransformer's
+    // constructor.
+    const {template: namedTemplateFn} =
+      /**
+       * @type {import('./index.js').JSONPathTemplateObject<T> &
+       *   {template: import('./index.js').
+       *     TemplateFunction<T, "json", JSONPathTransformerContext<T>>}}
+       */ (templateObj);
+    const result = namedTemplateFn.call(
       // `this` carries runtime `extensions`; a consumer's `ContextExtensions`
       // augmentation would otherwise reject the bare context.
       /** @type {any} */ (this), this._contextObj, {}
@@ -768,8 +801,9 @@ class JSONPathTransformerContext {
       /** @type {any} */ (results).append(result);
     }
 
-    // Restore previous parameter context
+    // Restore previous parameter/variable context
     this._params = prevParams;
+    this.vars = prevVars;
 
     return this;
   }
@@ -781,21 +815,38 @@ class JSONPathTransformerContext {
    * @param {string} select - JSONPath selector
    * @param {(this: JSONPathTransformerContext<T>,
    *   value: unknown
-   * ) => void} cb - Callback function
+   * ) => void} cb - Callback function; may be async, in which case
+   *   `forEach()` itself returns a `Promise<this>` instead of `this` from
+   *   the iteration where that first happens onward. (Typed as plain
+   *   `void`, not `void|Promise<void>` — see the note on `SimpleCallback`
+   *   in JSONJoiningTransformer.js.)
    * @param {SortSpec<V>} [sort] - Sort spec
-   * @returns {this}
+   * @returns {this|Promise<this>}
    */
   forEach (select, cb, sort) {
     // eslint-disable-next-line unicorn/no-this-assignment -- Temporary
     const that = this;
+    // A bare `$name` (matching `if()`/`valueOf()`/comparisons' own
+    // convention — no trailing path) resolves against the param/var scope
+    // and iterates its value directly: jsonpath-plus has no notion of a
+    // named root to continue a path from (`$name[*]` is not `$.name[*]`),
+    // and XPath's data model treats a non-array value as a length-1
+    // sequence, so a scalar/object here becomes a single iteration.
+    const paramRef = select.trim().match(/^\$(?<name>[\w\-]+)$/v);
+    const param = paramRef && paramRef.groups
+      ? this._lookupParam(paramRef.groups.name)
+      : {has: false, value: undefined};
     /** @type {{value: any}[]} */
-    const matches = /** @type {any} */ (jsonpath)({
-      path: select,
-      json: this._contextObj,
-      preventEval: this._config.preventEval,
-      wrap: true,
-      resultType: 'all'
-    });
+    const matches = param.has
+      ? (Array.isArray(param.value) ? param.value : [param.value]).
+        map((value) => ({value}))
+      : /** @type {any} */ (jsonpath)({
+        path: select,
+        json: this._contextObj,
+        preventEval: this._config.preventEval,
+        wrap: true,
+        resultType: 'all'
+      });
 
     /**
      * @param {string} expr
@@ -896,19 +947,70 @@ class JSONPathTransformerContext {
 
     const comparator = feBuildComparator(sort);
     const list = comparator ? [...matches].toSorted(comparator) : matches;
-    for (const m of list) {
-      // Set up parameter context for valueOf() access
+    for (const [idx, m] of list.entries()) {
+      // Set up parameter context for valueOf() access. `vars` gets a fresh
+      // scope per iteration too, matching `xsl:for-each`: a `variable()` set
+      // for one item must not leak into (or be seen by) the next.
       const prevParams = that._params;
       const prevContext = that._contextObj;
+      const prevVars = that.vars;
       that._params = {0: m.value};
       that._contextObj = m.value;
+      that.vars = {};
+      // `cb`'s declared return type is plain `void` (see the parameter's
+      // JSDoc) — cast here to duck-type the real value; see the note on
+      // `SimpleCallback` in JSONJoiningTransformer.js.
+      /** @type {any} */
+      let cbResult;
       try {
-        cb.call(that, m.value);
-      } finally {
-        // Restore previous parameter context
+        cbResult = cb.call(that, m.value);
+      } catch (err) {
         that._params = prevParams;
         that._contextObj = prevContext;
+        that.vars = prevVars;
+        throw err;
       }
+      if (cbResult && typeof cbResult.then === 'function') {
+        // `cb` turned out to be async (e.g. it awaits a `$indexedDB`
+        // fetch): finish the remaining items sequentially, awaiting each,
+        // rather than the plain synchronous loop above — which is used for
+        // as long as every `cb` call keeps returning synchronously.
+        const remaining = list.slice(idx + 1);
+        // eslint-disable-next-line promise/prefer-await-to-then -- see above
+        return cbResult.then(async () => {
+          that._params = prevParams;
+          that._contextObj = prevContext;
+          that.vars = prevVars;
+          for (const next of remaining) {
+            const pp = that._params;
+            const pc = that._contextObj;
+            const pv = that.vars;
+            that._params = {0: next.value};
+            that._contextObj = next.value;
+            that.vars = {};
+            try {
+              // eslint-disable-next-line no-await-in-loop -- Sequential order
+              await cb.call(that, next.value);
+              // eslint-disable-next-line promise/always-return -- see above
+            } finally {
+              that._params = pp;
+              that._contextObj = pc;
+              that.vars = pv;
+            }
+          }
+          return that;
+        // eslint-disable-next-line promise/prefer-await-to-then -- see above
+        }).catch((/** @type {any} */ err) => {
+          that._params = prevParams;
+          that._contextObj = prevContext;
+          that.vars = prevVars;
+          throw err;
+        });
+      }
+      // Restore previous parameter/variable context
+      that._params = prevParams;
+      that._contextObj = prevContext;
+      that.vars = prevVars;
     }
     return this;
   }
@@ -1000,6 +1102,8 @@ class JSONPathTransformerContext {
         const actualKey = key === null && keyStr === 'null' ? undefined : key;
         const prevContext = this._contextObj;
         const prevParams = this._params;
+        const prevVars = this.vars;
+        this.vars = {};
         try {
           this._contextObj = items;
           // Provide currentGroup() and currentGroupingKey() via context
@@ -1009,6 +1113,7 @@ class JSONPathTransformerContext {
         } finally {
           this._contextObj = prevContext;
           this._params = prevParams;
+          this.vars = prevVars;
           delete /** @type {any} */ (this)._currentGroup;
           delete /** @type {any} */ (this)._currentGroupingKey;
         }
@@ -1027,6 +1132,8 @@ class JSONPathTransformerContext {
           if (currentGroup.length > 0) {
             const prevContext = this._contextObj;
             const prevParams = this._params;
+            const prevVars = this.vars;
+            this.vars = {};
             try {
               this._contextObj = currentGroup;
               /** @type {any} */ (this)._currentGroup = currentGroup;
@@ -1041,6 +1148,7 @@ class JSONPathTransformerContext {
             } finally {
               this._contextObj = prevContext;
               this._params = prevParams;
+              this.vars = prevVars;
               delete /** @type {any} */ (this)._currentGroup;
               delete /** @type {any} */ (this)._currentGroupingKey;
             }
@@ -1056,6 +1164,8 @@ class JSONPathTransformerContext {
       if (currentGroup.length > 0) {
         const prevContext = this._contextObj;
         const prevParams = this._params;
+        const prevVars = this.vars;
+        this.vars = {};
         try {
           this._contextObj = currentGroup;
           /** @type {any} */ (this)._currentGroup = currentGroup;
@@ -1070,6 +1180,7 @@ class JSONPathTransformerContext {
         } finally {
           this._contextObj = prevContext;
           this._params = prevParams;
+          this.vars = prevVars;
           delete /** @type {any} */ (this)._currentGroup;
           delete /** @type {any} */ (this)._currentGroupingKey;
         }
@@ -1084,6 +1195,8 @@ class JSONPathTransformerContext {
         if (startMatch && currentGroup.length > 0) {
           const prevContext = this._contextObj;
           const prevParams = this._params;
+          const prevVars = this.vars;
+          this.vars = {};
           try {
             this._contextObj = currentGroup;
             /** @type {any} */ (this)._currentGroup = currentGroup;
@@ -1091,6 +1204,7 @@ class JSONPathTransformerContext {
           } finally {
             this._contextObj = prevContext;
             this._params = prevParams;
+            this.vars = prevVars;
             delete /** @type {any} */ (this)._currentGroup;
           }
           currentGroup = [];
@@ -1102,6 +1216,8 @@ class JSONPathTransformerContext {
       if (currentGroup.length > 0) {
         const prevContext = this._contextObj;
         const prevParams = this._params;
+        const prevVars = this.vars;
+        this.vars = {};
         try {
           this._contextObj = currentGroup;
           /** @type {any} */ (this)._currentGroup = currentGroup;
@@ -1109,6 +1225,7 @@ class JSONPathTransformerContext {
         } finally {
           this._contextObj = prevContext;
           this._params = prevParams;
+          this.vars = prevVars;
           delete /** @type {any} */ (this)._currentGroup;
         }
       }
@@ -1123,6 +1240,8 @@ class JSONPathTransformerContext {
         if (endMatch) {
           const prevContext = this._contextObj;
           const prevParams = this._params;
+          const prevVars = this.vars;
+          this.vars = {};
           try {
             this._contextObj = currentGroup;
             /** @type {any} */ (this)._currentGroup = currentGroup;
@@ -1130,6 +1249,7 @@ class JSONPathTransformerContext {
           } finally {
             this._contextObj = prevContext;
             this._params = prevParams;
+            this.vars = prevVars;
             delete /** @type {any} */ (this)._currentGroup;
           }
           currentGroup = [];
@@ -1140,6 +1260,8 @@ class JSONPathTransformerContext {
       if (currentGroup.length > 0) {
         const prevContext = this._contextObj;
         const prevParams = this._params;
+        const prevVars = this.vars;
+        this.vars = {};
         try {
           this._contextObj = currentGroup;
           /** @type {any} */ (this)._currentGroup = currentGroup;
@@ -1147,6 +1269,7 @@ class JSONPathTransformerContext {
         } finally {
           this._contextObj = prevContext;
           this._params = prevParams;
+          this.vars = prevVars;
           delete /** @type {any} */ (this)._currentGroup;
         }
       }
@@ -1645,12 +1768,18 @@ class JSONPathTransformerContext {
   }
 
   /**
+   * Bind a variable, equivalent to `xsl:variable`. Accepts the same default/
+   * value forms as `param()`/`withParam()`: a bare string (a JSONPath
+   * expression), an explicit `{select}`, or a literal `{value}` — the last
+   * for binding an already-computed value (e.g. `this.indexedDB(...)`'s
+   * result) directly, with no selector round-trip.
    * @param {string} name - Variable name
-   * @param {string} select - JSONPath selector
+   * @param {string|{select: string}|{value: unknown}} select - A JSONPath
+   *   expression string, an explicit `{select}`, or a literal `{value}`.
    * @returns {this}
    */
   variable (name, select) {
-    this.vars[name] = this.get(select, false);
+    this.vars[name] = this._resolveParam(this._paramSpec(select));
     return this;
   }
 
@@ -1675,9 +1804,12 @@ class JSONPathTransformerContext {
   }
 
   /**
-   * Look up a parameter by name across the active with-param scope and the
-   * runtime `config.params`, so runtime-supplied params act like XSLT global
-   * parameters (visible to every template and expression).
+   * Look up a parameter by name across the active with-param scope, any
+   * `variable()`-set value, and the runtime `config.params`, so a bare
+   * `$name` reference resolves the same way from `if()`/`choose()`/
+   * comparisons/`valueOf()` regardless of which of those set it. Runtime
+   * params act like XSLT global parameters (visible to every template and
+   * expression); `vars` is more local, matching `xsl:variable` scoping.
    * @param {string} name
    * @returns {{has: boolean, value: any}}
    * @private
@@ -1685,6 +1817,9 @@ class JSONPathTransformerContext {
   _lookupParam (name) {
     if (this._params && Object.hasOwn(this._params, name)) {
       return {has: true, value: this._params[name]};
+    }
+    if (Object.hasOwn(this.vars, name)) {
+      return {has: true, value: this.vars[name]};
     }
     if (Object.hasOwn(this._runtimeParams, name)) {
       return {has: true, value: this._runtimeParams[name]};
@@ -2328,13 +2463,17 @@ class JSONPathTransformerContext {
         });
 
         // Evaluate the JSONPath expression with bound variables
-        // Temporarily set _params so expressions can access them
+        // Temporarily set _params so expressions can access them; `vars` is
+        // scoped fresh too, matching a called `xsl:function`'s own scope.
         const oldParams = this._params;
+        const oldVars = this.vars;
         this._params = variables;
+        this.vars = {};
         try {
           return this.get(sequence, false);
         } finally {
           this._params = oldParams;
+          this.vars = oldVars;
         }
       }
       : body;
@@ -2370,15 +2509,24 @@ class JSONPathTransformerContext {
    * @param {any[]|
    *   ((this: JSONPathTransformerContext<T>) => void)} [children] -
    *   Child nodes or callback
-   * @param {(this: JSONPathTransformerContext<T>) => void} [cb] -
-   *   Callback function
+   * @param {(this: JSONPathTransformerContext<T>) => void
+   *   } [cb] - Callback function; may be async (e.g. to `await` a
+   *   `$indexedDB` fetch), in which case `element()` itself returns a
+   *   `Promise<this>` instead of `this` — check for `.then` (or `await`)
+   *   rather than assuming a synchronous return. (Typed as plain `void`,
+   *   not `void|Promise<void>` — see the note on `SimpleCallback` in
+   *   JSONJoiningTransformer.js.)
    * @param {string[]} [useAttributeSets] - Attribute set names to apply
-   * @returns {this}
+   * @returns {this|Promise<this>}
    */
   element (name, atts, children, cb, useAttributeSets) {
-    /** @type {any} */ (this._getJoiningTransformer()).element(
+    const ret = /** @type {any} */ (this._getJoiningTransformer()).element(
       name, atts, children, cb, useAttributeSets
     );
+    if (ret && typeof ret.then === 'function') {
+      // eslint-disable-next-line promise/prefer-await-to-then -- Not async
+      return ret.then(() => this);
+    }
     return this;
   }
 
@@ -2569,13 +2717,23 @@ class JSONPathTransformerContext {
    *
    * @param {string} select - JSONPath selector expression
    * @param {(this: JSONPathTransformerContext<T>)
-   *   => void} cb - Callback to invoke if condition is met
-   * @returns {this}
+   *   => void} cb - Callback to invoke if condition is met; may be async,
+   *   in which case `if()` itself returns a `Promise<this>` instead of
+   *   `this`. (Typed as plain `void`, not `void|Promise<void>` — see the
+   *   note on `SimpleCallback` in JSONJoiningTransformer.js.)
+   * @returns {this|Promise<this>}
    */
   if (select, cb) {
     const passes = this._passesIf(select);
     if (passes && typeof cb === 'function') {
-      cb.call(this);
+      // `cb`'s declared return type is plain `void` — cast here to
+      // duck-type the real value; see the note on `SimpleCallback` in
+      // JSONJoiningTransformer.js.
+      const ret = /** @type {any} */ (cb.call(this));
+      if (ret && typeof ret.then === 'function') {
+        // eslint-disable-next-line promise/prefer-await-to-then -- Not async
+        return ret.then(() => this);
+      }
     }
     return this;
   }
@@ -2749,19 +2907,32 @@ class JSONPathTransformerContext {
    * when the test does not pass (similar to xsl:choose/xsl:otherwise).
    * @param {string} select JSONPath selector
    * @param {(this: JSONPathTransformerContext<T>)
-   *   => void} whenCb Callback when condition passes
+   *   => void} whenCb Callback when condition passes; may be async, in
+   *   which case `choose()` itself returns a `Promise<this>` instead of
+   *   `this`. (Typed as plain `void`, not `void|Promise<void>` — see the
+   *   note on `SimpleCallback` in JSONJoiningTransformer.js.)
    * @param {(this: JSONPathTransformerContext<T>)
-   *   => void} [otherwiseCb] Callback when condition fails
-   * @returns {this}
+   *   => void} [otherwiseCb] Callback when condition fails; may likewise
+   *   be async.
+   * @returns {this|Promise<this>}
    */
   choose (select, whenCb, otherwiseCb) {
     const passes = this._passesIf(select);
+    // `whenCb`/`otherwiseCb`'s declared return type is plain `void` — cast
+    // here to duck-type the real value; see the note on `SimpleCallback`
+    // in JSONJoiningTransformer.js.
+    /** @type {any} */
+    let ret;
     if (passes) {
       if (typeof whenCb === 'function') {
-        whenCb.call(this);
+        ret = whenCb.call(this);
       }
     } else if (typeof otherwiseCb === 'function') {
-      otherwiseCb.call(this);
+      ret = otherwiseCb.call(this);
+    }
+    if (ret && typeof ret.then === 'function') {
+      // eslint-disable-next-line promise/prefer-await-to-then -- Not async
+      return ret.then(() => this);
     }
     return this;
   }

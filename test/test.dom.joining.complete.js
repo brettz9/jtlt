@@ -266,4 +266,39 @@ describe('DOMJoiningTransformer complete coverage', () => {
       expect(result.format).to.equal('xhtml');
     });
   });
+
+  describe('async callbacks (a cb returning a Promise)', () => {
+    it(
+      'awaits an async cb on both the root element and a nested ' +
+      '(non-root) element, resuming/restoring `_dom` only once it settles',
+      async () => {
+        const {window} = new JSDOM(
+          '<!doctype html><html><body></body></html>'
+        );
+        const {document} = window;
+        const joiner = DOMJoiningTransformer.create(
+          document.createDocumentFragment(),
+          {document, exposeDocuments: true}
+        );
+
+        joiner.output({method: 'xml'});
+        const ret = joiner.element('div', {}, async () => {
+          await Promise.resolve();
+          await joiner.element('span', {}, async () => {
+            await Promise.resolve();
+            joiner.text('async');
+          });
+        });
+        expect(ret).to.be.an.instanceOf(Promise);
+        await ret;
+
+        const docs = joiner.get();
+        const doc = docs[0];
+        expect(doc.documentElement.nodeName).to.equal('div');
+        const child = /** @type {Element} */ (doc.documentElement.firstChild);
+        expect(child.nodeName).to.equal('span');
+        expect(child.textContent).to.equal('async');
+      }
+    );
+  });
 });

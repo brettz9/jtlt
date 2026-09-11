@@ -40,7 +40,16 @@ export const setWindow = (win) => {
  * @property {string} [name] - Optional name for calling via callTemplate
  * @property {string} [mode] - Optional mode for template matching
  * @property {number} [priority] - Priority for template selection
- * @property {TemplateFunction<T, U, TCtx>} template - Template function
+ * @property {'json'|'javascript'} [format] - For an Array `template` only:
+ *   the jamilih validation strictness `compileJSONTemplate` applies
+ *   (`isValidJamilih`'s own `format` option) — `'json'` (default) rejects
+ *   live values (functions, DOM nodes, …) embedded in the structure,
+ *   `'javascript'` allows them. Ignored for a function `template`. Falls
+ *   back to `config.defaultTemplateFormat`, then `'json'`, when omitted.
+ * @property {TemplateFunction<T, U, TCtx> | JSONTemplateNode[]} template -
+ *   Template function, or a declarative (jamilih-shaped) node array
+ *   compiled via `compileJSONTemplate` — detected by `Array.isArray`, since
+ *   a `TemplateFunction` is never an array.
  */
 
 /**
@@ -80,7 +89,78 @@ export const setWindow = (win) => {
  * @template {"json"|"string"|"dom"} T
  * @typedef {JSONPathTemplateObject<T> | [string, TemplateFunction<T, "json",
  *   import('./JSONPathTransformerContext.js').default
- * >]} JSONPathTemplateArray
+ * > | JSONTemplateNode[]]} JSONPathTemplateArray
+ */
+
+/**
+ * A jamilih-shaped element node — see
+ * `~/idb-manager/ROUTE-OVERRIDES-PLAN.md` §3.1. An attributes object may be
+ * omitted when there are no attributes, in which case the second item is
+ * the children array directly. Attribute *values* are left `unknown` rather
+ * than modeled precisely: they range from HTML-attribute primitives to
+ * jamilih's own richer magic-key values (`$on` handler arrays, etc.), and
+ * that shape is validated at runtime by `isValidJamilih`/`validateJamilih`,
+ * not statically here.
+ * @typedef {[string] |
+ *   [string, Record<string, unknown>] |
+ *   [string, JSONTemplateNode[]] |
+ *   [string, Record<string, unknown>, JSONTemplateNode[]]
+ * } JSONElementNode
+ */
+
+/**
+ * The declarative operation vocabulary (see
+ * `~/idb-manager/ROUTE-OVERRIDES-PLAN.md` §3.2). Every key on the leading
+ * object is `$`-prefixed — jamilih's own validator requires this of any
+ * first-position plain object. Most keys use a bare `$`-prefix. `$jtltMode`
+ * is namespaced unconditionally: jamilih hard-rejects `$mode` even bare
+ * (`RESERVED_OPTION`). `$text` / `$jtltText` are the general form and a
+ * jamilih-native-compatible shorthand for the same thing, not two distinct
+ * operations: `$jtltText` (never seen by jamilih's own `$text` handling, so
+ * an unrecognized `$select` alongside it is just ordinary dialect data) is
+ * the canonical form and works with or without `$select`; a **bare**
+ * `{$text: value}` (literal only, no `$select`) is jamilih's own native
+ * text-node form, equivalent to `{$jtltText: value}`, and validates as-is —
+ * but `{$text: value, $select}` does not, because jamilih rejects the
+ * unrecognized `$select` sitting next to its own reserved `$text`
+ * (`UNKNOWN_MAGIC_PROPERTY`); that combined form needs `$jtltText` instead.
+ * See §3.5. `$indexedDB`'s children are optional (unlike `$if`/`$forEach`,
+ * which both require theirs): a bare prefetch — binding via `$as` for later
+ * use, or simply discarding the rows — is a legitimate leaf use.
+ * @typedef {[{$text: unknown}] |
+ *   [{$jtltText: unknown, $select?: string}] |
+ *   [{$string: unknown, $select?: string}] |
+ *   [{$valueOf: string}] |
+ *   [{$applyTemplates: string, $jtltMode?: string, $sort?: unknown}] |
+ *   [{$if: string}, JSONTemplateNode[]] |
+ *   [{$if: string}, JSONTemplateNode[], JSONTemplateNode[]] |
+ *   [{$forEach: string, $sort?: unknown}, JSONTemplateNode[]] |
+ *   [{$variable: string, $select: string}] |
+ *   [{
+ *     $indexedDB: {
+ *       db: string, store: string,
+ *       options?: import('./indexedDB.js').QueryOptions
+ *     },
+ *     $as?: string
+ *   }] |
+ *   [{
+ *     $indexedDB: {
+ *       db: string, store: string,
+ *       options?: import('./indexedDB.js').QueryOptions
+ *     },
+ *     $as?: string
+ *   }, JSONTemplateNode[]] |
+ *   [{$renderDefault: true}]
+ * } JSONOperationNode
+ */
+
+/**
+ * A declarative (jamilih-shaped) template node: a text string, an element
+ * node, or an operation node. Passed as a `TemplateObject.template` (or a
+ * `[path, JSONTemplateNode[]]` tuple's second slot) wherever a
+ * `TemplateFunction` is otherwise accepted, compiled via
+ * `compileJSONTemplate` — see `~/idb-manager/JTLT-JSON-TEMPLATES-PROPOSAL.md`.
+ * @typedef {string | JSONElementNode | JSONOperationNode} JSONTemplateNode
  */
 
 /**
@@ -223,6 +303,10 @@ export const setWindow = (win) => {
  *   A `this.param(name, default)` declaration whose name appears here resolves
  *   to this value instead of its default, and `$name` references such a
  *   parameter from any template.
+ * @property {'json'|'javascript'} [defaultTemplateFormat] Config-wide
+ *   default for an Array `template`'s jamilih validation strictness (see
+ *   `TemplateObject.format`), used for any entry that doesn't specify its
+ *   own `format`. Defaults to `'json'` when omitted here too.
  */
 
 /**
@@ -230,7 +314,7 @@ export const setWindow = (win) => {
  * @template {"json"|"string"|"dom"} [T = "json"]
  * @template {boolean|undefined} [E=false]
  * @typedef {BaseJTLTOptions<T, E> & {
- *   templates?: JSONPathTemplateArray<T>[] |
+ *   templates?: JSONPathTemplateArray<T>[] | JSONPathTemplateArray<T> |
  *     TemplateFunction<T, "json",
  *     import('./JSONPathTransformerContext.js').default<T>>,
  *   template?: JSONPathTemplateObject<T> | TemplateFunction<T, "json",
@@ -287,6 +371,29 @@ export const setWindow = (win) => {
  *   XPathJTLTOptions<"string", E>|
  *   XPathJTLTOptions<"dom", E>} JTLTOptions
  */
+
+/**
+ * `config.templates` (and, for symmetry, `config.template`) may be given as
+ * a bare single entry — a `TemplateObject` (`{path, template}`) or a
+ * `[path, template]` tuple — rather than always wrapped in an outer array.
+ * A bare tuple is distinguished from a list of entries by its own first
+ * item being a string: no valid entry (a plain object, or itself a tuple
+ * whose own first item is a path string) is ever a bare string, so this
+ * can't collide with a real list.
+ * @param {unknown} templates
+ * @returns {unknown[]|undefined}
+ */
+function normalizeBareTemplatesShape (templates) {
+  if (!templates) {
+    return undefined;
+  }
+  if (Array.isArray(templates)) {
+    return typeof templates[0] === 'string' ? [templates] : templates;
+  }
+  // A bare `TemplateObject` (a plain object, not a function — functions are
+  // already routed through the `query` branch above this call).
+  return [templates];
+}
 
 /**
  * High-level façade for running a JTLT transform.
@@ -519,7 +626,8 @@ class JTLT {
         ])
       // eslint-disable-next-line @stylistic/max-len -- Long
       : /** @type {JSONPathTemplateObject<joiningTypes>[]|XPathTemplateObject<joiningTypes>[]} */ (
-        cfg.templates || [cfg.template]
+        normalizeBareTemplatesShape(cfg.templates) ||
+          normalizeBareTemplatesShape(cfg.template)
       );
     this.config.errorOnEqualPriority = cfg.errorOnEqualPriority || false;
     this.config.engine ||=
@@ -859,5 +967,8 @@ export {
 export {
   default as XPathTransformer
 } from './XPathTransformer.js';
+export {
+  compileJSONTemplate, isJSONTemplateNodeArray, validateJSONTemplate
+} from './jsonTemplate.js';
 
 export default JTLT;

@@ -452,4 +452,49 @@ describe('JSONPathTransformerContext branch coverage', () => {
     // Should return the count of matches (3)
     expect(pos).to.equal(3);
   });
+
+  describe('forEach() with an async cb', () => {
+    it('restores context and rethrows when cb throws synchronously', () => {
+      const ctx = new JSONPathTransformerContext({
+        data: {items: [1, 2, 3]},
+        joiningTransformer: JSONJoiningTransformer.create(),
+        templates: []
+      }, []);
+      const prevContext = ctx._contextObj;
+      expect(() => ctx.forEach('$.items[*]', () => {
+        throw new Error('sync boom');
+      })).to.throw('sync boom');
+      expect(ctx._contextObj).to.equal(prevContext);
+    });
+
+    it(
+      'switches to an async continuation once cb returns a Promise, and ' +
+      'propagates a later iteration\'s rejection via .catch()',
+      async () => {
+        const ctx = new JSONPathTransformerContext({
+          data: {items: [1, 2, 3]},
+          joiningTransformer: JSONJoiningTransformer.create(),
+          templates: []
+        }, []);
+        const prevContext = ctx._contextObj;
+        const ret = ctx.forEach('$.items[*]', async (value) => {
+          if (value === 1) {
+            await Promise.resolve();
+          } else if (value === 3) {
+            throw new Error('later boom');
+          }
+        });
+        expect(ret).to.be.an.instanceOf(Promise);
+        let error;
+        try {
+          await ret;
+        } catch (err) {
+          error = /** @type {Error} */ (err);
+        }
+        expect(error).to.be.an('error');
+        expect(/** @type {Error} */ (error).message).to.equal('later boom');
+        expect(ctx._contextObj).to.equal(prevContext);
+      }
+    );
+  });
 });

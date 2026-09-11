@@ -30,6 +30,12 @@ function _makeDatasetAttribute (n0) {
  *   : import('./DOMJoiningTransformer.js').default}
  * @returns {void}
  */
+// Kept as plain `void` (not `void|Promise<void>`) rather than a union:
+// TypeScript's "a void-returning callback parameter accepts any actual
+// return value" leniency — relied on throughout the test suite for
+// concise-body arrows like `() => this.text(...)` — only applies to a
+// literal `void` return type, not a union. An async callback (returning
+// `Promise<void>`) is still assignable here for the same reason.
 
 /**
  * Attributes object for element() allowing standard string attributes
@@ -392,9 +398,11 @@ class JSONJoiningTransformer extends AbstractJoiningTransformer {
    * @param {ElementAttributes|any[]|SimpleCallback} [atts]
    *   Attrs, children, or cb.
    * @param {any[]|SimpleCallback} [childNodes] Children or cb.
-   * @param {SimpleCallback} [cb] Builder callback.
+   * @param {SimpleCallback} [cb] Builder callback; may be async (e.g. to
+   *   `await` a `$indexedDB` fetch), in which case `element()` itself
+   *   returns a `Promise` instead of `this`.
    * @param {string[]} [useAttributeSets] - Attribute set names to apply
-   * @returns {JSONJoiningTransformer}
+   * @returns {JSONJoiningTransformer|Promise<JSONJoiningTransformer>}
    */
   element (elem, atts, childNodes, cb, useAttributeSets) {
     this._requireSameChildren('json', 'element');
@@ -485,77 +493,96 @@ class JSONJoiningTransformer extends AbstractJoiningTransformer {
       }));
     }
 
+    // Everything from here on depends on `attsObj`/`jmlChildren` having
+    // been fully populated by `cb` (when given) — deferred into a
+    // continuation so an async `cb` (e.g. one that awaits a `$indexedDB`
+    // fetch) can be awaited first, keeping output correctly ordered.
+    const finishElement = () => {
+      // Build Jamilih array
+      /** @type {any[]} */
+      const jmlEl = [elementName];
+      if (Object.keys(attsObj).length) {
+        jmlEl.push(attsObj, jmlChildren);
+      } else {
+        jmlEl.push(jmlChildren);
+      }
+
+      if (isRoot) {
+        // todo: indent, cdataSectionElements
+        const {
+          omitXmlDeclaration, bareDoctype, doctypePublic, doctypeSystem, method
+        } = this._outputConfig ?? {};
+
+        const dtd = bareDoctype !== false
+          ? [{$DOCTYPE: {
+            name: elementName,
+            publicId: doctypePublic ?? null, // Public ID (optional)
+            systemId: doctypeSystem ?? null // System ID (optional)
+          }}]
+          : [];
+
+        let xmlDeclaration;
+        /* c8 ignore start -- third OR condition short-circuits */
+        if (!omitXmlDeclaration && (
+          method === 'xml' || method === 'xhtml' ||
+          omitXmlDeclaration === false)
+        ) {
+          const {version, encoding, standalone} = this._outputConfig ?? {};
+
+          xmlDeclaration = {
+            version,
+            encoding,
+            standalone
+          };
+        }
+        /* c8 ignore stop */
+
+        const doc = {$document: {
+          ...(xmlDeclaration ? {xmlDeclaration} : {}),
+          childNodes: [
+            ...(method === 'xml' || method === 'xhtml' ? dtd : []),
+            jmlEl
+          ]
+        }};
+
+        // Removed this._doc; use this._docs only
+        if (this._cfg.exposeDocuments) {
+          this._docs.push(doc);
+        }
+      }
+
+      // If inside a parent element, append as its child; otherwise
+      // append to root
+      if (this._elementStack.length) {
+        const top = /** @type {ElementInfo} */ (this._elementStack.at(-1));
+        top.jmlChildren.push(jmlEl);
+      } else {
+        this.append(jmlEl);
+      }
+      return this;
+    };
+
     // Callback-driven building (attribute/text/nested element mutate stack)
     if (cb) {
       // Push current state onto a stack
       this._elementStack.push({attsObj, jmlChildren});
-      cb.call(this._context || this);
-      const state = /** @type {ElementInfo} */ (this._elementStack.pop());
-      ({attsObj} = state);
-      // Children may have been mutated by nested element()/text();
-      // already in jmlChildren
-    }
-
-    // Build Jamilih array
-    /** @type {any[]} */
-    const jmlEl = [elementName];
-    if (Object.keys(attsObj).length) {
-      jmlEl.push(attsObj, jmlChildren);
-    } else {
-      jmlEl.push(jmlChildren);
-    }
-
-    if (isRoot) {
-      // todo: indent, cdataSectionElements
-      const {
-        omitXmlDeclaration, bareDoctype, doctypePublic, doctypeSystem, method
-      } = this._outputConfig ?? {};
-
-      const dtd = bareDoctype !== false
-        ? [{$DOCTYPE: {
-          name: elementName,
-          publicId: doctypePublic ?? null, // Public ID (optional)
-          systemId: doctypeSystem ?? null // System ID (optional)
-        }}]
-        : [];
-
-      let xmlDeclaration;
-      /* c8 ignore start -- third OR condition short-circuits */
-      if (!omitXmlDeclaration && (
-        method === 'xml' || method === 'xhtml' || omitXmlDeclaration === false)
-      ) {
-        const {version, encoding, standalone} = this._outputConfig ?? {};
-
-        xmlDeclaration = {
-          version,
-          encoding,
-          standalone
-        };
+      // `cb`'s declared return type is plain `void` (see `SimpleCallback`)
+      // — cast here to duck-type the real value.
+      const cbResult = /** @type {any} */ (cb.call(this._context || this));
+      const finishWithStack = () => {
+        const state = /** @type {ElementInfo} */ (this._elementStack.pop());
+        ({attsObj} = state);
+        // Children may have been mutated by nested element()/text();
+        // already in jmlChildren
+        return finishElement();
+      };
+      if (cbResult && typeof cbResult.then === 'function') {
+        // eslint-disable-next-line promise/prefer-await-to-then -- Not async
+        return cbResult.then(() => finishWithStack());
       }
-      /* c8 ignore stop */
-
-      const doc = {$document: {
-        ...(xmlDeclaration ? {xmlDeclaration} : {}),
-        childNodes: [
-          ...(method === 'xml' || method === 'xhtml' ? dtd : []),
-          jmlEl
-        ]
-      }};
-
-      // Removed this._doc; use this._docs only
-      if (this._cfg.exposeDocuments) {
-        this._docs.push(doc);
-      }
+      return finishWithStack();
     }
-
-    // If inside a parent element, append as its child; otherwise append to root
-    if (this._elementStack.length) {
-      const top = /** @type {ElementInfo} */ (this._elementStack.at(-1));
-      top.jmlChildren.push(jmlEl);
-    } else {
-      this.append(jmlEl);
-    }
-    return this;
+    return finishElement();
   }
 
   /**

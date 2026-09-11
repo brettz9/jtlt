@@ -619,12 +619,36 @@ class XPathTransformerContext {
       const prevTemplateParams = this._params;
       this._params = {0: node, ...appliedParams};
 
+      const {template: xpathTemplateFn} = templateObj;
+      /* c8 ignore start -- Todo: compile via compileJSONTemplate() once it
+         exists (see ~/idb-manager/JTLT-JSON-TEMPLATES-PROPOSAL.md) instead
+         of rejecting; no matched template can reach here with an Array
+         `template` until that lands (and the declarative subset is
+         JSONPath-only per that plan, so this may stay unreachable longer
+         than the JSONPath-side guards). */
+      if (Array.isArray(xpathTemplateFn)) {
+        throw new TypeError(
+          'JSON (jamilih-shaped) Array templates are not yet supported by ' +
+          'the XPath engine; compile with compileJSONTemplate() first.'
+        );
+      }
+      /* c8 ignore stop */
       /**
        * The template may return synchronously or return a Promise (e.g. from
        * `await this.indexedDB(...)`), which is awaited unless `config.sync`.
        * @type {any}
        */
-      const ret = templateObj.template.call(this, node, {mode});
+      const ret = xpathTemplateFn.call(
+        // `this` carries runtime `extensions`; a consumer's
+        // `ContextExtensions` augmentation would otherwise reject it here
+        // (matching the cast already used at the other three call sites).
+        // `node` is cast too: `templateObj.template`'s static type is a
+        // union across a `dom`-typed `TemplateFunction` (expecting
+        // `DocumentFragment | Element`) and the mode-callback signature
+        // above (expecting plain `Node`) — the same node value satisfies
+        // whichever one actually runs.
+        /** @type {any} */ (this), /** @type {any} */ (node), {mode}
+      );
 
       // Restore previous parameter context
       this._params = prevTemplateParams;

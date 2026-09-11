@@ -443,6 +443,81 @@ from XSLT):
 
 1. The method `this.stylesheet()` (or `this.transform()`) is used similarly to XSLT for configuration, but it does not call for including the templates within it as nested content.
 2. JTLT adds `path` as an alias for `match` on templates.
+3. **No single-root-node restriction.** XSLT's content model has, at root,
+   a single node per template (not counting processing instructions) —
+   `xsl:output` is a separate top-level stylesheet declaration, and
+   `xsl:template`'s own content is one nested tree. JTLT has no equivalent
+   of that single `xsl:stylesheet`/`xsl:transform` wrapper to enforce it:
+   - A **function template** is a plain JavaScript function body, so it can
+     make any number of top-level calls in sequence — there is nothing
+     that limits it to producing (or delegating to) one node:
+    ```js
+    const templateObj = {path: '$', template () {
+      // Two independent things at the root, not one nested tree:
+      this.output({method: 'html'}); // configure output
+      this.applyTemplates('$.items[*]'); // then produce content
+    }};
+    ```
+   - A **declarative (jamilih-shaped) template** — the `Array`-of-nodes
+     form compiled by `compileJSONTemplate()` — is likewise an array of
+     *sibling* top-level nodes, not one node:
+    ```js
+    const templateObj = {
+      template: [
+        ['h1', ['Custom heading']], // a literal element, then
+        [{$applyTemplates: '$.items[*]'}] // an operation node
+      ]
+      // -> <h1>Custom heading</h1><li>...</li>...
+    };
+    ```
+     jamilih's own `#` fragment node offers a similar grouping when only
+     one node is structurally expected, but the top level here never
+     requires it — an array of nodes is already accepted directly.
+
+     This is also why a template holding just *one* operation node, with
+     no other siblings, still needs two levels of array, not one:
+
+    ```js
+    // Rejected: a bare `{$applyTemplates}` object is not itself a node —
+    // every node (elements included) is array-shaped, `[head, ...args]`.
+    const rejected = {template: [{$applyTemplates: '$.items[*]'}]};
+
+    // Accepted: the outer array is the sibling-node list (point 3, above);
+    // the inner array is this one operation node's own `[head, ...args]`
+    // shape — `$applyTemplates` just happens to need no further `args`.
+    const accepted = {template: [[{$applyTemplates: '$.items[*]'}]]};
+    ```
+
+     The inner array isn't there *for* `$applyTemplates` specifically — it's
+     the same shape every operation node uses, whether or not that
+     operation happens to need trailing arguments: `$if` and `$forEach`
+     both use later array items for their bodies (`[{$if}, thenNodes,
+     elseNodes?]`, `[{$forEach}, childNodes]`), so the node model treats
+     `[head, ...args]` as the one uniform shape rather than special-casing
+     the argument-less operations to a bare head object.
+
+     `$if`'s then/else and `$forEach`'s children are, in turn, each a
+     `thenNodes`/`elseNodes`/`childNodes` **array of sibling nodes** — the
+     exact same shape as `template` itself (point 3, above) — not a single
+     unwrapped node, even when the body happens to hold just one:
+
+    ```js
+    // Not this — a single node, unwrapped:
+    const unwrapped = [[{$if: '$flag'}, ['p', ['yes']]]];
+
+    // This — an array of (one) sibling node(s):
+    const wrapped = [[{$if: '$flag'}, [['p', ['yes']]]]];
+    ```
+
+     Requiring the wrapper isn't just consistency for its own sake — an
+     *unwrapped* single node would be genuinely ambiguous, silently so:
+     an element node is itself an array, `[name, attrs?, children?]`, so
+     `['p', ['yes']]` is indistinguishable, at the array level, from a
+     two-node *list*: a bare string `'p'` (a text node) followed by an
+     element node `['yes']` (an empty `<yes>` tag). That is exactly what
+     `unwrapped` above produces — `p<yes></yes>`, not `<p>yes</p>` — with
+     no error, since both readings are structurally valid nodes on their
+     own; only the wrapped array-of-nodes form is unambiguous.
 
 ## To-dos
 

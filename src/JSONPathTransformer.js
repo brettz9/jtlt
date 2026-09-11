@@ -1,4 +1,7 @@
 import JSONPathTransformerContext from './JSONPathTransformerContext.js';
+import {
+  compileJSONTemplate, isJSONTemplateNodeArray
+} from './jsonTemplate.js';
 
 /**
  * Applies named JSONPath-driven templates to JSON data.
@@ -106,18 +109,35 @@ class JSONPathTransformer {
       throw new TypeError('config.templates is required');
     }
     this.templates = config.templates.map(function (template) {
+      /** @type {import('./index.js').JSONPathTemplateObject<T>} */
+      let normalized;
       if (Array.isArray(template)) {
         // Todo: We could allow a third argument (at beginning or
         //    end?) to represent template name
-        return /** @type {import('./index.js').JSONPathTemplateObject<T>} */ (
-          {path: template[0], template: template[1]}
-        );
+        normalized = /**
+                      * @type {import('./index.js').
+          JSONPathTemplateObject<T>} */ (
+            {path: template[0], template: template[1]}
+          );
+      } else if (template.match && !template.path) {
+        // Normalize 'match' to 'path' for XSLT compatibility
+        normalized = {...template, path: template.match};
+      } else {
+        normalized = template;
       }
-      // Normalize 'match' to 'path' for XSLT compatibility
-      if (template.match && !template.path) {
-        return {...template, path: template.match};
+      // A declarative (jamilih-shaped) node array, as opposed to a
+      // `TemplateFunction` — compile it once, up front, so every later
+      // dispatch site (root, applyTemplates, callTemplate) only ever sees
+      // a plain function.
+      if (isJSONTemplateNodeArray(normalized.template)) {
+        const format = normalized.format || config.defaultTemplateFormat ||
+          'json';
+        normalized = {
+          ...normalized,
+          template: compileJSONTemplate(normalized.template, {format})
+        };
       }
-      return template;
+      return normalized;
     });
     this.templates.forEach((template, i, templates) => {
       // eslint-disable-next-line @stylistic/max-len -- Long
@@ -164,16 +184,26 @@ class JSONPathTransformer {
     }
     // Set up parameter context for valueOf() access in root template
     jte._params = {0: jte._contextObj};
+    // `template` is always a function here: a declarative (jamilih-shaped)
+    // Array is compiled to one up front, in the constructor.
+    const {template: rootTemplateFn} =
+      /**
+       * @type {import('./index.js').JSONPathTemplateObject<T> &
+       *   {template: import('./index.js').
+       *     TemplateFunction<T, "json", JSONPathTransformerContext<T>>}}
+       */ (
+        templateObj
+      );
     /**
      * The template may return a value synchronously or a Promise (e.g. from
      * `await this.indexedDB(...)`), which is awaited unless `config.sync`.
      * @type {any}
      */
-    const ret = /** @type {import('./index.js').JSONPathTemplateObject<T>} */ (
-      templateObj
+    const ret = (
       // `this` carries runtime `extensions`; a consumer's `ContextExtensions`
       // augmentation would otherwise reject the bare context here.
-    ).template.call(/** @type {any} */ (jte), undefined, {mode});
+      rootTemplateFn
+    ).call(/** @type {any} */ (jte), undefined, {mode});
 
     if (ret !== null && typeof ret !== 'undefined' &&
         typeof ret.then === 'function') {

@@ -391,6 +391,12 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
     if (_oldStrTemp !== undefined) {
       this._strTemp = (this._strTemp || '') + str;
     } else {
+      // Close any open parent start tag before appending content, matching
+      // text()'s behavior — string() is content too, not an attribute value.
+      if (this._openTagState) {
+        this.append('>');
+        this._openTagState = false;
+      }
       // Append to the output (or current container via append()).
       this.append(tmpStr + str);
     }
@@ -497,9 +503,14 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
    * @param {string|Element} elem - Element name or element object
    * @param {ElementAttributes} [atts] - Element attributes
    * @param {any[]} [childNodes] - Child nodes
-   * @param {(this: StringJoiningTransformer) => void} [cb] - Callback function
+   * @param {(this: StringJoiningTransformer) => void} [cb] -
+   *   Callback function; may be async (e.g. to `await` a `$indexedDB`
+   *   fetch), in which case `element()` itself returns a `Promise` instead
+   *   of `this` — check for `.then` (or `await`) rather than assuming a
+   *   synchronous return. (Typed as plain `void`, not `void|Promise<void>`
+   *   — see the note on `SimpleCallback` in JSONJoiningTransformer.js.)
    * @param {string[]} [useAttributeSets] - Attribute set names to apply
-   * @returns {StringJoiningTransformer}
+   * @returns {StringJoiningTransformer|Promise<StringJoiningTransformer>}
    */
   element (elem, atts, childNodes, cb, useAttributeSets) {
     // If a parent element's start tag is still open, close it before
@@ -635,17 +646,32 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
         jml[method]({'#': childNodes})
       ));
     }
-    cb.call(this._context || this);
+    // `cb`'s declared return type is plain `void` (see the parameter's
+    // JSDoc) so the leniency that lets any actual return value through
+    // still applies to callers — cast here to duck-type the real value.
+    const cbResult = /** @type {any} */ (cb.call(this._context || this));
 
     // Todo: Depending on an this._cfg.xmlElements option, allow for
     //    XML self-closing when empty or as per the tag, HTML
     //    self-closing tags (or polyglot-friendly self-closing)
-    if (this._openTagState) {
-      this.append('>');
+    const finish = () => {
+      if (this._openTagState) {
+        this.append('>');
+      }
+      this.append('</' + elName + '>');
+      this._openTagState = oldTagState;
+      return this;
+    };
+    // `cb` may be an async function (e.g. one that awaits
+    // `this.indexedDB(...)`/`this.renderDefault()` before appending
+    // content) — mirroring how a root/matched/named template's own return
+    // value is already handled elsewhere, closing the tag only after that
+    // settles keeps output correctly ordered.
+    if (cbResult && typeof cbResult.then === 'function') {
+      // eslint-disable-next-line promise/prefer-await-to-then -- Not async
+      return cbResult.then(() => finish());
     }
-    this.append('</' + elName + '>');
-    this._openTagState = oldTagState;
-    return this;
+    return finish();
   }
 
   /**

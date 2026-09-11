@@ -300,7 +300,7 @@ class DOMJoiningTransformer extends AbstractJoiningTransformer {
    * @overload
    * @param {Element|string} elName
    * @param {(this: DOMJoiningTransformer) => void} cb
-   * @returns {DOMJoiningTransformer}
+   * @returns {DOMJoiningTransformer|Promise<DOMJoiningTransformer>}
    */
   /**
    * @overload
@@ -314,9 +314,15 @@ class DOMJoiningTransformer extends AbstractJoiningTransformer {
    *   childNodes, or callback
    * @param {(Node|string)[]|((this: DOMJoiningTransformer) => void)
    *   } [childNodes] - Child nodes or callback
-   * @param {(this: DOMJoiningTransformer) => void} [cb] - Callback
+   * @param {(this: DOMJoiningTransformer) => void} [cb] -
+   *   Callback; may be async (e.g. to `await` a `$indexedDB` fetch), in
+   *   which case `element()` itself returns a `Promise` instead of `this`.
+   *   (Typed as returning plain `void`, not `void|Promise<void>` — a union
+   *   there would lose TypeScript's usual "a void-returning callback
+   *   parameter accepts any actual return value" leniency, which existing
+   *   callers rely on for e.g. `() => this.text(...)` concise arrows.)
    * @param {string[]} [useAttributeSets] - Attribute set names to apply
-   * @returns {DOMJoiningTransformer}
+   * @returns {DOMJoiningTransformer|Promise<DOMJoiningTransformer>}
    */
   element (elem, atts, childNodes, cb, useAttributeSets) {
     // Handle argument overloading like other transformers
@@ -440,12 +446,24 @@ class DOMJoiningTransformer extends AbstractJoiningTransformer {
         }
       }
 
+      const finishRoot = () => {
+        this._dom = oldDOM;
+        return this;
+      };
       if (cb) {
-        cb.call(this._context || this);
+        // `cb`'s declared return type is plain `void` (see the parameter's
+        // JSDoc), preserving TypeScript's void-return leniency for
+        // callers — cast here to duck-type the real value.
+        const cbResult = /** @type {any} */ (cb.call(this._context || this));
+        // `cb` may be an async function (e.g. one that awaits a
+        // `$indexedDB` fetch); resume only once it settles, so `_dom` is
+        // restored in the right order.
+        if (cbResult && typeof cbResult.then === 'function') {
+          // eslint-disable-next-line promise/prefer-await-to-then -- Not async
+          return cbResult.then(() => finishRoot());
+        }
       }
-      this._dom = oldDOM;
-
-      return this;
+      return finishRoot();
     }
 
     // Non-root elements
@@ -494,12 +512,20 @@ class DOMJoiningTransformer extends AbstractJoiningTransformer {
       }
     }
 
+    const finish = () => {
+      this._dom = oldDOM;
+      return this;
+    };
     if (cb) {
-      cb.call(this._context || this);
+      // `cb`'s declared return type is plain `void` — cast here to
+      // duck-type the real value; see the note above the other branch.
+      const cbResult = /** @type {any} */ (cb.call(this._context || this));
+      if (cbResult && typeof cbResult.then === 'function') {
+        // eslint-disable-next-line promise/prefer-await-to-then -- Not async
+        return cbResult.then(() => finish());
+      }
     }
-    this._dom = oldDOM;
-
-    return this;
+    return finish();
   }
 
   /**

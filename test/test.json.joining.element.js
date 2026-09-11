@@ -64,4 +64,18 @@ describe('JSONJoiningTransformer element/attribute/text (Jamilih JSON)', () => {
     expect(/** @type {string} */ (jml[0]).toLowerCase()).to.equal('a');
     expect(jml[1]).to.include({href: '#', 'data-x': 'y', role: 'note'});
   });
+
+  it('awaits an async cb, resuming/popping the element stack only once ' +
+    'it settles', async () => {
+    const jt = JSONJoiningTransformer.create([], {});
+    const ret = jt.element('div', {}, async () => {
+      await Promise.resolve();
+      jt.text('async');
+    });
+    expect(ret).to.be.an.instanceOf(Promise);
+    await ret;
+
+    const out = /** @type {import('jamilih').JamilihArray[]} */ (jt.get());
+    expect(out[0][0]).to.equal('div');
+  });
 });

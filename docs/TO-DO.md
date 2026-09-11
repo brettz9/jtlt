@@ -4,10 +4,12 @@
 
 1. Document
 
+    1. Write a specification for declarative jamilih / jtlt?
+
     1.  Implement and demo equivalent to applying and calling templates, and
         root template
 
-    2.  Demo chaining of methods, including [equivalents](https://www.saxonica.com/papers/XTech2005/mhkpaper.html#S4.)
+    1.  Demo chaining of methods, including [equivalents](https://www.saxonica.com/papers/XTech2005/mhkpaper.html#S4.)
         to XQuery's FLWOR expressions (see also Promises to-do), perhaps
         even making aliases so that XQuery's friendlier terms can be used
         instead of XSLT's.
@@ -41,10 +43,10 @@
     through [HTTPQuery](https://github.com/brettz9/httpquery) (and also
     supply to JSONEditor, etc.). Utilize updating by reference.
 
-8. Demo narrowing to subset of JavaScript (as with `jsep`) to make
-    JTLT truly "declarative" as far as freedom from scripting
-
 ## Possible to-dos
+
+1. Demo narrowing to subset of JavaScript (as with `jsep`) to make
+    JTLT truly "declarative" as far as freedom from scripting
 
 1. Make schema-aware so that templates could target types. Most reusable
     application may be having a type-driven view of a JSON Schema instance
