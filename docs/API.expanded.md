@@ -59,8 +59,9 @@ Common to both entry points unless noted.
 | ------ | ---- | ----------- |
 | `data` | object \| primitive | Root JSON/JS value (or DOM `Document`/`Element` for the XPath engine). Required unless `ajaxData` provided. |
 | `ajaxData` | string | URL to fetch JSON (async start). |
-| `templates` | Array&lt;TemplateObject&gt; | Template declarations; see below. |
+| `templates` | Array&lt;TemplateObject&gt; \| TemplateObject \| [path, Function\|Array] | Template declarations; see below. A bare `TemplateObject` or `[path, template]` tuple (not wrapped in an outer array) is also accepted directly. |
 | `template` | Function \| TemplateObject | Single root template convenience. |
+| `defaultTemplateFormat` | 'json' \| 'javascript' | JSONPath engine only. Jamilih validation strictness applied to a declarative (`Array`) `template` when its own `format` isn't set. Default `'json'`. See "Declarative (jamilih-shaped) templates" below. |
 | `query` | Function | Root template convenience (wrapped as `path: '$'`). |
 | `forQuery` | [select, cb] | One-off query (like FLWOR `for`). Auto-wrapped as root template. |
 | `success` | Function(result) | **`JTLT` only** — required callback; also the return of `.transform()`. Not accepted by `jtlt()`. |
@@ -96,6 +97,79 @@ Edge cases:
 - For JSONPath: `path` examples: `$.items[*]`, `$['prop']`, `$..deep`.
 - For XPath: `//item`, `/root/item`, `//*[@id='x']`.
 - Root template: path `$` (JSONPath) or `/` (XPath).
+
+## Declarative (jamilih-shaped) templates
+
+JSONPath engine only. A `TemplateObject.template` may be an `Array` of
+declarative nodes — modeled on [jamilih](https://github.com/brettz9/jamilih)'s
+own JSON/JS-array HTML/XML construction syntax — instead of a `Function`.
+`compileJSONTemplate()` compiles it once, up front, into an ordinary
+`TemplateFunction`; every other API (`applyTemplates`, `callTemplate`, modes,
+priority, …) works the same regardless of which form a matched template uses.
+
+```js
+const out = await jtlt({
+  data: {name: 'Ada'},
+  outputType: 'string',
+  templates: {
+    path: '$',
+    template: [
+      ['h1', ['Hello']],
+      [{$valueOf: '$.name'}]
+    ]
+  }
+});
+// -> <h1>Hello</h1>Ada
+```
+
+A node is one of:
+
+| Node | Emits |
+| --- | --- |
+| `"text"` (a plain string) | a text node |
+| `[name, attrs?, children?]` | an element — `attrs` is omitted when there are none, in which case the second item is the children array directly |
+| `[{$text: value}]` | `this.text(value)` — jamilih's own native text-node form; bare only, no `$select` |
+| `[{$jtltText: value, $select?: sel}]` | `this.text(value)` (no `$select`) or `this.valueOf(sel)` (with `$select`) — the general/canonical form of `$text` |
+| `[{$string: value, $select?: sel}]` | `this.string(value)` or, with `$select`, the selected value stringified |
+| `[{$valueOf: sel}]` | `this.valueOf(sel)` |
+| `[{$applyTemplates: sel, $jtltMode?: mode, $sort?: sort}]` | `this.applyTemplates(sel, mode, sort)` |
+| `[{$if: sel}, thenNodes, elseNodes?]` | `this.if(sel, cb)` or, with an else, `this.choose(sel, whenCb, otherwiseCb)` |
+| `[{$forEach: sel, $sort?: sort}, childNodes]` | `this.forEach(sel, cb, sort)` |
+| `[{$variable: name, $select: sel}]` | `this.variable(name, sel)`, readable back later via a bare `$name` reference |
+| `[{$indexedDB: {db, store, options?}, $as?: name}, childNodes?]` | fetches rows; with `$as`, binds them via `this.variable(name, {value: rows})`; without it, swaps the data context (`$`) to the rows for `childNodes` |
+| `[{$renderDefault: true}]` | `this.appendOutput(await this.renderDefault())` (an `extensions.renderDefault` your config supplies) |
+
+Every operation node's leading object is entirely `$`-prefixed — jamilih's
+own validator requires this of any first-position plain object. `$jtltMode`/
+`$jtltText` are namespaced because jamilih itself reserves `$mode` outright
+and gives `$text` its own (bare-only) native meaning; see the README's
+["Differences between an exact equivalence with
+XSLT"](../README.md#differences-between-an-exact-equivalence-with-xslt)
+section for why `template`, an `$if`/`$forEach` body, and an operation
+node's own trailing arguments are each *arrays* — including the
+easy-to-miss case of a single node or a single sibling, which still needs
+its wrapping array.
+
+`$indexedDB`/`$renderDefault` may appear nested anywhere a node is
+allowed — inside an element's children, or a `$if`/`$forEach` body — not
+just at a template's top level; see the README section above for why.
+
+**Validation**: `format: 'json'` (the default) rejects an embedded live
+function/DOM node anywhere in the tree — the intent is a safely
+serializable structure (e.g. round-tripped through IndexedDB), not
+arbitrary JavaScript. Pass `format: 'javascript'` on the `TemplateObject`
+(or set `defaultTemplateFormat: 'javascript'` on the config to relax every
+entry lacking its own `format`) to allow one.
+
+**Exports** (from `'jtlt'`):
+- `compileJSONTemplate(nodes, {format?}) => TemplateFunction` — throws a
+  `TypeError` with every problem found if `nodes` is invalid.
+- `validateJSONTemplate(nodes, {format?}) => {valid, errors}` — the same
+  checks, non-executing and non-throwing; for a "validate before save"
+  editor workflow.
+- `isJSONTemplateNodeArray(x) => boolean` — `Array.isArray`, exported for
+  callers that need to detect the declarative form themselves (e.g. before
+  deciding whether to call `compileJSONTemplate`).
 
 ## Engines
 

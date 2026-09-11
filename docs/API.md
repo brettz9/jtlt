@@ -181,6 +181,26 @@ this.applyTemplates('$.items[*]');
 
 This is useful for strict template matching where ambiguity should be an error rather than silently choosing a template, or for development where warnings help identify potential issues.
 
+## Declarative (jamilih-shaped) templates
+
+JSONPath engine only. `template` may be an `Array` of jamilih-shaped nodes
+instead of a `Function` — compiled once via `compileJSONTemplate()`
+(also exported, along with `validateJSONTemplate()` for non-executing
+validation and `isJSONTemplateNodeArray()`):
+
+```js
+const templates = {path: '$', template: [
+  ['h1', ['Hello']],
+  [{$valueOf: '$.name'}]
+]};
+// -> <h1>Hello</h1>Ada
+```
+
+`format: 'json'` (default) rejects an embedded live function/DOM node
+anywhere in the tree; `format: 'javascript'` (per-entry, or
+`defaultTemplateFormat` on the config) allows one. See
+`docs/API.expanded.md` for the full node vocabulary.
+
 ## Sorting
 
 Path string (ascending text), comparator function, object spec

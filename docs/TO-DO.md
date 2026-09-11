@@ -48,6 +48,8 @@
 1. Demo narrowing to subset of JavaScript (as with `jsep`) to make
     JTLT truly "declarative" as far as freedom from scripting
 
+1. Support XPath and Declarative Jamilih
+
 1. Make schema-aware so that templates could target types. Most reusable
     application may be having a type-driven view of a JSON Schema instance
     (e.g., dates could be shown inside a calendar widget). Perhaps this
