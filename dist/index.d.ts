@@ -364,6 +364,6 @@ export { default as JSONPathTransformerContext } from './JSONPathTransformerCont
 export { default as JSONPathTransformer } from './JSONPathTransformer.js';
 export { default as XPathTransformerContext } from './XPathTransformerContext.js';
 export { default as XPathTransformer } from './XPathTransformer.js';
-export { compileJSONTemplate, isJSONTemplateNodeArray, validateJSONTemplate } from './jsonTemplate.js';
+export { compileJSONTemplate, extractReads, isJSONTemplateNodeArray, validateJSONTemplate } from './jsonTemplate.js';
 export default JTLT;
 //# sourceMappingURL=index.d.ts.map

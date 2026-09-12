@@ -1,5 +1,27 @@
 # jtlt CHANGES
 
+## 0.20.0
+
+- fix: `ObjectCallback` / `ArrayCallback` / `SimpleCallback` (in the String/
+  DOM/JSON joining transformers) mis-emitted in `dist/*.d.ts` — a `@callback`
+  tag combined with `@this` produced raw, unparsed JSDoc text instead of a
+  proper `this:` function-type parameter (present since these typedefs were
+  introduced; only surfaced once a consumer's own JSDoc first referenced a
+  jtlt type — `dist/index.d.ts`'s `import('jtlt')...` was otherwise never
+  loaded for type-checking). Switched to the equivalent `@typedef {(this:
+  ...) => ...}` function-type form (already used successfully elsewhere,
+  e.g. `TemplateFunction`), which emits correctly.
+- feat: `extractReads(nodes)`, exported alongside `compileJSONTemplate` /
+  `validateJSONTemplate` / `isJSONTemplateNodeArray` — statically derives
+  the deduplicated `{db, store}` targets a declarative template's
+  `$indexedDB` nodes touch, walking the whole tree (element children,
+  `$if`/`$forEach` bodies, another `$indexedDB` node's own children — not
+  just the top level). Total: an `$indexedDB` node whose `db`/`store` isn't
+  a literal, non-empty string is reported as an error rather than silently
+  omitted from the result. `validateJSONTemplate()` folds these errors in
+  automatically, so `compileJSONTemplate()` rejects an unresolvable target
+  too, not just a standalone `extractReads()` caller.
+
 ## 0.19.0
 
 - feat: declarative jamilih node format

@@ -166,7 +166,19 @@ entry lacking its own `format`) to allow one.
   `TypeError` with every problem found if `nodes` is invalid.
 - `validateJSONTemplate(nodes, {format?}) => {valid, errors}` — the same
   checks, non-executing and non-throwing; for a "validate before save"
-  editor workflow.
+  editor workflow. Includes `extractReads()`'s errors, below — an
+  unresolvable `$indexedDB` target makes the whole template invalid, not
+  just a `reads` omission.
+- `extractReads(nodes) => {reads: {db, store}[], errors}` — statically
+  derives the `{db, store}` targets every `$indexedDB` node in the tree
+  touches (walking element children, `$if`/`$forEach` bodies, and another
+  `$indexedDB` node's own children — not just the top level), deduplicated.
+  Total: an `$indexedDB` node whose `db`/`store` isn't a literal,
+  non-empty string is reported as an error rather than silently omitted
+  from `reads` — the point is to drive a data-access allowlist, so an
+  unresolvable target must never read as "no read happens here." Useful on
+  its own (not just via `validateJSONTemplate`) for computing the actual
+  `reads` value to store alongside a saved template.
 - `isJSONTemplateNodeArray(x) => boolean` — `Array.isArray`, exported for
   callers that need to detect the declarative form themselves (e.g. before
   deciding whether to call `compileJSONTemplate`).

@@ -186,7 +186,8 @@ This is useful for strict template matching where ambiguity should be an error r
 JSONPath engine only. `template` may be an `Array` of jamilih-shaped nodes
 instead of a `Function` — compiled once via `compileJSONTemplate()`
 (also exported, along with `validateJSONTemplate()` for non-executing
-validation and `isJSONTemplateNodeArray()`):
+validation, `extractReads()` for statically deriving the `{db, store}`
+targets its `$indexedDB` nodes touch, and `isJSONTemplateNodeArray()`):
 
 ```js
 const templates = {path: '$', template: [

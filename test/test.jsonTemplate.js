@@ -1,6 +1,6 @@
 import {expect} from 'chai';
 import {
-  isJSONTemplateNodeArray, jtlt, validateJSONTemplate
+  extractReads, isJSONTemplateNodeArray, jtlt, validateJSONTemplate
 } from '../src/index.js';
 
 /**
@@ -604,5 +604,125 @@ describe('JSON (jamilih) templates', function () {
       expect(result.valid).to.equal(false);
       expect(result.errors).to.have.length(1);
     });
+  });
+
+  describe('extractReads() (the static reads extractor — ' +
+    'ROUTE-OVERRIDES-PLAN.md §3.4, §13 decision 4)', function () {
+    it('reports no reads for a template with no $indexedDB nodes',
+      function () {
+        expect(extractReads([['p', ['hi']]])).to.deep.equal(
+          {reads: [], errors: []}
+        );
+      });
+
+    it('finds a top-level $indexedDB target', function () {
+      expect(extractReads([
+        [{$indexedDB: {db: 'x', store: 'y'}}]
+      ])).to.deep.equal({reads: [{db: 'x', store: 'y'}], errors: []});
+    });
+
+    it("finds a target nested inside an element's children", function () {
+      expect(extractReads([
+        ['div', [
+          [{$indexedDB: {db: 'x', store: 'y'}}]
+        ]]
+      ])).to.deep.equal({reads: [{db: 'x', store: 'y'}], errors: []});
+    });
+
+    it('finds targets nested inside $if\'s then and else branches',
+      function () {
+        expect(extractReads([
+          [
+            {$if: '$flag'},
+            [[{$indexedDB: {db: 'x', store: 'then'}}]],
+            [[{$indexedDB: {db: 'x', store: 'else'}}]]
+          ]
+        ])).to.deep.equal({
+          reads: [{db: 'x', store: 'then'}, {db: 'x', store: 'else'}],
+          errors: []
+        });
+      });
+
+    it("finds a target nested inside $forEach's children", function () {
+      expect(extractReads([
+        [{$forEach: '$.items[*]'}, [
+          [{$indexedDB: {db: 'x', store: 'y'}}]
+        ]]
+      ])).to.deep.equal({reads: [{db: 'x', store: 'y'}], errors: []});
+    });
+
+    it("finds targets nested inside another $indexedDB node's own " +
+      'children', function () {
+      expect(extractReads([
+        [{$indexedDB: {db: 'outer', store: 'a'}}, [
+          [{$indexedDB: {db: 'inner', store: 'b'}}]
+        ]]
+      ])).to.deep.equal({
+        reads: [{db: 'outer', store: 'a'}, {db: 'inner', store: 'b'}],
+        errors: []
+      });
+    });
+
+    it('deduplicates identical {db, store} targets', function () {
+      expect(extractReads([
+        [{$indexedDB: {db: 'x', store: 'y'}}],
+        ['div', [
+          [{$indexedDB: {db: 'x', store: 'y'}}]
+        ]]
+      ])).to.deep.equal({reads: [{db: 'x', store: 'y'}], errors: []});
+    });
+
+    it(
+      'reports an error (not a silent omission) when $indexedDB\'s db is ' +
+      'not a literal string',
+      function () {
+        // extractReads() takes untyped `unknown[]` nodes (like
+        // validateJSONTemplate()), so this deliberately-invalid literal
+        // needs no @ts-expect-error here — the whole point of both is
+        // catching this at runtime, for a source that never went through
+        // TypeScript at all (e.g. loaded back out of IndexedDB).
+        const result = extractReads([
+          [{$indexedDB: {db: 42, store: 'y'}}]
+        ]);
+        expect(result.reads).to.deep.equal([]);
+        expect(result.errors).to.have.length(1);
+      }
+    );
+
+    it(
+      'reports an error when $indexedDB\'s store is not a literal string',
+      function () {
+        const result = extractReads([
+          [{$indexedDB: {db: 'x', store: undefined}}]
+        ]);
+        expect(result.reads).to.deep.equal([]);
+        expect(result.errors).to.have.length(1);
+      }
+    );
+
+    it('rejects a non-array top level directly', function () {
+      const result = extractReads(
+        // @ts-expect-error -- deliberately invalid; see note above
+        {not: 'an array'}
+      );
+      expect(result.reads).to.deep.equal([]);
+      expect(result.errors).to.have.length(1);
+    });
+
+    it(
+      'validateJSONTemplate()/compileJSONTemplate() reject a template ' +
+      'whose $indexedDB target cannot be resolved statically, rather ' +
+      'than silently treating it as "no read happens here"',
+      async function () {
+        const nodes = [
+          [{$indexedDB: {db: 42, store: 'y'}}]
+        ];
+        expect(validateJSONTemplate(nodes).valid).to.equal(false);
+        await expectRejection(
+          // @ts-expect-error -- deliberately invalid; see note above
+          renderJSON(nodes)
+        );
+      }
+    );
   });
 });

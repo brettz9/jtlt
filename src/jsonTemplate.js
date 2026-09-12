@@ -225,9 +225,125 @@ function validateNode (node, format, errors) {
 }
 
 /**
+ * @typedef {{db: string, store: string}} ReadTarget
+ */
+
+/**
+ * Recursively collect the `{db, store}` targets under one node's
+ * `$indexedDB` operations (if any), walking every position a node can
+ * appear — element children, `$if` then/else, `$forEach` children, and
+ * another `$indexedDB` node's own children — not just the top level. Uses
+ * `classify()` defensively, so a structurally-invalid node (already
+ * reported by `validateNode`) simply contributes nothing here rather than
+ * throwing a second time.
+ * @param {unknown} node
+ * @param {ReadTarget[]} targets - Populated in place
+ * @param {string[]} errors - Populated in place
+ * @returns {void}
+ */
+function collectReads (node, targets, errors) {
+  const kind = classify(node);
+  if (kind !== 'element' && kind !== 'operation') {
+    return;
+  }
+  const arr = /** @type {unknown[]} */ (node);
+  if (kind === 'element') {
+    const [, ...rest] = /** @type {[string, ...unknown[]]} */ (arr);
+    const {children} = splitElementRest(rest);
+    for (const child of children) {
+      collectReads(child, targets, errors);
+    }
+    return;
+  }
+  // kind === 'operation'
+  const head = /** @type {Record<string, unknown>} */ (arr[0]);
+  if (Object.hasOwn(head, '$if')) {
+    const [, thenNodes, elseNodes] = arr;
+    const thenChildren = /** @type {unknown[]} */ (thenNodes ?? []);
+    for (const child of thenChildren) {
+      collectReads(child, targets, errors);
+    }
+    const elseChildren = /** @type {unknown[]} */ (elseNodes ?? []);
+    for (const child of elseChildren) {
+      collectReads(child, targets, errors);
+    }
+    return;
+  }
+  if (Object.hasOwn(head, '$forEach')) {
+    const [, childNodes] = arr;
+    const forEachChildren = /** @type {unknown[]} */ (childNodes ?? []);
+    for (const child of forEachChildren) {
+      collectReads(child, targets, errors);
+    }
+    return;
+  }
+  if (Object.hasOwn(head, '$indexedDB')) {
+    const spec = /** @type {any} */ (head.$indexedDB);
+    if (
+      !isPlainObject(spec) ||
+      typeof spec.db !== 'string' || spec.db.length === 0 ||
+      typeof spec.store !== 'string' || spec.store.length === 0
+    ) {
+      errors.push(
+        '`$indexedDB` target could not be resolved statically — `db` and ' +
+        '`store` must both be non-empty string literals: ' +
+        JSON.stringify(head)
+      );
+    } else {
+      targets.push({db: spec.db, store: spec.store});
+    }
+    const [, childNodes] = arr;
+    const idbChildren = /** @type {unknown[]} */ (childNodes ?? []);
+    for (const child of idbChildren) {
+      collectReads(child, targets, errors);
+    }
+  }
+}
+
+/**
+ * Statically derive the `{db, store}` targets a declarative template's
+ * `$indexedDB` nodes touch (ROUTE-OVERRIDES-PLAN.md §3.4, §13 decision 4)
+ * — for a route override's data-access checks and its `reads` field. Total:
+ * an `$indexedDB` node whose `db`/`store` isn't a literal string is
+ * reported as an error rather than silently omitted from `reads` — the
+ * whole point is to drive a data-access allowlist, so an unresolvable
+ * target must never be mistaken for "no read happens here". Duplicate
+ * targets are deduplicated.
+ * @param {unknown[]} nodes
+ * @returns {{reads: ReadTarget[], errors: string[]}}
+ */
+export function extractReads (nodes) {
+  if (!Array.isArray(nodes)) {
+    return {
+      reads: [],
+      errors: ['A declarative template must be an array of nodes.']
+    };
+  }
+  /** @type {ReadTarget[]} */
+  const targets = [];
+  /** @type {string[]} */
+  const errors = [];
+  for (const node of nodes) {
+    collectReads(node, targets, errors);
+  }
+  const seen = new Set();
+  const reads = targets.filter(({db, store}) => {
+    const key = `${db} ${store}`;
+    if (seen.has(key)) {
+      return false;
+    }
+    seen.add(key);
+    return true;
+  });
+  return {reads, errors};
+}
+
+/**
  * Non-executing structural check for a declarative template. Unlike
  * `compileJSONTemplate`, this never throws — it reports every problem it
- * finds, for a "validate before save" editor workflow.
+ * finds, for a "validate before save" editor workflow. Includes the
+ * `extractReads()` check (an unresolvable `$indexedDB` target is a
+ * validation error, not just a `reads` omission).
  * @param {unknown[]} nodes
  * @param {{format?: 'json'|'javascript'}} [options]
  * @returns {{valid: boolean, errors: string[]}}
@@ -244,6 +360,7 @@ export function validateJSONTemplate (nodes, {format = 'json'} = {}) {
   for (const node of nodes) {
     validateNode(node, format, errors);
   }
+  errors.push(...extractReads(nodes).errors);
   return {valid: errors.length === 0, errors};
 }
 

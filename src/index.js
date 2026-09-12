@@ -968,7 +968,8 @@ export {
   default as XPathTransformer
 } from './XPathTransformer.js';
 export {
-  compileJSONTemplate, isJSONTemplateNodeArray, validateJSONTemplate
+  compileJSONTemplate, extractReads, isJSONTemplateNodeArray,
+  validateJSONTemplate
 } from './jsonTemplate.js';
 
 export default JTLT;
