@@ -138,9 +138,7 @@ export type JSONOperationNode = [{
         $renderDefault: true;
     }
 ] | [
-    Record<`$${string}`, {
-        select?: string;
-    }>
+    Record<`$${string}`, Record<string, unknown>>
 ];
 export type JSONTemplateNode = string | JSONElementNode | JSONOperationNode;
 export type JoiningTransformerContract = {

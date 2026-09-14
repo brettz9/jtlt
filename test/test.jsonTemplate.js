@@ -348,19 +348,19 @@ describe('JSON (jamilih) templates', function () {
       }
     );
 
-    describe('extension calls (e.g. `{$greet: {select?}}`)', function () {
+    describe('extension calls (e.g. `{$greet: {...}}`)', function () {
       it(
-        'calls the caller-supplied extension, passing the current data ' +
-        'when `select` is omitted',
+        'passes the argument object through entirely unresolved — the ' +
+        'extension itself calls `this.get(...)` for a `select` it defines',
         async function () {
           const out = await renderJSON(
-            [[{$greet: {}}]],
-            {name: 'Ada'},
+            [[{$greet: {select: '$.user.name'}}]],
+            {user: {name: 'Ada'}},
             {},
             {
-              /** @param {{name: string}} data */
-              greet (data) {
-                this.text(`Hello, ${data.name}!`);
+              /** @param {{select: string}} argObject */
+              greet (argObject) {
+                this.text(`Hello, ${this.get(argObject.select, false)}!`);
               }
             }
           );
@@ -368,21 +368,29 @@ describe('JSON (jamilih) templates', function () {
         }
       );
 
-      it('resolves `select` and passes the result as the argument',
+      it(
+        'passes through arbitrary literal fields alongside `select` ' +
+        'unchanged — e.g. a `db`/`store` pair naming something other ' +
+        'than the current data',
         async function () {
           const out = await renderJSON(
-            [[{$greet: {select: '$.user.name'}}]],
-            {user: {name: 'Ada'}},
+            [[{$greet: {select: '$.name', greeting: 'Hi'}}]],
+            {name: 'Ada'},
             {},
             {
-              /** @param {string} name */
-              greet (name) {
-                this.text(`Hello, ${name}!`);
+              /** @param {{select: string, greeting: string}} argObject */
+              greet (argObject) {
+                this.text(
+                  `${argObject.greeting}, ${
+                    this.get(argObject.select, false)
+                  }!`
+                );
               }
             }
           );
-          expect(out).to.equal('Hello, Ada!');
-        });
+          expect(out).to.equal('Hi, Ada!');
+        }
+      );
 
       it('awaits an async extension', async function () {
         const out = await renderJSON(
@@ -418,16 +426,6 @@ describe('JSON (jamilih) templates', function () {
           expect(valid).to.equal(false);
           expect(errors[0]).to.include('requires an object value');
         });
-
-      it('rejects a non-string `select` at validation time', function () {
-        const {valid, errors} = validateJSONTemplate([
-          [{$greet: {select: 123}}]
-        ]);
-        expect(valid).to.equal(false);
-        expect(errors[0]).to.include(
-          "`$greet`'s `select`, when given, must be a string"
-        );
-      });
     });
 
     it(

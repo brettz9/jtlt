@@ -1,5 +1,32 @@
 # jtlt CHANGES
 
+## 0.22.0
+
+BREAKING: Changes extension system to provide extensions with the full argument rather than assigning a special meaning to `select` and passing only its value.
+
+- feat: extension-call declarative operation nodes — any operation-node key
+  not otherwise recognized, e.g. `{$greet: {select: '$.path'}}`, calls a
+  named function of that same name from `config.extensions` (`ctx[name]
+  (argObject)`, the argument object passed through entirely unresolved —
+  no key, including a conventional `select`, is interpreted by jtlt itself;
+  the extension reads whatever it needs via `this.get(...)`, `this.valueOf
+  (...)`, etc. — the argument is an object, matching `$indexedDB`'s own
+  convention, so a call can carry any number of named fields, e.g. `{select,
+  db, store}`). Restricted at runtime to names actually present in
+  `config.extensions` (tracked via a new `context._extensionNames` `Set`,
+  populated by `applyExtensions`): a declarative `behavior` — e.g. an
+  admin-authored, untrusted template — can never invoke an arbitrary
+  built-in context method (`element`, `indexedDB`, etc.) by name this way.
+  Like `$renderDefault`, the extension itself is responsible for inserting
+  any output (e.g. via `this.appendOutput(...)`); the interpreter never does
+  so on its behalf. Trade-off: because any not-otherwise-recognized
+  `$`-prefixed key becomes a live extension name, a future jtlt release
+  adding a new built-in operation could collide with an extension name a
+  consumer already uses — consumers documenting their extension names
+  ([jtlt's wiki](https://github.com/brettz9/jtlt/wiki/Extension-registry) is
+  reserved for this purpose) are encouraged to also list jtlt's own reserved
+  op keys as names to avoid.
+
 ## 0.21.0
 
 - feat: extension-call declarative operation nodes — any operation-node key

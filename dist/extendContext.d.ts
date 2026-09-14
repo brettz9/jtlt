@@ -5,8 +5,8 @@
  *
  * Also records the registered names on `context._extensionNames` (a `Set`,
  * merged with any already present from an earlier call) — consulted by the
- * declarative interpreter's extension-call nodes (e.g. `{$greet:
- * {select?}}` — see `jsonTemplate.js`) so a declarative `behavior` can only
+ * declarative interpreter's extension-call nodes (e.g. `{$greet: {select:
+ * '$.path'}}` — see `jsonTemplate.js`) so a declarative `behavior` can only
  * ever invoke names that were actually supplied here, never an
  * arbitrary/built-in context method (`element`, `indexedDB`, etc.) by name.
  * Untrusted, admin-authored declarative source is exactly why this

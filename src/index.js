@@ -128,11 +128,14 @@ export const setWindow = (win) => {
  * which both require theirs): a bare prefetch — binding via `$as` for later
  * use, or simply discarding the rows — is a legitimate leaf use. Any key
  * not otherwise recognized here — e.g. `$greet` — is an extension call:
- * `ctx[name]({select?})` calls a named function from `config.extensions`
- * (`value` from `select`, or the current `$` data when omitted) — like
- * `$renderDefault`, the extension itself is responsible for inserting any
- * output (e.g. via `this.appendOutput(...)`); the interpreter never does so
- * on its behalf. Restricted at runtime to names actually present in
+ * `ctx[name](argObject)` calls a named function from `config.extensions`,
+ * passing the operation node's own argument object through entirely
+ * unresolved (no key, including a conventional `select`, is interpreted by
+ * jtlt itself — the extension reads whatever it needs via `this.get(...)`,
+ * `this.valueOf(...)`, etc.) — like `$renderDefault`, the extension itself
+ * is responsible for inserting any output (e.g. via
+ * `this.appendOutput(...)`); the interpreter never does so on its behalf.
+ * Restricted at runtime to names actually present in
  * `config.extensions` (tracked via `ctx._extensionNames`, set by
  * `applyExtensions`), so a declarative `behavior` — untrusted, admin-authored
  * — can never invoke an arbitrary built-in context method by name. Because
@@ -165,7 +168,7 @@ export const setWindow = (win) => {
  *     $as?: string
  *   }, JSONTemplateNode[]] |
  *   [{$renderDefault: true}] |
- *   [Record<`$${string}`, {select?: string}>]
+ *   [Record<`$${string}`, Record<string, unknown>>]
  * } JSONOperationNode
  */
 

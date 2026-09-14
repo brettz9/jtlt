@@ -138,7 +138,7 @@ A node is one of:
 | `[{$variable: name, $select: sel}]` | `this.variable(name, sel)`, readable back later via a bare `$name` reference |
 | `[{$indexedDB: {db, store, options?}, $as?: name}, childNodes?]` | fetches rows; with `$as`, binds them via `this.variable(name, {value: rows})`; without it, swaps the data context (`$`) to the rows for `childNodes` |
 | `[{$renderDefault: true}]` | `this.appendOutput(await this.renderDefault())` (an `extensions.renderDefault` your config supplies) |
-| `[{$name: {select?: sel}}]` (any key not otherwise recognized above) | an extension call: `await this[name](value)` — `value` is the `select` result, or the current `$` data when omitted. `name` must be a key actually present in `config.extensions`; any other name throws |
+| `[{$name: {...}}]` (any key not otherwise recognized above) | an extension call: `await this[name](argObject)` — the argument object is passed through entirely unresolved (no key, e.g. a conventional `select`, is interpreted by jtlt itself; the extension resolves whatever it needs via `this.get(...)`, `this.valueOf(...)`, etc.). `name` must be a key actually present in `config.extensions`; any other name throws |
 
 Every operation node's leading object is entirely `$`-prefixed — jamilih's
 own validator requires this of any first-position plain object. `$jtltMode`/
@@ -164,6 +164,15 @@ on the context as `_extensionNames`) matters when `behavior` itself is
 untrusted, admin-authored declarative source: without it, an extension-call
 key could invoke any built-in context method by name (`element`,
 `indexedDB`, etc.), not just the helpers its author intentionally exposed.
+
+The argument object's contents are entirely up to the extension itself —
+jtlt neither resolves a `select` nor interprets any other key, just hands
+the whole object over (`this`-bound to the live context, so the extension
+can call `this.get(argObject.select, false)`, or read a literal field like
+`argObject.db` directly, however it needs to). This is what lets one call
+carry more than a single value — e.g. `{$generateJsoeEditUI: {select:
+'$.record', db: 'x', store: 'y'}}` passing both the record to edit and
+which store's schema should shape the controls.
 
 **Trade-off**: because any operation-node key not in the fixed built-in set
 is treated as a candidate extension name, a future jtlt release adding a

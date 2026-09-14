@@ -30,24 +30,28 @@ import {isValidJamilih} from 'jamilih';
  * itself return a `Promise` that settles once the callback's work is done,
  * keeping output correctly ordered either way.
  *
- * An extension call (`{$name: {select?: 'sel'}}`, e.g. `{$greet: {select:
- * '$.user.name'}}` — the argument is an object, matching `$indexedDB`'s own
- * convention, rather than a bare value, leaving room for more named fields
- * later without a breaking shape change) calls a `this`-bound method of
- * that same name supplied via `config.extensions` (`this.name(value)`,
- * `value` resolved by running `select` against the current data, or the
- * current data itself when `select` is omitted) — restricted to names
- * actually present in `config.extensions` (tracked by `applyExtensions` in
+ * An extension call (`{$name: {...}}`, e.g. `{$greet: {select:
+ * '$.user.name'}}`, or `{$generateJsoeEditUI: {select: '$.record', db:
+ * 'x', store: 'y'}}` — the argument is an object, matching `$indexedDB`'s
+ * own convention, rather than a bare value) calls a `this`-bound method of
+ * that same name supplied via `config.extensions` (`this.name(argObject)`)
+ * — restricted to names actually present in `config.extensions` (tracked
+ * by `applyExtensions` in
  * `extendContext.js`), never an arbitrary/built-in context method, since a
  * declarative `behavior` using this format is typically untrusted,
  * admin-authored input (idb-manager's route overrides): any key not in
  * `RECOGNIZED_OP_KEYS` is treated as a candidate extension name rather than
  * a validation error, so whether it's actually callable can only be
  * confirmed once a live context (and its `config.extensions`) exists — see
- * `runOperation`, below. Like `$renderDefault`, inserting the extension's
- * return value into the output (if it has one worth inserting) is the
- * extension's own job — e.g. via `this.appendOutput(node)` — not something
- * this interpreter does for it. Because any not-otherwise-recognized
+ * `runOperation`, below. The interpreter does not interpret the argument
+ * object's contents at all — no key (including `select`) is special-cased
+ * — it's simply handed to the extension as-is, `this`-bound to the live
+ * context, so the extension resolves whatever it needs itself (e.g.
+ * `this.get(argObject.select, false)`) however suits it. Like
+ * `$renderDefault`, inserting the extension's return value into the output
+ * (if it has one worth inserting) is the extension's own job — e.g. via
+ * `this.appendOutput(node)` — not something this interpreter does for it.
+ * Because any not-otherwise-recognized
  * `$`-prefixed key becomes a live extension name, a future jtlt release
  * adding a new built-in operation could collide with an extension name a
  * consumer already uses — accepted as a known, documented risk in exchange
@@ -151,16 +155,13 @@ function validateOperationHead (head) {
       return `Unrecognized operation-node key \`${keys[0]}\`.`;
     }
     const [extKey] = keys;
-    const argSpec = head[extKey];
-    if (!isPlainObject(argSpec)) {
+    if (!isPlainObject(head[extKey])) {
       return `\`${extKey}\` (an extension call) requires an object value, ` +
         `e.g. \`{${extKey}: {select: '$.path'}}\` — matching ` +
-        '`$indexedDB`\'s own convention.';
-    }
-    if (
-      Object.hasOwn(argSpec, 'select') && typeof argSpec.select !== 'string'
-    ) {
-      return `\`${extKey}\`'s \`select\`, when given, must be a string.`;
+        '`$indexedDB`\'s own convention. Its contents are entirely up to ' +
+        'the extension itself (e.g. a `select` it resolves via `this.get' +
+        '(...)`, literal fields like `db`/`store`, …) — not interpreted ' +
+        'here.';
     }
     return null;
   }
@@ -570,9 +571,11 @@ async function runOperation (head, rest, ctx) {
       'may only name one actually supplied via `config.extensions`).'
     );
   }
-  const argSpec = /** @type {{select?: string}} */ (head[key]);
-  const value = ctx.get(argSpec.select, false);
-  await ctx[name](value);
+  // The argument object's contents are entirely up to the extension: the
+  // interpreter neither resolves a `select` nor interprets any other key,
+  // just hands the whole thing over (`this` is still the live context, so
+  // the extension can call `this.get(...)`/`this.valueOf(...)` itself).
+  await ctx[name](/** @type {Record<string, unknown>} */ (head[key]));
 }
 
 /**
