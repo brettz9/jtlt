@@ -126,7 +126,21 @@ export const setWindow = (win) => {
  * (`UNKNOWN_MAGIC_PROPERTY`); that combined form needs `$jtltText` instead.
  * See §3.5. `$indexedDB`'s children are optional (unlike `$if`/`$forEach`,
  * which both require theirs): a bare prefetch — binding via `$as` for later
- * use, or simply discarding the rows — is a legitimate leaf use.
+ * use, or simply discarding the rows — is a legitimate leaf use. Any key
+ * not otherwise recognized here — e.g. `$greet` — is an extension call:
+ * `ctx[name]({select?})` calls a named function from `config.extensions`
+ * (`value` from `select`, or the current `$` data when omitted) — like
+ * `$renderDefault`, the extension itself is responsible for inserting any
+ * output (e.g. via `this.appendOutput(...)`); the interpreter never does so
+ * on its behalf. Restricted at runtime to names actually present in
+ * `config.extensions` (tracked via `ctx._extensionNames`, set by
+ * `applyExtensions`), so a declarative `behavior` — untrusted, admin-authored
+ * — can never invoke an arbitrary built-in context method by name. Because
+ * any not-otherwise-recognized `$`-prefixed key becomes a live extension
+ * name, a future built-in operation added here could collide with a name a
+ * consumer already uses for an extension — an accepted, documented risk
+ * (see `jsonTemplate.js`'s module doc comment) traded for this terser
+ * syntax over a more defensive, explicitly namespaced wrapper.
  * @typedef {[{$text: unknown}] |
  *   [{$jtltText: unknown, $select?: string}] |
  *   [{$string: unknown, $select?: string}] |
@@ -150,7 +164,8 @@ export const setWindow = (win) => {
  *     },
  *     $as?: string
  *   }, JSONTemplateNode[]] |
- *   [{$renderDefault: true}]
+ *   [{$renderDefault: true}] |
+ *   [Record<`$${string}`, {select?: string}>]
  * } JSONOperationNode
  */
 
@@ -260,6 +275,14 @@ export const setWindow = (win) => {
  *   with a single argument that is the result of this instance's
  *   transform() method. When used in TypeScript, this can be made
  *   generic as `success<T>(result: T): void`.
+ * @property {(err: unknown) => void} [error] `success`'s counterpart for
+ *   the autostart path (`config.autostart` unset/`true`, the common case):
+ *   a template that throws (directly, or via an awaited Promise it
+ *   returned) calls this instead, if supplied — otherwise the failure is
+ *   only surfaced via `console.error`, since `_autoStart` invokes
+ *   `transform()` without a caller able to `await`/`catch` it directly.
+ *   Not consulted for a `transform()` call made directly (its own return
+ *   value/rejection is observable there instead).
  * @property {null|boolean|number|string|object} [data] A JSON
  *   object or DOM document (XPath)
  * @property {string} [ajaxData] URL of a JSON file to retrieve for
@@ -567,7 +590,28 @@ class JTLT {
       return;
     }
 
-    this.transform(/** @type {string} */ (mode));
+    // `transform()`'s result is a `Promise` whenever the template ran
+    //   asynchronously (§ its own doc comment) — discarding that here, as
+    //   this call previously did, meant a template that threw (or whose
+    //   `success` callback threw) became an unhandled rejection with no way
+    //   for the constructor's caller to observe it at all: `config.success`
+    //   is the only callback `transform()` invokes, with nothing symmetric
+    //   for failure. `config.error`, when supplied, is that missing
+    //   counterpart; when it isn't, the failure is at least surfaced via
+    //   `console.error` instead of silently vanishing.
+    const result = this.transform(/** @type {string} */ (mode));
+    const maybePromise = /** @type {{catch?: unknown}} */ (result);
+    if (maybePromise && typeof maybePromise.catch === 'function') {
+      // eslint-disable-next-line promise/prefer-await-to-then -- Fire+forget
+      /** @type {Promise<unknown>} */ (result).catch((err) => {
+        if (typeof this.config.error === 'function') {
+          this.config.error(err);
+        } else {
+          /* eslint-disable-next-line no-console -- Last-resort visibility */
+          console.error(err);
+        }
+      });
+    }
   }
 
   /**
@@ -865,7 +909,7 @@ class JTLT {
  */
 export function jtlt (cfg) {
   // eslint-disable-next-line promise/avoid-new -- Own API
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     // Narrow the constructor overload based on engineType
     if (cfg && cfg.engineType === 'xpath') {
       const outputType = cfg.outputType || 'string';
@@ -877,7 +921,8 @@ export function jtlt (cfg) {
             outputType: 'json',
             success (val) {
               resolve(val);
-            }
+            },
+            error: reject
           })
         );
       } else if (outputType === 'dom') {
@@ -887,7 +932,8 @@ export function jtlt (cfg) {
             outputType: 'dom',
             success (val) {
               resolve(val);
-            }
+            },
+            error: reject
           })
         );
       } else {
@@ -897,7 +943,8 @@ export function jtlt (cfg) {
             outputType: 'string',
             success (val) {
               resolve(val);
-            }
+            },
+            error: reject
           })
         );
       }
@@ -913,7 +960,8 @@ export function jtlt (cfg) {
           outputType: 'string',
           success (val) {
             resolve(val);
-          }
+          },
+          error: reject
         })
       );
     } else if (outputType === 'dom') {
@@ -923,7 +971,8 @@ export function jtlt (cfg) {
           outputType: 'dom',
           success (val) {
             resolve(val);
-          }
+          },
+          error: reject
         })
       );
     } else {
@@ -933,7 +982,8 @@ export function jtlt (cfg) {
           outputType: 'json',
           success (val) {
             resolve(val);
-          }
+          },
+          error: reject
         })
       );
     }

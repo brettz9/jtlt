@@ -138,6 +138,7 @@ A node is one of:
 | `[{$variable: name, $select: sel}]` | `this.variable(name, sel)`, readable back later via a bare `$name` reference |
 | `[{$indexedDB: {db, store, options?}, $as?: name}, childNodes?]` | fetches rows; with `$as`, binds them via `this.variable(name, {value: rows})`; without it, swaps the data context (`$`) to the rows for `childNodes` |
 | `[{$renderDefault: true}]` | `this.appendOutput(await this.renderDefault())` (an `extensions.renderDefault` your config supplies) |
+| `[{$name: {select?: sel}}]` (any key not otherwise recognized above) | an extension call: `await this[name](value)` — `value` is the `select` result, or the current `$` data when omitted. `name` must be a key actually present in `config.extensions`; any other name throws |
 
 Every operation node's leading object is entirely `$`-prefixed — jamilih's
 own validator requires this of any first-position plain object. `$jtltMode`/
@@ -150,9 +151,31 @@ node's own trailing arguments are each *arrays* — including the
 easy-to-miss case of a single node or a single sibling, which still needs
 its wrapping array.
 
-`$indexedDB`/`$renderDefault` may appear nested anywhere a node is
-allowed — inside an element's children, or a `$if`/`$forEach` body — not
-just at a template's top level; see the README section above for why.
+`$indexedDB`/`$renderDefault`/an extension call may appear nested anywhere a
+node is allowed — inside an element's children, or a `$if`/`$forEach` body —
+not just at a template's top level; see the README section above for why.
+
+An extension call, like `$renderDefault`, never auto-inserts its call's
+return value — the extension itself is responsible for that (e.g. via
+`this.appendOutput(...)`), since a called extension may want to emit
+nothing, emit synchronously, or await further work first. Restricting
+callable names to those actually supplied via `config.extensions` (tracked
+on the context as `_extensionNames`) matters when `behavior` itself is
+untrusted, admin-authored declarative source: without it, an extension-call
+key could invoke any built-in context method by name (`element`,
+`indexedDB`, etc.), not just the helpers its author intentionally exposed.
+
+**Trade-off**: because any operation-node key not in the fixed built-in set
+is treated as a candidate extension name, a future jtlt release adding a
+new built-in operation could collide with an extension name a consumer
+already uses, silently changing that template's behavior on upgrade. This
+is accepted in exchange for the terser `{$greet: {...}}` syntax over a more
+defensive, explicitly namespaced `{$extension: 'greet', ...}` wrapper.
+Consumers who register extensions are encouraged to document their chosen
+names somewhere (e.g. a project wiki page) alongside jtlt's own reserved
+op keys (`$text`, `$jtltText`, `$string`, `$valueOf`, `$applyTemplates`,
+`$if`, `$forEach`, `$variable`, `$indexedDB`, `$renderDefault`, `$mode`,
+`$jtltMode`, `$as`, `$sort`, `$select`) as names to avoid.
 
 **Validation**: `format: 'json'` (the default) rejects an embedded live
 function/DOM node anywhere in the tree — the intent is a safely

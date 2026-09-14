@@ -44,7 +44,10 @@ import {
  * @param {import('../src/index.js').JSONTemplateNode[]} nodes
  * @param {object} [data]
  * @param {Record<string, unknown>} [params]
- * @param {Record<string, unknown>} [extensions]
+ * @param {Record<string, unknown> & ThisType<
+ *   import('../src/JSONPathTransformerContext.js').default &
+ *   import('../src/context-extensions.js').ContextExtensions
+ * >} [extensions]
  * @returns {Promise<string>}
  */
 function renderJSON (nodes, data = {}, params = {}, extensions = {}) {
@@ -344,6 +347,88 @@ describe('JSON (jamilih) templates', function () {
         expect(out).to.equal('<h1>Custom view</h1><default></default>');
       }
     );
+
+    describe('extension calls (e.g. `{$greet: {select?}}`)', function () {
+      it(
+        'calls the caller-supplied extension, passing the current data ' +
+        'when `select` is omitted',
+        async function () {
+          const out = await renderJSON(
+            [[{$greet: {}}]],
+            {name: 'Ada'},
+            {},
+            {
+              /** @param {{name: string}} data */
+              greet (data) {
+                this.text(`Hello, ${data.name}!`);
+              }
+            }
+          );
+          expect(out).to.equal('Hello, Ada!');
+        }
+      );
+
+      it('resolves `select` and passes the result as the argument',
+        async function () {
+          const out = await renderJSON(
+            [[{$greet: {select: '$.user.name'}}]],
+            {user: {name: 'Ada'}},
+            {},
+            {
+              /** @param {string} name */
+              greet (name) {
+                this.text(`Hello, ${name}!`);
+              }
+            }
+          );
+          expect(out).to.equal('Hello, Ada!');
+        });
+
+      it('awaits an async extension', async function () {
+        const out = await renderJSON(
+          [[{$slowGreet: {}}]],
+          {},
+          {},
+          {
+            async slowGreet () {
+              await Promise.resolve();
+              this.text('Hello!');
+            }
+          }
+        );
+        expect(out).to.equal('Hello!');
+      });
+
+      it(
+        'rejects a name not actually supplied via `extensions`, even one ' +
+        'naming a real, built-in context method',
+        async function () {
+          const error = await expectRejection(
+            renderJSON([[{$element: {}}]])
+          );
+          expect(error.message).to.include('not a registered extension');
+        }
+      );
+
+      it('rejects a non-object extension-call value at validation time',
+        function () {
+          const {valid, errors} = validateJSONTemplate([
+            [{$greet: 'not-an-object'}]
+          ]);
+          expect(valid).to.equal(false);
+          expect(errors[0]).to.include('requires an object value');
+        });
+
+      it('rejects a non-string `select` at validation time', function () {
+        const {valid, errors} = validateJSONTemplate([
+          [{$greet: {select: 123}}]
+        ]);
+        expect(valid).to.equal(false);
+        expect(errors[0]).to.include(
+          "`$greet`'s `select`, when given, must be a string"
+        );
+      });
+    });
 
     it(
       '$variable binds a selector result, readable back via a bare $name ' +

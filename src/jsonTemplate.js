@@ -18,16 +18,44 @@ import {isValidJamilih} from 'jamilih';
  * including the `$text`/`$jtltText` and `$mode`/`$jtltMode` namespacing
  * rules and `$indexedDB`'s optional `$as`.
  *
- * `$indexedDB`/`$renderDefault` (the only async operations) may appear
- * anywhere a node is allowed — nested inside an element's children, or a
- * `$if`/`$forEach` body, included — because every node here is run through
- * an `async` callback, and `element()`/`if()`/`choose()`/`forEach()` (in
- * every joining transformer and `JSONPathTransformerContext`) duck-type
- * their callback's return value: a synchronous callback keeps them
- * synchronous, but one returning a `Promise` (an async function that
- * awaited something) makes the call itself return a `Promise` that settles
- * once the callback's work is done, keeping output correctly ordered
- * either way.
+ * `$indexedDB`/`$renderDefault`/an extension call (the only operations that
+ * may be async — an extension call awaits whatever the named extension
+ * itself is) may appear anywhere a node is allowed — nested inside an
+ * element's children, or a `$if`/`$forEach` body, included — because every
+ * node here is run through an `async` callback, and
+ * `element()`/`if()`/`choose()`/`forEach()` (in every joining transformer
+ * and `JSONPathTransformerContext`) duck-type their callback's return
+ * value: a synchronous callback keeps them synchronous, but one returning a
+ * `Promise` (an async function that awaited something) makes the call
+ * itself return a `Promise` that settles once the callback's work is done,
+ * keeping output correctly ordered either way.
+ *
+ * An extension call (`{$name: {select?: 'sel'}}`, e.g. `{$greet: {select:
+ * '$.user.name'}}` — the argument is an object, matching `$indexedDB`'s own
+ * convention, rather than a bare value, leaving room for more named fields
+ * later without a breaking shape change) calls a `this`-bound method of
+ * that same name supplied via `config.extensions` (`this.name(value)`,
+ * `value` resolved by running `select` against the current data, or the
+ * current data itself when `select` is omitted) — restricted to names
+ * actually present in `config.extensions` (tracked by `applyExtensions` in
+ * `extendContext.js`), never an arbitrary/built-in context method, since a
+ * declarative `behavior` using this format is typically untrusted,
+ * admin-authored input (idb-manager's route overrides): any key not in
+ * `RECOGNIZED_OP_KEYS` is treated as a candidate extension name rather than
+ * a validation error, so whether it's actually callable can only be
+ * confirmed once a live context (and its `config.extensions`) exists — see
+ * `runOperation`, below. Like `$renderDefault`, inserting the extension's
+ * return value into the output (if it has one worth inserting) is the
+ * extension's own job — e.g. via `this.appendOutput(node)` — not something
+ * this interpreter does for it. Because any not-otherwise-recognized
+ * `$`-prefixed key becomes a live extension name, a future jtlt release
+ * adding a new built-in operation could collide with an extension name a
+ * consumer already uses — accepted as a known, documented risk in exchange
+ * for the terser syntax (rather than the more defensive, explicitly
+ * namespaced `{$extension: 'name', $select?: sel}` wrapper this replaced) —
+ * consumers documenting their extension names (e.g. a project wiki page)
+ * are encouraged to also list jtlt's own reserved op keys as names to
+ * avoid.
  */
 
 /**
@@ -87,6 +115,9 @@ function splitElementRest (rest) {
  * is never valid bare (jamilih hard-reserves it); `$text` is valid bare
  * (jamilih's own text-node form) but not combined with `$select` (jamilih
  * rejects the unrecognized companion) — that combination needs `$jtltText`.
+ * Any `$`-prefixed key *not* in this set is a candidate extension call
+ * (see `runOperation`), not a validation error — see the module doc
+ * comment above for the namespace-collision tradeoff this implies.
  * @type {ReadonlySet<string>}
  */
 const RECOGNIZED_OP_KEYS = new Set([
@@ -108,8 +139,30 @@ function validateOperationHead (head) {
   }
   const opKeys = keys.filter((k) => RECOGNIZED_OP_KEYS.has(k));
   if (opKeys.length === 0) {
-    const badKey = keys.find((k) => !k.startsWith('$')) ?? keys[0];
-    return `Unrecognized operation-node key \`${badKey}\`.`;
+    const badKey = keys.find((k) => !k.startsWith('$'));
+    if (badKey) {
+      return `Unrecognized operation-node key \`${badKey}\`.`;
+    }
+    // Every key is `$`-prefixed but none is a built-in op: a single such
+    // key is a candidate extension call. Whether it names a name actually
+    // supplied via `config.extensions` can only be confirmed once a live
+    // context exists (`runOperation`), so that check isn't done here.
+    if (keys.length !== 1) {
+      return `Unrecognized operation-node key \`${keys[0]}\`.`;
+    }
+    const [extKey] = keys;
+    const argSpec = head[extKey];
+    if (!isPlainObject(argSpec)) {
+      return `\`${extKey}\` (an extension call) requires an object value, ` +
+        `e.g. \`{${extKey}: {select: '$.path'}}\` — matching ` +
+        '`$indexedDB`\'s own convention.';
+    }
+    if (
+      Object.hasOwn(argSpec, 'select') && typeof argSpec.select !== 'string'
+    ) {
+      return `\`${extKey}\`'s \`select\`, when given, must be a string.`;
+    }
+    return null;
   }
   if (Object.hasOwn(head, '$text') && keys.length > 1) {
     return '`$text` combined with any other key (e.g. `$select`) is not ' +
@@ -482,25 +535,44 @@ async function runOperation (head, rest, ctx) {
     await ctx.renderDefault();
     return;
   }
-  // Only $indexedDB is left (validateOperationHead already rejects
-  // anything else, and every other recognized key returned above).
-  const idb = /** @type {{db: string, store: string, options?: unknown}} */
-    (head.$indexedDB);
-  const rows = await ctx.indexedDB(idb.db, idb.store, idb.options);
-  // Validation already confirmed this is an array, when given at all.
-  const childNodes = /** @type {unknown[]} */ (rest[0] ?? []);
-  if (Object.hasOwn(head, '$as')) {
-    ctx.variable(head.$as, {value: rows});
-    await runNodes(childNodes, ctx);
-  } else {
-    const prevContext = ctx._contextObj;
-    ctx._contextObj = rows;
-    try {
+  if (Object.hasOwn(head, '$indexedDB')) {
+    const idb = /** @type {{db: string, store: string, options?: unknown}} */
+      (head.$indexedDB);
+    const rows = await ctx.indexedDB(idb.db, idb.store, idb.options);
+    // Validation already confirmed this is an array, when given at all.
+    const childNodes = /** @type {unknown[]} */ (rest[0] ?? []);
+    if (Object.hasOwn(head, '$as')) {
+      ctx.variable(head.$as, {value: rows});
       await runNodes(childNodes, ctx);
-    } finally {
-      ctx._contextObj = prevContext;
+    } else {
+      const prevContext = ctx._contextObj;
+      ctx._contextObj = rows;
+      try {
+        await runNodes(childNodes, ctx);
+      } finally {
+        ctx._contextObj = prevContext;
+      }
     }
+    return;
   }
+  // Only a single, not-otherwise-recognized `$`-prefixed key is left
+  // (`validateOperationHead` already confirmed this shape) — a candidate
+  // extension call. Only a name actually supplied via `config.extensions`
+  // (tracked by `applyExtensions` in `extendContext.js`) may be called this
+  // way — never an arbitrary/built-in context method (`element`,
+  // `indexedDB`, …) by name, since an admin-authored declarative `behavior`
+  // is untrusted input.
+  const [key] = Object.keys(head);
+  const name = key.slice(1);
+  if (!ctx._extensionNames?.has(name)) {
+    throw new Error(
+      `"${name}" is not a registered extension (an extension-call key ` +
+      'may only name one actually supplied via `config.extensions`).'
+    );
+  }
+  const argSpec = /** @type {{select?: string}} */ (head[key]);
+  const value = ctx.get(argSpec.select, false);
+  await ctx[name](value);
 }
 
 /**

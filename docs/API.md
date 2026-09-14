@@ -43,7 +43,13 @@ const out = JTLT.create({
 }).transform('');
 ```
 
-`jtlt()` accepts every `JTLT` option except `success`.
+`jtlt()` accepts every `JTLT` option except `success`/`error` — it wires
+both itself, so its returned `Promise` resolves or rejects instead.
+
+For `JTLT`'s own autostart path (no explicit `.transform()` call), `error`
+is `success`'s failure counterpart: a template that throws or otherwise
+rejects the transform calls `error(err)` if provided, else falls back to
+`console.error(err)`.
 
 ## Engines
 

@@ -1,5 +1,34 @@
 # jtlt CHANGES
 
+## 0.21.0
+
+- feat: extension-call declarative operation nodes — any operation-node key
+  not otherwise recognized, e.g. `{$greet: {select?: '$.path'}}`, calls a
+  named function of that same name from `config.extensions` (`ctx[name]
+  (value)`, `value` from `select`, or the current `$` context data when
+  `select` is omitted — the argument is an object, matching `$indexedDB`'s
+  own convention, leaving room for more named fields later). Restricted at
+  runtime to names actually present in `config.extensions` (tracked via a
+  new `context._extensionNames` `Set`, populated by `applyExtensions`): a
+  declarative `behavior` — e.g. an admin-authored, untrusted template — can
+  never invoke an arbitrary built-in context method (`element`, `indexedDB`,
+  etc.) by name this way. Like `$renderDefault`, the extension itself is
+  responsible for inserting any output (e.g. via `this.appendOutput(...)`);
+  the interpreter never does so on its behalf. Trade-off: because any
+  not-otherwise-recognized `$`-prefixed key becomes a live extension name, a
+  future jtlt release adding a new built-in operation could collide with an
+  extension name a consumer already uses — consumers documenting their
+  extension names ([jtlt's wiki](https://github.com/brettz9/jtlt/wiki/Extension-registry) is reserved for this purpose)
+  are encouraged to also list jtlt's own reserved op keys as names to avoid.
+- fix: `_autoStart`'s `transform()` call discarded its returned promise
+  entirely, so a rejection (e.g. a template throwing) became a silently
+  swallowed unhandled rejection instead of surfacing anywhere — `await
+  jtlt({...})` would hang forever rather than reject. Added a new `error`
+  config option (alongside the existing `success`) and wired a `.catch()` in
+  `_autoStart` that calls it (or falls back to `console.error`); the `jtlt()`
+  convenience function now rejects its promise via `error` on failure
+  instead of hanging.
+
 ## 0.20.0
 
 - fix: `ObjectCallback` / `ArrayCallback` / `SimpleCallback` (in the String/

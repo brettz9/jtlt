@@ -137,6 +137,10 @@ export type JSONOperationNode = [{
     {
         $renderDefault: true;
     }
+] | [
+    Record<`$${string}`, {
+        select?: string;
+    }>
 ];
 export type JSONTemplateNode = string | JSONElementNode | JSONOperationNode;
 export type JoiningTransformerContract = {
@@ -183,6 +187,17 @@ export type BaseJTLTOptions<T, E extends boolean | undefined = false> = {
      * generic as `success<T>(result: T): void`.
      */
     success?: (result: ResultType<T, E>) => ResultType<T, E> | void;
+    /**
+     * `success`'s counterpart for
+     * the autostart path (`config.autostart` unset/`true`, the common case):
+     * a template that throws (directly, or via an awaited Promise it
+     * returned) calls this instead, if supplied — otherwise the failure is
+     * only surfaced via `console.error`, since `_autoStart` invokes
+     * `transform()` without a caller able to `await`/`catch` it directly.
+     * Not consulted for a `transform()` call made directly (its own return
+     * value/rejection is observable there instead).
+     */
+    error?: (err: unknown) => void;
     /**
      * A JSON
      * object or DOM document (XPath)
