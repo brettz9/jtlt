@@ -429,9 +429,20 @@ class DOMJoiningTransformer extends AbstractJoiningTransformer {
       }
 
       for (const att in atts) {
-        if (Object.hasOwn(atts, att)) {
-          el.setAttribute(att, this._replaceCharacterMaps(atts[att]));
+        if (!Object.hasOwn(atts, att)) {
+          continue;
         }
+        // Mirrors jamilih's own real DOM builder (`jml.js`): `innerHTML`
+        // sets real, browser-parsed HTML content rather than a literal
+        // `innerHTML="..."` attribute — see jsonTemplate.js's
+        // `resolveElementAttributes` doc comment for the trust model
+        // (the template author is responsible for the value's safety;
+        // this sink does no sanitization of its own).
+        if (att === 'innerHTML') {
+          el.innerHTML = /** @type {string} */ (atts[att]);
+          continue;
+        }
+        el.setAttribute(att, this._replaceCharacterMaps(atts[att]));
       }
 
       const oldDOM = this._dom;
@@ -493,9 +504,15 @@ class DOMJoiningTransformer extends AbstractJoiningTransformer {
     }
 
     for (const att in atts) {
-      if (Object.hasOwn(atts, att)) {
-        el.setAttribute(att, this._replaceCharacterMaps(atts[att]));
+      if (!Object.hasOwn(atts, att)) {
+        continue;
       }
+      // See the matching branch above for why `innerHTML` is special-cased.
+      if (att === 'innerHTML') {
+        el.innerHTML = /** @type {string} */ (atts[att]);
+        continue;
+      }
+      el.setAttribute(att, this._replaceCharacterMaps(atts[att]));
     }
     this.append(el);
 

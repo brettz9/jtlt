@@ -1,5 +1,41 @@
 # jtlt CHANGES
 
+## 0.23.0
+
+- feat: `${sel}` template-literal-style interpolation for a declarative
+  (jamilih-shaped) element's string-valued attributes, e.g. `['a', {href:
+  '/words/${$.key}'}, ['dog']]`. Each `${sel}` placeholder is resolved via
+  `ctx.get(sel.trim(), false)` at runtime and coerced to a string
+  (`null`/`undefined` becomes `''`, not the literal "null"/"undefined");
+  a value with no `${` at all is returned unchanged. Combined with
+  jamilih's own `innerHTML` magic attribute (already accepted at
+  validation time, just not previously *executed* correctly — see below),
+  this covers "raw HTML from a data value" too, e.g. `{innerHTML:
+  '${$.definitionHtml}'}` — no separate operation is needed.
+- feat: new `interpolateAttributes` option (`compileJSONTemplate`,
+  `validateJSONTemplate`, and the `TemplateObject`/config-wide
+  `defaultInterpolateAttributes` fallback) restricts which element
+  attribute names `${sel}` interpolation applies to: `{allow: [...]}` or
+  `{deny: [...]}`. Every string-valued attribute is eligible when omitted
+  (the default, backward-compatible behavior). A `${...}`-shaped literal
+  string sitting in an ineligible attribute is not flagged as an error —
+  it may just as well be a coincidental literal value (e.g. a currency
+  template or CSS `calc()`-like string) — it simply renders as literal
+  text.
+- fix: `innerHTML` (jamilih's own magic attribute key, already accepted by
+  `isValidJamilih` at validation time) was never actually given raw-HTML
+  treatment by the *execution* engine — `StringJoiningTransformer`'s
+  callback-driven `element()` path rendered it as a literal
+  `innerHTML="..."` attribute, and `DOMJoiningTransformer`'s `element()`
+  called `setAttribute('innerHTML', ...)`, which does nothing useful on a
+  real DOM element. Both now special-case `innerHTML` to match jamilih's
+  own real DOM builder (`jml.js`): `StringJoiningTransformer` appends the
+  value as raw, unescaped content, and `DOMJoiningTransformer` sets
+  `element.innerHTML = value` directly (real, browser-parsed HTML nodes).
+  `JSONJoiningTransformer` output needed no change — its output already
+  *is* a jamilih-shaped structure, where `innerHTML` staying a literal
+  attribute key is correct (a later `jml()` call handles it).
+
 ## 0.22.0
 
 BREAKING: Changes extension system to provide extensions with the full argument rather than assigning a special meaning to `select` and passing only its value.

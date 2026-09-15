@@ -632,15 +632,34 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
     /** @type {any} */
     const oldTagState = this._openTagState;
     this._openTagState = true;
+    /** @type {string|undefined} */
+    let innerHTMLValue;
     if (atts) {
       const attsObj = /** @type {Record<string, unknown>} */ (atts);
       Object.keys(attsObj).forEach((att) => {
+        // Mirrors jamilih's own real DOM builder (`jml.js`): `innerHTML`
+        // sets raw, unescaped HTML content rather than a literal
+        // `innerHTML="..."` attribute — see jsonTemplate.js's
+        // `resolveElementAttributes` doc comment for the trust model (the
+        // template author is responsible for the value's safety; this
+        // sink does no sanitization of its own).
+        if (att === 'innerHTML') {
+          innerHTMLValue = /** @type {string} */ (attsObj[att]);
+          return;
+        }
         that.attribute(
           att,
           /** @type {string|Record<string, unknown>} */ (attsObj[att]),
           false
         );
       });
+    }
+    if (innerHTMLValue !== undefined) {
+      if (this._openTagState) {
+        this.append('>');
+        this._openTagState = false;
+      }
+      this.append(innerHTMLValue);
     }
     if (childNodes && childNodes.length) {
       this._openTagState = false;

@@ -132,9 +132,13 @@ class JSONPathTransformer {
       if (isJSONTemplateNodeArray(normalized.template)) {
         const format = normalized.format || config.defaultTemplateFormat ||
           'json';
+        const interpolateAttributes = normalized.interpolateAttributes ||
+          config.defaultInterpolateAttributes;
         normalized = {
           ...normalized,
-          template: compileJSONTemplate(normalized.template, {format})
+          template: compileJSONTemplate(
+            normalized.template, {format, interpolateAttributes}
+          )
         };
       }
       return normalized;

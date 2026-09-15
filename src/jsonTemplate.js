@@ -115,6 +115,138 @@ function splitElementRest (rest) {
 }
 
 /**
+ * Resolve every `${sel}` placeholder embedded in a string attribute value
+ * against the live context, e.g. `'/words?key=${$.key}'` or (combined with
+ * jamilih's own `innerHTML` magic attribute) `{innerHTML: '${$.definition}'}`
+ * — no separate raw-HTML operation is needed since `innerHTML` is just
+ * another string-valued attribute as far as this is concerned. `sel` is
+ * resolved via `ctx.get(sel.trim(), false)`; a `null`/`undefined` result
+ * becomes `''` rather than the literal string "null"/"undefined", matching
+ * typical templating conventions (most useful for a still-missing value in
+ * an `href`). A value with no `${` at all is returned unchanged, so the
+ * common (fully static) case allocates nothing extra.
+ * @param {string} value
+ * @param {any} ctx
+ * @returns {string}
+ */
+function interpolateString (value, ctx) {
+  if (!value.includes('${')) {
+    return value;
+  }
+  return value.replaceAll(/\$\{(?<sel>[^\}]+)\}/gv, (_match, sel) => {
+    const resolved = ctx.get(sel.trim(), false);
+    return resolved === null || resolved === undefined
+      ? ''
+      : String(resolved);
+  });
+}
+
+/**
+ * @typedef {{allow: string[]} | {deny: string[]}} InterpolateAttributesConfig
+ */
+
+/**
+ * Validate an `interpolateAttributes` option's own shape, without building
+ * anything from it — used by `validateJSONTemplate` to surface a bad
+ * config's errors up front, before ever compiling (matching its own "report
+ * every problem, don't throw" contract). Omitted entirely, there is nothing
+ * to validate (every string-valued attribute is eligible, the default);
+ * otherwise exactly one of `allow`/`deny` must be present — giving both, or
+ * neither, is an error rather than silently picked between — each a
+ * non-empty array of non-empty attribute-name strings.
+ * @param {InterpolateAttributesConfig} [config]
+ * @returns {string[]}
+ */
+function validateInterpolateAttributesConfig (config) {
+  if (config === undefined) {
+    return [];
+  }
+  if (!isPlainObject(config)) {
+    return [
+      '`interpolateAttributes`, when given, must be an object with ' +
+      'exactly one of `allow` or `deny` (an array of attribute names).'
+    ];
+  }
+  const hasAllow = Object.hasOwn(config, 'allow');
+  const hasDeny = Object.hasOwn(config, 'deny');
+  if (hasAllow === hasDeny) {
+    return [
+      '`interpolateAttributes`, when given, must have exactly one of ' +
+      '`allow` or `deny` (an array of attribute names).'
+    ];
+  }
+  const list = /** @type {Record<string, unknown>} */ (config)[
+    hasAllow ? 'allow' : 'deny'
+  ];
+  if (
+    !Array.isArray(list) ||
+    list.some((n) => typeof n !== 'string' || n.length === 0)
+  ) {
+    return [
+      `\`interpolateAttributes.${hasAllow ? 'allow' : 'deny'}\` must be ` +
+      'an array of non-empty attribute-name strings.'
+    ];
+  }
+  return [];
+}
+
+/**
+ * Compile an `interpolateAttributes` option into a plain attribute-name-
+ * matching predicate. Only ever called (by `compileJSONTemplate`) once
+ * `validateInterpolateAttributesConfig` has already confirmed the config is
+ * well-formed, so this never needs to handle a malformed one itself.
+ * Omitted entirely, every string-valued attribute is eligible (the
+ * default, backward-compatible behavior); `{allow: [...]}` restricts
+ * eligibility to exactly those attribute names, uniformly across every
+ * element in the template (this is a template-wide policy, not scoped per
+ * element name — a `href`-vs-`src` distinction, say, isn't possible);
+ * `{deny: [...]}` makes every attribute eligible *except* those named.
+ * @param {InterpolateAttributesConfig} [config]
+ * @returns {(name: string) => boolean}
+ */
+function compileInterpolateAttributesMatcher (config) {
+  if (config === undefined) {
+    return () => true;
+  }
+  const configObj = /** @type {Record<string, unknown>} */ (config);
+  if (Object.hasOwn(configObj, 'allow')) {
+    const set = new Set(/** @type {string[]} */ (configObj.allow));
+    return (name) => set.has(name);
+  }
+  const set = new Set(/** @type {string[]} */ (configObj.deny));
+  return (name) => !set.has(name);
+}
+
+/**
+ * Apply `interpolateString` to every string-valued attribute of an
+ * element's attributes object (including jamilih magic attributes like
+ * `innerHTML`) that `ctx._interpolateAttributesMatcher` allows — always set
+ * by `compileJSONTemplate` (from its `interpolateAttributes` option) before
+ * `runNodes` ever runs, since this function is only ever reached through
+ * the function `compileJSONTemplate` returns. Non-string attribute values
+ * (e.g. a nested `style` object, or an array-valued attribute) are always
+ * passed through unchanged — interpolation only ever applies to literal
+ * string content; a data-driven nested attribute value is not yet
+ * supported.
+ * @param {Record<string, unknown>} atts
+ * @param {any} ctx
+ * @returns {Record<string, unknown>}
+ */
+function resolveElementAttributes (atts, ctx) {
+  const matches = /** @type {(name: string) => boolean} */ (
+    ctx._interpolateAttributesMatcher
+  );
+  /** @type {Record<string, unknown>} */
+  const result = {};
+  for (const [key, value] of Object.entries(atts)) {
+    result[key] = typeof value === 'string' && matches(key)
+      ? interpolateString(value, ctx)
+      : value;
+  }
+  return result;
+}
+
+/**
  * Operation keys recognized on an operation node's leading object. `$mode`
  * is never valid bare (jamilih hard-reserves it); `$text` is valid bare
  * (jamilih's own text-node form) but not combined with `$select` (jamilih
@@ -397,20 +529,30 @@ export function extractReads (nodes) {
  * `compileJSONTemplate`, this never throws — it reports every problem it
  * finds, for a "validate before save" editor workflow. Includes the
  * `extractReads()` check (an unresolvable `$indexedDB` target is a
- * validation error, not just a `reads` omission).
+ * validation error, not just a `reads` omission) and, when
+ * `interpolateAttributes` is given, its own config-shape check (a
+ * `${...}`-shaped string sitting in an attribute `interpolateAttributes`
+ * doesn't cover is *not* flagged — it may just as well be a coincidental
+ * literal value, e.g. a currency template or CSS `calc()`-like string, so
+ * treating it as a mistake would be presumptuous; it silently renders as
+ * literal text instead, same as any other ineligible attribute).
  * @param {unknown[]} nodes
- * @param {{format?: 'json'|'javascript'}} [options]
+ * @param {{
+ *   format?: 'json'|'javascript',
+ *   interpolateAttributes?: InterpolateAttributesConfig
+ * }} [options]
  * @returns {{valid: boolean, errors: string[]}}
  */
-export function validateJSONTemplate (nodes, {format = 'json'} = {}) {
+export function validateJSONTemplate (
+  nodes, {format = 'json', interpolateAttributes} = {}
+) {
   if (!Array.isArray(nodes)) {
     return {
       valid: false,
       errors: ['A declarative template must be an array of nodes.']
     };
   }
-  /** @type {string[]} */
-  const errors = [];
+  const errors = validateInterpolateAttributesConfig(interpolateAttributes);
   for (const node of nodes) {
     validateNode(node, format, errors);
   }
@@ -442,7 +584,8 @@ async function runNode (node, ctx) {
   if (kind === 'element') {
     const [name, ...rest] = /** @type {[string, ...unknown[]]} */ (arr);
     const {atts, children} = splitElementRest(rest);
-    await ctx.element(name, atts, [], async () => {
+    const resolvedAtts = resolveElementAttributes(atts, ctx);
+    await ctx.element(name, resolvedAtts, [], async () => {
       await runNodes(children, ctx);
     });
     return;
@@ -581,22 +724,38 @@ async function runOperation (head, rest, ctx) {
 /**
  * Compile a declarative (jamilih-shaped) node array into a jtlt
  * `TemplateFunction`. Validates the whole tree up front (see
- * `validateJSONTemplate`) and throws on the first problem, rather than
- * failing partway through execution.
+ * `validateJSONTemplate`, including `interpolateAttributes`'s own config
+ * shape) and throws on the first problem, rather than failing partway
+ * through execution. `interpolateAttributes`, when given, restricts which
+ * element attributes `${sel}` interpolation applies to (see
+ * `compileInterpolateAttributesMatcher`) — stashed on the live context as
+ * `_interpolateAttributesMatcher` for `resolveElementAttributes` to consult
+ * at runtime.
  * @param {unknown[]} nodes
- * @param {{format?: 'json'|'javascript'}} [options]
+ * @param {{
+ *   format?: 'json'|'javascript',
+ *   interpolateAttributes?: InterpolateAttributesConfig
+ * }} [options]
  * @returns {(
  *   this: any, value: unknown, cfg?: {mode?: string}
  * ) => Promise<void>}
  */
-export function compileJSONTemplate (nodes, {format = 'json'} = {}) {
-  const {valid, errors} = validateJSONTemplate(nodes, {format});
+export function compileJSONTemplate (
+  nodes, {format = 'json', interpolateAttributes} = {}
+) {
+  const {valid, errors} = validateJSONTemplate(
+    nodes, {format, interpolateAttributes}
+  );
   if (!valid) {
     throw new TypeError(
       `Invalid declarative template:\n${errors.join('\n')}`
     );
   }
+  const matches = compileInterpolateAttributesMatcher(interpolateAttributes);
   return async function () {
+    /** @type {{_interpolateAttributesMatcher: (name: string) => boolean}} */ (
+      this
+    )._interpolateAttributesMatcher = matches;
     await runNodes(nodes, this);
   };
 }

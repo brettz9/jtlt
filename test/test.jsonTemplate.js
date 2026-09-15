@@ -1,7 +1,17 @@
+import {JSDOM} from 'jsdom';
 import {expect} from 'chai';
 import {
-  extractReads, isJSONTemplateNodeArray, jtlt, validateJSONTemplate
+  extractReads, isJSONTemplateNodeArray, jtlt, setWindow, validateJSONTemplate
 } from '../src/index.js';
+
+// Named `domWindow`, not `window`: a bare `const {window} = ...` at module
+// scope would shadow the global `window` for this whole file — including
+// inside the `$indexedDB` describe block below, whose `before()` hook does
+// its own `typeof window === 'undefined'` check to decide whether to load
+// the `indexeddbshim` Node polyfill; shadowing it with a always-defined
+// local would wrongly skip that and break indexedDB access entirely.
+const {window: domWindow} = new JSDOM('');
+setWindow(domWindow);
 
 /**
  * The declarative (jamilih-shaped) node format used by idb-manager route
@@ -48,16 +58,44 @@ import {
  *   import('../src/JSONPathTransformerContext.js').default &
  *   import('../src/context-extensions.js').ContextExtensions
  * >} [extensions]
+ * @param {{
+ *   format?: 'json'|'javascript',
+ *   interpolateAttributes?:
+ *     import('../src/jsonTemplate.js').InterpolateAttributesConfig
+ * }} [templateOptions] - Extra `TemplateObject` fields (e.g.
+ *   `interpolateAttributes`) merged onto the single root template.
  * @returns {Promise<string>}
  */
-function renderJSON (nodes, data = {}, params = {}, extensions = {}) {
+function renderJSON (
+  nodes, data = {}, params = {}, extensions = {}, templateOptions = {}
+) {
   return jtlt({
     data,
     outputType: 'string',
     params,
     extensions,
-    templates: {path: '$', template: nodes}
+    templates: {path: '$', template: nodes, ...templateOptions}
   });
+}
+
+/**
+ * Render a DOM-output transform — the actual output type idb-manager's
+ * Router uses (see `~/idb-manager/src/Router.js`'s `renderDeclarativeView`),
+ * so `innerHTML` needs real, browser-parsed HTML nodes here, not just a
+ * correctly-shaped string (string output goes through jamilih's own
+ * `toHTML`/incremental builder, which is a separate code path).
+ * @param {import('../src/index.js').JSONTemplateNode[]} nodes
+ * @param {object} [data]
+ * @returns {Promise<DocumentFragment>}
+ */
+function renderDOM (nodes, data = {}) {
+  return /** @type {Promise<DocumentFragment>} */ (/** @type {unknown} */ (
+    jtlt({
+      data,
+      outputType: 'dom',
+      templates: {path: '$', template: nodes}
+    })
+  ));
 }
 
 /**
@@ -245,6 +283,187 @@ describe('JSON (jamilih) templates', function () {
         await renderJSON([[{$valueOf: '$.name'}]], {name: 'Ada'})
       ).to.equal('Ada');
     });
+
+    /* eslint-disable no-template-curly-in-string -- Intentional: these are
+       jtlt's own `${sel}` placeholder literals (plain strings, not template
+       literals), not a mistaken template literal. */
+    describe('${sel} attribute-value interpolation', function () {
+      it('resolves a `${sel}` placeholder embedded in a string attribute ' +
+        'value', async function () {
+        expect(
+          await renderJSON(
+            [['a', {href: '/words/${$.key}'}, ['dog']]],
+            {key: 'dog'}
+          )
+        ).to.equal('<a href="/words/dog">dog</a>');
+      });
+
+      it('resolves multiple placeholders in one attribute value',
+        async function () {
+          expect(
+            await renderJSON(
+              [['a', {href: '/${$.db}/${$.store}'}, []]],
+              {db: 'dictionaryDb', store: 'words'}
+            )
+          ).to.equal('<a href="/dictionaryDb/words"></a>');
+        });
+
+      it('leaves a plain (no `${`) attribute value untouched',
+        async function () {
+          expect(
+            await renderJSON([['a', {href: '/static'}, []]])
+          ).to.equal('<a href="/static"></a>');
+        });
+
+      it('coerces a null/undefined placeholder result to the empty ' +
+        'string, not the literal "null"/"undefined"', async function () {
+        expect(
+          await renderJSON(
+            [['a', {href: '/words/${$.missing}'}, []]],
+            {}
+          )
+        ).to.equal('<a href="/words/"></a>');
+      });
+
+      it('interpolates jamilih\'s own `innerHTML` magic attribute — no ' +
+        'separate raw-HTML operation is needed', async function () {
+        expect(
+          await renderJSON(
+            [['div', {innerHTML: '${$.definition}'}, []]],
+            {definition: '<em>bark</em>'}
+          )
+        ).to.equal('<div><em>bark</em></div>');
+      });
+
+      it('for DOM output, sets real, browser-parsed HTML nodes (via ' +
+        "`Element#innerHTML`), not a literal, escaped '<em>' text node " +
+        '— the actual output type idb-manager\'s Router uses',
+      async function () {
+        const frag = await renderDOM(
+          [['div', {innerHTML: '${$.definition}'}, []]],
+          {definition: '<em>bark</em>'}
+        );
+        const em = frag.querySelector('em');
+        expect(em).to.not.be.null;
+        expect(/** @type {Element} */ (em).textContent).to.equal('bark');
+      });
+
+      it('leaves a non-string attribute value (e.g. a `dataset` object) ' +
+        'untouched, rather than crashing trying to string-interpolate ' +
+        'it', async function () {
+        expect(
+          await renderJSON(
+            [['div', {dataset: {foo: 'bar'}}, []]]
+          )
+        ).to.equal('<div data-foo="bar"></div>');
+      });
+    });
+    /* eslint-enable no-template-curly-in-string -- See disable above */
+
+    /* eslint-disable no-template-curly-in-string -- Intentional: `${...}`
+       placeholder literals, not template literals. */
+    describe('interpolateAttributes (allow/deny which attributes are ' +
+      'eligible)', function () {
+      it('with no config, every attribute is eligible (the default)',
+        async function () {
+          expect(
+            await renderJSON(
+              [['a', {href: '${$.key}'}, []]], {key: 'dog'}
+            )
+          ).to.equal('<a href="dog"></a>');
+        });
+
+      it('{allow: [...]} interpolates only the listed attributes, ' +
+        'leaving others as literal text', async function () {
+        expect(
+          await renderJSON(
+            [['a', {href: '${$.key}', title: '${$.key}'}, []]],
+            {key: 'dog'},
+            {},
+            {},
+            {interpolateAttributes: {allow: ['href']}}
+          )
+        ).to.equal('<a href="dog" title="${$.key}"></a>');
+      });
+
+      it('{deny: [...]} interpolates every attribute except the listed ' +
+        'ones', async function () {
+        expect(
+          await renderJSON(
+            [['a', {href: '${$.key}', title: '${$.key}'}, []]],
+            {key: 'dog'},
+            {},
+            {},
+            {interpolateAttributes: {deny: ['title']}}
+          )
+        ).to.equal('<a href="dog" title="${$.key}"></a>');
+      });
+
+      it('validateJSONTemplate does NOT flag a `${...}`-shaped string ' +
+        'sitting in an attribute that is not eligible for interpolation ' +
+        "— it's just a literal value there, possibly coincidental (e.g. " +
+        'a currency template or CSS calc()-like string), not a mistake',
+      function () {
+        const {valid, errors} = validateJSONTemplate(
+          [['a', {href: '${$.key}'}, []]],
+          {interpolateAttributes: {allow: ['title']}}
+        );
+        expect(valid).to.equal(true);
+        expect(errors).to.deep.equal([]);
+      });
+
+      it('compileJSONTemplate throws for a bad interpolateAttributes ' +
+        'config (both allow and deny)', async function () {
+        const error = await expectRejection((async () => {
+          await renderJSON(
+            [['a']], {}, {}, {},
+            {interpolateAttributes: {allow: ['href'], deny: ['title']}}
+          );
+        })());
+        expect(error.message).to.include('exactly one of');
+      });
+
+      it('compileJSONTemplate throws for a non-object interpolateAttributes',
+        async function () {
+          const error = await expectRejection((async () => {
+            await renderJSON(
+              [['a']], {}, {}, {},
+              // @ts-expect-error Intentionally invalid for this test
+              {interpolateAttributes: 'href'}
+            );
+          })());
+          expect(error.message).to.include(
+            'must be an object with exactly one of'
+          );
+        });
+
+      it('compileJSONTemplate throws when allow/deny is not an array of ' +
+        'non-empty strings', async function () {
+        const error = await expectRejection((async () => {
+          await renderJSON(
+            [['a']], {}, {}, {},
+            {interpolateAttributes: {allow: ['href', '']}}
+          );
+        })());
+        expect(error.message).to.include(
+          '`interpolateAttributes.allow` must be an array of non-empty'
+        );
+      });
+
+      it('...and names `deny` instead of `allow` in that message when ' +
+        'it was `deny` that was invalid', async function () {
+        const error = await expectRejection((async () => {
+          await renderJSON(
+            [['a']], {}, {}, {},
+            {interpolateAttributes: {deny: ['title', '']}}
+          );
+        })());
+        expect(error.message).to.include(
+          '`interpolateAttributes.deny` must be an array of non-empty'
+        );
+      });
+    });
+    /* eslint-enable no-template-curly-in-string -- See disable above */
 
     it('$applyTemplates dispatches to a matching function-template entry',
       async function () {
@@ -575,6 +794,17 @@ describe('JSON (jamilih) templates', function () {
         [{$notARealOp: 'x'}]
       ]));
     });
+
+    it(
+      'rejects two unrecognized `$`-prefixed keys together (neither a ' +
+      'built-in op — a single such key would instead be a candidate ' +
+      'extension call, but two together can never both be extension calls)',
+      async function () {
+        await expectRejection(renderJSON([
+          [{$notARealOp: {}, $alsoNotReal: {}}]
+        ]));
+      }
+    );
 
     it(
       'rejects a non-$-prefixed key on an operation node\'s leading object',

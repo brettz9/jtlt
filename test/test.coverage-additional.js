@@ -1,4 +1,4 @@
-/* eslint-disable @stylistic/max-len, no-empty-function
+/* eslint-disable @stylistic/max-len, no-empty-function, no-console
   -- Coverage tests for edge cases */
 import {assert, expect} from 'chai';
 import XSLTStyleJSONPathResolver from '../src/XSLTStyleJSONPathResolver.js';
@@ -775,6 +775,43 @@ describe('Coverage - additional edge cases', function () {
       }, /You must supply either config.ajaxData or config.data/v);
       // The branch was still covered even though it threw
     });
+
+    it(
+      'falls back to console.error when an async-throwing autostart ' +
+      'transform has no config.error to report to instead (the fire+forget ' +
+      'catch in _autoStart)',
+      function (done) {
+        const originalConsoleError = console.error;
+        /** @type {unknown[][]} */
+        const calls = [];
+        console.error = (...args) => {
+          calls.push(args);
+        };
+        JTLT.create({
+          data: {},
+          templates: [{
+            path: '$',
+            async template () {
+              await Promise.resolve();
+              throw new Error('boom');
+            }
+          }],
+          success () {}
+        });
+        setTimeout(() => {
+          console.error = originalConsoleError;
+          try {
+            expect(calls).to.have.lengthOf(1);
+            expect(calls[0][0]).to.be.an('error');
+            expect(/** @type {Error} */ (calls[0][0]).message).
+              to.equal('boom');
+            done();
+          } catch (err) {
+            done(err);
+          }
+        }, 0);
+      }
+    );
 
     it('setDefaults with null config defaults to empty object (line 168)', function () {
       const jtlt = JTLT.create({

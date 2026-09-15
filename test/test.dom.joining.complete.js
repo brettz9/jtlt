@@ -301,4 +301,101 @@ describe('DOMJoiningTransformer complete coverage', () => {
       }
     );
   });
+
+  describe('innerHTML magic attribute (jsonTemplate.js gap #2 parity)',
+    () => {
+      it('sets real, browser-parsed HTML on the root element, not a ' +
+        'literal `innerHTML="..."` attribute', () => {
+        const {window} = new JSDOM(
+          '<!doctype html><html><body></body></html>'
+        );
+        const {document} = window;
+        const joiner = DOMJoiningTransformer.create(
+          document.createDocumentFragment(),
+          {document, exposeDocuments: true}
+        );
+
+        joiner.output({method: 'xml'});
+        joiner.element('div', {innerHTML: '<em>bark</em>'});
+
+        const docs = joiner.get();
+        const doc = docs[0];
+        expect(doc.documentElement.getAttribute('innerHTML')).to.be.null;
+        const em = doc.documentElement.querySelector('em');
+        expect(em).to.not.be.null;
+        expect(/** @type {Element} */ (em).textContent).to.equal('bark');
+      });
+
+      it('sets real, browser-parsed HTML on a non-root element too', () => {
+        const {window} = new JSDOM(
+          '<!doctype html><html><body></body></html>'
+        );
+        const {document} = window;
+        const joiner = DOMJoiningTransformer.create(
+          document.createDocumentFragment(),
+          {document}
+        );
+
+        joiner.element('div', {innerHTML: '<em>bark</em>'});
+
+        const result = joiner.get();
+        const div = /** @type {Element} */ (result.childNodes[0]);
+        expect(div.getAttribute('innerHTML')).to.be.null;
+        const em = div.querySelector('em');
+        expect(em).to.not.be.null;
+        expect(/** @type {Element} */ (em).textContent).to.equal('bark');
+      });
+
+      it(
+        'skips a non-own (prototype-inherited) enumerable attribute key ' +
+        "on the root element, matching `for...in`'s own well-known " +
+        'pitfall of walking the prototype chain',
+        () => {
+          const {window} = new JSDOM(
+            '<!doctype html><html><body></body></html>'
+          );
+          const {document} = window;
+          const joiner = DOMJoiningTransformer.create(
+            document.createDocumentFragment(),
+            {document, exposeDocuments: true}
+          );
+
+          const atts = Object.create({inherited: 'skip-me'});
+          atts.id = 'main';
+
+          joiner.output({method: 'xml'});
+          joiner.element('div', atts);
+
+          const docs = joiner.get();
+          const doc = docs[0];
+          expect(doc.documentElement.getAttribute('id')).to.equal('main');
+          expect(doc.documentElement.getAttribute('inherited')).to.be.null;
+        }
+      );
+
+      it(
+        'skips a non-own (prototype-inherited) enumerable attribute key ' +
+        'on a non-root element too',
+        () => {
+          const {window} = new JSDOM(
+            '<!doctype html><html><body></body></html>'
+          );
+          const {document} = window;
+          const joiner = DOMJoiningTransformer.create(
+            document.createDocumentFragment(),
+            {document}
+          );
+
+          const atts = Object.create({inherited: 'skip-me'});
+          atts.id = 'main';
+
+          joiner.element('div', atts);
+
+          const result = joiner.get();
+          const div = /** @type {Element} */ (result.childNodes[0]);
+          expect(div.getAttribute('id')).to.equal('main');
+          expect(div.getAttribute('inherited')).to.be.null;
+        }
+      );
+    });
 });

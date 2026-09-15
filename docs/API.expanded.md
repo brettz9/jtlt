@@ -62,6 +62,7 @@ Common to both entry points unless noted.
 | `templates` | Array&lt;TemplateObject&gt; \| TemplateObject \| [path, Function\|Array] | Template declarations; see below. A bare `TemplateObject` or `[path, template]` tuple (not wrapped in an outer array) is also accepted directly. |
 | `template` | Function \| TemplateObject | Single root template convenience. |
 | `defaultTemplateFormat` | 'json' \| 'javascript' | JSONPath engine only. Jamilih validation strictness applied to a declarative (`Array`) `template` when its own `format` isn't set. Default `'json'`. See "Declarative (jamilih-shaped) templates" below. |
+| `defaultInterpolateAttributes` | `{allow: string[]}` \| `{deny: string[]}` | JSONPath engine only. Restricts which element attribute names `${sel}` interpolation applies to for a declarative (`Array`) `template` when its own `interpolateAttributes` isn't set. Every string-valued attribute is eligible when omitted. See "Declarative (jamilih-shaped) templates" below. |
 | `query` | Function | Root template convenience (wrapped as `path: '$'`). |
 | `forQuery` | [select, cb] | One-off query (like FLWOR `for`). Auto-wrapped as root template. |
 | `success` | Function(result) | **`JTLT` only** — required callback; also the return of `.transform()`. Not accepted by `jtlt()`. |
@@ -140,6 +141,32 @@ A node is one of:
 | `[{$renderDefault: true}]` | `this.appendOutput(await this.renderDefault())` (an `extensions.renderDefault` your config supplies) |
 | `[{$name: {...}}]` (any key not otherwise recognized above) | an extension call: `await this[name](argObject)` — the argument object is passed through entirely unresolved (no key, e.g. a conventional `select`, is interpreted by jtlt itself; the extension resolves whatever it needs via `this.get(...)`, `this.valueOf(...)`, etc.). `name` must be a key actually present in `config.extensions`; any other name throws |
 
+**Dynamic attribute values**: an element's attribute value stays a plain
+string, which may embed one or more `${sel}` placeholders resolved at
+runtime via `ctx.get(sel.trim(), false)` and coerced to a string
+(`null`/`undefined` becomes `''`, not the literal "null"/"undefined") —
+e.g. `['a', {href: '/words/${$.key}'}, ['dog']]`. A value with no `${` at
+all is returned unchanged. Combined with jamilih's own `innerHTML` magic
+attribute, this also covers inserting raw HTML from a data value — e.g.
+`{innerHTML: '${$.definitionHtml}'}` — with no separate operation needed;
+the override/template author is responsible for trusting that field's
+data, the same way they're already trusted with the declarative `behavior`
+itself.
+
+By default every string-valued attribute is eligible for `${sel}`
+interpolation. `compileJSONTemplate`/`validateJSONTemplate`'s
+`interpolateAttributes` option (and the `TemplateObject`-level
+`interpolateAttributes` / config-wide `defaultInterpolateAttributes`
+fallback) restricts this: `{allow: ['href', 'innerHTML']}` interpolates
+only the named attributes (uniformly across every element in the
+template — not scoped per element name), leaving any other attribute's
+value as a literal string even if it happens to contain `${...}`;
+`{deny: ['title']}` interpolates every attribute except the named ones.
+A `${...}`-shaped string sitting in an ineligible attribute is not
+flagged as a validation error — it may just as well be a coincidental
+literal value (e.g. a currency template or CSS `calc()`-like string) —
+it simply renders as literal text.
+
 Every operation node's leading object is entirely `$`-prefixed — jamilih's
 own validator requires this of any first-position plain object. `$jtltMode`/
 `$jtltText` are namespaced because jamilih itself reserves `$mode` outright
@@ -194,13 +221,14 @@ arbitrary JavaScript. Pass `format: 'javascript'` on the `TemplateObject`
 entry lacking its own `format`) to allow one.
 
 **Exports** (from `'jtlt'`):
-- `compileJSONTemplate(nodes, {format?}) => TemplateFunction` — throws a
-  `TypeError` with every problem found if `nodes` is invalid.
-- `validateJSONTemplate(nodes, {format?}) => {valid, errors}` — the same
-  checks, non-executing and non-throwing; for a "validate before save"
-  editor workflow. Includes `extractReads()`'s errors, below — an
-  unresolvable `$indexedDB` target makes the whole template invalid, not
-  just a `reads` omission.
+- `compileJSONTemplate(nodes, {format?, interpolateAttributes?}) =>
+  TemplateFunction` — throws a `TypeError` with every problem found if
+  `nodes` (or `interpolateAttributes`'s own shape) is invalid.
+- `validateJSONTemplate(nodes, {format?, interpolateAttributes?}) =>
+  {valid, errors}` — the same checks, non-executing and non-throwing; for
+  a "validate before save" editor workflow. Includes `extractReads()`'s
+  errors, below — an unresolvable `$indexedDB` target makes the whole
+  template invalid, not just a `reads` omission.
 - `extractReads(nodes) => {reads: {db, store}[], errors}` — statically
   derives the `{db, store}` targets every `$indexedDB` node in the tree
   touches (walking element children, `$if`/`$forEach` bodies, and another

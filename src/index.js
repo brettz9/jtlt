@@ -46,6 +46,13 @@ export const setWindow = (win) => {
  *   live values (functions, DOM nodes, …) embedded in the structure,
  *   `'javascript'` allows them. Ignored for a function `template`. Falls
  *   back to `config.defaultTemplateFormat`, then `'json'`, when omitted.
+ * @property {import('./jsonTemplate.js').InterpolateAttributesConfig}
+ *   [interpolateAttributes] - For an Array `template` only: restricts
+ *   which element attribute names `${sel}` interpolation applies to (see
+ *   `compileJSONTemplate`'s own doc comment) — `{allow: [...]}` or
+ *   `{deny: [...]}`. Every string-valued attribute is eligible when
+ *   omitted. Falls back to `config.defaultInterpolateAttributes` when
+ *   omitted here too.
  * @property {TemplateFunction<T, U, TCtx> | JSONTemplateNode[]} template -
  *   Template function, or a declarative (jamilih-shaped) node array
  *   compiled via `compileJSONTemplate` — detected by `Array.isArray`, since
@@ -333,6 +340,12 @@ export const setWindow = (win) => {
  *   default for an Array `template`'s jamilih validation strictness (see
  *   `TemplateObject.format`), used for any entry that doesn't specify its
  *   own `format`. Defaults to `'json'` when omitted here too.
+ * @property {import('./jsonTemplate.js').InterpolateAttributesConfig}
+ *   [defaultInterpolateAttributes] Config-wide default for an Array
+ *   `template`'s `${sel}` attribute-interpolation eligibility (see
+ *   `TemplateObject.interpolateAttributes`), used for any entry that
+ *   doesn't specify its own. Every string-valued attribute is eligible
+ *   when omitted here too.
  */
 
 /**

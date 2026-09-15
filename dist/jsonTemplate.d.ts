@@ -1,4 +1,9 @@
 export type NodeKind = 'text' | 'element' | 'operation';
+export type InterpolateAttributesConfig = {
+    allow: string[];
+} | {
+    deny: string[];
+};
 export type ReadTarget = {
     db: string;
     store: string;
@@ -24,13 +29,23 @@ export declare function extractReads(nodes: unknown[]): {
  * `compileJSONTemplate`, this never throws — it reports every problem it
  * finds, for a "validate before save" editor workflow. Includes the
  * `extractReads()` check (an unresolvable `$indexedDB` target is a
- * validation error, not just a `reads` omission).
+ * validation error, not just a `reads` omission) and, when
+ * `interpolateAttributes` is given, its own config-shape check (a
+ * `${...}`-shaped string sitting in an attribute `interpolateAttributes`
+ * doesn't cover is *not* flagged — it may just as well be a coincidental
+ * literal value, e.g. a currency template or CSS `calc()`-like string, so
+ * treating it as a mistake would be presumptuous; it silently renders as
+ * literal text instead, same as any other ineligible attribute).
  * @param {unknown[]} nodes
- * @param {{format?: 'json'|'javascript'}} [options]
+ * @param {{
+ *   format?: 'json'|'javascript',
+ *   interpolateAttributes?: InterpolateAttributesConfig
+ * }} [options]
  * @returns {{valid: boolean, errors: string[]}}
  */
-export declare function validateJSONTemplate(nodes: unknown[], { format }?: {
+export declare function validateJSONTemplate(nodes: unknown[], { format, interpolateAttributes }?: {
     format?: 'json' | 'javascript';
+    interpolateAttributes?: InterpolateAttributesConfig;
 }): {
     valid: boolean;
     errors: string[];
@@ -43,16 +58,25 @@ export declare function isJSONTemplateNodeArray(x: unknown): x is unknown[];
 /**
  * Compile a declarative (jamilih-shaped) node array into a jtlt
  * `TemplateFunction`. Validates the whole tree up front (see
- * `validateJSONTemplate`) and throws on the first problem, rather than
- * failing partway through execution.
+ * `validateJSONTemplate`, including `interpolateAttributes`'s own config
+ * shape) and throws on the first problem, rather than failing partway
+ * through execution. `interpolateAttributes`, when given, restricts which
+ * element attributes `${sel}` interpolation applies to (see
+ * `compileInterpolateAttributesMatcher`) — stashed on the live context as
+ * `_interpolateAttributesMatcher` for `resolveElementAttributes` to consult
+ * at runtime.
  * @param {unknown[]} nodes
- * @param {{format?: 'json'|'javascript'}} [options]
+ * @param {{
+ *   format?: 'json'|'javascript',
+ *   interpolateAttributes?: InterpolateAttributesConfig
+ * }} [options]
  * @returns {(
  *   this: any, value: unknown, cfg?: {mode?: string}
  * ) => Promise<void>}
  */
-export declare function compileJSONTemplate(nodes: unknown[], { format }?: {
+export declare function compileJSONTemplate(nodes: unknown[], { format, interpolateAttributes }?: {
     format?: 'json' | 'javascript';
+    interpolateAttributes?: InterpolateAttributesConfig;
 }): (this: any, value: unknown, cfg?: {
     mode?: string;
 }) => Promise<void>;

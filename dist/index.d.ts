@@ -39,6 +39,15 @@ export type TemplateObject<T, U, TCtx> = {
      */
     format?: 'json' | 'javascript';
     /**
+     * - For an Array `template` only: restricts
+     * which element attribute names `${sel}` interpolation applies to (see
+     * `compileJSONTemplate`'s own doc comment) — `{allow: [...]}` or
+     * `{deny: [...]}`. Every string-valued attribute is eligible when
+     * omitted. Falls back to `config.defaultInterpolateAttributes` when
+     * omitted here too.
+     */
+    interpolateAttributes?: import('./jsonTemplate.js').InterpolateAttributesConfig;
+    /**
      * -
      * Template function, or a declarative (jamilih-shaped) node array
      * compiled via `compileJSONTemplate` — detected by `Array.isArray`, since
@@ -285,6 +294,14 @@ export type BaseJTLTOptions<T, E extends boolean | undefined = false> = {
      * own `format`. Defaults to `'json'` when omitted here too.
      */
     defaultTemplateFormat?: 'json' | 'javascript';
+    /**
+     * Config-wide default for an Array
+     * `template`'s `${sel}` attribute-interpolation eligibility (see
+     * `TemplateObject.interpolateAttributes`), used for any entry that
+     * doesn't specify its own. Every string-valued attribute is eligible
+     * when omitted here too.
+     */
+    defaultInterpolateAttributes?: import('./jsonTemplate.js').InterpolateAttributesConfig;
 };
 export type JSONPathJTLTOptions<T extends "json" | "string" | "dom" = "json", E extends boolean | undefined = false> = BaseJTLTOptions<T, E> & {
     templates?: JSONPathTemplateArray<T>[] | JSONPathTemplateArray<T> | TemplateFunction<T, "json", import('./JSONPathTransformerContext.js').default<T>>;

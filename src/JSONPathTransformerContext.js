@@ -103,6 +103,10 @@ const escapeRegexReplacement = (string) => {
  *   default for the jamilih validation strictness `compileJSONTemplate`
  *   applies to a declarative (Array) `template`, used when an entry has no
  *   `format` of its own
+ * @property {import('./jsonTemplate.js').InterpolateAttributesConfig}
+ *   [defaultInterpolateAttributes] Config-wide default for a declarative
+ *   (Array) `template`'s `${sel}` attribute-interpolation eligibility, used
+ *   when an entry has no `interpolateAttributes` of its own
  * @property {Record<string, unknown>} [params] Runtime parameter values
  *   (like an XSLT processor's stylesheet parameters); a `param()` with a
  *   matching name uses this value instead of its declared default
