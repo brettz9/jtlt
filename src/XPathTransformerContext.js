@@ -101,7 +101,7 @@ class XPathTransformerContext {
       }
     }
   };
-  /* c8 ignore stop */
+  /* c8 ignore stop -- See above */
 
   /**
    * @param {XPathTransformerContextConfig} config
@@ -301,7 +301,7 @@ class XPathTransformerContext {
             ? globalThis.XPathResult.ANY_TYPE
             : 0
         );
-      /* c8 ignore stop */
+      /* c8 ignore stop -- See above */
       const resultObj = docTyped.evaluate(
         expr, contextNode, resolver, type, null
       );
@@ -336,14 +336,14 @@ class XPathTransformerContext {
           n = resultObj.iterateNext();
         }
         return nodes;
-        /* c8 ignore stop */
+        /* c8 ignore stop -- See above */
       }
       /* c8 ignore start -- Default fallback for unsupported XPathResult
        * types; environment-dependent and not hit under jsdom. */
       default:
         // Fallback: return original context for unsupported types
         return this._contextNode;
-      /* c8 ignore stop */
+      /* c8 ignore stop -- See above */
       }
     }
     if (version === 2) {
@@ -542,7 +542,7 @@ class XPathTransformerContext {
         } else {
           templateObj = DTR.transformScalars;
         }
-        /* c8 ignore stop */
+        /* c8 ignore stop -- See above */
       } else {
         // Sort by priority (numeric or specificity resolver)
         pathMatchedTemplates.sort((a, b) => {
@@ -632,7 +632,7 @@ class XPathTransformerContext {
           'the XPath engine; compile with compileJSONTemplate() first.'
         );
       }
-      /* c8 ignore stop */
+      /* c8 ignore stop -- See above */
       /**
        * The template may return synchronously or return a Promise (e.g. from
        * `await this.indexedDB(...)`), which is awaited unless `config.sync`.
@@ -674,7 +674,7 @@ class XPathTransformerContext {
               // @ts-expect-error -- _openTagState: StringJoiningTransformer
               joiner._openTagState = false;
             }
-            /* c8 ignore stop */
+            /* c8 ignore stop -- See above */
             joiner.append(resolvedRet);
           }
           this._contextNode = node;
@@ -1225,7 +1225,7 @@ class XPathTransformerContext {
         // Fall through to normal XPath evaluation
         // This allows fontoxpath registered functions to work natively
       }
-      /* c8 ignore stop */
+      /* c8 ignore stop -- See above */
     }
 
     // Check for format-number() function call
@@ -1293,11 +1293,11 @@ class XPathTransformerContext {
         const resResult = this._evalXPath(selectStr, true);
         const res = /** @type {Node[]} */ (resResult);
         const first = res[0];
-        /* c8 ignore start */
+        /* c8 ignore start -- Ok? */
         val = first && first.nodeType
           ? first.textContent
           : first;
-        /* c8 ignore stop */
+        /* c8 ignore stop -- See above */
       }
     } else if (!selectStr || selectStr === '.') {
       if (this._contextNode.nodeType === 3) {
@@ -1345,9 +1345,9 @@ class XPathTransformerContext {
     if (select) {
       try {
         const res = this.get(select, true);
-        nodes = Array.isArray(res) ? res : /* c8 ignore next */ [];
-      } catch { /* c8 ignore next */
-        nodes = /* c8 ignore next */ [];
+        nodes = Array.isArray(res) ? res : /* c8 ignore next -- Ok? */ [];
+      } catch { /* c8 ignore next -- Should not err? */
+        nodes = /* c8 ignore next -- Should not err? */ [];
       }
     } else {
       nodes = [this._contextNode];
@@ -1358,13 +1358,13 @@ class XPathTransformerContext {
           let deep;
           try {
             deep = /** @type {Node} */ (n.cloneNode(true));
-          } catch { /* c8 ignore start */
+          } catch { /* c8 ignore start -- Should not err? */
             deep = /** @type {Node} */ (n.cloneNode(false));
-          } /* c8 ignore stop */
+          } /* c8 ignore stop -- See above */
           this._getJoiningTransformer().append(/** @type {any} */ (deep));
-        } else { /* c8 ignore start */
+        } else { /* c8 ignore start -- Ok? */
           this._getJoiningTransformer().append(/** @type {any} */ (n));
-        } /* c8 ignore stop */
+        } /* c8 ignore stop -- See above */
       }
     } else if (select) { // Scalar path
       const scalar = this._evalXPath(select, false);
@@ -1378,7 +1378,7 @@ class XPathTransformerContext {
       ) {
         const node = /** @type {Node} */ (scalar);
         let txt = /** @type {any} */ (node.textContent);
-        if (/* c8 ignore start */
+        if (/* c8 ignore start -- Ok? */
           (txt === null || typeof txt === 'undefined') &&
           /** @type {any} */ (node).nodeType === 9 // Document
         ) {
@@ -1387,9 +1387,9 @@ class XPathTransformerContext {
             /** @type {any} */ (node)
           ).documentElement;
           txt = /** @type {any} */ (docEl && docEl.textContent) || '';
-        } /* c8 ignore stop */
+        } /* c8 ignore stop -- See above */
         this._getJoiningTransformer().append(
-          /** @type {any} */ (txt || /* c8 ignore next */ '')
+          /** @type {any} */ (txt || /* c8 ignore next -- Ok? */ '')
         );
       } else {
         this._getJoiningTransformer().append(/** @type {any} */ (scalar));
@@ -1410,12 +1410,12 @@ class XPathTransformerContext {
     if (target && typeof target === 'object' && 'nodeType' in target) {
       try {
         clone = /** @type {Node} */ (target.cloneNode(false));
-      } catch { /* c8 ignore start */
+      } catch { /* c8 ignore start -- Should not err? */
         clone = target;
-      } /* c8 ignore stop */
-    } else { /* c8 ignore start */
+      } /* c8 ignore stop -- See above */
+    } else { /* c8 ignore start -- Ok? */
       clone = target;
-    } /* c8 ignore stop */
+    } /* c8 ignore stop -- See above */
     this._getJoiningTransformer().append(/** @type {any} */ (clone));
     return this;
   }
@@ -2142,7 +2142,7 @@ class XPathTransformerContext {
         `Function '${name}' must have either 'body' or 'sequence' attribute`
       );
     }
-    /* c8 ignore stop */
+    /* c8 ignore stop -- See above */
 
     // If sequence is provided, create a body function that evaluates it
     const actualBody = sequence
@@ -2170,7 +2170,8 @@ class XPathTransformerContext {
         });
 
         // Evaluate the XPath expression with bound variables
-        const version = this._config.xpathVersion /* c8 ignore next */ ?? 1;
+        // eslint-disable-next-line @stylistic/max-len -- Long
+        const version = this._config.xpathVersion /* c8 ignore next -- Ok? */ ?? 1;
         // eslint-disable-next-line sonarjs/no-floating-point-equality -- Safe
         if (version === 3.1) {
           // Use fontoxpath for XPath 3.1
@@ -2259,7 +2260,7 @@ class XPathTransformerContext {
               if (!actualBody) {
                 throw new Error(`Function body not defined for ${name}`);
               }
-              /* c8 ignore stop */
+              /* c8 ignore stop -- See above */
               // For sequence functions, unwrap/wrap arrays as needed
               // For regular body functions, pass through as-is
               if (sequence) {
@@ -2278,7 +2279,7 @@ class XPathTransformerContext {
                   return [result];
                 }
                 return result;
-                /* c8 ignore stop */
+                /* c8 ignore stop -- See above */
               }
               // Regular body function - pass through
               return actualBody(...args);
@@ -2290,7 +2291,7 @@ class XPathTransformerContext {
         // Ignore fontoxpath registration errors (e.g., if duplicate)
         // Function still available via invokeFunctionByArity
       }
-      /* c8 ignore stop */
+      /* c8 ignore stop -- See above */
     }
 
     return this;
@@ -2593,11 +2594,11 @@ class XPathTransformerContext {
           passes = nodes.length > 0;
         // Defensive for non-array nodes, but _evalXPath with asNodes=true
         // always returns arrays in both v1 and v2.
-        /* c8 ignore start */
+        /* c8 ignore start -- Ok? */
         } else {
           passes = Boolean(nodes);
         }
-        /* c8 ignore stop */
+        /* c8 ignore stop -- See above */
       } catch {
         passes = false;
       }

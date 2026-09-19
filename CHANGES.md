@@ -1,5 +1,9 @@
 # jtlt CHANGES
 
+## ?
+
+- chore: update codemirror/state (though moving with other codemirror to devDeps), jamilih, jsdom, devDeps
+
 ## 0.24.0
 
 - feat: the declarative `{$variable: name, $select}` node now also accepts

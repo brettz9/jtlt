@@ -357,7 +357,7 @@ class DOMJoiningTransformer extends AbstractJoiningTransformer {
         omitXmlDeclaration, doctypePublic, doctypeSystem, method
       /* c8 ignore start -- outputConfig ?? attribution issue */
       } = this._outputConfig ?? {};
-      /* c8 ignore stop */
+      /* c8 ignore stop -- See above */
 
       /* c8 ignore start -- namespace/prefix detection branches */
       const dtd = this._cfg.document.implementation.createDocumentType(
@@ -379,7 +379,7 @@ class DOMJoiningTransformer extends AbstractJoiningTransformer {
         elementName,
         dtd
       );
-      /* c8 ignore stop */
+      /* c8 ignore stop -- See above */
 
       /* c8 ignore start -- third OR condition short-circuits */
       if (!omitXmlDeclaration && (
@@ -403,7 +403,7 @@ class DOMJoiningTransformer extends AbstractJoiningTransformer {
           doc.firstChild
         );
       }
-      /* c8 ignore stop */
+      /* c8 ignore stop -- See above */
 
       // Push the document to _docs
       this._docs.push(doc);

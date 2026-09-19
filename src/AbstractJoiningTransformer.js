@@ -230,7 +230,7 @@ class AbstractJoiningTransformer {
         `Function "${name}" must have either 'body' or 'sequence' attribute`
       );
     }
-    /* c8 ignore stop */
+    /* c8 ignore stop -- See above */
 
     // Create function key with arity
     const arity = params.length;
@@ -280,7 +280,7 @@ class AbstractJoiningTransformer {
         `supported in this context)`
       );
     }
-    /* c8 ignore stop */
+    /* c8 ignore stop -- See above */
     return functionDef.body(...args);
   }
 

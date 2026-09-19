@@ -42,3 +42,4 @@ minimumReleaseAgeExclude:
   - '@node-static/node-static@0.9.2'
   - baseline-browser-mapping@2.11.22
   - jamilih@0.70.0
+  - eslint@10.11.0

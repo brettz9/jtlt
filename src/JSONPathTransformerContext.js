@@ -460,7 +460,7 @@ class JSONPathTransformerContext {
           if (!templateObj.path) {
             return false;
           }
-          /* c8 ignore stop */
+          /* c8 ignore stop -- See above */
           const queryResult = /** @type {any[]} */ (
             (/** @type {any} */ (jsonpath))({
               path: JSONPathTransformer.makeJSONPathAbsolute(
@@ -554,7 +554,7 @@ class JSONPathTransformerContext {
             : (that._config.specificityPriorityResolver && b.path
               ? that._config.specificityPriorityResolver(b.path)
               : 0);
-          /* c8 ignore stop */
+          /* c8 ignore stop -- See above */
 
           if (aPriority === bPriority) {
             that._triggerEqualPriorityError();
@@ -676,13 +676,13 @@ class JSONPathTransformerContext {
               // @ts-expect-error -- _openTagState: StringJoiningTransformer
               joiner._openTagState = false;
             }
-            /* c8 ignore stop */
+            /* c8 ignore stop -- See above */
             joiner.append(resolvedRet);
           }
           that._parent = parent;
           // Matches reached here always carry a parentProperty; the sync
           // path covers the root-node fallback.
-          /* c8 ignore next */
+          /* c8 ignore next -- See comment just above */
           that._parentProperty = (parentProperty ?? that._parentProperty);
           that._currPath = _oldPath;
           return undefined;
@@ -700,7 +700,7 @@ class JSONPathTransformerContext {
           // @ts-expect-error -- _openTagState only on StringJoiningTransformer
           joiner._openTagState = false;
         }
-        /* c8 ignore stop */
+        /* c8 ignore stop -- See above */
         joiner.append(
           /** @type {string|Node|*} */ (ret)
         );
@@ -1750,7 +1750,7 @@ class JSONPathTransformerContext {
         // For non-functions, attempting structuredClone again would rethrow;
         // use shallow clone to retain non-serializable props like Symbols.
         clone = Array.isArray(val) ? [...val] : {...val};
-        /* c8 ignore stop */
+        /* c8 ignore stop -- See above */
       }
     } else {
       // Primitives/functions copied by value/reference semantics naturally.
@@ -1782,7 +1782,7 @@ class JSONPathTransformerContext {
       }
     } else { /* c8 ignore start -- primitive branch attribution variance */
       clone = src; // Primitive/function - nothing to shallow clone
-    } /* c8 ignore stop */
+    } /* c8 ignore stop -- See above */
     this._getJoiningTransformer().append(clone);
     return this;
   }

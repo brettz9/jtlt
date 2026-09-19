@@ -537,7 +537,7 @@ class JSONJoiningTransformer extends AbstractJoiningTransformer {
             standalone
           };
         }
-        /* c8 ignore stop */
+        /* c8 ignore stop -- See above */
 
         const doc = {$document: {
           ...(xmlDeclaration ? {xmlDeclaration} : {}),
@@ -882,7 +882,7 @@ class JSONJoiningTransformer extends AbstractJoiningTransformer {
           standalone
         };
       }
-      /* c8 ignore stop */
+      /* c8 ignore stop -- See above */
 
       resultDoc = {$document: {
         ...(xmlDeclaration ? {xmlDeclaration} : {}),

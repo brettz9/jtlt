@@ -562,7 +562,7 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
           standalone ? ` standalone="yes"` : ''
         }?>\n`;
       }
-      /* c8 ignore stop */
+      /* c8 ignore stop -- See above */
 
       const doctype = bareDoctype ||
         doctypePublic !== undefined || doctypeSystem !== undefined

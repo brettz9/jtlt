@@ -147,7 +147,7 @@ async function readAllRecords (target, range, direction, count) {
       key: cursor.key, primaryKey: cursor.primaryKey, value: cursor.value
     }), false)
   );
-  /* c8 ignore stop */
+  /* c8 ignore stop -- See above */
 }
 
 /**
@@ -502,7 +502,7 @@ export async function evaluateXPathWithIndexedDB (selectStr, contextNode) {
   } catch {
     // Ignore: only the collected request list matters from this pass.
   }
-  /* c8 ignore stop */
+  /* c8 ignore stop -- See above */
 
   // Phase 2: fetch each distinct query and cache the records.
   const fetched = new Set();
