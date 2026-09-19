@@ -825,9 +825,22 @@ class JSONPathTransformerContext {
    *   `void`, not `void|Promise<void>` — see the note on `SimpleCallback`
    *   in JSONJoiningTransformer.js.)
    * @param {SortSpec<V>} [sort] - Sort spec
+   * @param {string} [keyVar] - When given, binds each iteration's key —
+   *   the array index, or the object property name when `select` is an
+   *   object-wildcard path like `$.*` (jsonpath-plus's own `parentProperty`
+   *   on a `resultType: 'all'` match) — to this name for the duration of
+   *   that iteration, readable back via a bare `$name` reference (same
+   *   convention as `variable()`), same as `_params[0]`/`this.vars` are
+   *   already scoped fresh per iteration. Lets a template render
+   *   "property: value" pairs, or skip one property by name via `$if`,
+   *   while iterating an object's own properties — jsonpath-plus's match
+   *   data already carries this; `select`s naming a bound variable (the
+   *   bare-`$name` convention, below) carry the array index too, but never
+   *   a meaningful key for a non-array bound value (treated as a single,
+   *   length-1-sequence item — there's no "property name" for that case).
    * @returns {this|Promise<this>}
    */
-  forEach (select, cb, sort) {
+  forEach (select, cb, sort, keyVar) {
     // eslint-disable-next-line unicorn/no-this-assignment -- Temporary
     const that = this;
     // A bare `$name` (matching `if()`/`valueOf()`/comparisons' own
@@ -840,10 +853,13 @@ class JSONPathTransformerContext {
     const param = paramRef && paramRef.groups
       ? this._lookupParam(paramRef.groups.name)
       : {has: false, value: undefined};
-    /** @type {{value: any}[]} */
+    /** @type {{value: any, parentProperty?: string|number}[]} */
     const matches = param.has
-      ? (Array.isArray(param.value) ? param.value : [param.value]).
-        map((value) => ({value}))
+      ? (Array.isArray(param.value)
+        // An array's own index is a meaningful key (see `keyVar`, above);
+        // a non-array value wrapped as a length-1 sequence has none.
+        ? param.value.map((value, index) => ({value, parentProperty: index}))
+        : [{value: param.value}])
       : /** @type {any} */ (jsonpath)({
         path: select,
         json: this._contextObj,
@@ -960,7 +976,7 @@ class JSONPathTransformerContext {
       const prevVars = that.vars;
       that._params = {0: m.value};
       that._contextObj = m.value;
-      that.vars = {};
+      that.vars = keyVar ? {[keyVar]: m.parentProperty} : {};
       // `cb`'s declared return type is plain `void` (see the parameter's
       // JSDoc) — cast here to duck-type the real value; see the note on
       // `SimpleCallback` in JSONJoiningTransformer.js.
@@ -991,7 +1007,7 @@ class JSONPathTransformerContext {
             const pv = that.vars;
             that._params = {0: next.value};
             that._contextObj = next.value;
-            that.vars = {};
+            that.vars = keyVar ? {[keyVar]: next.parentProperty} : {};
             try {
               // eslint-disable-next-line no-await-in-loop -- Sequential order
               await cb.call(that, next.value);

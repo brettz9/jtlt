@@ -1,5 +1,32 @@
 # jtlt CHANGES
 
+## 0.24.0
+
+- feat: the declarative `{$variable: name, $select}` node now also accepts
+  a literal `$value` (`{$variable: name, $value: literal}`), mirroring the
+  JS-API-level `variable()`'s existing `{value}` form — lets a template
+  bind a literal array/object embedded directly in the template itself
+  (e.g. a fixed collection list), not just a value fetched from `data`/
+  `params`/`$indexedDB`. `$forEach`'s own bare-`$name` convention then
+  iterates it directly (`$forEach: '$name'`). When both `$select` and
+  `$value` are given, `$value` wins (matching `variable()`'s own
+  `_paramSpec` precedence) — not a documented shape to combine
+  intentionally, just parity with the existing JS-API tiebreak.
+- feat: `forEach()` (and the declarative `{$forEach: sel, $key?: name}`
+  node) now accepts an optional `keyVar`/`$key` name that binds each
+  iteration's key — the array index, or (for an object-wildcard select
+  like `$.*`) the object property name, from jsonpath-plus's own
+  `parentProperty` on a `resultType: 'all'` match — for the duration of
+  that iteration, readable back via a bare `$name` reference (same
+  convention as `variable()`). This is what lets a template render
+  "property: value" pairs while iterating an object's own properties, or
+  skip one property by name via `$if` (e.g. `{$if: "$prop !== 'blob'"}`)
+  — jsonpath-plus's match data already carried this key; `forEach()`
+  itself was simply discarding it. A bare-`$name` (bound-variable)
+  iteration over an array also now gets its own index as the key; a
+  non-array bound value (treated as a length-1 sequence) has no
+  meaningful key.
+
 ## 0.23.0
 
 - feat: `${sel}` template-literal-style interpolation for a declarative

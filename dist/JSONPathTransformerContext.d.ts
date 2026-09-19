@@ -390,9 +390,22 @@ declare class JSONPathTransformerContext<T extends "json" | "string" | "dom" = "
      *   `void`, not `void|Promise<void>` — see the note on `SimpleCallback`
      *   in JSONJoiningTransformer.js.)
      * @param {SortSpec<V>} [sort] - Sort spec
+     * @param {string} [keyVar] - When given, binds each iteration's key —
+     *   the array index, or the object property name when `select` is an
+     *   object-wildcard path like `$.*` (jsonpath-plus's own `parentProperty`
+     *   on a `resultType: 'all'` match) — to this name for the duration of
+     *   that iteration, readable back via a bare `$name` reference (same
+     *   convention as `variable()`), same as `_params[0]`/`this.vars` are
+     *   already scoped fresh per iteration. Lets a template render
+     *   "property: value" pairs, or skip one property by name via `$if`,
+     *   while iterating an object's own properties — jsonpath-plus's match
+     *   data already carries this; `select`s naming a bound variable (the
+     *   bare-`$name` convention, below) carry the array index too, but never
+     *   a meaningful key for a non-array bound value (treated as a single,
+     *   length-1-sequence item — there's no "property name" for that case).
      * @returns {this|Promise<this>}
      */
-    forEach(select: string, cb: (this: JSONPathTransformerContext<T>, value: unknown) => void, sort?: SortSpec<V>): this | Promise<this>;
+    forEach(select: string, cb: (this: JSONPathTransformerContext<T>, value: unknown) => void, sort?: SortSpec<V>, keyVar?: string): this | Promise<this>;
     /**
      * Groups items and executes callback for each group.
      * Equivalent to XSLT's xsl:for-each-group.

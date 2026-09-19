@@ -642,7 +642,16 @@ async function runOperation (head, rest, ctx) {
     return;
   }
   if (Object.hasOwn(head, '$variable')) {
-    ctx.variable(head.$variable, {select: head.$select});
+    // `$value` (a literal, e.g. a collection list embedded directly in the
+    // template) takes precedence over `$select` when both are given,
+    // mirroring `variable()`'s own JS-API-level `_paramSpec` precedence —
+    // this is a direct passthrough to that same mechanism, not a new rule.
+    ctx.variable(
+      head.$variable,
+      Object.hasOwn(head, '$value')
+        ? {value: head.$value}
+        : {select: head.$select}
+    );
     return;
   }
   if (Object.hasOwn(head, '$if')) {
@@ -671,7 +680,8 @@ async function runOperation (head, rest, ctx) {
       async () => {
         await runNodes(/** @type {unknown[]} */ (childNodes), ctx);
       },
-      head.$sort
+      head.$sort,
+      head.$key
     );
     return;
   }

@@ -158,8 +158,9 @@ export const setWindow = (win) => {
  *   [{$applyTemplates: string, $jtltMode?: string, $sort?: unknown}] |
  *   [{$if: string}, JSONTemplateNode[]] |
  *   [{$if: string}, JSONTemplateNode[], JSONTemplateNode[]] |
- *   [{$forEach: string, $sort?: unknown}, JSONTemplateNode[]] |
+ *   [{$forEach: string, $sort?: unknown, $key?: string}, JSONTemplateNode[]] |
  *   [{$variable: string, $select: string}] |
+ *   [{$variable: string, $value: unknown}] |
  *   [{
  *     $indexedDB: {
  *       db: string, store: string,

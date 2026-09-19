@@ -135,8 +135,8 @@ A node is one of:
 | `[{$valueOf: sel}]` | `this.valueOf(sel)` |
 | `[{$applyTemplates: sel, $jtltMode?: mode, $sort?: sort}]` | `this.applyTemplates(sel, mode, sort)` |
 | `[{$if: sel}, thenNodes, elseNodes?]` | `this.if(sel, cb)` or, with an else, `this.choose(sel, whenCb, otherwiseCb)` |
-| `[{$forEach: sel, $sort?: sort}, childNodes]` | `this.forEach(sel, cb, sort)` |
-| `[{$variable: name, $select: sel}]` | `this.variable(name, sel)`, readable back later via a bare `$name` reference |
+| `[{$forEach: sel, $sort?: sort, $key?: name}, childNodes]` | `this.forEach(sel, cb, sort, name)` — with `$key`, binds each iteration's key (array index, or object property name for an object-wildcard `sel` like `$.*`) to `name`, readable via a bare `$name` reference |
+| `[{$variable: name, $select: sel}]` or `[{$variable: name, $value: literal}]` | `this.variable(name, sel)` / `this.variable(name, {value: literal})`, readable back later via a bare `$name` reference — `$value` embeds a literal directly in the template (e.g. a fixed collection list) rather than selecting from `data`/`params` |
 | `[{$indexedDB: {db, store, options?}, $as?: name}, childNodes?]` | fetches rows; with `$as`, binds them via `this.variable(name, {value: rows})`; without it, swaps the data context (`$`) to the rows for `childNodes` |
 | `[{$renderDefault: true}]` | `this.appendOutput(await this.renderDefault())` (an `extensions.renderDefault` your config supplies) |
 | `[{$name: {...}}]` (any key not otherwise recognized above) | an extension call: `await this[name](argObject)` — the argument object is passed through entirely unresolved (no key, e.g. a conventional `select`, is interpreted by jtlt itself; the extension resolves whatever it needs via `this.get(...)`, `this.valueOf(...)`, etc.). `name` must be a key actually present in `config.extensions`; any other name throws |
@@ -166,6 +166,20 @@ A `${...}`-shaped string sitting in an ineligible attribute is not
 flagged as a validation error — it may just as well be a coincidental
 literal value (e.g. a currency template or CSS `calc()`-like string) —
 it simply renders as literal text.
+
+**Iterating with a key, and literal iteration data**: `$forEach`'s `$key`
+exposes the current iteration's key — the array index, or (for an
+object-wildcard select like `$.*`) the object property name — as a bare
+`$name` reference, e.g. rendering "property: value" pairs while iterating
+a record's own properties, or skipping one property by name via
+`{$if: "$prop !== 'blob'"}`. `$variable`'s `$value` embeds a literal
+value directly in the template (an array, object, or scalar) rather than
+selecting one from `data`/`params` — e.g. a fixed list of collection
+links a root page shows regardless of the underlying data — and
+`$forEach`'s own bare-`$name` convention (`$forEach: '$name'`, not
+`$forEach: '$name[*]'` — jsonpath-plus has no notion of a named root to
+continue a path from) iterates it directly, exposing its own array
+indices via `$key` too.
 
 Every operation node's leading object is entirely `$`-prefixed — jamilih's
 own validator requires this of any first-position plain object. `$jtltMode`/
@@ -211,7 +225,8 @@ Consumers who register extensions are encouraged to document their chosen
 names somewhere (e.g. a project wiki page) alongside jtlt's own reserved
 op keys (`$text`, `$jtltText`, `$string`, `$valueOf`, `$applyTemplates`,
 `$if`, `$forEach`, `$variable`, `$indexedDB`, `$renderDefault`, `$mode`,
-`$jtltMode`, `$as`, `$sort`, `$select`) as names to avoid.
+`$jtltMode`, `$as`, `$sort`, `$select`, `$key`, `$value`) as names to
+avoid.
 
 **Validation**: `format: 'json'` (the default) rejects an embedded live
 function/DOM node anywhere in the tree — the intent is a safely

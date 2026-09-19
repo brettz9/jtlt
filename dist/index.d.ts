@@ -116,12 +116,18 @@ export type JSONOperationNode = [{
     {
         $forEach: string;
         $sort?: unknown;
+        $key?: string;
     },
     JSONTemplateNode[]
 ] | [
     {
         $variable: string;
         $select: string;
+    }
+] | [
+    {
+        $variable: string;
+        $value: unknown;
     }
 ] | [
     {

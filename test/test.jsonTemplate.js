@@ -540,6 +540,70 @@ describe('JSON (jamilih) templates', function () {
     });
 
     it(
+      "$forEach's $key exposes the current iteration's key (the array " +
+      'index, or — for an object-wildcard select like `$.*` — the ' +
+      'object property name, from jsonpath-plus\'s own `parentProperty`), ' +
+      'readable via a bare $name — enough to render "property: value" ' +
+      'pairs, or skip one property by name via $if',
+      async function () {
+        expect(
+          await renderJSON(
+            [
+              [{$forEach: '$.record.*', $key: 'prop'}, [
+                [{$if: "$prop !== 'blob'"}, [
+                  ['li', [
+                    [{$valueOf: '$prop'}],
+                    ': ',
+                    [{$valueOf: '$'}]
+                  ]]
+                ]]
+              ]]
+            ],
+            {record: {
+              title: 'Advent', author: 'Shoghi Effendi', blob: '<p>x</p>'
+            }}
+          )
+        ).to.equal('<li>title: Advent</li><li>author: Shoghi Effendi</li>');
+      }
+    );
+
+    it("$forEach's $key exposes the array index too, for a plain array " +
+      'select (not just an object-wildcard one)', async function () {
+      expect(
+        await renderJSON(
+          [
+            [{$forEach: '$.items[*]', $key: 'i'}, [
+              ['li', [
+                [{$valueOf: '$i'}],
+                ': ',
+                [{$valueOf: '$'}]
+              ]]
+            ]]
+          ],
+          {items: ['a', 'b']}
+        )
+      ).to.equal('<li>0: a</li><li>1: b</li>');
+    });
+
+    it("$forEach's $key exposes the array index for a bound-variable " +
+      '(bare-$name) iteration too', async function () {
+      expect(
+        await renderJSON(
+          [
+            [{$variable: 'letters', $value: ['x', 'y']}],
+            [{$forEach: '$letters', $key: 'i'}, [
+              ['li', [
+                [{$valueOf: '$i'}],
+                ': ',
+                [{$valueOf: '$'}]
+              ]]
+            ]]
+          ]
+        )
+      ).to.equal('<li>0: x</li><li>1: y</li>');
+    });
+
+    it(
       '$renderDefault invokes the caller-supplied `renderDefault` extension',
       async function () {
         // Called directly (not through `renderJSON`) so `extensions` keeps
@@ -660,6 +724,48 @@ describe('JSON (jamilih) templates', function () {
             {name: 'Ada'}
           )
         ).to.equal('Ada');
+      }
+    );
+
+    it(
+      '$variable accepts a literal $value (e.g. a collection list ' +
+      'embedded directly in the template, not fetched from data) ' +
+      "alongside $select — $forEach's own bare-$name convention then " +
+      'iterates it directly',
+      async function () {
+        expect(
+          await renderJSON(
+            [
+              [{
+                $variable: 'collections',
+                $value: [{name: 'letters'}, {name: 'talks'}]
+              }],
+              [{$forEach: '$collections'}, [
+                ['li', [[{$valueOf: '$.name'}]]]
+              ]]
+            ]
+          )
+        ).to.equal('<li>letters</li><li>talks</li>');
+      }
+    );
+
+    it(
+      '$variable\'s $value takes precedence when both $value and $select ' +
+      'are given, mirroring variable()\'s own JS-API-level precedence',
+      async function () {
+        expect(
+          await renderJSON(
+            [
+              // @ts-expect-error -- giving both together isn't a documented
+              // shape (an author should pick one); this only tests the
+              // runtime tiebreak, which exists for parity with the
+              // JS-API-level `_paramSpec`, not to encourage the combination.
+              [{$variable: 'n', $select: '$.name', $value: 'Override'}],
+              [{$valueOf: '$n'}]
+            ],
+            {name: 'Ada'}
+          )
+        ).to.equal('Override');
       }
     );
 
