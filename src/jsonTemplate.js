@@ -89,10 +89,7 @@ function classify (node) {
   if (typeof head === 'string') {
     return 'element';
   }
-  if (isPlainObject(head)) {
-    return 'operation';
-  }
-  return null;
+  return isPlainObject(head) ? 'operation' : null;
 }
 
 /**
@@ -287,22 +284,20 @@ function validateOperationHead (head) {
       return `Unrecognized operation-node key \`${keys[0]}\`.`;
     }
     const [extKey] = keys;
-    if (!isPlainObject(head[extKey])) {
-      return `\`${extKey}\` (an extension call) requires an object value, ` +
+    return !isPlainObject(head[extKey])
+      ? `\`${extKey}\` (an extension call) requires an object value, ` +
         `e.g. \`{${extKey}: {select: '$.path'}}\` — matching ` +
         '`$indexedDB`\'s own convention. Its contents are entirely up to ' +
         'the extension itself (e.g. a `select` it resolves via `this.get' +
         '(...)`, literal fields like `db`/`store`, …) — not interpreted ' +
-        'here.';
-    }
-    return null;
+        'here.'
+      : null;
   }
-  if (Object.hasOwn(head, '$text') && keys.length > 1) {
-    return '`$text` combined with any other key (e.g. `$select`) is not ' +
+  return Object.hasOwn(head, '$text') && keys.length > 1
+    ? '`$text` combined with any other key (e.g. `$select`) is not ' +
       'valid jamilih (jamilih rejects the unrecognized companion alongside ' +
-      'its own reserved `$text`); use `$jtltText` for the combined form.';
-  }
-  return null;
+      'its own reserved `$text`); use `$jtltText` for the combined form.'
+    : null;
 }
 
 /**
@@ -392,21 +387,24 @@ function validateNode (node, format, errors) {
     }
     return;
   }
-  if (Object.hasOwn(head, '$indexedDB')) {
-    // Unlike `$if`/`$forEach`, `$indexedDB`'s children are optional — a
-    // bare prefetch (binding via `$as` for later use, or discarding the
-    // rows entirely) with no immediate consumer is a legitimate leaf use.
-    const [, childNodes] = arr;
-    if (childNodes !== undefined && !Array.isArray(childNodes)) {
-      errors.push(
-        "`$indexedDB`'s children, when given, must be a node array."
-      );
-      return;
-    }
-    const idbChildren = childNodes || [];
-    for (const child of idbChildren) {
-      validateNode(child, format, errors);
-    }
+
+  if (!Object.hasOwn(head, '$indexedDB')) {
+    return;
+  }
+
+  // Unlike `$if`/`$forEach`, `$indexedDB`'s children are optional — a
+  // bare prefetch (binding via `$as` for later use, or discarding the
+  // rows entirely) with no immediate consumer is a legitimate leaf use.
+  const [, childNodes] = arr;
+  if (childNodes !== undefined && !Array.isArray(childNodes)) {
+    errors.push(
+      "`$indexedDB`'s children, when given, must be a node array."
+    );
+    return;
+  }
+  const idbChildren = childNodes || [];
+  for (const child of idbChildren) {
+    validateNode(child, format, errors);
   }
 }
 
@@ -463,26 +461,28 @@ function collectReads (node, targets, errors) {
     }
     return;
   }
-  if (Object.hasOwn(head, '$indexedDB')) {
-    const spec = /** @type {any} */ (head.$indexedDB);
-    if (
-      !isPlainObject(spec) ||
-      typeof spec.db !== 'string' || spec.db.length === 0 ||
-      typeof spec.store !== 'string' || spec.store.length === 0
-    ) {
-      errors.push(
-        '`$indexedDB` target could not be resolved statically — `db` and ' +
-        '`store` must both be non-empty string literals: ' +
-        JSON.stringify(head)
-      );
-    } else {
-      targets.push({db: spec.db, store: spec.store});
-    }
-    const [, childNodes] = arr;
-    const idbChildren = /** @type {unknown[]} */ (childNodes ?? []);
-    for (const child of idbChildren) {
-      collectReads(child, targets, errors);
-    }
+  if (!Object.hasOwn(head, '$indexedDB')) {
+    return;
+  }
+
+  const spec = /** @type {any} */ (head.$indexedDB);
+  if (
+    !isPlainObject(spec) ||
+    typeof spec.db !== 'string' || spec.db.length === 0 ||
+    typeof spec.store !== 'string' || spec.store.length === 0
+  ) {
+    errors.push(
+      '`$indexedDB` target could not be resolved statically — `db` and ' +
+      '`store` must both be non-empty string literals: ' +
+      JSON.stringify(head)
+    );
+  } else {
+    targets.push({db: spec.db, store: spec.store});
+  }
+  const [, childNodes] = arr;
+  const idbChildren = /** @type {unknown[]} */ (childNodes ?? []);
+  for (const child of idbChildren) {
+    collectReads(child, targets, errors);
   }
 }
 
@@ -512,13 +512,18 @@ export function extractReads (nodes) {
   for (const node of nodes) {
     collectReads(node, targets, errors);
   }
-  const seen = new Set();
+  /** @type {Map<string, Set<string>>} */
+  const seenStores = new Map();
   const reads = targets.filter(({db, store}) => {
-    const key = `${db} ${store}`;
-    if (seen.has(key)) {
+    let stores = seenStores.get(db);
+    if (!stores) {
+      stores = new Set();
+      seenStores.set(db, stores);
+    }
+    if (stores.has(store)) {
       return false;
     }
-    seen.add(key);
+    stores.add(store);
     return true;
   });
   return {reads, errors};

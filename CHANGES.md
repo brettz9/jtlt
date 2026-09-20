@@ -1,7 +1,8 @@
 # jtlt CHANGES
 
-## ?
+## 0.24.1
 
+- fix: avoid fragile use of combined string (with NUL byte) as key
 - chore: update codemirror/state (though moving with other codemirror to devDeps), jamilih, jsdom, devDeps
 
 ## 0.24.0

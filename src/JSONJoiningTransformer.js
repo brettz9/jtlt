@@ -488,10 +488,9 @@ class JSONJoiningTransformer extends AbstractJoiningTransformer {
     // If children provided as array, copy (may be primitives or nested JML)
     if (Array.isArray(childNodes) && childNodes.length) {
       jmlChildren.push(...childNodes.map((childNode) => {
-        if (typeof childNode === 'string') {
-          return this._replaceCharacterMaps(childNode);
-        }
-        return childNode;
+        return typeof childNode === 'string'
+          ? this._replaceCharacterMaps(childNode)
+          : childNode;
       }));
     }
 
@@ -641,20 +640,22 @@ class JSONJoiningTransformer extends AbstractJoiningTransformer {
     }
 
     const pending = this._pendingNamespaceMap.get(prefix);
-    if (pending) {
-      const top = /** @type {ElementInfo} */ (this._elementStack.at(-1));
-      const {attsObj} = top;
-
-      if (!attsObj.xmlns) {
-        attsObj.xmlns = {};
-      }
-
-      /** @type {Record<string, string>} */
-      (attsObj.xmlns)[pending.prefix === '#default' ? '' : pending.prefix] =
-        this._replaceCharacterMaps(pending.namespaceURI);
-
-      this._pendingNamespaceMap.delete(prefix);
+    if (!pending) {
+      return;
     }
+
+    const top = /** @type {ElementInfo} */ (this._elementStack.at(-1));
+    const {attsObj} = top;
+
+    if (!attsObj.xmlns) {
+      attsObj.xmlns = {};
+    }
+
+    /** @type {Record<string, string>} */
+    (attsObj.xmlns)[pending.prefix === '#default' ? '' : pending.prefix] =
+      this._replaceCharacterMaps(pending.namespaceURI);
+
+    this._pendingNamespaceMap.delete(prefix);
   }
   /**
    * Adds/updates an attribute for the most recently open element built via
@@ -921,10 +922,9 @@ class JSONJoiningTransformer extends AbstractJoiningTransformer {
    */
   _usePropertySets (obj, psName) {
     // Merge the named property set (if present) into the provided object
-    if (Object.hasOwn(this.propertySets, psName)) {
-      return Object.assign(obj, this.propertySets[psName]);
-    }
-    return obj;
+    return Object.hasOwn(this.propertySets, psName)
+      ? Object.assign(obj, this.propertySets[psName])
+      : obj;
   }
 }
 

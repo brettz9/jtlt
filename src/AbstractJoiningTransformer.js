@@ -361,10 +361,7 @@ class AbstractJoiningTransformer {
     this._flushPendingNamespace(alias);
 
     if (colonIdx === -1) {
-      if (alias === '#default') {
-        return elemName;
-      }
-      return alias + ':' + elemName;
+      return alias === '#default' ? elemName : alias + ':' + elemName;
     }
 
     return (alias === '#default'
@@ -392,13 +389,14 @@ class AbstractJoiningTransformer {
    */
   _trackAttributePrefix (attrName) {
     const colonIdx = attrName.indexOf(':');
-    if (colonIdx !== -1 && !attrName.startsWith('xmlns')) {
-      const prefix = attrName.slice(0, colonIdx);
-      this._usedNamespacePrefixes.add(prefix);
-
-      // If this prefix was buffered, output it now
-      this._flushPendingNamespace(prefix);
+    if (colonIdx === -1 || attrName.startsWith('xmlns')) {
+      return;
     }
+    const prefix = attrName.slice(0, colonIdx);
+    this._usedNamespacePrefixes.add(prefix);
+
+    // If this prefix was buffered, output it now
+    this._flushPendingNamespace(prefix);
   }
 
   /**
@@ -445,10 +443,12 @@ class AbstractJoiningTransformer {
     const cfg = /** @type {Record<string, unknown>} */ (this._cfg);
     const oldCfgProp = cfg[prop];
     cfg[prop] = val;
-    if (cb) {
-      cb.call(this);
-      cfg[prop] = oldCfgProp;
+    if (!cb) {
+      return;
     }
+
+    cb.call(this);
+    cfg[prop] = oldCfgProp;
   }
 }
 

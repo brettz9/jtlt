@@ -1001,20 +1001,22 @@ class XPathTransformerContext {
         currentGroup.push(node);
         const endMatch = evalInContext(groupEndingWith, node);
 
-        if (endMatch) {
-          const prevParams = this._params;
-          const prevContext = this._contextNode;
-          try {
-            this._contextNode = currentGroup[0];
-            /** @type {any} */ (this)._currentGroup = currentGroup;
-            cb.call(this, null, currentGroup, this);
-          } finally {
-            this._params = prevParams;
-            this._contextNode = prevContext;
-            delete /** @type {any} */ (this)._currentGroup;
-          }
-          currentGroup = [];
+        if (!endMatch) {
+          continue;
         }
+
+        const prevParams = this._params;
+        const prevContext = this._contextNode;
+        try {
+          this._contextNode = currentGroup[0];
+          /** @type {any} */ (this)._currentGroup = currentGroup;
+          cb.call(this, null, currentGroup, this);
+        } finally {
+          this._params = prevParams;
+          this._contextNode = prevContext;
+          delete /** @type {any} */ (this)._currentGroup;
+        }
+        currentGroup = [];
       }
 
       // Process last group if not ended
@@ -1463,10 +1465,9 @@ class XPathTransformerContext {
     if (this._params && Object.hasOwn(this._params, name)) {
       return {has: true, value: this._params[name]};
     }
-    if (Object.hasOwn(this._runtimeParams, name)) {
-      return {has: true, value: this._runtimeParams[name]};
-    }
-    return {has: false, value: undefined};
+    return Object.hasOwn(this._runtimeParams, name)
+      ? {has: true, value: this._runtimeParams[name]}
+      : {has: false, value: undefined};
   }
 
   /**
@@ -1610,15 +1611,18 @@ class XPathTransformerContext {
           while (node) {
             positions.unshift(this._calculatePosition(count, undefined));
             node = node.parentNode;
-            if (from) {
-              const fromResult = /** @type {any} */ (
-                this._evalXPath(from, node)
-              );
-              if (fromResult && fromResult.length > 0) {
-                break;
-              }
+            if (!from) {
+              continue;
+            }
+
+            const fromResult = /** @type {any} */ (
+              this._evalXPath(from, node)
+            );
+            if (fromResult && fromResult.length > 0) {
+              break;
             }
           }
+
           value = positions.join('.');
 
           break;
@@ -1993,8 +1997,7 @@ class XPathTransformerContext {
    */
   object (objOrCb, cbOrUsePropertySets, usePropertySetsOrPropSets, propSets) {
     const jt = this._getJoiningTransformer();
-    // Union of transformers creates intersection types
-    // @ts-expect-error
+    // @ts-expect-error -- Union of transformers creates intersection types
     jt.object(objOrCb, cbOrUsePropertySets, usePropertySetsOrPropSets,
       propSets);
     return this;
@@ -2026,8 +2029,7 @@ class XPathTransformerContext {
    */
   array (arrOrCb, cb) {
     const jt = this._getJoiningTransformer();
-    // Union of transformers creates intersection types
-    // @ts-expect-error
+    // @ts-expect-error -- Union of transformers creates intersection types
     jt.array(arrOrCb, cb);
     return this;
   }
@@ -2179,10 +2181,7 @@ class XPathTransformerContext {
           /** @param {string} prefix */
           const namespaceResolver = (prefix) => {
             // Map common prefixes to URN namespaces
-            if (prefix) {
-              return `urn:${prefix}`;
-            }
-            return null;
+            return prefix ? `urn:${prefix}` : null;
           };
           // // eslint-disable-next-line import/no-named-as-default-member -- OK
           const result = fontoxpath.evaluateXPath(
@@ -2275,10 +2274,9 @@ class XPathTransformerContext {
                 const result = actualBody(...unwrappedArgs);
                 // Fontoxpath expects sequences (item()*) to be arrays
                 // But scalar types (xs:integer, xs:string) should be scalars
-                if (returnsSequence && !Array.isArray(result)) {
-                  return [result];
-                }
-                return result;
+                return returnsSequence && !Array.isArray(result)
+                  ? [result]
+                  : result;
                 /* c8 ignore stop -- See above */
               }
               // Regular body function - pass through
@@ -2375,8 +2373,7 @@ class XPathTransformerContext {
     const jt = this._getJoiningTransformer();
     // Only StringJoiningTransformer supports the third parameter
     if (typeof avoid !== 'undefined') {
-      // Union of transformers creates intersection types
-      // @ts-expect-error
+      // @ts-expect-error -- Union of transformers creates intersection types
       jt.attribute(name, /** @type {string} */ (val), avoid);
     } else {
       jt.attribute(name, /** @type {string} */ (val));
@@ -2531,10 +2528,7 @@ class XPathTransformerContext {
     if (Array.isArray(val)) {
       return val.length > 0;
     }
-    if (val && typeof val === 'object') {
-      return true;
-    }
-    return Boolean(val);
+    return val && typeof val === 'object' ? true : Boolean(val);
   }
 
   /**
@@ -2589,7 +2583,6 @@ class XPathTransformerContext {
     if (!passes && (/[\/@*]/v).test(select)) {
       try {
         const nodes = this.get(select, true);
-        // eslint-disable-next-line unicorn/prefer-ternary -- for coverage
         if (Array.isArray(nodes)) {
           passes = nodes.length > 0;
         // Defensive for non-array nodes, but _evalXPath with asNodes=true
@@ -2624,10 +2617,9 @@ class XPathTransformerContext {
       return null;
     }
     const right = this._parseLiteral(m.groups.right.trim());
-    if (!right) {
-      return null;
-    }
-    return {left: m.groups.left, op: m.groups.op, right: right.value};
+    return !right
+      ? null
+      : {left: m.groups.left, op: m.groups.op, right: right.value};
   }
 
   /**
@@ -2658,10 +2650,7 @@ class XPathTransformerContext {
     if (str === 'null') {
       return {value: null};
     }
-    if (str === 'undefined') {
-      return {value: undefined};
-    }
-    return null;
+    return str === 'undefined' ? {value: undefined} : null;
   }
 
   /**
@@ -2674,10 +2663,9 @@ class XPathTransformerContext {
   _resolveComparand (ref) {
     const paramRef = ref.match(/^\$(?<name>[\w\-]+)$/v);
     /* c8 ignore next 3 -- `_parseComparison` only yields a `$name` left side */
-    if (!paramRef || !paramRef.groups) {
-      return undefined;
-    }
-    return this._lookupParam(paramRef.groups.name).value;
+    return !paramRef || !paramRef.groups
+      ? undefined
+      : this._lookupParam(paramRef.groups.name).value;
   }
 
   /**
@@ -2818,12 +2806,11 @@ class XPathTransformerContext {
      * @returns {string} - Captured group or empty string
      */
     const getRegexGroup = (groupNumber) => {
-      if (!currentCapturedGroups ||
+      return !currentCapturedGroups ||
           groupNumber < 0 ||
-          groupNumber >= currentCapturedGroups.length) {
-        return '';
-      }
-      return currentCapturedGroups[groupNumber] || '';
+          groupNumber >= currentCapturedGroups.length
+        ? ''
+        : currentCapturedGroups[groupNumber] || '';
     };
 
     // Save previous context to restore later

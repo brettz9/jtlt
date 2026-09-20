@@ -319,10 +319,8 @@ class JSONPathTransformerContext {
     /* const results = */ this._getJoiningTransformer();
     const modeMatchedTemplates = this._templates.filter((templateObj) => {
       // Exclude named-only templates (those with name but no path)
-      if (templateObj.name && !templateObj.path) {
-        return false;
-      }
-      return ((mode && mode === templateObj.mode) ||
+      return (!templateObj.name || templateObj.path) &&
+        ((mode && mode === templateObj.mode) ||
         (!mode && !templateObj.mode));
     });
 
@@ -382,10 +380,7 @@ class JSONPathTransformerContext {
         if (Number.isNaN(an)) {
           return Number(order);
         }
-        if (Number.isNaN(bn)) {
-          return -order;
-        }
-        return (an - bn) * order;
+        return Number.isNaN(bn) ? -order : (an - bn) * order;
       }
       // text
       /* c8 ignore next 2 -- all null/undefined tested; OR short-circuit */
@@ -910,10 +905,7 @@ class JSONPathTransformerContext {
         if (Number.isNaN(an)) {
           return Number(order);
         }
-        if (Number.isNaN(bn)) {
-          return -order;
-        }
-        return (an - bn) * order;
+        return Number.isNaN(bn) ? -order : (an - bn) * order;
       }
       /* c8 ignore next 2 -- all null/undefined tested; OR short-circuit */
       const aStr = aVal === null || aVal === undefined ? '' : String(aVal);
@@ -1257,23 +1249,25 @@ class JSONPathTransformerContext {
         currentGroup.push(m.value);
         const endMatch = evalInContext(groupEndingWith, m.value);
 
-        if (endMatch) {
-          const prevContext = this._contextObj;
-          const prevParams = this._params;
-          const prevVars = this.vars;
-          this.vars = {};
-          try {
-            this._contextObj = currentGroup;
-            /** @type {any} */ (this)._currentGroup = currentGroup;
-            cb.call(this, null, currentGroup, this);
-          } finally {
-            this._contextObj = prevContext;
-            this._params = prevParams;
-            this.vars = prevVars;
-            delete /** @type {any} */ (this)._currentGroup;
-          }
-          currentGroup = [];
+        if (!endMatch) {
+          continue;
         }
+
+        const prevContext = this._contextObj;
+        const prevParams = this._params;
+        const prevVars = this.vars;
+        this.vars = {};
+        try {
+          this._contextObj = currentGroup;
+          /** @type {any} */ (this)._currentGroup = currentGroup;
+          cb.call(this, null, currentGroup, this);
+        } finally {
+          this._contextObj = prevContext;
+          this._params = prevParams;
+          this.vars = prevVars;
+          delete /** @type {any} */ (this)._currentGroup;
+        }
+        currentGroup = [];
       }
 
       // Process last group if not ended
@@ -1341,10 +1335,7 @@ class JSONPathTransformerContext {
         if (Number.isNaN(an)) {
           return order;
         }
-        if (Number.isNaN(bn)) {
-          return -order;
-        }
-        return (an - bn) * order;
+        return Number.isNaN(bn) ? -order : (an - bn) * order;
       }
       /* c8 ignore next 2 -- all null/undefined tested; OR short-circuit */
       const aStr = aVal === null || aVal === undefined ? '' : String(aVal);
@@ -1642,12 +1633,11 @@ class JSONPathTransformerContext {
      * @returns {string} - Captured group or empty string
      */
     const getRegexGroup = (groupNumber) => {
-      if (!currentCapturedGroups ||
+      return !currentCapturedGroups ||
           groupNumber < 0 ||
-          groupNumber >= currentCapturedGroups.length) {
-        return '';
-      }
-      return currentCapturedGroups[groupNumber] || '';
+          groupNumber >= currentCapturedGroups.length
+        ? ''
+        : currentCapturedGroups[groupNumber] || '';
     };
 
     // Save previous context to restore later
@@ -1841,10 +1831,9 @@ class JSONPathTransformerContext {
     if (Object.hasOwn(this.vars, name)) {
       return {has: true, value: this.vars[name]};
     }
-    if (Object.hasOwn(this._runtimeParams, name)) {
-      return {has: true, value: this._runtimeParams[name]};
-    }
-    return {has: false, value: undefined};
+    return Object.hasOwn(this._runtimeParams, name)
+      ? {has: true, value: this._runtimeParams[name]}
+      : {has: false, value: undefined};
   }
 
   /**
@@ -2778,15 +2767,9 @@ class JSONPathTransformerContext {
       }
       // Single item; apply scalar truthiness
       const single = val[0];
-      if (single && typeof single === 'object') {
-        return true;
-      }
-      return Boolean(single);
+      return single && typeof single === 'object' ? true : Boolean(single);
     }
-    if (val && typeof val === 'object') {
-      return true;
-    }
-    return Boolean(val);
+    return val && typeof val === 'object' ? true : Boolean(val);
   }
 
   /**
@@ -2837,10 +2820,9 @@ class JSONPathTransformerContext {
       return null;
     }
     const right = this._parseLiteral(m.groups.right.trim());
-    if (!right) {
-      return null;
-    }
-    return {left: m.groups.left, op: m.groups.op, right: right.value};
+    return !right
+      ? null
+      : {left: m.groups.left, op: m.groups.op, right: right.value};
   }
 
   /**
@@ -2871,10 +2853,7 @@ class JSONPathTransformerContext {
     if (str === 'null') {
       return {value: null};
     }
-    if (str === 'undefined') {
-      return {value: undefined};
-    }
-    return null;
+    return str === 'undefined' ? {value: undefined} : null;
   }
 
   /**

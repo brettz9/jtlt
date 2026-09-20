@@ -587,15 +587,17 @@ class DOMJoiningTransformer extends AbstractJoiningTransformer {
    */
   _flushPendingNamespace (prefix) {
     const pending = this._pendingNamespaceMap.get(prefix);
-    if (pending) {
-      /** @type {Element} */
-      (this._dom).setAttributeNS(
-        'http://www.w3.org/2000/xmlns/',
-        pending.prefix === '#default' ? 'xmlns' : 'xmlns:' + pending.prefix,
-        this._replaceCharacterMaps(pending.namespaceURI)
-      );
-      this._pendingNamespaceMap.delete(prefix);
+    if (!pending) {
+      return;
     }
+
+    /** @type {Element} */
+    (this._dom).setAttributeNS(
+      'http://www.w3.org/2000/xmlns/',
+      pending.prefix === '#default' ? 'xmlns' : 'xmlns:' + pending.prefix,
+      this._replaceCharacterMaps(pending.namespaceURI)
+    );
+    this._pendingNamespaceMap.delete(prefix);
   }
   /**
    * @param {string} name

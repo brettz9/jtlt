@@ -50,10 +50,9 @@ class XPathTransformer {
         return {path: template[0], template: template[1]};
       }
       // Normalize 'match' to 'path' for XSLT compatibility
-      if (template.match && !template.path) {
-        return {...template, path: template.match};
-      }
-      return template;
+      return template.match && !template.path
+        ? {...template, path: template.match}
+        : template;
     });
     this.templates.forEach((template) => {
       if ('name' in template && template.name &&

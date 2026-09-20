@@ -678,6 +678,7 @@ class JTLT {
             : null
       );
     this.config.templates = query
+    // eslint-disable-next-line unicorn/prefer-minimal-ternary -- TS
       ? this.config.engineType === 'xpath'
         ? /** @type {XPathTemplateObject<joiningTypes>[]} */ ([
           {name: 'root', path: '//*', template: query}

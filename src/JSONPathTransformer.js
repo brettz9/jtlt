@@ -34,10 +34,9 @@ class JSONPathTransformer {
        */
       template (value) {
         // Emit property names for the current object context
-        if (value && typeof value === 'object' && !Array.isArray(value)) {
-          return Object.keys(value).join('');
-        }
-        return '';
+        return value && typeof value === 'object' && !Array.isArray(value)
+          ? Object.keys(value).join('')
+          : '';
       }
     },
     transformObjects: {

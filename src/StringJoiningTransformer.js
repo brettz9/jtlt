@@ -733,13 +733,15 @@ class StringJoiningTransformer extends AbstractJoiningTransformer {
    */
   _flushPendingNamespace (prefix) {
     const pending = this._pendingNamespaceMap.get(prefix);
-    if (pending) {
-      this.append(' ' + (
-        pending.prefix === '#default' ? 'xmlns' : 'xmlns:' + pending.prefix
-      ) + '="' +
-          this._replaceCharacterMaps(pending.namespaceURI) + '"');
-      this._pendingNamespaceMap.delete(prefix);
+    if (!pending) {
+      return;
     }
+
+    this.append(' ' + (
+      pending.prefix === '#default' ? 'xmlns' : 'xmlns:' + pending.prefix
+    ) + '="' +
+        this._replaceCharacterMaps(pending.namespaceURI) + '"');
+    this._pendingNamespaceMap.delete(prefix);
   }
 
   /**

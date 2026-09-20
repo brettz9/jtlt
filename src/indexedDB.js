@@ -229,10 +229,9 @@ export async function queryIndexedDB (dbName, storeName, options = {}) {
 
   // Forward iteration has bulk APIs. For a store query the primary key and
   // the query key are the same, so `getAllKeys` serves both.
-  if (resultType === 'value') {
-    return target.getAll(range, count);
-  }
-  return target.getAllKeys(range, count);
+  return resultType === 'value'
+    ? target.getAll(range, count)
+    : target.getAllKeys(range, count);
 }
 
 /**
