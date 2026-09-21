@@ -1,5 +1,9 @@
 # jtlt CHANGES
 
+## 0.24.2
+
+- chore: update simple-get-json
+
 ## 0.24.1
 
 - fix: avoid fragile use of combined string (with NUL byte) as key
