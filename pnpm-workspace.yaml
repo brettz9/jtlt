@@ -44,3 +44,5 @@ minimumReleaseAgeExclude:
   - jamilih@0.70.0
   - eslint@10.11.0
   - eslint-plugin-unicorn@76.0.0
+  - local-xmlhttprequest@4.0.1
+  - simple-get-json@11.0.2
