@@ -1,4 +1,8 @@
-# jtlt CHANGES
+# CHANGES for jtlt
+
+## 0.25.0
+
+- chore: update jsdom, jsonpath-plus, devDeps.
 
 ## 0.24.2
 

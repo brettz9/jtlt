@@ -5,44 +5,46 @@ allowBuilds:
   libxmljs: true
   unrs-resolver: true
 minimumReleaseAgeExclude:
-  - '@rollup/rollup-android-arm-eabi@4.63.0'
-  - '@rollup/rollup-android-arm64@4.63.0'
-  - '@rollup/rollup-darwin-arm64@4.63.0'
-  - '@rollup/rollup-darwin-x64@4.63.0'
-  - '@rollup/rollup-freebsd-arm64@4.63.0'
-  - '@rollup/rollup-freebsd-x64@4.63.0'
-  - '@rollup/rollup-linux-arm-gnueabihf@4.63.0'
-  - '@rollup/rollup-linux-arm-musleabihf@4.63.0'
-  - '@rollup/rollup-linux-arm64-gnu@4.63.0'
-  - '@rollup/rollup-linux-arm64-musl@4.63.0'
-  - '@rollup/rollup-linux-loong64-gnu@4.63.0'
-  - '@rollup/rollup-linux-loong64-musl@4.63.0'
-  - '@rollup/rollup-linux-ppc64-gnu@4.63.0'
-  - '@rollup/rollup-linux-ppc64-musl@4.63.0'
-  - '@rollup/rollup-linux-riscv64-gnu@4.63.0'
-  - '@rollup/rollup-linux-riscv64-musl@4.63.0'
-  - '@rollup/rollup-linux-s390x-gnu@4.63.0'
-  - '@rollup/rollup-linux-x64-gnu@4.63.0'
-  - '@rollup/rollup-linux-x64-musl@4.63.0'
-  - '@rollup/rollup-openbsd-x64@4.63.0'
-  - '@rollup/rollup-openharmony-arm64@4.63.0'
-  - '@rollup/rollup-win32-arm64-msvc@4.63.0'
-  - '@rollup/rollup-win32-ia32-msvc@4.63.0'
-  - '@rollup/rollup-win32-x64-gnu@4.63.0'
-  - '@rollup/rollup-win32-x64-msvc@4.63.0'
-  - rollup@4.63.0
+  - '@rollup/rollup-android-arm-eabi@4.63.0 || 4.63.5'
+  - '@rollup/rollup-android-arm64@4.63.0 || 4.63.5'
+  - '@rollup/rollup-darwin-arm64@4.63.0 || 4.63.5'
+  - '@rollup/rollup-darwin-x64@4.63.0 || 4.63.5'
+  - '@rollup/rollup-freebsd-arm64@4.63.0 || 4.63.5'
+  - '@rollup/rollup-freebsd-x64@4.63.0 || 4.63.5'
+  - '@rollup/rollup-linux-arm-gnueabihf@4.63.0 || 4.63.5'
+  - '@rollup/rollup-linux-arm-musleabihf@4.63.0 || 4.63.5'
+  - '@rollup/rollup-linux-arm64-gnu@4.63.0 || 4.63.5'
+  - '@rollup/rollup-linux-arm64-musl@4.63.0 || 4.63.5'
+  - '@rollup/rollup-linux-loong64-gnu@4.63.0 || 4.63.5'
+  - '@rollup/rollup-linux-loong64-musl@4.63.0 || 4.63.5'
+  - '@rollup/rollup-linux-ppc64-gnu@4.63.0 || 4.63.5'
+  - '@rollup/rollup-linux-ppc64-musl@4.63.0 || 4.63.5'
+  - '@rollup/rollup-linux-riscv64-gnu@4.63.0 || 4.63.5'
+  - '@rollup/rollup-linux-riscv64-musl@4.63.0 || 4.63.5'
+  - '@rollup/rollup-linux-s390x-gnu@4.63.0 || 4.63.5'
+  - '@rollup/rollup-linux-x64-gnu@4.63.0 || 4.63.5'
+  - '@rollup/rollup-linux-x64-musl@4.63.0 || 4.63.5'
+  - '@rollup/rollup-openbsd-x64@4.63.0 || 4.63.5'
+  - '@rollup/rollup-openharmony-arm64@4.63.0 || 4.63.5'
+  - '@rollup/rollup-win32-arm64-msvc@4.63.0 || 4.63.5'
+  - '@rollup/rollup-win32-ia32-msvc@4.63.0 || 4.63.5'
+  - '@rollup/rollup-win32-x64-gnu@4.63.0 || 4.63.5'
+  - '@rollup/rollup-win32-x64-msvc@4.63.0 || 4.63.5'
+  - rollup@4.63.0 || 4.63.5
   - jhtml@0.7.2 || 0.7.3
-  - eslint-config-ash-nazg@43.1.0 || 43.1.6 || 43.2.2
+  - eslint-config-ash-nazg@43.1.0 || 43.1.6 || 43.2.2 || 43.2.3
   - eslint-plugin-escompat@3.12.0
   - eslint-plugin-jsdoc@64.3.0 || 64.3.3
-  - indexeddbshim@17.4.1 || 17.4.2 || 17.4.3 || 17.5.0 || 17.6.0 || 19.0.2
+  - indexeddbshim@17.4.1 || 17.4.2 || 17.4.3 || 17.5.0 || 17.6.0 || 19.0.2 || 19.0.7
   - open@11.0.2
   - powershell-utils@0.2.1
   - websql-configurable@4.0.0
   - '@node-static/node-static@0.9.2'
-  - baseline-browser-mapping@2.11.22
+  - baseline-browser-mapping@2.11.22 || 2.11.26
   - jamilih@0.70.0
   - eslint@10.11.0
   - eslint-plugin-unicorn@76.0.0
   - local-xmlhttprequest@4.0.1
   - simple-get-json@11.0.2
+  - '@lezer/highlight@1.2.4'
+  - jsonpath-plus@11.0.0
