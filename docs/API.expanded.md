@@ -78,7 +78,7 @@ Common to both entry points unless noted.
 | `specificityPriorityResolver` | fn(path)=&gt;number | Custom resolver for relative priorities. Defaults to XSLT-like JSONPath resolver. |
 | `engine` | fn(config)=&gt;result | Override transform engine (defaults to JSONPathTransformer). |
 | `autostart` | boolean | **`JTLT` only** — if `false`, don't auto-call `transform()` in constructor. |
-| `preventEval` | boolean | Disable parenthetical eval portions of JSONPath (security). |
+| `eval` | boolean | Allow parenthetical eval portions of JSONPath (security). |
 
 ## Template objects
 

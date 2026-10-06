@@ -1,5 +1,10 @@
 # CHANGES for jtlt
 
+## 0.25.1
+
+- fix: JSONPath (preventEval -> eval: false; returnType->resultType; add customTypes; avoid any type)
+- chore: update idb, jsdom, jsonpath-plus, simple-get-json, devDeps.
+
 ## 0.25.0
 
 - chore: update jsdom, jsonpath-plus, devDeps.

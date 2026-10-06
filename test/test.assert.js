@@ -95,7 +95,7 @@ describe('assert() method', () => {
           path: '$',
           template () {
             this.assert('$.name');
-            this.string(this.get('$.name', false));
+            this.string(/** @type {string} */ (this.get('$.name', false)));
           }
         }],
         success (result) {

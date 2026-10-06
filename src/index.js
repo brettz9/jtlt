@@ -302,7 +302,7 @@ export const setWindow = (win) => {
  * report an error when equal priority templates are found
  * @property {boolean} [autostart] Whether to begin transform()
  * immediately.
- * @property {boolean} [preventEval] Whether to prevent
+ * @property {boolean} [eval] Whether to allow
  * parenthetical evaluations in JSONPath. Safer if relying on user
  * input, but reduces capabilities of JSONPath.
  * @property {boolean} [unwrapSingleResult] For JSON output, whether to

@@ -1,4 +1,6 @@
 import {JSONPath as jsonpath} from 'jsonpath-plus';
+import structuredCloningTypes from
+  'jsonpath-plus/src/structuredCloningTypes.js';
 import JSONPathTransformer from './JSONPathTransformer.js';
 import {maybeAsyncLoop} from './maybeAsync.js';
 import applyExtensions from './extendContext.js';
@@ -91,7 +93,7 @@ const escapeRegexReplacement = (string) => {
  *   equal priority
  * @property {T} [outputType] - Output type
  * @property {JoiningTransformerMap[T]} joiningTransformer - Joining transformer
- * @property {boolean} [preventEval] - Whether to prevent eval in
+ * @property {boolean} [eval] - Whether to allow eval in
  *   JSONPath
  * @property {boolean} [sync] - When true, throw if a template returns a
  *   Promise instead of awaiting it (disables `indexedDB()`)
@@ -246,14 +248,15 @@ class JSONPathTransformerContext {
    *   to the result tree instead).
    * @param {string} select - JSONPath selector
    * @param {boolean} wrap - Whether to wrap results
-   * @returns {any} The selected value(s)
+   * @returns {unknown} The selected value(s)
    */
   get (select, wrap) {
     if (select) {
       return /** @type {any} */ (jsonpath)({
         path: select, json: this._contextObj,
-        preventEval: this._config.preventEval,
-        wrap: wrap || false, returnType: 'value'
+        eval: this._config.eval,
+        wrap: wrap || false, returnType: 'value',
+        customTypes: structuredCloningTypes
       });
     }
     return this._contextObj;
@@ -335,7 +338,8 @@ class JSONPathTransformerContext {
       resultType: 'all',
       wrap: true,
       json: this._contextObj,
-      preventEval: this._config.preventEval
+      eval: this._config.eval,
+      customTypes: structuredCloningTypes
     });
 
     // Sorting utilities
@@ -354,8 +358,9 @@ class JSONPathTransformerContext {
       return /** @type {any} */ (jsonpath)({
         path: expr,
         json: ctxVal,
-        preventEval: that._config.preventEval,
-        wrap: false, returnType: 'value'
+        eval: that._config.eval,
+        wrap: false, returnType: 'value',
+        customTypes: structuredCloningTypes
       });
     }
     /**
@@ -463,8 +468,9 @@ class JSONPathTransformerContext {
               ),
               json: that._origObj,
               resultType: 'path',
-              preventEval: that._config.preventEval,
-              wrap: true
+              eval: that._config.eval,
+              wrap: true,
+              customTypes: structuredCloningTypes
             })
           );
           return (
@@ -858,9 +864,10 @@ class JSONPathTransformerContext {
       : /** @type {any} */ (jsonpath)({
         path: select,
         json: this._contextObj,
-        preventEval: this._config.preventEval,
+        eval: this._config.eval,
         wrap: true,
-        resultType: 'all'
+        resultType: 'all',
+        customTypes: structuredCloningTypes
       });
 
     /**
@@ -878,8 +885,9 @@ class JSONPathTransformerContext {
       return /** @type {any} */ (jsonpath)({
         path: expr,
         json: ctxVal,
-        preventEval: that._config.preventEval,
-        wrap: false, returnType: 'value'
+        eval: that._config.eval,
+        wrap: false, returnType: 'value',
+        customTypes: structuredCloningTypes
       });
     }
     /**
@@ -1058,9 +1066,10 @@ class JSONPathTransformerContext {
     const matches = /** @type {any} */ (jsonpath)({
       path: select,
       json: this._contextObj,
-      preventEval: this._config.preventEval,
+      eval: this._config.eval,
       wrap: true,
-      resultType: 'all'
+      resultType: 'all',
+      customTypes: structuredCloningTypes
     });
 
     /**
@@ -1075,9 +1084,10 @@ class JSONPathTransformerContext {
       return /** @type {any} */ (jsonpath)({
         path: expr,
         json: ctxVal,
-        preventEval: that._config.preventEval,
+        eval: that._config.eval,
         wrap: false,
-        returnType: 'value'
+        returnType: 'value',
+        customTypes: structuredCloningTypes
       });
     }
 
@@ -1422,7 +1432,7 @@ class JSONPathTransformerContext {
    */
   async _appendIndexedDBValue (parsed, results) {
     const value = await resolveIndexedDBQuery(parsed, {
-      preventEval: this._config.preventEval
+      eval: this._config.eval
     });
     results.text(String(value));
     return this;
@@ -1954,8 +1964,9 @@ class JSONPathTransformerContext {
           // If count is set, simulate count by returning total items
           //   in current context
           if (count) {
-            const arr = Array.isArray(this.get(count, true))
-              ? this.get(count, true)
+            const getVal = this.get(count, true);
+            const arr = Array.isArray(getVal)
+              ? getVal
               /* c8 ignore next -- defensive: get(wrap) always returns array */
               : [];
             value = arr.length;
@@ -1970,8 +1981,9 @@ class JSONPathTransformerContext {
           while (state) {
             // If count is set, use count for each ancestor if possible
             if (count) {
-              const arr = Array.isArray(this.get(count, true))
-                ? this.get(count, true)
+              const getVal = this.get(count, true);
+              const arr = Array.isArray(getVal)
+                ? getVal
                 /* c8 ignore next -- defensive: get(wrap) returns array */
                 : [];
               positions.unshift(arr.length);
@@ -2059,7 +2071,8 @@ class JSONPathTransformerContext {
     //   the root data
     if (count) {
       const result = jsonpath({
-        path: count, json: this._origObj, resultType: 'value', wrap: true
+        path: count, json: this._origObj, resultType: 'value', wrap: true,
+        customTypes: structuredCloningTypes
       });
       if (Array.isArray(result)) {
         if (result.length === 0) {
@@ -2676,9 +2689,10 @@ class JSONPathTransformerContext {
       (/** @type {any} */ (jsonpath))({
         path: JSONPathTransformer.makeJSONPathAbsolute(key.match),
         json: this._origObj,
-        preventEval: this._config.preventEval,
+        eval: this._config.eval,
         wrap: true,
-        returnType: 'value'
+        returnType: 'value',
+        customTypes: structuredCloningTypes
       })
     );
     for (const match of matches) { // For objects or arrays

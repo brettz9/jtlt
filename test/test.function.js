@@ -435,7 +435,9 @@ describe('function() - XSLT-like stylesheet functions', function () {
       templates: [{
         path: '$',
         template () {
-          const threshold = this.get('$.threshold', false);
+          const threshold = /** @type {number} */ (
+            this.get('$.threshold', false)
+          );
 
           this.function({
             name: 'app:isAboveThreshold',

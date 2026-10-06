@@ -1,4 +1,6 @@
 import {JSONPath as jsonpath} from 'jsonpath-plus';
+import structuredCloningTypes from
+  'jsonpath-plus/src/structuredCloningTypes.js';
 import fontoxpath from 'fontoxpath';
 
 /**
@@ -359,22 +361,23 @@ export function parseIndexedDBExpression (expr) {
  * trailing JSONPath segment is present (e.g. `.*.name`), evaluate it against
  * the fetched records. Shared by the JSONPath and XPath engines.
  * @param {ParsedIndexedDBExpression} parsed
- * @param {{preventEval?: boolean}} [options]
+ * @param {{eval?: boolean}} [options]
  * @returns {Promise<unknown>}
  */
-export async function resolveIndexedDBQuery (parsed, {preventEval} = {}) {
+export async function resolveIndexedDBQuery (parsed, {eval: evalMode} = {}) {
   const {dbName, storeName, options, trailing} = parsed;
   const data = await queryIndexedDB(dbName, storeName, options);
   if (!trailing) {
     return data;
   }
   // A JSONPath trailing segment always begins with a step (`.` or `[`).
-  return /** @type {(config: object) => unknown} */ (jsonpath)({
+  return jsonpath({
     path: '$' + trailing,
     json: data,
-    preventEval,
+    eval: evalMode,
     wrap: false,
-    returnType: 'value'
+    resultType: 'value',
+    customTypes: structuredCloningTypes
   });
 }
 

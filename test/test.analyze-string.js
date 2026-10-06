@@ -9,7 +9,7 @@ describe('JSONPathTransformerContext analyzeString', () => {
       templates: [{
         path: '$',
         template () {
-          this.analyzeString(this.get('$.text', false), /\n/v, {
+          this.analyzeString(/** @type {string} */ (this.get('$.text', false)), /\n/v, {
             matchingSubstring () {
               this.string('<br/>');
             },
@@ -40,7 +40,7 @@ describe('JSONPathTransformerContext analyzeString', () => {
           path: '$',
           template () {
             this.analyzeString(
-              this.get('$.text', false),
+              /** @type {string} */ (this.get('$.text', false)),
               /\[(?<bracket>.*?)\]/v,
               {
                 matchingSubstring (substring, groups, regexGroup) {
@@ -77,7 +77,7 @@ describe('JSONPathTransformerContext analyzeString', () => {
       templates: [{
         path: '$',
         template () {
-          this.analyzeString(this.get('$.text', false), /\n/v, {
+          this.analyzeString(/** @type {string} */ (this.get('$.text', false)), /\n/v, {
             matchingSubstring () {
               this.string('MATCH');
             },
@@ -110,7 +110,7 @@ describe('JSONPathTransformerContext analyzeString', () => {
             'July', 'August', 'September', 'October', 'November', 'December'
           ];
           this.analyzeString(
-            this.get('$.date', false),
+            /** @type {string} */ (this.get('$.date', false)),
             /(?<day>\d{1,2})\s(?<month>[A-Z][a-z]+)\s(?<year>\d{4})/v,
             {
               matchingSubstring (substring, groups, regexGroup) {
@@ -146,7 +146,7 @@ describe('JSONPathTransformerContext analyzeString', () => {
         templates: [{
           path: '$',
           template () {
-            this.analyzeString(this.get('$.text', false), /\d+/v, {
+            this.analyzeString(/** @type {string} */ (this.get('$.text', false)), /\d+/v, {
               matchingSubstring (substring) {
                 this.string('[' + substring + ']');
               },
@@ -175,7 +175,7 @@ describe('JSONPathTransformerContext analyzeString', () => {
       templates: [{
         path: '$',
         template () {
-          this.analyzeString(this.get('$.text', false), /\d+/v, {
+          this.analyzeString(/** @type {string} */ (this.get('$.text', false)), /\d+/v, {
             matchingSubstring (substring) {
               this.string('[' + substring + ']');
             },
@@ -206,7 +206,7 @@ describe('JSONPathTransformerContext analyzeString', () => {
           templates: [{
             path: '$',
             template () {
-              this.analyzeString(this.get('$.text', false), /.*/v, {
+              this.analyzeString(/** @type {string} */ (this.get('$.text', false)), /.*/v, {
                 matchingSubstring (substring) {
                   this.string(substring);
                 }
@@ -233,15 +233,17 @@ describe('JSONPathTransformerContext analyzeString', () => {
       templates: [{
         path: '$',
         template () {
-          this.analyzeString(this.get('$.text', false), 'test', {
-            flags: 'iv',
-            matchingSubstring (substring) {
-              this.string('[' + substring + ']');
-            },
-            nonMatchingSubstring (substring) {
-              this.string(substring);
+          this.analyzeString(
+            /** @type {string} */ (this.get('$.text', false)), 'test', {
+              flags: 'iv',
+              matchingSubstring (substring) {
+                this.string('[' + substring + ']');
+              },
+              nonMatchingSubstring (substring) {
+                this.string(substring);
+              }
             }
-          });
+          );
         }
       }],
       success (result) {
@@ -265,7 +267,7 @@ describe('JSONPathTransformerContext analyzeString', () => {
           path: '$',
           template () {
             this.analyzeString(
-              this.get('$.text', false),
+              /** @type {string} */ (this.get('$.text', false)),
               /(?<key>\w+):\s*(?<value>\w+)/v,
               {
                 matchingSubstring (substring, groups, regexGroup) {
@@ -296,7 +298,7 @@ describe('JSONPathTransformerContext analyzeString', () => {
         templates: [{
           path: '$',
           template () {
-            this.analyzeString(this.get('$.text', false), /\d/v, {
+            this.analyzeString(/** @type {string} */ (this.get('$.text', false)), /\d/v, {
               matchingSubstring (substring) {
                 // Context should be the matching substring
                 this.string('[' + String(this._contextObj) + ']');
@@ -330,7 +332,7 @@ describe('JSONPathTransformerContext analyzeString', () => {
           path: '$',
           template () {
             this.analyzeString(
-              this.get('$.text', false),
+              /** @type {string} */ (this.get('$.text', false)),
               /(?<word>[a-z]+)(?<num>\d+)/v,
               {
                 matchingSubstring (substring, groups, regexGroup) {
@@ -369,7 +371,7 @@ describe('JSONPathTransformerContext analyzeString', () => {
             // Use a regex that matches positions (lookahead)
             // This tests the defensive lastIndex++ code
             this.analyzeString(
-              this.get('$.text', false),
+              /** @type {string} */ (this.get('$.text', false)),
               /(?=\w)/v,
               {
                 matchingSubstring (substring) {
@@ -404,15 +406,19 @@ describe('JSONPathTransformerContext analyzeString', () => {
         templates: [{
           path: '$',
           template () {
-            this.analyzeString(this.get('$.text', false), String.raw`\w`, {
-              flags: 'v',
-              matchingSubstring (substring) {
-                this.string('[' + substring + ']');
-              },
-              nonMatchingSubstring (substring) {
-                this.string(substring);
+            this.analyzeString(
+              /** @type {string} */ (this.get('$.text', false)),
+              String.raw`\w`,
+              {
+                flags: 'v',
+                matchingSubstring (substring) {
+                  this.string('[' + substring + ']');
+                },
+                nonMatchingSubstring (substring) {
+                  this.string(substring);
+                }
               }
-            });
+            );
           }
         }],
         success (result) {
@@ -436,15 +442,19 @@ describe('JSONPathTransformerContext analyzeString', () => {
         templates: [{
           path: '$',
           template () {
-            this.analyzeString(this.get('$.text', false), String.raw`\d`, {
-              flags: 'gv',
-              matchingSubstring (substring) {
-                this.string('(' + substring + ')');
-              },
-              nonMatchingSubstring (substring) {
-                this.string(substring);
+            this.analyzeString(
+              /** @type {string} */ (this.get('$.text', false)),
+              String.raw`\d`,
+              {
+                flags: 'gv',
+                matchingSubstring (substring) {
+                  this.string('(' + substring + ')');
+                },
+                nonMatchingSubstring (substring) {
+                  this.string(substring);
+                }
               }
-            });
+            );
           }
         }],
         success (result) {
@@ -468,7 +478,7 @@ describe('JSONPathTransformerContext analyzeString', () => {
         templates: [{
           path: '$',
           template () {
-            this.analyzeString(this.get('$.text', false), /\w/gv, {
+            this.analyzeString(/** @type {string} */ (this.get('$.text', false)), /\w/gv, {
               matchingSubstring (substring) {
                 this.string('<' + substring + '>');
               },
@@ -499,7 +509,7 @@ describe('JSONPathTransformerContext analyzeString', () => {
         templates: [{
           path: '$',
           template () {
-            this.analyzeString(this.get('$.text', false), /\d+/v, {
+            this.analyzeString(/** @type {string} */ (this.get('$.text', false)), /\d+/v, {
               nonMatchingSubstring (substring) {
                 this.string('[' + substring + ']');
               }
@@ -527,7 +537,7 @@ describe('JSONPathTransformerContext analyzeString', () => {
         templates: [{
           path: '$',
           template () {
-            this.analyzeString(this.get('$.text', false), /\d+/v, {
+            this.analyzeString(/** @type {string} */ (this.get('$.text', false)), /\d+/v, {
               matchingSubstring (substring) {
                 this.string('[' + substring + ']');
               }
@@ -557,7 +567,7 @@ describe('JSONPathTransformerContext analyzeString', () => {
           template () {
             // Optional group that might capture nothing
             this.analyzeString(
-              this.get('$.text', false),
+              /** @type {string} */ (this.get('$.text', false)),
               /(?<word>\w+)(?<space>\s*)/v,
               {
                 matchingSubstring (substring, groups, regexGroup) {
