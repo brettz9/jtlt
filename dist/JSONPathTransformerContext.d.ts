@@ -102,10 +102,10 @@ export type JSONPathTransformerContextConfig<T extends "json" | "string" | "dom"
      */
     joiningTransformer: JoiningTransformerMap[T];
     /**
-     * - Whether to prevent eval in
+     * - Whether to allow eval in
      * JSONPath
      */
-    preventEval?: boolean;
+    eval?: boolean;
     /**
      * - When true, throw if a template returns a
      * Promise instead of awaiting it (disables `indexedDB()`)
@@ -212,7 +212,7 @@ export type JSONPathTransformerContextConfig<T extends "json" | "string" | "dom"
  *   equal priority
  * @property {T} [outputType] - Output type
  * @property {JoiningTransformerMap[T]} joiningTransformer - Joining transformer
- * @property {boolean} [preventEval] - Whether to prevent eval in
+ * @property {boolean} [eval] - Whether to allow eval in
  *   JSONPath
  * @property {boolean} [sync] - When true, throw if a template returns a
  *   Promise instead of awaiting it (disables `indexedDB()`)
@@ -337,9 +337,9 @@ declare class JSONPathTransformerContext<T extends "json" | "string" | "dom" = "
      *   to the result tree instead).
      * @param {string} select - JSONPath selector
      * @param {boolean} wrap - Whether to wrap results
-     * @returns {any} The selected value(s)
+     * @returns {unknown} The selected value(s)
      */
-    get(select: string, wrap: boolean): any;
+    get(select: string, wrap: boolean): unknown;
     /**
      * @param {unknown} v - Value to set
      * @returns {this}

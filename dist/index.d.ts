@@ -232,11 +232,11 @@ export type BaseJTLTOptions<T, E extends boolean | undefined = false> = {
      */
     autostart?: boolean;
     /**
-     * Whether to prevent
+     * Whether to allow
      * parenthetical evaluations in JSONPath. Safer if relying on user
      * input, but reduces capabilities of JSONPath.
      */
-    preventEval?: boolean;
+    eval?: boolean;
     /**
      * For JSON output, whether to
      * unwrap single-element root arrays to return just the element

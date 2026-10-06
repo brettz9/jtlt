@@ -18,10 +18,10 @@ export type XPathTransformerContextConfig = {
      */
     sync?: boolean;
     /**
-     * - Whether to prevent eval in the JSONPath
+     * - Whether to allow eval in the JSONPath
      * trailing segment of an `indexedDB(...)` expression
      */
-    preventEval?: boolean;
+    eval?: boolean;
     specificityPriorityResolver?: (path: string) => number;
     /**
      * Runtime parameter values
@@ -44,7 +44,7 @@ export type XPathTransformerContextConfig = {
  * @property {boolean} [errorOnEqualPriority]
  * @property {boolean} [sync] - When true, throw if a template returns a
  *   Promise instead of awaiting it (disables `indexedDB()`)
- * @property {boolean} [preventEval] - Whether to prevent eval in the JSONPath
+ * @property {boolean} [eval] - Whether to allow eval in the JSONPath
  *   trailing segment of an `indexedDB(...)` expression
  * @property {(path: string) => number} [specificityPriorityResolver]
  * @property {Record<string, unknown>} [params] Runtime parameter values

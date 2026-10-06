@@ -78,11 +78,11 @@ export declare function parseIndexedDBExpression(expr: string): ParsedIndexedDBE
  * trailing JSONPath segment is present (e.g. `.*.name`), evaluate it against
  * the fetched records. Shared by the JSONPath and XPath engines.
  * @param {ParsedIndexedDBExpression} parsed
- * @param {{preventEval?: boolean}} [options]
+ * @param {{eval?: boolean}} [options]
  * @returns {Promise<unknown>}
  */
-export declare function resolveIndexedDBQuery(parsed: ParsedIndexedDBExpression, { preventEval }?: {
-    preventEval?: boolean;
+export declare function resolveIndexedDBQuery(parsed: ParsedIndexedDBExpression, { eval: evalMode }?: {
+    eval?: boolean;
 }): Promise<unknown>;
 /**
  * Namespace URI backing the predefined `jtlt` prefix under which the XPath
