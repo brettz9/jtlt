@@ -631,6 +631,44 @@ describe('JSON (jamilih) templates', function () {
       }
     );
 
+    it(
+      '$renderDefault passes an argument object through to the ' +
+      '`renderDefault` extension, and nothing for `true`',
+      async function () {
+        /** @type {unknown[]} */
+        const received = [];
+        const out = await jtlt({
+          data: {},
+          outputType: 'string',
+          templates: {
+            path: '$',
+            template: [
+              [{$renderDefault: true}],
+              [{$renderDefault: {exclude: ['utilities'], include: ['a']}}],
+              [{$renderDefault: {}}]
+            ]
+          },
+          extensions: {
+            renderDefault (/** @type {unknown} */ arg) {
+              received.push(arg);
+              this.element('default', {}, [], () => {
+                //
+              });
+            }
+          }
+        });
+        expect(out).to.equal(
+          '<default></default><default></default><default></default>'
+        );
+        expect(received).to.deep.equal([
+          undefined,
+          // Handed over as-is: jtlt does not interpret the object itself
+          {exclude: ['utilities'], include: ['a']},
+          {}
+        ]);
+      }
+    );
+
     describe('extension calls (e.g. `{$greet: {...}}`)', function () {
       it(
         'passes the argument object through entirely unresolved — the ' +

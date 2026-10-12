@@ -1,5 +1,10 @@
 # CHANGES for jtlt
 
+## 0.26.0
+
+- feat: `{$renderDefault: {...}}` passes its argument object to the
+  `renderDefault` extension (`{$renderDefault: true}` is unchanged)
+
 ## 0.25.1
 
 - fix: JSONPath (preventEval -> eval: false; returnType->resultType; add customTypes; avoid any type)

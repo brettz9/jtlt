@@ -138,7 +138,7 @@ A node is one of:
 | `[{$forEach: sel, $sort?: sort, $key?: name}, childNodes]` | `this.forEach(sel, cb, sort, name)` — with `$key`, binds each iteration's key (array index, or object property name for an object-wildcard `sel` like `$.*`) to `name`, readable via a bare `$name` reference |
 | `[{$variable: name, $select: sel}]` or `[{$variable: name, $value: literal}]` | `this.variable(name, sel)` / `this.variable(name, {value: literal})`, readable back later via a bare `$name` reference — `$value` embeds a literal directly in the template (e.g. a fixed collection list) rather than selecting from `data`/`params` |
 | `[{$indexedDB: {db, store, options?}, $as?: name}, childNodes?]` | fetches rows; with `$as`, binds them via `this.variable(name, {value: rows})`; without it, swaps the data context (`$`) to the rows for `childNodes` |
-| `[{$renderDefault: true}]` | `this.appendOutput(await this.renderDefault())` (an `extensions.renderDefault` your config supplies) |
+| `[{$renderDefault: true}]` or `[{$renderDefault: {...}}]` | `this.appendOutput(await this.renderDefault())` / `await this.renderDefault(argObject)` (an `extensions.renderDefault` your config supplies; the argument object, if any, is passed through unresolved, like any other extension call's) |
 | `[{$name: {...}}]` (any key not otherwise recognized above) | an extension call: `await this[name](argObject)` — the argument object is passed through entirely unresolved (no key, e.g. a conventional `select`, is interpreted by jtlt itself; the extension resolves whatever it needs via `this.get(...)`, `this.valueOf(...)`, etc.). `name` must be a key actually present in `config.extensions`; any other name throws |
 
 **Dynamic attribute values**: an element's attribute value stays a plain

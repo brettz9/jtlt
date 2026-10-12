@@ -691,7 +691,12 @@ async function runOperation (head, rest, ctx) {
     return;
   }
   if (Object.hasOwn(head, '$renderDefault')) {
-    await ctx.renderDefault();
+    // `true` (the original, argument-less form) or an argument object, handed
+    //   to the `renderDefault` extension as-is (like any extension call's
+    //   argument object, its contents are entirely up to the extension)
+    await (head.$renderDefault === true
+      ? ctx.renderDefault()
+      : ctx.renderDefault(head.$renderDefault));
     return;
   }
   if (Object.hasOwn(head, '$indexedDB')) {
